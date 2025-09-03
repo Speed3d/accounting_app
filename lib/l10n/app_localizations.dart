@@ -4711,6 +4711,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can try this feature on a real device'**
   String get tryOnRealDevice;
+
+  /// No description provided for @quickStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Stats'**
+  String get quickStats;
+
+  /// No description provided for @totalSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sales'**
+  String get totalSales;
+
+  /// No description provided for @totalProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Profit'**
+  String get totalProfit;
+
+  /// No description provided for @activeCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Customers'**
+  String get activeCustomers;
+
+  /// No description provided for @availableProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Products'**
+  String get availableProducts;
+
+  /// No description provided for @smartAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Alerts'**
+  String get smartAlerts;
+
+  /// No description provided for @lowStockAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Products'**
+  String get lowStockAlert;
+
+  /// No description provided for @lowStockAlertSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products need reordering'**
+  String lowStockAlertSubtitle(int count);
+
+  /// No description provided for @overdueCustomersAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue Customers'**
+  String get overdueCustomersAlert;
+
+  /// No description provided for @overdueCustomersAlertSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} customers with overdue debts'**
+  String overdueCustomersAlertSubtitle(int count);
+
+  /// No description provided for @financialStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Stats'**
+  String get financialStats;
+
+  /// No description provided for @totalDebts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Debts'**
+  String get totalDebts;
+
+  /// No description provided for @totalPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Payments'**
+  String get totalPayments;
+
+  /// No description provided for @collectionRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection Rate'**
+  String get collectionRate;
+
+  /// No description provided for @topBuyers.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Buyers'**
+  String get topBuyers;
+
+  /// No description provided for @topDebtors.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Debtors'**
+  String get topDebtors;
+
+  /// No description provided for @daysSinceLastTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days since last transaction'**
+  String daysSinceLastTransaction(int days);
+
+  /// No description provided for @topSellingProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Selling Products'**
+  String get topSellingProducts;
+
+  /// No description provided for @inStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In Stock'**
+  String get inStock;
+
+  /// No description provided for @monthlySalesChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Sales Chart'**
+  String get monthlySalesChart;
+
+  /// No description provided for @profitBySupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit by Supplier'**
+  String get profitBySupplier;
+
+  /// No description provided for @lowStockProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Products'**
+  String get lowStockProducts;
+
+  /// No description provided for @overdueCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue Customers'**
+  String get overdueCustomers;
 }
 
 class _AppLocalizationsDelegate

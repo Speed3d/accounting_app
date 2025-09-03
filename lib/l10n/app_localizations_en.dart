@@ -2536,4 +2536,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tryOnRealDevice => 'You can try this feature on a real device';
+
+  @override
+  String get quickStats => 'Quick Stats';
+
+  @override
+  String get totalSales => 'Total Sales';
+
+  @override
+  String get totalProfit => 'Total Profit';
+
+  @override
+  String get activeCustomers => 'Active Customers';
+
+  @override
+  String get availableProducts => 'Available Products';
+
+  @override
+  String get smartAlerts => 'Smart Alerts';
+
+  @override
+  String get lowStockAlert => 'Low Stock Products';
+
+  @override
+  String lowStockAlertSubtitle(int count) {
+    return '$count products need reordering';
+  }
+
+  @override
+  String get overdueCustomersAlert => 'Overdue Customers';
+
+  @override
+  String overdueCustomersAlertSubtitle(int count) {
+    return '$count customers with overdue debts';
+  }
+
+  @override
+  String get financialStats => 'Financial Stats';
+
+  @override
+  String get totalDebts => 'Total Debts';
+
+  @override
+  String get totalPayments => 'Total Payments';
+
+  @override
+  String get collectionRate => 'Collection Rate';
+
+  @override
+  String get topBuyers => 'Top Buyers';
+
+  @override
+  String get topDebtors => 'Top Debtors';
+
+  @override
+  String daysSinceLastTransaction(int days) {
+    return '$days days since last transaction';
+  }
+
+  @override
+  String get topSellingProducts => 'Top Selling Products';
+
+  @override
+  String get inStock => 'In Stock';
+
+  @override
+  String get monthlySalesChart => 'Monthly Sales Chart';
+
+  @override
+  String get profitBySupplier => 'Profit by Supplier';
+
+  @override
+  String get lowStockProducts => 'Low Stock Products';
+
+  @override
+  String get overdueCustomers => 'Overdue Customers';
 }

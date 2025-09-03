@@ -1917,7 +1917,47 @@
   "or": "OR",
   "loginWithBiometric": "Login with Biometric",
   "noUsersFound": "No users found",
-  "tryOnRealDevice": "You can try this feature on a real device"
+  "tryOnRealDevice": "You can try this feature on a real device",
+
+  "dashboard": "Dashboard",
+  "quickStats": "Quick Stats",
+  "totalSales": "Total Sales",
+  "totalProfit": "Total Profit",
+  "activeCustomers": "Active Customers",
+  "availableProducts": "Available Products",
+  "smartAlerts": "Smart Alerts",
+  "lowStockAlert": "Low Stock Products",
+  "lowStockAlertSubtitle": "{count} products need reordering",
+  "@lowStockAlertSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "overdueCustomersAlert": "Overdue Customers",
+  "overdueCustomersAlertSubtitle": "{count} customers with overdue debts",
+  "@overdueCustomersAlertSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "financialStats": "Financial Stats",
+  "totalDebts": "Total Debts",
+  "totalPayments": "Total Payments",
+  "collectionRate": "Collection Rate",
+  "topBuyers": "Top Buyers",
+  "topDebtors": "Top Debtors",
+  "daysSinceLastTransaction": "{days} days since last transaction",
+  "@daysSinceLastTransaction": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "topSellingProducts": "Top Selling Products",
+  "inStock": "In Stock",
+  "monthlySalesChart": "Monthly Sales Chart",
+  "profitBySupplier": "Profit by Supplier",
+  "lowStockProducts": "Low Stock Products",
+  "overdueCustomers": "Overdue Customers"
 
 
 }

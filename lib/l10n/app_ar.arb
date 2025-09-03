@@ -1855,7 +1855,47 @@
   "or": "أو",
   "loginWithBiometric": "تسجيل الدخول بالبصمة",
   "noUsersFound": "لم يتم العثور على مستخدمين",
-  "tryOnRealDevice": "يمكنك تجربة الميزة على جهاز حقيقي"
+  "tryOnRealDevice": "يمكنك تجربة الميزة على جهاز حقيقي",
+
+    "dashboard": "لوحة القيادة",
+  "quickStats": "إحصائيات سريعة",
+  "totalSales": "إجمالي المبيعات",
+  "totalProfit": "إجمالي الأرباح",
+  "activeCustomers": "العملاء النشطون",
+  "availableProducts": "المنتجات المتاحة",
+  "smartAlerts": "تنبيهات ذكية",
+  "lowStockAlert": "منتجات شارفت على النفاد",
+  "lowStockAlertSubtitle": "{count} منتج بحاجة لإعادة طلب",
+  "@lowStockAlertSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "overdueCustomersAlert": "عملاء متأخرون عن السداد",
+  "overdueCustomersAlertSubtitle": "{count} عميل لديهم ديون متأخرة",
+  "@overdueCustomersAlertSubtitle": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "financialStats": "الإحصائيات المالية",
+  "totalDebts": "إجمالي الديون",
+  "totalPayments": "إجمالي المدفوعات",
+  "collectionRate": "نسبة التحصيل",
+  "topBuyers": "أكثر العملاء شراءً",
+  "topDebtors": "العملاء المدينون",
+  "daysSinceLastTransaction": "{days} يوم منذ آخر معاملة",
+  "@daysSinceLastTransaction": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "topSellingProducts": "أكثر المنتجات مبيعاً",
+  "inStock": "متوفر",
+  "monthlySalesChart": "المبيعات الشهرية",
+  "profitBySupplier": "الأرباح حسب المورد",
+  "lowStockProducts": "منتجات منخفضة المخزون",
+  "overdueCustomers": "عملاء متأخرون"
 
 
 }

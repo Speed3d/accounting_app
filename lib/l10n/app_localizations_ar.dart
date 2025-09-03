@@ -1360,7 +1360,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get expensesarebeingloaded => 'جاري تحميل المصاريف';
 
   @override
-  String get dashboard => 'لوحة التحكم';
+  String get dashboard => 'لوحة القيادة';
 
   @override
   String get today => 'اليوم';
@@ -2514,4 +2514,79 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tryOnRealDevice => 'يمكنك تجربة الميزة على جهاز حقيقي';
+
+  @override
+  String get quickStats => 'إحصائيات سريعة';
+
+  @override
+  String get totalSales => 'إجمالي المبيعات';
+
+  @override
+  String get totalProfit => 'إجمالي الأرباح';
+
+  @override
+  String get activeCustomers => 'العملاء النشطون';
+
+  @override
+  String get availableProducts => 'المنتجات المتاحة';
+
+  @override
+  String get smartAlerts => 'تنبيهات ذكية';
+
+  @override
+  String get lowStockAlert => 'منتجات شارفت على النفاد';
+
+  @override
+  String lowStockAlertSubtitle(int count) {
+    return '$count منتج بحاجة لإعادة طلب';
+  }
+
+  @override
+  String get overdueCustomersAlert => 'عملاء متأخرون عن السداد';
+
+  @override
+  String overdueCustomersAlertSubtitle(int count) {
+    return '$count عميل لديهم ديون متأخرة';
+  }
+
+  @override
+  String get financialStats => 'الإحصائيات المالية';
+
+  @override
+  String get totalDebts => 'إجمالي الديون';
+
+  @override
+  String get totalPayments => 'إجمالي المدفوعات';
+
+  @override
+  String get collectionRate => 'نسبة التحصيل';
+
+  @override
+  String get topBuyers => 'أكثر العملاء شراءً';
+
+  @override
+  String get topDebtors => 'العملاء المدينون';
+
+  @override
+  String daysSinceLastTransaction(int days) {
+    return '$days يوم منذ آخر معاملة';
+  }
+
+  @override
+  String get topSellingProducts => 'أكثر المنتجات مبيعاً';
+
+  @override
+  String get inStock => 'متوفر';
+
+  @override
+  String get monthlySalesChart => 'المبيعات الشهرية';
+
+  @override
+  String get profitBySupplier => 'الأرباح حسب المورد';
+
+  @override
+  String get lowStockProducts => 'منتجات منخفضة المخزون';
+
+  @override
+  String get overdueCustomers => 'عملاء متأخرون';
 }

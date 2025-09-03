@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/auth/splash_screen.dart'; // ✅ Hint: استيراد SplashScreen
+import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -53,7 +54,7 @@ return Drawer(
                   ),
                 );
               },
-            ),
+            ),   
             
             if (authService.canViewCashSales || authService.isAdmin)
               _buildMenuItem(
@@ -71,6 +72,25 @@ return Drawer(
                 },
               ),
             
+            const Divider(),
+
+             /////////////////////////////////////
+            /// الاحصاءيات
+
+            _buildMenuItem(
+  context,
+  icon: Icons.dashboard,
+  title: l10n.dashboard,
+  onTap: () {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DashboardScreen(),
+      ),
+    );
+  },
+),
             const Divider(),
             
             // ============= قسم العملاء والموردين =============

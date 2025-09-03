@@ -1583,4 +1583,157 @@ Future<int> getActiveEmployeesCount() async {
 
 
 
+  // =================================================================================================
+  // ✅✅✅ دوال إضافية للوحة القيادة (Dashboard) ✅✅✅
+  // =================================================================================================
+
+  /// ✅ Hint: حساب إجمالي المبيعات (مجموع كل الديون من المبيعات غير المرجعة)
+  Future<double> getTotalSales() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(Debt) as Total FROM Debt_Customer WHERE IsReturned = 0'
+    );
+    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  /// ✅ Hint: حساب عدد العملاء النشطين (الذين لديهم معاملات)
+  Future<int> getActiveCustomersCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      SELECT COUNT(DISTINCT CustomerID) as count 
+      FROM Debt_Customer 
+      WHERE IsReturned = 0
+    ''');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// ✅ Hint: حساب عدد المنتجات النشطة في المخزن
+  Future<int> getActiveProductsCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM Store_Products WHERE IsActive = 1'
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  /// ✅ Hint: جلب المنتجات منخفضة المخزون
+  /// threshold: الحد الأدنى للكمية (افتراضياً 5)
+  Future<List<Product>> getLowStockProducts({int threshold = 5}) async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      SELECT P.*, S.SupplierName 
+      FROM Store_Products P 
+      LEFT JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID 
+      WHERE P.IsActive = 1 AND P.Quantity <= ?
+      ORDER BY P.Quantity ASC
+    ''', [threshold]);
+    
+    return result.map((map) => Product.fromMap(map)).toList();
+  }
+
+  /// ✅ Hint: جلب العملاء المتأخرين عن السداد
+  /// daysThreshold: عدد الأيام منذ آخر معاملة (افتراضياً 30 يوم)
+  Future<List<Map<String, dynamic>>> getOverdueCustomers({int daysThreshold = 30}) async {
+    final db = await instance.database;
+    
+    // ✅ Hint: حساب التاريخ الحد (قبل X يوم من الآن)
+    final cutoffDate = DateTime.now().subtract(Duration(days: daysThreshold)).toIso8601String();
+    
+    final result = await db.rawQuery('''
+      SELECT 
+        C.CustomerID,
+        C.CustomerName,
+        C.Remaining,
+        C.Phone,
+        MAX(D.DateT) as LastTransactionDate,
+        julianday('now') - julianday(MAX(D.DateT)) as DaysSinceLastTransaction
+      FROM TB_Customer C
+      LEFT JOIN Debt_Customer D ON C.CustomerID = D.CustomerID
+      WHERE C.Remaining > 0 
+        AND C.IsActive = 1
+        AND C.CustomerName != ?
+      GROUP BY C.CustomerID
+      HAVING MAX(D.DateT) < ?
+      ORDER BY C.Remaining DESC
+    ''', [cashCustomerInternalName, cutoffDate]);
+    
+    return result;
+  }
+
+  /// ✅ Hint: حساب إجمالي الديون المستحقة على جميع العملاء
+  Future<double> getTotalDebts() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      SELECT SUM(Remaining) as Total 
+      FROM TB_Customer 
+      WHERE Remaining > 0 AND IsActive = 1 AND CustomerName != ?
+    ''', [cashCustomerInternalName]);
+    
+    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  /// ✅ Hint: حساب إجمالي المدفوعات المحصلة
+  Future<double> getTotalPaymentsCollected() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(Payment) as Total FROM Payment_Customer'
+    );
+    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  /// ✅ Hint: حساب نسبة التحصيل (المدفوعات / المبيعات × 100)
+  Future<double> getCollectionRate() async {
+    final totalSales = await getTotalSales();
+    if (totalSales == 0) return 100.0; // تجنب القسمة على صفر
+    
+    final totalPayments = await getTotalPaymentsCollected();
+    return (totalPayments / totalSales) * 100;
+  }
+
+  /// ✅ Hint: جلب المبيعات الشهرية لآخر 6 أشهر (للرسم البياني)
+  Future<List<Map<String, dynamic>>> getMonthlySales({int months = 6}) async {
+    final db = await instance.database;
+    
+    // ✅ Hint: حساب تاريخ البداية (قبل X شهر)
+    final startDate = DateTime.now().subtract(Duration(days: months * 30)).toIso8601String();
+    
+    final result = await db.rawQuery('''
+      SELECT 
+        strftime('%Y-%m', DateT) as Month,
+        SUM(Debt) as TotalSales,
+        COUNT(*) as TransactionCount
+      FROM Debt_Customer
+      WHERE IsReturned = 0 AND DateT >= ?
+      GROUP BY strftime('%Y-%m', DateT)
+      ORDER BY Month ASC
+    ''', [startDate]);
+    
+    return result;
+  }
+
+  /// ✅ Hint: جلب أكثر 5 موردين ربحاً (للرسم الدائري)
+  Future<List<Map<String, dynamic>>> getTopSuppliersByProfit({int limit = 5}) async {
+    final db = await instance.database;
+    
+    final result = await db.rawQuery('''
+      SELECT 
+        S.SupplierID,
+        S.SupplierName,
+        SUM(D.ProfitAmount) as TotalProfit,
+        COUNT(D.ID) as SalesCount
+      FROM Debt_Customer D
+      JOIN Store_Products P ON D.ProductID = P.ProductID
+      JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
+      WHERE D.IsReturned = 0
+      GROUP BY S.SupplierID
+      ORDER BY TotalProfit DESC
+      LIMIT ?
+    ''', [limit]);
+    
+    return result;
+  }
+
+
+
+
 }
