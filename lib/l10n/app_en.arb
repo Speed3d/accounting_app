@@ -1,0 +1,749 @@
+{
+    "@@locale": "en",
+
+    "settings": "Settings",
+    "homePage": "Home Page",
+    "users": "Users",
+    "suppliers": "Suppliers",
+    "products": "Products",
+    "employees": "Employees",
+    "customers": "Customers",
+    "reports": "Reports",
+
+    "customization": "Customization",
+    "companyInformation": "Company Information",
+    "changeAppNameAndLogo": "Change app name and logo",
+    "dataManagement": "Data Management",
+    "archiveCenter": "Archive Center",
+    "restoreArchivedItems": "Restore archived items",
+    "backupAndRestore": "Backup and Restore",
+    "saveAndRestoreAppData": "Save and restore app data",
+    "about": "About",
+    "aboutTheApp": "About The App",
+    "language": "Language",
+    "changeLanguage": "Change app language",
+
+    "customersList": "Customers List",
+    "noActiveCustomers": "No active customers yet.",
+    "phone": "Phone",
+    "unregistered": "Unregistered",
+    "remainingForHim": "Credit",
+    "remainingOnHim": "Debit",
+    "balance": "Balance",
+    "archive": "Archive",
+    "confirmArchive": "Confirm Archive",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+
+    "addEditCustomer": "Add/Edit Customer",
+    "customerName": "Customer Name",
+    "addressOptional": "Address (Optional)",
+    "phoneOptional": "Phone (Optional)",
+    "fieldRequired": "Field is required",
+    "customerAddedSuccess": "Customer added successfully!",
+    "customerUpdatedSuccess": "Customer updated successfully!",
+    "chooseImageSource": "Choose Image Source",
+    "gallery": "Gallery",
+    "camera": "Camera",
+
+    "customerDetails": "Customer Details",
+    "purchases": "Purchases",
+    "payments": "Payments",
+    "noPurchases": "No purchases recorded.",
+    "noPayments": "No payments recorded.",
+    "newSaleSuccess": "New sale recorded successfully!",
+    "newPayment": "New Payment",
+    "paidAmount": "Paid Amount",
+    "amountRequired": "Amount is required",
+    "enterValidAmount": "Enter a valid amount greater than zero",
+    "amountExceedsDebt": "Amount is greater than the remaining debt",
+    "notesOptional": "Notes (Optional)",
+    "paymentSuccess": "Payment recorded successfully!",
+    "returnConfirmTitle": "Confirm Return",
+    "returnConfirmContent": "Are you sure you want to return this item?\n\"{details}\"\nThe quantity will be returned to stock and the customer's account will be adjusted.",
+    "@returnConfirmContent": {
+        "placeholders": {
+            "details": {
+                "type": "String"
+            }
+        }
+    },
+    "returnSuccess": "Item returned successfully!",
+    "errorOccurred": "An error occurred: {error}",
+    "@errorOccurred": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "returnItem": "Return Item",
+    "saleDetails": "Sale Details: {productName} (Qty: {quantity})",
+    "@saleDetails": {
+        "placeholders": {
+            "productName": {
+                "type": "String"
+            },
+            "quantity": {
+                "type": "String"
+            }
+        }
+    },
+
+    "newAdvanceFor": "New Advance for: {name}",
+    "advanceAmount": "Advance Amount",
+    "advanceDate": "Advance Date",
+    "saveAdvance": "Save Advance",
+    "advanceAddedSuccess": "Advance recorded successfully!",
+    "unpaid": "Unpaid",
+    "addEmployee": "Add Employee",
+    "editEmployee": "Edit Employee",
+    "employeeName": "Employee Full Name",
+    "employeeNameRequired": "Employee name is required",
+    "jobTitle": "Job Title",
+    "jobTitleRequired": "Job title is required",
+    "phoneOptional": "Phone Number (Optional)",
+    "baseSalary": "Base Salary",
+    "baseSalaryRequired": "Base salary is required",
+    "enterValidNumber": "Please enter a valid number",
+    "hireDate": "Hire Date",
+    "employeeAddedSuccess": "Employee added successfully!",
+    "employeeUpdatedSuccess": "Employee updated successfully!",
+    "payrollFor": "Payroll for: {name}",
+    "payrollForMonthAndYear": "Payroll for month and year:",
+    "month": "Month",
+    "year": "Year",
+    "payrollAlreadyExists": "Error: A payroll for this month has already been recorded.",
+    "payrollSavedSuccess": "Payroll saved successfully!",
+    "bonuses": "Bonuses (+)",
+    "deductions": "Deductions (-)",
+    "advanceRepayment": "Advance Repayment (-)",
+    "currentBalanceOnEmployee": "Current balance on employee: {balance}",
+    "enterZeroIfNotRepaying": "Enter 0 if there is no repayment",
+    "repaymentExceedsBalance": "Amount is greater than the employee's advance balance",
+    "paymentDate": "Payment Date",
+    "saveAndPaySalary": "Save and Pay Salary",
+    "netSalaryDue": "Net Salary Due",
+    "fieldRequiredEnterZero": "Field is required, enter 0 for zero value",
+    "payrollHistory": "Payroll History",
+    "advancesHistory": "Advances History",
+    "noPayrolls": "No payrolls recorded.",
+    "noAdvances": "No advances recorded.",
+    "payrollDetailsFor": "Payroll Details for {month}",
+    "paidOn": "Paid on: {date}",
+    "payrollOfMonth": "Payroll for {month} {year}",
+    "advanceAmountLabel": "Advance Amount: {amount}",
+    "advanceDateLabel": "Advance Date: {date}",
+    "fullyPaid": "Fully Paid",
+    "employeesList": "Employees List",
+    "noEmployees": "No employees currently. Press + to add the first employee.",
+    "jobTitleLabel": "Job Title: {title}",
+    "baseSalaryLabel": "Base Salary: {salary}",
+    "advancesBalanceLabel": "Advances Balance: {balance}",
+
+    "suppliersList": "Suppliers List",
+    "noActiveSuppliers": "No active suppliers.",
+    "type": "Type",
+    "individual": "Individual",
+    "partner": "Partner",
+
+    "addSupplier": "Add New Supplier",
+    "editSupplier": "Edit Supplier",
+    "supplierName": "Supplier Name",
+    "supplierNameRequired": "Supplier name is required",
+    "supplierType": "Supplier Type",
+    "individual": "Individual",
+    "partnership": "Partnership",
+    "partners": "Partners",
+    "addPartner": "Add Partner",
+    "atLeastOnePartnerRequired": "At least one partner must be added for a partnership type.",
+    "partnerShareTotalExceeds100": "Error: Total partner shares ({total}%) exceeds 100%.",
+    "supplierAddedSuccess": "Supplier added successfully!",
+    "supplierUpdatedSuccess": "Supplier updated successfully!",
+    "addNewPartner": "Add New Partner",
+    "partnerName": "Partner Name",
+    "partnerNameRequired": "Partner name is required",
+    "sharePercentage": "Share Percentage (%)",
+    "percentageMustBeBetween1And100": "Percentage must be between 1 and 100",
+    "shareTotalExceeds100": "Error: Total partner shares cannot exceed 100%.",
+    "percentageLabel": "Percentage: {percentage}%",
+    "suppliersList": "Suppliers List",
+    "noActiveSuppliers": "No active suppliers.",
+    "typeLabel": "Type: {type}",
+    "cannotArchiveSupplierWithActiveProducts": "This supplier cannot be archived because they are linked to active products.",
+    "archiveSupplierConfirmation": "Are you sure you want to archive the supplier \"{name}\"? They will be hidden from lists.",
+    "archiveSupplierLog": "Archive Supplier: {name}",
+
+    "addUser": "Add New User",
+    "editUser": "Edit User",
+    "passwordRequiredForNewUser": "Password is required for a new user",
+    "userAddedSuccess": "User added successfully!",
+    "userUpdatedSuccess": "User updated successfully!",
+    "usernameAlreadyExists": "This username already exists. Please choose another one.",
+    "passwordHint": "Leave blank to keep unchanged",
+    "userPermissions": "User Permissions",
+    "adminPermission": "Full Admin Privileges",
+    "adminPermissionSubtitle": "Grants all permissions and overrides any other selection.",
+    "viewSuppliers": "View Suppliers",
+    "editSuppliers": "Edit Suppliers",
+    "viewProducts": "View Products",
+    "editProducts": "Edit Products",
+    "viewCustomers": "View Customers",
+    "editCustomers": "Edit Customers",
+    "viewReports": "View Reports",
+    "viewEmployeesReport": "View Employees Report",
+    "viewSettings": "View Settings",
+    "manageEmployees": "Manage Employees",
+    "manageExpenses": "Manage General Expenses",
+    "viewCashSales": "View Cash Sales Reports",
+
+    "usersList": "Users List",
+    "noUsers": "No users yet.",
+    "you": "(You)",
+    "admin": "Admin",
+    "customPermissionsUser": "User with custom permissions",
+    "usernameLabel": "Username",
+    "cannotEditOwnAccount": "You cannot edit your own account from here. Use the settings screen instead.",
+    "cannotDeleteOwnAccount": "You cannot delete your own account.",
+    "cannotDeleteLastUser": "The last user in the system cannot be deleted.",
+    "deleteUserConfirmation": "Are you sure you want to delete the user \"{name}\"? This action cannot be undone.",
+    "@deleteUserConfirmation": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "deleteUserLog": "Delete user: {name}",
+    "@deleteUserLog": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "productsList": "Products List",
+    "noActiveProducts": "No active products in stock.",
+    "searchForProduct": "Search for a product...",
+    "noMatchingResults": "No matching results found.",
+    "supplier": "Supplier",
+    "quantity": "Quantity",
+    "sellingPrice": "Selling Price",
+
+    "cannotArchiveSoldProduct": "This product cannot be archived because it is linked to previous sales.",
+    "archiveProductConfirmation": "Are you sure you want to archive the product \"{name}\"?",
+    "supplierLabel": "Supplier: {name}",
+    "quantityLabel": "Quantity: {qty}",
+    "undefined": "Undefined",
+    "sellingPriceLabel": "Selling Price: {price}",
+
+    "addProduct": "Add New Product",
+    "editProduct": "Edit Product",
+    "pleaseSelectSupplier": "Please select a supplier",
+    "productAddedSuccess": "Product added successfully!",
+    "productUpdatedSuccess": "Product updated successfully!",
+    "productName": "Product Name",
+    "productNameRequired": "Product name is required",
+    "productDetailsOptional": "Product Details (Optional)",
+    "quantity": "Quantity",
+    "costPrice": "Cost Price",
+    "sellingPrice": "Selling Price",
+    "fieldCannotBeNegative": "Field cannot be negative",
+    "supplier": "Supplier",
+    "selectSupplier": "Select a supplier",
+    "errorLoadingSuppliers": "Error loading suppliers.",
+    "noSuppliersAddOneFirst": "No suppliers found. Please add a supplier first.",
+    "enterValidNumber": "Please enter a valid number",
+
+    "barcode": "Barcode",
+    "barcodeOptional": "Barcode (Optional)",
+    "scanBarcode": "Scan Barcode",
+    "cameraPermissionRequired": "Camera permission is required to scan barcodes.",
+    "openSettings": "Open Settings",
+    "barcodeAlreadyExists": "Error: This barcode is already assigned to another product.",
+    "productUpdatedWithBarcodeLog": "Update product with barcode: {name}",
+    "productAddedWithBarcodeLog": "Add new product with barcode: {name}",
+
+    "productNotFound": "Product not found or inactive",
+    "@productNotFound": {
+        "description": "Message shown when a scanned barcode does not match any product in the database"
+    },
+
+    "scanBarcodeToSell": "Scan Barcode to Sell",
+    "@scanBarcodeToSell": {
+        "description": "Text on the barcode scanning button on the new sale screen"
+    },
+
+    "addWithProductName": "Add \"{productName}\"",
+    "@addWithProductName": {
+    "description": "Dialog title when adding a product to the cart",
+    "placeholders": {
+        "productName": {
+            "type": "String",
+            "example": "Pepsi"
+        }
+     }
+    },
+
+    "barcodeExistsError": "This barcode is already registered for another product.",
+    "@barcodeExistsError": {},
+
+    "reportsHub": "Reports Hub",
+    "profitReport": "Profit Report",
+    "profitReportDesc": "View net profit from all sales",
+    "supplierProfitReport": "Supplier Profit Report",
+    "supplierProfitReportDesc": "View profits grouped by each supplier",
+    "employeesReport": "Employees & Payroll Report",
+    "employeesReportDesc": "Summary of salaries, advances, and employee statements",
+
+    "login": "Login",
+    "username": "Username",
+    "password": "Password",
+    "loginTo": "Login to",
+    "accountingProgram": "Accounting Program",
+    "invalidCredentials": "Incorrect username or password.",
+
+    "ok": "OK",
+    "error": "Error",
+    "success": "Success",
+    
+
+    "backupStarted": "Backup sharing started.",
+    "backupFailed": "Backup failed: {error}",
+    "restoreConfirmTitle": "Confirm Restore",
+    "restoreConfirmContent": "Are you sure? All your current data will be replaced by the data in the backup. This action cannot be undone.",
+    "restore": "Restore",
+    "restoreSuccessTitle": "Restore Successful",
+    "restoreSuccessContent": "Data restored successfully. Please restart the app to apply changes.",
+    "restoreFailed": "Restore failed: {error}",
+    "createBackupTitle": "Create & Share Backup",
+    "createBackupSubtitle": "Save an encrypted copy of your data and share it to a safe place.",
+    "restoreFromFileTitle": "Restore Data from File",
+    "restoreFromFileSubtitle": "Warning: This will replace all current data.",
+    "backupTip": "Tip: Periodically back up your data off-device (to Google Drive or email) to protect it from loss or damage.",
+    "companyOrShopName": "Company or Shop Name",
+    "companyDescOptional": "Company Description (Optional)",
+    "companyDescHint": "e.g., business activity, short address...",
+    "companyInfoHint": "This name and logo will appear on the splash screen and in reports.",
+    "infoSavedSuccess": "Information saved successfully!",
+    "errorPickingImage": "Error picking image: {error}",
+
+    "archivedCustomer": "Archived Customer",
+    "archivedSupplier": "Archived Supplier",
+    "archivedProduct": "Archived Product | Supplier: {supplierName}",
+    "unknown": "Unknown",
+    "restore": "Restore",
+    "itemRestoredSuccess": "Item \"{name}\" restored successfully!",
+    "noArchivedItems": "No archived items.",
+    "setupAdminAccount": "Setup Admin Account",
+    "welcomeSetup": "Welcome! This is a one-time setup. This account will have all permissions.",
+    "fullName": "Full Name",
+    "fullNameRequired": "Full name is required",
+    "usernameForLogin": "Username (for login)",
+    "usernameRequired": "Username is required",
+    "chooseStrongPassword": "Choose a strong password",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 4 characters",
+    "createAdminAndStart": "Create Admin & Start",
+    "adminCreatedSuccess": "Admin account created successfully! You can now log in.",
+    "usernameExists": "This username already exists. Please choose another one.",
+    "unexpectedError": "An unexpected error occurred: {error}",
+    "pleaseEnterUsername": "Please enter username",
+    "pleaseEnterPassword": "Please enter password",
+
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "customerName": "Customer Name",
+    "customerNameRequired": "Customer name is required",
+    "addressOptional": "Address (Optional)",
+    "phoneOptional": "Phone (Optional)",
+    "imageSource": "Image Source",
+    "gallery": "Gallery",
+    "camera": "Camera",
+    "errorPickingImage": "Error picking image: {error}",
+    "@errorPickingImage": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "customerAddedSuccess": "Customer added successfully!",
+    "customerUpdatedSuccess": "Customer updated successfully!",
+    "save": "Save",
+    "purchases": "Purchases",
+    "payments": "Payments",
+    "noPurchases": "No purchases recorded.",
+    "noPayments": "No payments recorded.",
+    "newSaleSuccess": "New sale recorded successfully!",
+    "newPayment": "New Payment",
+    "paidAmount": "Paid Amount",
+    "amountRequired": "Amount is required",
+    "enterValidAmount": "Enter a valid amount greater than zero",
+    "amountExceedsDebt": "Amount is greater than the remaining debt",
+    "notesOptional": "Notes (Optional)",
+    "paymentSuccess": "Payment recorded successfully!",
+    "returnConfirmTitle": "Confirm Return",
+    "returnConfirmContent": "Are you sure you want to return this item?\n\"{details}\"\nThe quantity will be returned to stock and the customer's account will be adjusted.",
+    "returnSuccess": "Item returned successfully!",
+    "errorOccurred": "An error occurred: {error}",
+    "returnItem": "Return Item",
+    "customersList": "Customers List",
+    "noActiveCustomers": "No active customers yet.",
+    "remainingOnHim": "Debt",
+    "remainingForHim": "Credit",
+    "balance": "Balance",
+    "unregistered": "Unregistered",
+    "cannotArchiveCustomerWithDebt": "Cannot archive a customer with remaining debt.",
+    "archiveConfirmTitle": "Confirm Archive",
+    "archiveConfirmContent": "Are you sure you want to archive the customer \"{name}\"?",
+    "archive": "Archive",
+    "chooseProducts": "Choose Products",
+    "reviewCart": "Review Cart",
+    "noProductsInStock": "No products in stock.",
+    "available": "Available",
+    "price": "Price",
+    "quantity": "Quantity",
+    "add": "Add",
+    "quantityExceedsStock": "Requested quantity is more than available in stock!",
+    "cartIsEmpty": "Shopping cart is empty!",
+    "product": "Product",
+    "total": "Total",
+    "finalTotal": "Final Total",
+    "close": "Close",
+    "itemsCount": "Items: {count}",
+    "@itemsCount": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "addWithProductName": "Add \"{productName}\"",
+    "@addWithProductName": {
+        "placeholders": {
+            "productName": {
+                "type": "String"
+            }
+        }
+    },
+    "scanBarcodeToSell": "Scan Barcode to Sell",
+    "productNotFound": "Product not found or inactive",
+    "barcodeExistsError": "This barcode is already registered for another product.",
+
+    "saleDetails": "Sale Details: {productName} (Qty: {quantity})",
+
+    "employeesReport": "Employees Report",
+    "totalSalariesPaid": "Total Salaries Paid",
+    "totalAdvancesBalance": "Total Advances Balance",
+    "activeEmployeesCount": "Active Employees Count",
+    "employeesStatement": "Employees Statement",
+    "noEmployeesToDisplay": "No employees to display.",
+    "salaryLabel": "Salary: {salary}",
+    "advancesBalanceLabel": "Advances Balance: {balance}",
+
+    "profitReport": "Profit Report",
+    "totalNetProfit": "Total Net Profit",
+    "salesDetails": "Sales Details",
+    "loadingDetails": "Loading details...",
+    "noSalesRecorded": "No sales recorded to display.",
+    "customerLabel": "Customer: {name}",
+    "dateLabel": "Date: {date}",
+    "profitLabel": "Profit: {profit}",
+    "saleLabel": "Sale: {sale}",
+
+    "reportsHub": "Reports Hub",
+    "generalProfitReport": "General Profit Report",
+    "generalProfitReportSubtitle": "View summary of profits, expenses, and net profit",
+    "supplierProfitReport": "Supplier & Partner Profit Report",
+    "supplierProfitReportSubtitle": "View profits grouped by supplier and partner share distribution",
+    "cashSalesHistory": "Cash Sales History",
+    "cashSalesHistorySubtitle": "View and manage direct sale invoices",
+    "cashFlowReport": "Cash Receipts Report",
+    "cashFlowReportSubtitle": "View cash sales and customer debt payments",
+    "expensesLog": "General Expenses Log",
+    "expensesLogSubtitle": "View and record operational expenses",
+    "employeesAndSalariesReport": "Employees & Salaries Report",
+    "employeesAndSalariesReportSubtitle": "View summary of salaries, advances, and employee statements",
+
+    "supplierProfitReport": "Supplier & Partner Profit Report",
+    "errorOccurred": "An error occurred: {error}",
+    "@errorOccurred": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "noProfitsRecorded": "No profits recorded to display.",
+    "partnersLabel": "Partners: {names}",
+    "@partnersLabel": {
+        "placeholders": {
+            "names": {
+                "type": "String"
+            }
+        }
+    },
+    "netProfitLabel": "Net Profit: {amount}",
+    "@netProfitLabel": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+
+    "selectDateRange": "Select Date Range",
+    "totalCashSales": "Total Cash Sales",
+    "totalDebtPayments": "Total Debt Payments",
+    "totalCashInflow": "Total Cash Inflow",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "noTransactions": "No cash transactions in this period.",
+    "cashSaleDescription": "Direct Cash Sale (Invoice #{id})",
+    "@cashSaleDescription": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "debtPaymentDescription": "Payment from customer: {name}",
+    "@debtPaymentDescription": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "recordWithdrawalFor": "Record Withdrawal for: {name}",
+    "@recordWithdrawalFor": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "availableNetProfit": "Available Net Profit for Distribution: {amount}",
+    "@availableNetProfit": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdrawnAmount": "Withdrawn Amount",
+    "amountExceedsProfit": "Amount exceeds available profit",
+    "withdrawalSuccess": "Withdrawal recorded successfully",
+    "totalProfitFromSupplier": "Total Profit from Supplier:",
+    "totalWithdrawals": "Total Withdrawals:",
+    "remainingNetProfit": "Remaining Net Profit:",
+    "partnersProfitDistribution": "Partners' Profit Distribution",
+    "partnerShare": "Share of net profit: {amount}",
+    "@partnerShare": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdraw": "Withdraw",
+    "recordGeneralWithdrawal": "Record General Withdrawal",
+    "withdrawalsHistory": "Withdrawals History",
+    "noWithdrawals": "No withdrawals recorded.",
+    "withdrawalAmountLabel": "Amount: {amount}",
+    "@withdrawalAmountLabel": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdrawalForLabel": "For: {name}",
+    "@withdrawalForLabel": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "generalProfitReport": "General Profit Report",
+    "refresh": "Refresh",
+    "noDataToShow": "No data to display.",
+    "showSalesDetails": "Show Sales Details",
+    "hideSalesDetails": "Hide Sales Details",
+    "grossProfitFromSales": "Gross Profit from Sales",
+    "totalGeneralExpenses": "(-) Total General Expenses",
+    "totalProfitWithdrawals": "(-) Total Profit Withdrawals",
+    "netProfit": "Final Net Profit",
+    "noSalesRecorded": "No sales recorded to display.",
+    "customerLabel": "Customer: {name}",
+    "@customerLabel": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "dateLabel": "Date: {date}",
+    "@dateLabel": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "profitLabel": "Profit: {profit}",
+    "@profitLabel": {
+        "placeholders": {
+            "profit": {
+                "type": "String"
+            }
+        }
+    },
+    "saleLabel": "Sale: {sale}",
+    "@saleLabel": {
+        "placeholders": {
+            "sale": {
+                "type": "String"
+            }
+        }
+    },
+
+    "totalProfitFromThisSupplier": "Total profit from this supplier",
+    "partnersProfitDistribution": "Partners' Profit Distribution",
+    "noPartnersForThisSupplier": "No partners registered for this supplier.",
+    "noSalesForThisSupplier": "No sales for this supplier.",
+
+    "noProfitsRecorded": "No profits recorded to display.",
+
+    "cashSalesHistory": "Cash Sales History",
+    "searchByInvoiceNumber": "Search by invoice number...",
+    "showInvoices": "Show Invoices",
+    "hideInvoices": "Hide Invoices",
+    "noCashInvoices": "No cash sale invoices recorded.",
+    "noMatchingResults": "No matching results found.",
+    "invoiceNo": "Invoice No: {id}",
+    "@invoiceNo": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "modified": "Modified",
+    "voided": "Voided",
+    "confirmVoidTitle": "Confirm Invoice Void",
+    "confirmVoidContent": "Are you sure you want to void this entire invoice? All its products will be returned to stock.",
+    "confirmVoidAction": "Yes, Void",
+    "voidSuccess": "Invoice voided successfully.",
+    "detailsForInvoice": "Details for Invoice #{id}",
+    "@detailsForInvoice": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+
+    "directselling": "Direct selling",
+
+
+    "directSalePoint": "Direct Sale Point",
+    "scanBarcode": "Scan Barcode",
+    "reviewCart": "Review Cart",
+    "noProductsInStock": "No products in stock.",
+    "productNotFound": "Product not found or inactive",
+    "quantityExceedsStock": "Requested quantity is more than available in stock!",
+    "cartIsEmpty": "Shopping cart is empty!",
+    "completeSale": "Complete Sale",
+    "saleSuccess": "Sale completed successfully!",
+    "available": "Available",
+    "price": "Price",
+    "quantity": "Quantity",
+    "delete": "Delete",
+    "save": "Save",
+    "product": "Product",
+    "total": "Total",
+    "finalTotal": "Final Total",
+    "close": "Close",
+    "itemsCount": "Items: {count}",
+    "@itemsCount": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "pdfInvoiceTitle": "Cash Sale Invoice",
+    "pdfDate": "Date",
+    "pdfInvoiceNumber": "Invoice #",
+    "pdfHeaderProduct": "Product",
+    "pdfHeaderQty": "Qty",
+    "pdfHeaderPrice": "Price",
+    "pdfHeaderTotal": "Total",
+    "pdfFooterTotal": "Total Amount",
+    "pdfFooterThanks": "Thank you for your business",
+
+    "manageExpenseCategories": "Manage Expense Categories",
+    "noCategories": "No categories found. Add your first one.",
+    "addCategory": "Add New Category",
+    "editCategory": "Edit Category",
+    "categoryName": "Category Name",
+    "categoryNameRequired": "Category name is required",
+    "categoryExistsError": "Error: This category name already exists.",
+    "confirmDeleteTitle": "Confirm Deletion",
+    "confirmDeleteCategory": "Are you sure you want to delete the category \"{name}\"?",
+    "@confirmDeleteCategory": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+
+    "expensesLog": "General Expenses Log",
+    "manageCategories": "Manage Categories",
+    "noExpenses": "No expenses recorded.",
+    "addExpense": "Add New Expense",
+    "newExpense": "Record New Expense",
+    "expenseDescription": "Expense Description",
+    "descriptionRequired": "Description is required",
+    "amount": "Amount",
+    "amountRequired": "Amount is required",
+    "enterValidNumber": "Enter a valid number",
+    "category": "Category",
+    "selectCategory": "Please select a category",
+    "addCategoriesFirst": "Please add expense categories first from the manage categories screen.",
+    "notesOptional": "Notes (Optional)",
+    "expenseAddedSuccess": "Expense recorded successfully.",
+    "unclassified": "Unclassified",
+
+      "dashboard": "Dashboard",
+  "today": "Today",
+  "thisMonth": "This Month",
+  "sales": "Sales",
+  "profit": "Profit",
+  "topSelling": "Top Selling",
+  "topCustomer": "Top Customer",
+  "generalStats": "General Statistics",
+  "totalCustomers": "Customers",
+  "totalProducts": "Products",
+  "lowStock": "Low Stock",
+  "pendingPayments": "Pending Payments",
+  "available": "Available",
+  "topBuyerThisMonth": "Top buyer this month",
+  "noSalesData": "Not enough data to show top selling products",
+  "noCustomersData": "Not enough data to show top customer",
+  "loadingStats": "Loading statistics...",
+  "currency": "IQD"
+
+
+
+}

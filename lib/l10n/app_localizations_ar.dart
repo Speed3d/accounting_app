@@ -1,0 +1,1381 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Arabic (`ar`).
+class AppLocalizationsAr extends AppLocalizations {
+  AppLocalizationsAr([String locale = 'ar']) : super(locale);
+
+  @override
+  String get settings => 'الإعدادات';
+
+  @override
+  String get homePage => 'الصفحة الرئيسية';
+
+  @override
+  String get users => 'المستخدمين';
+
+  @override
+  String get suppliers => 'الموردين';
+
+  @override
+  String get products => 'المخزن';
+
+  @override
+  String get employees => 'الموظفين';
+
+  @override
+  String get customers => 'الزبائن';
+
+  @override
+  String get reports => 'التقارير';
+
+  @override
+  String get customization => 'التخصيص';
+
+  @override
+  String get companyInformation => 'معلومات الشركة';
+
+  @override
+  String get changeAppNameAndLogo => 'تغيير اسم وشعار التطبيق';
+
+  @override
+  String get dataManagement => 'إدارة البيانات';
+
+  @override
+  String get archiveCenter => 'مركز الأرشفة';
+
+  @override
+  String get restoreArchivedItems => 'استعادة العناصر المؤرشفة';
+
+  @override
+  String get backupAndRestore => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get saveAndRestoreAppData => 'حفظ واستعادة بيانات التطبيق';
+
+  @override
+  String get about => 'حول';
+
+  @override
+  String get aboutTheApp => 'حول التطبيق';
+
+  @override
+  String get language => 'اللغة';
+
+  @override
+  String get changeLanguage => 'تغيير لغة التطبيق';
+
+  @override
+  String get customersList => 'قائمة الزبائن';
+
+  @override
+  String get noActiveCustomers => 'لا يوجد زبائن نشطون حتى الآن.';
+
+  @override
+  String get phone => 'الهاتف';
+
+  @override
+  String get unregistered => 'غير مسجل';
+
+  @override
+  String get remainingForHim => 'المتبقي له';
+
+  @override
+  String get remainingOnHim => 'المتبقي عليه';
+
+  @override
+  String get balance => 'الرصيد';
+
+  @override
+  String get archive => 'أرشفة';
+
+  @override
+  String get confirmArchive => 'تأكيد الأرشفة';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get edit => 'تعديل';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get save => 'حفظ';
+
+  @override
+  String get addEditCustomer => 'إضافة/تعديل زبون';
+
+  @override
+  String get customerName => 'اسم الزبون';
+
+  @override
+  String get addressOptional => 'العنوان (اختياري)';
+
+  @override
+  String get phoneOptional => 'الهاتف (اختياري)';
+
+  @override
+  String get fieldRequired => 'الحقل مطلوب';
+
+  @override
+  String get customerAddedSuccess => 'تم إضافة الزبون بنجاح!';
+
+  @override
+  String get customerUpdatedSuccess => 'تم تحديث الزبون بنجاح!';
+
+  @override
+  String get chooseImageSource => 'اختر مصدر الصورة';
+
+  @override
+  String get gallery => 'المعرض';
+
+  @override
+  String get camera => 'الكاميرا';
+
+  @override
+  String get customerDetails => 'تفاصيل الزبون';
+
+  @override
+  String get purchases => 'عمليات الشراء';
+
+  @override
+  String get payments => 'الدفعات';
+
+  @override
+  String get noPurchases => 'لا توجد عمليات شراء مسجلة.';
+
+  @override
+  String get noPayments => 'لا توجد دفعات مسجلة.';
+
+  @override
+  String get newSaleSuccess => 'تم تسجيل عملية الشراء بنجاح!';
+
+  @override
+  String get newPayment => 'تسجيل دفعة جديدة';
+
+  @override
+  String get paidAmount => 'المبلغ المدفوع';
+
+  @override
+  String get amountRequired => 'المبلغ مطلوب';
+
+  @override
+  String get enterValidAmount => 'أدخل مبلغًا صحيحًا أكبر من صفر';
+
+  @override
+  String get amountExceedsDebt => 'المبلغ أكبر من الدين المتبقي';
+
+  @override
+  String get notesOptional => 'ملاحظات (اختياري)';
+
+  @override
+  String get paymentSuccess => 'تم تسجيل الدفعة بنجاح!';
+
+  @override
+  String get returnConfirmTitle => 'تأكيد الإرجاع';
+
+  @override
+  String returnConfirmContent(String details) {
+    return 'هل أنت متأكد من إرجاع هذا المنتج؟\n\"$details\"\nسيتم إعادة الكمية للمخزن وتعديل حساب الزبون.';
+  }
+
+  @override
+  String get returnSuccess => 'تم إرجاع المنتج بنجاح!';
+
+  @override
+  String errorOccurred(String error) {
+    return 'حدث خطأ: $error';
+  }
+
+  @override
+  String get returnItem => 'تأكيد الإرجاع';
+
+  @override
+  String saleDetails(String productName, String quantity) {
+    return 'تفاصيل البيع: $productName (الكمية: $quantity)';
+  }
+
+  @override
+  String newAdvanceFor(Object name) {
+    return 'سلفة جديدة لـ: $name';
+  }
+
+  @override
+  String get advanceAmount => 'مبلغ السلفة';
+
+  @override
+  String get advanceDate => 'تاريخ السلفة';
+
+  @override
+  String get saveAdvance => 'حفظ السلفة';
+
+  @override
+  String get advanceAddedSuccess => 'تم تسجيل السلفة بنجاح!';
+
+  @override
+  String get unpaid => 'غير مسددة';
+
+  @override
+  String get addEmployee => 'إضافة موظف جديد';
+
+  @override
+  String get editEmployee => 'تعديل بيانات موظف';
+
+  @override
+  String get employeeName => 'اسم الموظف الكامل';
+
+  @override
+  String get employeeNameRequired => 'اسم الموظف مطلوب';
+
+  @override
+  String get jobTitle => 'العنوان الوظيفي';
+
+  @override
+  String get jobTitleRequired => 'العنوان الوظيفي مطلوب';
+
+  @override
+  String get baseSalary => 'الراتب الأساسي';
+
+  @override
+  String get baseSalaryRequired => 'الراتب الأساسي مطلوب';
+
+  @override
+  String get enterValidNumber => 'أدخل رقماً صحيحاً';
+
+  @override
+  String get hireDate => 'تاريخ التعيين';
+
+  @override
+  String get employeeAddedSuccess => 'تم إضافة الموظف بنجاح!';
+
+  @override
+  String get employeeUpdatedSuccess => 'تم تحديث الموظف بنجاح!';
+
+  @override
+  String payrollFor(Object name) {
+    return 'راتب: $name';
+  }
+
+  @override
+  String get payrollForMonthAndYear => 'الراتب عن شهر وسنة:';
+
+  @override
+  String get month => 'الشهر';
+
+  @override
+  String get year => 'السنة';
+
+  @override
+  String get payrollAlreadyExists => 'خطأ: تم تسجيل راتب لهذا الشهر بالفعل.';
+
+  @override
+  String get payrollSavedSuccess => 'تم تسجيل الراتب بنجاح!';
+
+  @override
+  String get bonuses => 'مكافآت (+)';
+
+  @override
+  String get deductions => 'خصومات (-)';
+
+  @override
+  String get advanceRepayment => 'تسديد من السلفة (-)';
+
+  @override
+  String currentBalanceOnEmployee(Object balance) {
+    return 'الرصيد الحالي على الموظف: $balance';
+  }
+
+  @override
+  String get enterZeroIfNotRepaying => 'أدخل 0 إذا لم يكن هناك تسديد';
+
+  @override
+  String get repaymentExceedsBalance => 'المبلغ أكبر من رصيد السلفة على الموظف';
+
+  @override
+  String get paymentDate => 'تاريخ الدفع';
+
+  @override
+  String get saveAndPaySalary => 'حفظ وتسديد الراتب';
+
+  @override
+  String get netSalaryDue => 'الراتب الصافي المستحق للدفع';
+
+  @override
+  String get fieldRequiredEnterZero => 'الحقل مطلوب، أدخل 0 للقيمة الصفرية';
+
+  @override
+  String get payrollHistory => 'سجل الرواتب';
+
+  @override
+  String get advancesHistory => 'سجل السلف';
+
+  @override
+  String get noPayrolls => 'لا توجد رواتب مسجلة.';
+
+  @override
+  String get noAdvances => 'لا توجد سلف مسجلة.';
+
+  @override
+  String payrollDetailsFor(Object month) {
+    return 'تفاصيل راتب شهر $month';
+  }
+
+  @override
+  String paidOn(Object date) {
+    return 'تاريخ الدفع: $date';
+  }
+
+  @override
+  String payrollOfMonth(Object month, Object year) {
+    return 'راتب شهر: $month $year';
+  }
+
+  @override
+  String advanceAmountLabel(Object amount) {
+    return 'مبلغ السلفة: $amount';
+  }
+
+  @override
+  String advanceDateLabel(Object date) {
+    return 'تاريخ السلفة: $date';
+  }
+
+  @override
+  String get fullyPaid => 'مسددة بالكامل';
+
+  @override
+  String get employeesList => 'قائمة الموظفين';
+
+  @override
+  String get noEmployees =>
+      'لا يوجد موظفون حاليًا. اضغط على زر + لإضافة أول موظف.';
+
+  @override
+  String jobTitleLabel(Object title) {
+    return 'العنوان الوظيفي: $title';
+  }
+
+  @override
+  String baseSalaryLabel(Object salary) {
+    return 'الراتب الأساسي: $salary';
+  }
+
+  @override
+  String advancesBalanceLabel(Object balance) {
+    return 'رصيد السلف: $balance';
+  }
+
+  @override
+  String get suppliersList => 'قائمة الموردين';
+
+  @override
+  String get noActiveSuppliers => 'لا يوجد موردون نشطون.';
+
+  @override
+  String get type => 'النوع';
+
+  @override
+  String get individual => 'فردي';
+
+  @override
+  String get partner => 'شريك';
+
+  @override
+  String get addSupplier => 'إضافة مورد جديد';
+
+  @override
+  String get editSupplier => 'تعديل مورد';
+
+  @override
+  String get supplierName => 'اسم المورد';
+
+  @override
+  String get supplierNameRequired => 'اسم المورد مطلوب';
+
+  @override
+  String get supplierType => 'نوع المورد';
+
+  @override
+  String get partnership => 'شراكة';
+
+  @override
+  String get partners => 'الشركاء';
+
+  @override
+  String get addPartner => 'إضافة شريك';
+
+  @override
+  String get atLeastOnePartnerRequired =>
+      'يجب إضافة شريك واحد على الأقل لنوع الشراكة.';
+
+  @override
+  String partnerShareTotalExceeds100(Object total) {
+    return 'خطأ: مجموع نسب الشركاء ($total%) يتجاوز 100%.';
+  }
+
+  @override
+  String get supplierAddedSuccess => 'تم إضافة المورد بنجاح!';
+
+  @override
+  String get supplierUpdatedSuccess => 'تم تحديث المورد بنجاح!';
+
+  @override
+  String get addNewPartner => 'إضافة شريك جديد';
+
+  @override
+  String get partnerName => 'اسم الشريك';
+
+  @override
+  String get partnerNameRequired => 'اسم الشريك مطلوب';
+
+  @override
+  String get sharePercentage => 'نسبة الشراكة (%)';
+
+  @override
+  String get percentageMustBeBetween1And100 => 'النسبة يجب أن تكون بين 1 و 100';
+
+  @override
+  String get shareTotalExceeds100 =>
+      'خطأ: مجموع نسب الشركاء لا يمكن أن يتجاوز 100%.';
+
+  @override
+  String percentageLabel(Object percentage) {
+    return 'النسبة: $percentage%';
+  }
+
+  @override
+  String typeLabel(Object type) {
+    return 'النوع: $type';
+  }
+
+  @override
+  String get cannotArchiveSupplierWithActiveProducts =>
+      'لا يمكن أرشفة هذا المورد لأنه مرتبط بمنتجات نشطة.';
+
+  @override
+  String archiveSupplierConfirmation(Object name) {
+    return 'هل أنت متأكد من أرشفة المورد \"$name\"؟ سيتم إخفاؤه من القوائم.';
+  }
+
+  @override
+  String archiveSupplierLog(Object name) {
+    return 'أرشفة المورد: $name';
+  }
+
+  @override
+  String get addUser => 'إضافة مستخدم جديد';
+
+  @override
+  String get editUser => 'تعديل مستخدم';
+
+  @override
+  String get passwordRequiredForNewUser => 'كلمة المرور مطلوبة للمستخدم الجديد';
+
+  @override
+  String get userAddedSuccess => 'تم إضافة المستخدم بنجاح!';
+
+  @override
+  String get userUpdatedSuccess => 'تم تحديث المستخدم بنجاح!';
+
+  @override
+  String get usernameAlreadyExists =>
+      'اسم المستخدم هذا موجود بالفعل. الرجاء اختيار اسم آخر.';
+
+  @override
+  String get passwordHint => 'اتركه فارغًا لعدم التغيير';
+
+  @override
+  String get userPermissions => 'صلاحيات المستخدم';
+
+  @override
+  String get adminPermission => 'مدير كامل الصلاحيات (Admin)';
+
+  @override
+  String get adminPermissionSubtitle =>
+      'يمنحه كل الصلاحيات ويتجاوز أي تحديد آخر.';
+
+  @override
+  String get viewSuppliers => 'عرض الموردين';
+
+  @override
+  String get editSuppliers => 'تعديل الموردين';
+
+  @override
+  String get viewProducts => 'عرض المنتجات';
+
+  @override
+  String get editProducts => 'تعديل المنتجات';
+
+  @override
+  String get viewCustomers => 'عرض الزبائن';
+
+  @override
+  String get editCustomers => 'تعديل الزبائن';
+
+  @override
+  String get viewReports => 'عرض التقارير';
+
+  @override
+  String get viewEmployeesReport => 'عرض تقرير الموظفين';
+
+  @override
+  String get viewSettings => 'عرض الإعدادات';
+
+  @override
+  String get manageEmployees => 'إدارة الموظفين';
+
+  @override
+  String get manageExpenses => 'إدارة المصاريف العامة';
+
+  @override
+  String get viewCashSales => 'عرض تقارير البيع النقدي';
+
+  @override
+  String get usersList => 'قائمة المستخدمين';
+
+  @override
+  String get noUsers => 'لا يوجد مستخدمون حتى الآن.';
+
+  @override
+  String get you => '(أنت)';
+
+  @override
+  String get admin => 'مدير';
+
+  @override
+  String get customPermissionsUser => 'مستخدم بصلاحيات مخصصة';
+
+  @override
+  String get usernameLabel => 'اسم المستخدم';
+
+  @override
+  String get cannotEditOwnAccount =>
+      'لا يمكنك تعديل حسابك الخاص من هنا. استخدم شاشة الإعدادات بدلاً من ذلك.';
+
+  @override
+  String get cannotDeleteOwnAccount => 'لا يمكنك حذف حسابك الخاص.';
+
+  @override
+  String get cannotDeleteLastUser => 'لا يمكن حذف آخر مستخدم في النظام.';
+
+  @override
+  String deleteUserConfirmation(String name) {
+    return 'هل أنت متأكد من رغبتك في حذف المستخدم \"$name\"؟ هذا الإجراء لا يمكن التراجع عنه.';
+  }
+
+  @override
+  String deleteUserLog(String name) {
+    return 'حذف المستخدم: $name';
+  }
+
+  @override
+  String get productsList => 'قائمة المنتجات';
+
+  @override
+  String get noActiveProducts => 'لا توجد منتجات نشطة في المخزن.';
+
+  @override
+  String get searchForProduct => 'ابحث عن منتج...';
+
+  @override
+  String get noMatchingResults => 'لا توجد نتائج مطابقة للبحث.';
+
+  @override
+  String get supplier => 'المورد';
+
+  @override
+  String get quantity => 'الكمية';
+
+  @override
+  String get sellingPrice => 'سعر البيع';
+
+  @override
+  String get cannotArchiveSoldProduct =>
+      'لا يمكن أرشفة هذا المنتج لأنه مرتبط بعمليات بيع سابقة.';
+
+  @override
+  String archiveProductConfirmation(Object name) {
+    return 'هل أنت متأكد من أرشفة المنتج \"$name\"؟';
+  }
+
+  @override
+  String supplierLabel(Object name) {
+    return 'المورد: $name';
+  }
+
+  @override
+  String quantityLabel(Object qty) {
+    return 'الكمية: $qty';
+  }
+
+  @override
+  String get undefined => 'غير محدد';
+
+  @override
+  String sellingPriceLabel(Object price) {
+    return 'سعر البيع: $price';
+  }
+
+  @override
+  String get addProduct => 'إضافة منتج جديد';
+
+  @override
+  String get editProduct => 'تعديل منتج';
+
+  @override
+  String get pleaseSelectSupplier => 'الرجاء اختيار مورد';
+
+  @override
+  String get productAddedSuccess => 'تم إضافة المنتج بنجاح!';
+
+  @override
+  String get productUpdatedSuccess => 'تم تحديث المنتج بنجاح!';
+
+  @override
+  String get productName => 'اسم المنتج';
+
+  @override
+  String get productNameRequired => 'اسم المنتج مطلوب';
+
+  @override
+  String get productDetailsOptional => 'تفاصيل المنتج (اختياري)';
+
+  @override
+  String get costPrice => 'سعر التكلفة';
+
+  @override
+  String get fieldCannotBeNegative => 'لا يمكن أن يكون الرقم سالبًا';
+
+  @override
+  String get selectSupplier => 'اختر المورد';
+
+  @override
+  String get errorLoadingSuppliers => 'خطأ في تحميل الموردين.';
+
+  @override
+  String get noSuppliersAddOneFirst =>
+      'لا يوجد موردون. الرجاء إضافة مورد أولاً.';
+
+  @override
+  String get barcode => 'الباركود';
+
+  @override
+  String get barcodeOptional => 'الباركود (اختياري)';
+
+  @override
+  String get scanBarcode => 'مسح الباركود';
+
+  @override
+  String get cameraPermissionRequired =>
+      'إذن استخدام الكاميرا مطلوب لمسح الباركود.';
+
+  @override
+  String get openSettings => 'فتح الإعدادات';
+
+  @override
+  String get barcodeAlreadyExists => 'خطأ: هذا الباركود مسجل لمنتج آخر بالفعل.';
+
+  @override
+  String productUpdatedWithBarcodeLog(Object name) {
+    return 'تحديث منتج مع باركود: $name';
+  }
+
+  @override
+  String productAddedWithBarcodeLog(Object name) {
+    return 'إضافة منتج جديد مع باركود: $name';
+  }
+
+  @override
+  String get productNotFound => 'المنتج غير موجود أو غير نشط';
+
+  @override
+  String get scanBarcodeToSell => 'مسح باركود للبيع';
+
+  @override
+  String addWithProductName(String productName) {
+    return 'إضافة \"$productName\"';
+  }
+
+  @override
+  String get barcodeExistsError => 'هذا الباركود مسجل لمنتج آخر بالفعل.';
+
+  @override
+  String get reportsHub => 'مركز التقارير';
+
+  @override
+  String get profitReport => 'تقرير الأرباح';
+
+  @override
+  String get profitReportDesc => 'عرض صافي الربح من جميع المبيعات';
+
+  @override
+  String get supplierProfitReport => 'تقرير أرباح الموردين والشركاء';
+
+  @override
+  String get supplierProfitReportDesc => 'عرض الأرباح مجمعة حسب كل مورد';
+
+  @override
+  String get employeesReport => 'تقرير الموظفين';
+
+  @override
+  String get employeesReportDesc => 'ملخص الرواتب والسلف وكشوفات حساب الموظفين';
+
+  @override
+  String get login => 'تسجيل الدخول';
+
+  @override
+  String get username => 'اسم المستخدم';
+
+  @override
+  String get password => 'كلمة المرور';
+
+  @override
+  String get loginTo => 'تسجيل الدخول إلى';
+
+  @override
+  String get accountingProgram => 'برنامج المحاسبة';
+
+  @override
+  String get invalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+
+  @override
+  String get ok => 'موافق';
+
+  @override
+  String get error => 'خطأ';
+
+  @override
+  String get success => 'نجاح';
+
+  @override
+  String get backupStarted => 'تم بدء مشاركة النسخة الاحتياطية.';
+
+  @override
+  String backupFailed(Object error) {
+    return 'فشل النسخ الاحتياطي: $error';
+  }
+
+  @override
+  String get restoreConfirmTitle => 'تأكيد الاستعادة';
+
+  @override
+  String get restoreConfirmContent =>
+      'هل أنت متأكد؟ سيتم استبدال جميع بياناتك الحالية بالبيانات الموجودة في النسخة الاحتياطية. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get restore => 'استعادة';
+
+  @override
+  String get restoreSuccessTitle => 'تمت الاستعادة بنجاح';
+
+  @override
+  String get restoreSuccessContent =>
+      'تم استعادة البيانات بنجاح. يرجى إغلاق التطبيق وإعادة تشغيله لتطبيق التغييرات.';
+
+  @override
+  String restoreFailed(Object error) {
+    return 'فشل الاستعادة: $error';
+  }
+
+  @override
+  String get createBackupTitle => 'إنشاء ومشاركة نسخة احتياطية';
+
+  @override
+  String get createBackupSubtitle =>
+      'حفظ نسخة مشفرة من بياناتك ومشاركتها في مكان آمن.';
+
+  @override
+  String get restoreFromFileTitle => 'استعادة البيانات من ملف';
+
+  @override
+  String get restoreFromFileSubtitle =>
+      'تحذير: هذه العملية ستحل محل جميع البيانات الحالية.';
+
+  @override
+  String get backupTip =>
+      'تلميح: احتفظ بنسخ احتياطية بشكل دوري خارج جهازك (على Google Drive أو البريد الإلكتروني) لحماية بياناتك من الضياع أو التلف.';
+
+  @override
+  String get companyOrShopName => 'اسم الشركة أو المحل';
+
+  @override
+  String get companyDescOptional => 'وصف الشركة (اختياري)';
+
+  @override
+  String get companyDescHint => 'مثال: نشاط تجاري، عنوان مختصر...';
+
+  @override
+  String get companyInfoHint =>
+      'سيظهر هذا الاسم والشعار في شاشة البداية والتقارير.';
+
+  @override
+  String get infoSavedSuccess => 'تم حفظ المعلومات بنجاح!';
+
+  @override
+  String errorPickingImage(String error) {
+    return 'حدث خطأ أثناء اختيار الصورة: $error';
+  }
+
+  @override
+  String get archivedCustomer => 'زبون مؤرشف';
+
+  @override
+  String get archivedSupplier => 'مورد مؤرشف';
+
+  @override
+  String archivedProduct(Object supplierName) {
+    return 'منتج مؤرشف | المورد: $supplierName';
+  }
+
+  @override
+  String get unknown => 'غير معروف';
+
+  @override
+  String itemRestoredSuccess(Object name) {
+    return 'تم استعادة \"$name\" بنجاح!';
+  }
+
+  @override
+  String get noArchivedItems => 'لا توجد عناصر مؤرشفة.';
+
+  @override
+  String get setupAdminAccount => 'إعداد حساب المدير';
+
+  @override
+  String get welcomeSetup =>
+      'مرحبًا بك! هذا هو الإعداد لمرة واحدة فقط. هذا الحساب سيكون له كل الصلاحيات.';
+
+  @override
+  String get fullName => 'الاسم الكامل';
+
+  @override
+  String get fullNameRequired => 'الاسم الكامل مطلوب';
+
+  @override
+  String get usernameForLogin => 'اسم المستخدم (للدخول)';
+
+  @override
+  String get usernameRequired => 'اسم المستخدم مطلوب';
+
+  @override
+  String get chooseStrongPassword => 'اختر كلمة مرور قوية';
+
+  @override
+  String get passwordRequired => 'كلمة المرور مطلوبة';
+
+  @override
+  String get passwordTooShort => 'يجب أن تكون كلمة المرور 4 أحرف على الأقل';
+
+  @override
+  String get createAdminAndStart => 'إنشاء حساب المدير والبدء';
+
+  @override
+  String get adminCreatedSuccess =>
+      'تم إنشاء حساب المدير بنجاح! يمكنك الآن تسجيل الدخول.';
+
+  @override
+  String get usernameExists =>
+      'اسم المستخدم هذا موجود بالفعل. الرجاء اختيار اسم آخر.';
+
+  @override
+  String unexpectedError(Object error) {
+    return 'حدث خطأ غير متوقع: $error';
+  }
+
+  @override
+  String get pleaseEnterUsername => 'الرجاء إدخال اسم المستخدم';
+
+  @override
+  String get pleaseEnterPassword => 'الرجاء إدخال كلمة المرور';
+
+  @override
+  String get addCustomer => 'إضافة زبون';
+
+  @override
+  String get editCustomer => 'تعديل زبون';
+
+  @override
+  String get customerNameRequired => 'اسم الزبون مطلوب';
+
+  @override
+  String get imageSource => 'اختر مصدر الصورة';
+
+  @override
+  String get cannotArchiveCustomerWithDebt =>
+      'لا يمكن أرشفة زبون لديه دين متبقي.';
+
+  @override
+  String get archiveConfirmTitle => 'تأكيد الأرشفة';
+
+  @override
+  String archiveConfirmContent(Object name) {
+    return 'هل أنت متأكد من أرشفة الزبون \"$name\"؟';
+  }
+
+  @override
+  String get chooseProducts => 'اختر المنتجات';
+
+  @override
+  String get reviewCart => 'مراجعة سلة المشتريات';
+
+  @override
+  String get noProductsInStock => 'لا توجد منتجات في المخزن.';
+
+  @override
+  String get available => 'المتوفر';
+
+  @override
+  String get price => 'السعر';
+
+  @override
+  String get add => 'إضافة';
+
+  @override
+  String get quantityExceedsStock =>
+      'الكمية المطلوبة أكبر من المتوفر في المخزن!';
+
+  @override
+  String get cartIsEmpty => 'سلة المشتريات فارغة!';
+
+  @override
+  String get product => 'المنتج';
+
+  @override
+  String get total => 'الإجمالي';
+
+  @override
+  String get finalTotal => 'الإجمالي النهائي';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String itemsCount(String count) {
+    return 'عدد الأصناف: $count';
+  }
+
+  @override
+  String get totalSalariesPaid => 'إجمالي الرواتب المدفوعة';
+
+  @override
+  String get totalAdvancesBalance => 'إجمالي السلف المستحقة';
+
+  @override
+  String get activeEmployeesCount => 'عدد الموظفين النشطين';
+
+  @override
+  String get employeesStatement => 'كشف حساب الموظفين';
+
+  @override
+  String get noEmployeesToDisplay => 'لا يوجد موظفون لعرضهم.';
+
+  @override
+  String salaryLabel(Object salary) {
+    return 'الراتب: $salary';
+  }
+
+  @override
+  String get totalNetProfit => 'إجمالي صافي الربح';
+
+  @override
+  String get salesDetails => 'تفاصيل المبيعات';
+
+  @override
+  String get loadingDetails => 'جاري تحميل التفاصيل...';
+
+  @override
+  String get noSalesRecorded => 'لا توجد مبيعات مسجلة لعرضها.';
+
+  @override
+  String customerLabel(String name) {
+    return 'الزبون: $name';
+  }
+
+  @override
+  String dateLabel(String date) {
+    return 'التاريخ: $date';
+  }
+
+  @override
+  String profitLabel(String profit) {
+    return 'الربح: $profit';
+  }
+
+  @override
+  String saleLabel(String sale) {
+    return 'المبيع: $sale';
+  }
+
+  @override
+  String get generalProfitReport => 'تقرير الأرباح العام';
+
+  @override
+  String get generalProfitReportSubtitle =>
+      'عرض ملخص الأرباح والمصاريف وصافي الربح';
+
+  @override
+  String get supplierProfitReportSubtitle =>
+      'عرض الأرباح مجمعة حسب كل مورد وتوزيع حصص الشركاء';
+
+  @override
+  String get cashSalesHistory => 'سجل المبيعات النقدية';
+
+  @override
+  String get cashSalesHistorySubtitle => 'عرض وإدارة فواتير البيع المباشر';
+
+  @override
+  String get cashFlowReport => 'تقرير المقبوضات النقدية';
+
+  @override
+  String get cashFlowReportSubtitle => 'عرض المبيعات النقدية وتسديدات الزبائن';
+
+  @override
+  String get expensesLog => 'سجل المصاريف العامة';
+
+  @override
+  String get expensesLogSubtitle => 'عرض وتسجيل المصاريف التشغيلية';
+
+  @override
+  String get employeesAndSalariesReport => 'تقرير الموظفين والرواتب';
+
+  @override
+  String get employeesAndSalariesReportSubtitle =>
+      'عرض ملخص الرواتب والسلف وكشوفات حساب الموظفين';
+
+  @override
+  String get noProfitsRecorded => 'لا توجد أرباح مسجلة لعرضها.';
+
+  @override
+  String partnersLabel(String names) {
+    return 'الشركاء: $names';
+  }
+
+  @override
+  String netProfitLabel(String amount) {
+    return 'الربح الصافي: $amount';
+  }
+
+  @override
+  String get selectDateRange => 'تحديد فترة زمنية';
+
+  @override
+  String get totalCashSales => 'إجمالي المبيعات النقدية';
+
+  @override
+  String get totalDebtPayments => 'إجمالي مقبوضات الديون';
+
+  @override
+  String get totalCashInflow => 'إجمالي الرصيد النقدي الوارد';
+
+  @override
+  String get showDetails => 'إظهار التفاصيل';
+
+  @override
+  String get hideDetails => 'إخفاء التفاصيل';
+
+  @override
+  String get noTransactions => 'لا توجد معاملات نقدية في هذه الفترة.';
+
+  @override
+  String cashSaleDescription(String id) {
+    return 'بيع نقدي مباشر (فاتورة #$id)';
+  }
+
+  @override
+  String debtPaymentDescription(String name) {
+    return 'تسديد من الزبون: $name';
+  }
+
+  @override
+  String recordWithdrawalFor(String name) {
+    return 'تسجيل سحب لـ: $name';
+  }
+
+  @override
+  String availableNetProfit(String amount) {
+    return 'الربح الصافي المتاح للتوزيع: $amount';
+  }
+
+  @override
+  String get withdrawnAmount => 'المبلغ المسحوب';
+
+  @override
+  String get amountExceedsProfit => 'المبلغ أكبر من الربح المتاح';
+
+  @override
+  String get withdrawalSuccess => 'تم تسجيل السحب بنجاح';
+
+  @override
+  String get totalProfitFromSupplier => 'إجمالي الربح من المورد:';
+
+  @override
+  String get totalWithdrawals => 'إجمالي المسحوبات:';
+
+  @override
+  String get remainingNetProfit => 'الربح الصافي المتبقي:';
+
+  @override
+  String get partnersProfitDistribution => 'توزيع أرباح الشركاء';
+
+  @override
+  String partnerShare(String amount) {
+    return 'حصته من الربح الصافي: $amount';
+  }
+
+  @override
+  String get withdraw => 'سحب';
+
+  @override
+  String get recordGeneralWithdrawal => 'تسجيل سحب عام';
+
+  @override
+  String get withdrawalsHistory => 'سجل المسحوبات';
+
+  @override
+  String get noWithdrawals => 'لا توجد مسحوبات مسجلة.';
+
+  @override
+  String withdrawalAmountLabel(String amount) {
+    return 'مبلغ: $amount';
+  }
+
+  @override
+  String withdrawalForLabel(String name) {
+    return 'لـ: $name';
+  }
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get noDataToShow => 'لا توجد بيانات لعرضها.';
+
+  @override
+  String get showSalesDetails => 'إظهار تفاصيل المبيعات';
+
+  @override
+  String get hideSalesDetails => 'إخفاء تفاصيل المبيعات';
+
+  @override
+  String get grossProfitFromSales => 'إجمالي الربح من المبيعات';
+
+  @override
+  String get totalGeneralExpenses => '(-) إجمالي المصاريف العامة';
+
+  @override
+  String get totalProfitWithdrawals => '(-) إجمالي مسحوبات الأرباح';
+
+  @override
+  String get netProfit => 'صافي الربح النهائي';
+
+  @override
+  String get totalProfitFromThisSupplier => 'إجمالي الربح من هذا المورد';
+
+  @override
+  String get noPartnersForThisSupplier => 'لا يوجد شركاء مسجلون لهذا المورد.';
+
+  @override
+  String get noSalesForThisSupplier => 'لا توجد مبيعات لهذا المورد.';
+
+  @override
+  String get searchByInvoiceNumber => 'ابحث برقم الفاتورة...';
+
+  @override
+  String get showInvoices => 'إظهار الفواتير';
+
+  @override
+  String get hideInvoices => 'إخفاء الفواتير';
+
+  @override
+  String get noCashInvoices => 'لا توجد فواتير بيع نقدي مسجلة.';
+
+  @override
+  String invoiceNo(String id) {
+    return 'فاتورة رقم: $id';
+  }
+
+  @override
+  String get modified => 'معدلة';
+
+  @override
+  String get voided => 'ملغاة';
+
+  @override
+  String get confirmVoidTitle => 'تأكيد إلغاء الفاتورة';
+
+  @override
+  String get confirmVoidContent =>
+      'هل أنت متأكد من إلغاء هذه الفاتورة بالكامل؟ سيتم إرجاع جميع منتجاتها إلى المخزن.';
+
+  @override
+  String get confirmVoidAction => 'نعم، قم بالإلغاء';
+
+  @override
+  String get voidSuccess => 'تم إلغاء الفاتورة بنجاح.';
+
+  @override
+  String detailsForInvoice(String id) {
+    return 'تفاصيل الفاتورة #$id';
+  }
+
+  @override
+  String get directselling => 'بيع مباشر';
+
+  @override
+  String get directSalePoint => 'نقطة البيع المباشر';
+
+  @override
+  String get completeSale => 'إتمام البيع';
+
+  @override
+  String get saleSuccess => 'تم البيع بنجاح!';
+
+  @override
+  String get pdfInvoiceTitle => 'فاتورة بيع نقدي';
+
+  @override
+  String get pdfDate => 'التاريخ';
+
+  @override
+  String get pdfInvoiceNumber => 'فاتورة رقم';
+
+  @override
+  String get pdfHeaderProduct => 'المنتج';
+
+  @override
+  String get pdfHeaderQty => 'الكمية';
+
+  @override
+  String get pdfHeaderPrice => 'السعر';
+
+  @override
+  String get pdfHeaderTotal => 'الإجمالي';
+
+  @override
+  String get pdfFooterTotal => 'المبلغ الإجمالي';
+
+  @override
+  String get pdfFooterThanks => 'شكراً لتعاملكم معنا';
+
+  @override
+  String get manageExpenseCategories => 'إدارة فئات المصاريف';
+
+  @override
+  String get noCategories => 'لا توجد فئات. قم بإضافة أول فئة.';
+
+  @override
+  String get addCategory => 'إضافة فئة جديدة';
+
+  @override
+  String get editCategory => 'تعديل الفئة';
+
+  @override
+  String get categoryName => 'اسم الفئة';
+
+  @override
+  String get categoryNameRequired => 'اسم الفئة مطلوب';
+
+  @override
+  String get categoryExistsError => 'خطأ: اسم الفئة هذا موجود بالفعل.';
+
+  @override
+  String get confirmDeleteTitle => 'تأكيد الحذف';
+
+  @override
+  String confirmDeleteCategory(String name) {
+    return 'هل أنت متأكد من حذف الفئة \"$name\"؟';
+  }
+
+  @override
+  String get manageCategories => 'إدارة الفئات';
+
+  @override
+  String get noExpenses => 'لا توجد مصاريف مسجلة.';
+
+  @override
+  String get addExpense => 'إضافة مصروف جديد';
+
+  @override
+  String get newExpense => 'تسجيل مصروف جديد';
+
+  @override
+  String get expenseDescription => 'وصف المصروف';
+
+  @override
+  String get descriptionRequired => 'الوصف مطلوب';
+
+  @override
+  String get amount => 'المبلغ';
+
+  @override
+  String get category => 'الفئة';
+
+  @override
+  String get selectCategory => 'الرجاء اختيار فئة';
+
+  @override
+  String get addCategoriesFirst =>
+      'الرجاء إضافة فئات المصاريف أولاً من شاشة إدارة الفئات.';
+
+  @override
+  String get expenseAddedSuccess => 'تم تسجيل المصروف بنجاح.';
+
+  @override
+  String get unclassified => 'غير مصنف';
+
+  @override
+  String get dashboard => 'لوحة التحكم';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get sales => 'المبيعات';
+
+  @override
+  String get profit => 'الأرباح';
+
+  @override
+  String get topSelling => 'الأكثر مبيعاً';
+
+  @override
+  String get topCustomer => 'العميل المميز';
+
+  @override
+  String get generalStats => 'إحصائيات عامة';
+
+  @override
+  String get totalCustomers => 'العملاء';
+
+  @override
+  String get totalProducts => 'المنتجات';
+
+  @override
+  String get lowStock => 'مخزون منخفض';
+
+  @override
+  String get pendingPayments => 'مدفوعات معلقة';
+
+  @override
+  String get topBuyerThisMonth => 'العميل الأكثر شراءً هذا الشهر';
+
+  @override
+  String get noSalesData => 'لا توجد بيانات كافية لعرض المنتجات الأكثر مبيعاً';
+
+  @override
+  String get noCustomersData => 'لا توجد بيانات كافية لعرض العميل المميز';
+
+  @override
+  String get loadingStats => 'جاري تحميل الإحصائيات...';
+
+  @override
+  String get currency => 'د.ع';
+}

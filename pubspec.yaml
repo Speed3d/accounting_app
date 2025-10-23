@@ -1,0 +1,74 @@
+name: accounting_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  sqflite: any
+  path_provider: any
+  path: any
+  intl: any
+  image_picker: any
+  permission_handler: ^12.0.1
+  file_picker: ^10.3.3
+  share_plus: ^12.0.0
+  encrypt: ^5.0.3
+  bcrypt: ^1.1.3
+  flutter_secure_storage: ^9.0.0
+  provider: ^6.1.1
+  
+  #الحزمة لإنشاء سلايدر المنتجات الجذاب
+  carousel_slider: ^5.1.1 
+
+  cupertino_icons: ^1.0.6
+  package_info_plus: ^9.0.0
+
+  shared_preferences: ^2.2.3
+  mobile_scanner: ^7.1.2
+
+  device_info_plus: ^12.1.0
+  crypto: ^3.0.3
+
+  pdf: ^3.11.0
+  printing: ^5.12.0
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+# Hint: هذا هو القسم الأهم. تأكد من أن المسافات البادئة مطابقة تمامًا.
+# 'flutter' يجب أن تكون على نفس مستوى 'name', 'environment', 'dependencies'.
+flutter:
+  uses-material-design: true
+
+  generate: true
+
+  # Hint: 'assets' يجب أن تكون بمسافة بادئة (مسافتين) تحت 'flutter'.
+  assets:
+    # Hint: السطر الذي يحتوي على المسار يجب أن يكون بمسافة بادئة (مسافتين) تحت 'assets'.
+    - assets/fonts/
+    - assets/images/
+
+  # Hint: 'fonts' يجب أن تكون على نفس مستوى 'assets' (مسافتين بادئة تحت 'flutter').
+  fonts:
+    # Hint: 'family' يجب أن تكون بمسافة بادئة (مسافتين) تحت 'fonts'.
+    - family: Cairo
+      # Hint: 'fonts' (جمع) يجب أن تكون بمسافة بادئة (مسافتين) تحت 'family'.
+      fonts:
+        # Hint: كل 'asset' يجب أن يكون بمسافة بادئة (مسافتين) تحت 'fonts' (جمع).
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+          
+flutter_intl:
+  enabled: true          

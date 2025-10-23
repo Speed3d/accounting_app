@@ -1,0 +1,748 @@
+{
+    "@@locale": "ar",
+
+    "settings": "الإعدادات",
+    "homePage": "الصفحة الرئيسية",
+    "users": "المستخدمين",
+    "suppliers": "الموردين",
+    "products": "المخزن",
+    "employees": "الموظفين",
+    "customers": "الزبائن",
+    "reports": "التقارير",
+
+    "customization": "التخصيص",
+    "companyInformation": "معلومات الشركة",
+    "changeAppNameAndLogo": "تغيير اسم وشعار التطبيق",
+    "dataManagement": "إدارة البيانات",
+    "archiveCenter": "مركز الأرشفة",
+    "restoreArchivedItems": "استعادة العناصر المؤرشفة",
+    "backupAndRestore": "النسخ الاحتياطي والاستعادة",
+    "saveAndRestoreAppData": "حفظ واستعادة بيانات التطبيق",
+    "about": "حول",
+    "aboutTheApp": "حول التطبيق",
+    "language": "اللغة",
+    "changeLanguage": "تغيير لغة التطبيق",
+
+    "customersList": "قائمة الزبائن",
+    "noActiveCustomers": "لا يوجد زبائن نشطون حتى الآن.",
+    "phone": "الهاتف",
+    "unregistered": "غير مسجل",
+    "remainingForHim": "المتبقي له",
+    "remainingOnHim": "المتبقي عليه",
+    "balance": "الرصيد",
+    "archive": "أرشفة",
+    "confirmArchive": "تأكيد الأرشفة",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "save": "حفظ",
+
+    "addEditCustomer": "إضافة/تعديل زبون",
+    "customerName": "اسم الزبون",
+    "addressOptional": "العنوان (اختياري)",
+    "phoneOptional": "الهاتف (اختياري)",
+    "fieldRequired": "الحقل مطلوب",
+    "customerAddedSuccess": "تمت إضافة الزبون بنجاح!",
+    "customerUpdatedSuccess": "تم تحديث الزبون بنجاح!",
+    "chooseImageSource": "اختر مصدر الصورة",
+    "gallery": "المعرض",
+    "camera": "الكاميرا",
+
+    "customerDetails": "تفاصيل الزبون",
+    "purchases": "عمليات الشراء",
+    "payments": "الدفعات",
+    "noPurchases": "لا توجد عمليات شراء مسجلة.",
+    "noPayments": "لا توجد دفعات مسجلة.",
+    "newSaleSuccess": "تم تسجيل عملية الشراء بنجاح!",
+    "newPayment": "تسجيل دفعة جديدة",
+    "paidAmount": "المبلغ المدفوع",
+    "amountRequired": "الحقل مطلوب",
+    "enterValidAmount": "أدخل مبلغًا صحيحًا أكبر من صفر",
+    "amountExceedsDebt": "المبلغ أكبر من الدين المتبقي",
+    "notesOptional": "ملاحظات (اختياري)",
+    "paymentSuccess": "تم تسجيل الدفعة بنجاح!",
+    "returnConfirmTitle": "تأكيد الإرجاع",
+    "returnConfirmContent": "هل أنت متأكد من إرجاع هذا المنتج؟\n\"{details}\"\nسيتم إعادة الكمية للمخزن وتعديل حساب الزبون.",
+    "@returnConfirmContent": {
+        "placeholders": {
+            "details": {
+                "type": "String"
+            }
+        }
+    },
+    "returnSuccess": "تم إرجاع المنتج بنجاح!",
+    "errorOccurred": "حدث خطأ: {error}",
+    "@errorOccurred": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "returnItem": "تأكيد الإرجاع",
+    "saleDetails": "تفاصيل البيع: {productName} (الكمية: {quantity})",
+    "@saleDetails": {
+        "placeholders": {
+            "productName": {
+                "type": "String"
+            },
+            "quantity": {
+                "type": "String"
+            }
+        }
+    },
+
+    "newAdvanceFor": "سلفة جديدة لـ: {name}",
+    "advanceAmount": "مبلغ السلفة",
+    "advanceDate": "تاريخ السلفة",
+    "saveAdvance": "حفظ السلفة",
+    "advanceAddedSuccess": "تم تسجيل السلفة بنجاح!",
+    "unpaid": "غير مسددة",
+    "addEmployee": "إضافة موظف جديد",
+    "editEmployee": "تعديل بيانات موظف",
+    "employeeName": "اسم الموظف الكامل",
+    "employeeNameRequired": "اسم الموظف مطلوب",
+    "jobTitle": "العنوان الوظيفي",
+    "jobTitleRequired": "العنوان الوظيفي مطلوب",
+    "phoneOptional": "رقم الهاتف (اختياري)",
+    "baseSalary": "الراتب الأساسي",
+    "baseSalaryRequired": "الراتب الأساسي مطلوب",
+    "enterValidNumber": "الرجاء إدخال رقم صحيح",
+    "hireDate": "تاريخ التعيين",
+    "employeeAddedSuccess": "تم إضافة الموظف بنجاح!",
+    "employeeUpdatedSuccess": "تم تحديث الموظف بنجاح!",
+    "payrollFor": "راتب: {name}",
+    "payrollForMonthAndYear": "الراتب عن شهر وسنة:",
+    "month": "الشهر",
+    "year": "السنة",
+    "payrollAlreadyExists": "خطأ: تم تسجيل راتب لهذا الشهر بالفعل.",
+    "payrollSavedSuccess": "تم تسجيل الراتب بنجاح!",
+    "bonuses": "مكافآت (+)",
+    "deductions": "خصومات (-)",
+    "advanceRepayment": "تسديد من السلفة (-)",
+    "currentBalanceOnEmployee": "الرصيد الحالي على الموظف: {balance}",
+    "enterZeroIfNotRepaying": "أدخل 0 إذا لم يكن هناك تسديد",
+    "repaymentExceedsBalance": "المبلغ أكبر من رصيد السلفة على الموظف",
+    "paymentDate": "تاريخ الدفع",
+    "saveAndPaySalary": "حفظ وتسديد الراتب",
+    "netSalaryDue": "الراتب الصافي المستحق للدفع",
+    "fieldRequiredEnterZero": "الحقل مطلوب، أدخل 0 للقيمة الصفرية",
+    "payrollHistory": "سجل الرواتب",
+    "advancesHistory": "سجل السلف",
+    "noPayrolls": "لا توجد رواتب مسجلة.",
+    "noAdvances": "لا توجد سلف مسجلة.",
+    "payrollDetailsFor": "تفاصيل راتب شهر {month}",
+    "paidOn": "تاريخ الدفع: {date}",
+    "payrollOfMonth": "راتب شهر: {month} {year}",
+    "advanceAmountLabel": "مبلغ السلفة: {amount}",
+    "advanceDateLabel": "تاريخ السلفة: {date}",
+    "fullyPaid": "مسددة بالكامل",
+    "employeesList": "قائمة الموظفين",
+    "noEmployees": "لا يوجد موظفون حاليًا. اضغط على زر + لإضافة أول موظف.",
+    "jobTitleLabel": "العنوان الوظيفي: {title}",
+    "baseSalaryLabel": "الراتب الأساسي: {salary}",
+    "advancesBalanceLabel": "رصيد السلف عليه: {balance}",
+
+    "suppliersList": "قائمة الموردين",
+    "noActiveSuppliers": "لا يوجد موردون نشطون.",
+    "type": "النوع",
+    "individual": "فردي",
+    "partner": "شريك",
+
+    "addSupplier": "إضافة مورد جديد",
+    "editSupplier": "تعديل مورد",
+    "supplierName": "اسم المورد",
+    "supplierNameRequired": "اسم المورد مطلوب",
+    "supplierType": "نوع المورد",
+    "individual": "فردي",
+    "partnership": "شراكة",
+    "partners": "الشركاء",
+    "addPartner": "إضافة شريك",
+    "atLeastOnePartnerRequired": "يجب إضافة شريك واحد على الأقل لنوع الشراكة.",
+    "partnerShareTotalExceeds100": "خطأ: مجموع نسب الشركاء ({total}%) يتجاوز 100%.",
+    "supplierAddedSuccess": "تم إضافة المورد بنجاح!",
+    "supplierUpdatedSuccess": "تم تحديث المورد بنجاح!",
+    "addNewPartner": "إضافة شريك جديد",
+    "partnerName": "اسم الشريك",
+    "partnerNameRequired": "اسم الشريك مطلوب",
+    "sharePercentage": "نسبة الشراكة (%)",
+    "percentageMustBeBetween1And100": "النسبة يجب أن تكون بين 1 و 100",
+    "shareTotalExceeds100": "خطأ: مجموع نسب الشركاء لا يمكن أن يتجاوز 100%.",
+    "percentageLabel": "النسبة: {percentage}%",
+    "suppliersList": "قائمة الموردين",
+    "noActiveSuppliers": "لا يوجد موردون نشطون.",
+    "typeLabel": "النوع: {type}",
+    "cannotArchiveSupplierWithActiveProducts": "لا يمكن أرشفة هذا المورد لأنه مرتبط بمنتجات نشطة.",
+    "archiveSupplierConfirmation": "هل أنت متأكد من أرشفة المورد \"{name}\"؟ سيتم إخفاؤه من القوائم.",
+    "archiveSupplierLog": "أرشفة المورد: {name}",
+
+     "addUser": "إضافة مستخدم جديد",
+    "editUser": "تعديل مستخدم",
+    "passwordRequiredForNewUser": "كلمة المرور مطلوبة للمستخدم الجديد",
+    "userAddedSuccess": "تم إضافة المستخدم بنجاح!",
+    "userUpdatedSuccess": "تم تحديث المستخدم بنجاح!",
+    "usernameAlreadyExists": "اسم المستخدم هذا موجود بالفعل. الرجاء اختيار اسم آخر.",
+    "passwordHint": "اتركه فارغًا لعدم التغيير",
+    "userPermissions": "صلاحيات المستخدم",
+    "adminPermission": "مدير كامل الصلاحيات (Admin)",
+    "adminPermissionSubtitle": "يمنحه كل الصلاحيات ويتجاوز أي تحديد آخر.",
+    "viewSuppliers": "عرض الموردين",
+    "editSuppliers": "تعديل الموردين",
+    "viewProducts": "عرض المنتجات",
+    "editProducts": "تعديل المنتجات",
+    "viewCustomers": "عرض الزبائن",
+    "editCustomers": "تعديل الزبائن",
+    "viewReports": "عرض التقارير",
+    "viewEmployeesReport": "عرض تقرير الموظفين",
+    "viewSettings": "عرض الإعدادات",
+    "manageEmployees": "إدارة الموظفين",
+    "manageExpenses": "إدارة المصاريف العامة",
+    "viewCashSales": "عرض تقارير البيع النقدي",
+
+    "usersList": "قائمة المستخدمين",
+    "noUsers": "لا يوجد مستخدمون حتى الآن.",
+    "you": "(أنت)",
+    "admin": "مدير",
+    "customPermissionsUser": "مستخدم بصلاحيات مخصصة",
+    "usernameLabel": "اسم المستخدم",
+    "cannotEditOwnAccount": "لا يمكنك تعديل حسابك الخاص من هنا. استخدم شاشة الإعدادات بدلاً من ذلك.",
+    "cannotDeleteOwnAccount": "لا يمكنك حذف حسابك الخاص.",
+    "cannotDeleteLastUser": "لا يمكن حذف آخر مستخدم في النظام.",
+    "deleteUserConfirmation": "هل أنت متأكد من رغبتك في حذف المستخدم \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "@deleteUserConfirmation": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "deleteUserLog": "حذف المستخدم: {name}",
+    "@deleteUserLog": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "productsList": "قائمة المنتجات",
+    "noActiveProducts": "لا توجد منتجات نشطة في المخزن.",
+    "searchForProduct": "ابحث عن منتج...",
+    "noMatchingResults": "لا توجد نتائج مطابقة للبحث.",
+    "supplier": "المورد",
+    "quantity": "الكمية",
+    "sellingPrice": "سعر البيع",
+
+    "cannotArchiveSoldProduct": "لا يمكن أرشفة هذا المنتج لأنه مرتبط بعمليات بيع سابقة.",
+    "archiveProductConfirmation": "هل أنت متأكد من أرشفة المنتج \"{name}\"؟",
+    "supplierLabel": "المورد: {name}",
+    "quantityLabel": "الكمية: {qty}",
+    "undefined": "غير محدد",
+    "sellingPriceLabel": "سعر البيع: {price}",
+
+    "addProduct": "إضافة منتج جديد",
+    "editProduct": "تعديل منتج",
+    "pleaseSelectSupplier": "الرجاء اختيار مورد",
+    "productAddedSuccess": "تم إضافة المنتج بنجاح!",
+    "productUpdatedSuccess": "تم تحديث المنتج بنجاح!",
+    "productName": "اسم المنتج",
+    "productNameRequired": "اسم المنتج مطلوب",
+    "productDetailsOptional": "تفاصيل المنتج (اختياري)",
+    "quantity": "الكمية",
+    "costPrice": "سعر التكلفة",
+    "sellingPrice": "سعر البيع",
+    "fieldCannotBeNegative": "لا يمكن أن يكون الرقم سالبًا",
+    "supplier": "المورد",
+    "selectSupplier": "اختر المورد",
+    "errorLoadingSuppliers": "خطأ في تحميل الموردين.",
+    "noSuppliersAddOneFirst": "لا يوجد موردون. الرجاء إضافة مورد أولاً.",
+    "enterValidNumber": "الرجاء إدخال رقم صحيح",
+
+    "barcode": "الباركود",
+    "barcodeOptional": "الباركود (اختياري)",
+    "scanBarcode": "مسح الباركود",
+    "cameraPermissionRequired": "إذن استخدام الكاميرا مطلوب لمسح الباركود.",
+    "openSettings": "فتح الإعدادات",
+    "barcodeAlreadyExists": "خطأ: هذا الباركود مسجل لمنتج آخر بالفعل.",
+    "productUpdatedWithBarcodeLog": "تحديث منتج مع باركود: {name}",
+    "productAddedWithBarcodeLog": "إضافة منتج جديد مع باركود: {name}",
+
+    "productNotFound": "المنتج غير موجود أو غير نشط",
+    "@productNotFound": {
+        "description": "رسالة تظهر عند مسح باركود لمنتج غير موجود في قاعدة البيانات"
+    },
+
+    "scanBarcodeToSell": "مسح باركود للبيع",
+    "@scanBarcodeToSell": {
+        "description": "النص الذي يظهر على زر مسح الباركود في شاشة البيع"
+    },
+
+    "addWithProductName": "إضافة \"{productName}\"",
+    "@addWithProductName": {
+    "description": "عنوان مربع الحوار عند إضافة منتج للسلة",
+    "placeholders": {
+        "productName": {
+            "type": "String",
+            "example": "بيبسي"
+        }
+      }
+    },
+
+    "barcodeExistsError": "هذا الباركود مسجل لمنتج آخر بالفعل.",
+    "@barcodeExistsError": {},
+
+    "reportsHub": "مركز التقارير",
+    "profitReport": "تقرير الأرباح العام",
+    "profitReportDesc": "عرض صافي الربح من جميع المبيعات",
+    "supplierProfitReport": "تقرير أرباح الموردين",
+    "supplierProfitReportDesc": "عرض الأرباح مجمعة حسب كل مورد",
+    "employeesReport": "تقرير الموظفين والرواتب",
+    "employeesReportDesc": "ملخص الرواتب والسلف وكشوفات حساب الموظفين",
+
+    "login": "تسجيل الدخول",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "loginTo": "تسجيل الدخول إلى",
+    "accountingProgram": "برنامج المحاسبة",
+    "invalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة.",
+
+    "ok": "موافق",
+    "error": "خطأ",
+    "success": "نجاح",
+
+    "backupStarted": "تم بدء مشاركة النسخة الاحتياطية.",
+    "backupFailed": "فشل النسخ الاحتياطي: {error}",
+    "restoreConfirmTitle": "تأكيد الاستعادة",
+    "restoreConfirmContent": "هل أنت متأكد؟ سيتم استبدال جميع بياناتك الحالية بالبيانات الموجودة في النسخة الاحتياطية. لا يمكن التراجع عن هذا الإجراء.",
+    "restore": "استعادة",
+    "restoreSuccessTitle": "تمت الاستعادة بنجاح",
+    "restoreSuccessContent": "تم استعادة البيانات بنجاح. يرجى إغلاق التطبيق وإعادة تشغيله لتطبيق التغييرات.",
+    "restoreFailed": "فشل الاستعادة: {error}",
+    "createBackupTitle": "إنشاء ومشاركة نسخة احتياطية",
+    "createBackupSubtitle": "حفظ نسخة مشفرة من بياناتك ومشاركتها في مكان آمن.",
+    "restoreFromFileTitle": "استعادة البيانات من ملف",
+    "restoreFromFileSubtitle": "تحذير: هذه العملية ستحل محل جميع البيانات الحالية.",
+    "backupTip": "تلميح: احتفظ بنسخ احتياطية بشكل دوري خارج جهازك (على Google Drive أو البريد الإلكتروني) لحماية بياناتك من الضياع أو التلف.",
+    "companyOrShopName": "اسم الشركة أو المحل",
+    "companyDescOptional": "وصف الشركة (اختياري)",
+    "companyDescHint": "مثال: نشاط تجاري، عنوان مختصر...",
+    "companyInfoHint": "سيظهر هذا الاسم والشعار في شاشة البداية والتقارير.",
+    "infoSavedSuccess": "تم حفظ المعلومات بنجاح!",
+    "errorPickingImage": "حدث خطأ أثناء اختيار الصورة: {error}",
+
+    "archivedCustomer": "زبون مؤرشف",
+    "archivedSupplier": "مورد مؤرشف",
+    "archivedProduct": "منتج مؤرشف | المورد: {supplierName}",
+    "unknown": "غير معروف",
+    "restore": "استعادة",
+    "itemRestoredSuccess": "تم استعادة \"{name}\" بنجاح!",
+    "noArchivedItems": "لا توجد عناصر مؤرشفة.",
+    "setupAdminAccount": "إعداد حساب المدير",
+    "welcomeSetup": "مرحبًا بك! هذا هو الإعداد لمرة واحدة فقط. هذا الحساب سيكون له كل الصلاحيات.",
+    "fullName": "الاسم الكامل",
+    "fullNameRequired": "الاسم الكامل مطلوب",
+    "usernameForLogin": "اسم المستخدم (للدخول)",
+    "usernameRequired": "اسم المستخدم مطلوب",
+    "chooseStrongPassword": "اختر كلمة مرور قوية",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordTooShort": "يجب أن تكون كلمة المرور 4 أحرف على الأقل",
+    "createAdminAndStart": "إنشاء حساب المدير والبدء",
+    "adminCreatedSuccess": "تم إنشاء حساب المدير بنجاح! يمكنك الآن تسجيل الدخول.",
+    "usernameExists": "اسم المستخدم هذا موجود بالفعل. الرجاء اختيار اسم آخر.",
+    "unexpectedError": "حدث خطأ غير متوقع: {error}",
+    "pleaseEnterUsername": "الرجاء إدخال اسم المستخدم",
+    "pleaseEnterPassword": "الرجاء إدخال كلمة المرور",
+
+    "addCustomer": "إضافة زبون",
+    "editCustomer": "تعديل زبون",
+    "customerName": "اسم الزبون",
+    "customerNameRequired": "اسم الزبون مطلوب",
+    "addressOptional": "العنوان (اختياري)",
+    "phoneOptional": "الهاتف (اختياري)",
+    "imageSource": "اختر مصدر الصورة",
+    "gallery": "المعرض",
+    "camera": "الكاميرا",
+    "errorPickingImage": "حدث خطأ أثناء اختيار الصورة: {error}",
+    "@errorPickingImage": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "customerAddedSuccess": "تم إضافة الزبون بنجاح!",
+    "customerUpdatedSuccess": "تم تحديث الزبون بنجاح!",
+    "save": "حفظ",
+    "purchases": "عمليات الشراء",
+    "payments": "الدفعات",
+    "noPurchases": "لا توجد عمليات شراء مسجلة.",
+    "noPayments": "لا توجد دفعات مسجلة.",
+    "newSaleSuccess": "تم تسجيل عملية الشراء بنجاح!",
+    "newPayment": "تسجيل دفعة جديدة",
+    "paidAmount": "المبلغ المدفوع",
+    "amountRequired": "الحقل مطلوب",
+    "enterValidAmount": "أدخل مبلغًا صحيحًا أكبر من صفر",
+    "amountExceedsDebt": "المبلغ أكبر من الدين المتبقي",
+    "notesOptional": "ملاحظات (اختياري)",
+    "paymentSuccess": "تم تسجيل الدفعة بنجاح!",
+    "returnConfirmTitle": "تأكيد الإرجاع",
+    "returnConfirmContent": "هل أنت متأكد من إرجاع هذا المنتج؟\n\"{details}\"\nسيتم إعادة الكمية للمخزن وتعديل حساب الزبون.",
+    "returnSuccess": "تم إرجاع المنتج بنجاح!",
+    "errorOccurred": "حدث خطأ: {error}",
+    "returnItem": "تأكيد الإرجاع",
+    "customersList": "قائمة الزبائن",
+    "noActiveCustomers": "لا يوجد زبائن نشطون حتى الآن.",
+    "remainingOnHim": "المتبقي عليه",
+    "remainingForHim": "المتبقي له",
+    "balance": "الرصيد",
+    "unregistered": "غير مسجل",
+    "cannotArchiveCustomerWithDebt": "لا يمكن أرشفة زبون لديه دين متبقي.",
+    "archiveConfirmTitle": "تأكيد الأرشفة",
+    "archiveConfirmContent": "هل أنت متأكد من أرشفة الزبون \"{name}\"؟",
+    "archive": "أرشفة",
+
+    "chooseProducts": "اختر المنتجات",
+    "reviewCart": "مراجعة سلة المشتريات",
+    "noProductsInStock": "لا توجد منتجات في المخزن.",
+    "available": "المتوفر",
+    "price": "السعر",
+    "quantity": "الكمية",
+    "add": "إضافة",
+    "quantityExceedsStock": "الكمية المطلوبة أكبر من المتوفر في المخزن!",
+    "cartIsEmpty": "سلة المشتريات فارغة!",
+    "product": "المنتج",
+    "total": "الإجمالي",
+    "finalTotal": "الإجمالي النهائي",
+    "close": "إغلاق",
+    "itemsCount": "عدد الأصناف: {count}",
+    "@itemsCount": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "addWithProductName": "إضافة \"{productName}\"",
+    "@addWithProductName": {
+        "placeholders": {
+            "productName": {
+                "type": "String"
+            }
+        }
+    },
+    "scanBarcodeToSell": "مسح باركود للبيع",
+    "productNotFound": "المنتج غير موجود أو غير نشط",
+    "barcodeExistsError": "هذا الباركود مسجل لمنتج آخر بالفعل.",
+
+    "saleDetails": "تفاصيل البيع: {productName} (الكمية: {quantity})",
+
+    "employeesReport": "تقرير الموظفين",
+    "totalSalariesPaid": "إجمالي الرواتب المدفوعة",
+    "totalAdvancesBalance": "إجمالي السلف المستحقة",
+    "activeEmployeesCount": "عدد الموظفين النشطين",
+    "employeesStatement": "كشف حساب الموظفين",
+    "noEmployeesToDisplay": "لا يوجد موظفون لعرضهم.",
+    "salaryLabel": "الراتب: {salary}",
+    "advancesBalanceLabel": "رصيد السلف: {balance}",
+
+    "profitReport": "تقرير الأرباح",
+    "totalNetProfit": "إجمالي صافي الربح",
+    "salesDetails": "تفاصيل المبيعات",
+    "loadingDetails": "جاري تحميل التفاصيل...",
+    "noSalesRecorded": "لا توجد مبيعات مسجلة لعرضها.",
+    "customerLabel": "الزبون: {name}",
+    "dateLabel": "التاريخ: {date}",
+    "profitLabel": "الربح: {profit}",
+    "saleLabel": "المبيع: {sale}",
+
+    "reportsHub": "مركز التقارير",
+    "generalProfitReport": "تقرير الأرباح العام",
+    "generalProfitReportSubtitle": "عرض ملخص الأرباح والمصاريف وصافي الربح",
+    "supplierProfitReport": "تقرير أرباح الموردين والشركاء",
+    "supplierProfitReportSubtitle": "عرض الأرباح مجمعة حسب كل مورد وتوزيع حصص الشركاء",
+    "cashSalesHistory": "سجل المبيعات النقدية",
+    "cashSalesHistorySubtitle": "عرض وإدارة فواتير البيع المباشر",
+    "cashFlowReport": "تقرير المقبوضات النقدية",
+    "cashFlowReportSubtitle": "عرض المبيعات النقدية وتسديدات الزبائن",
+    "expensesLog": "سجل المصاريف العامة",
+    "expensesLogSubtitle": "عرض وتسجيل المصاريف التشغيلية",
+    "employeesAndSalariesReport": "تقرير الموظفين والرواتب",
+    "employeesAndSalariesReportSubtitle": "عرض ملخص الرواتب والسلف وكشوفات حساب الموظفين",
+
+    "supplierProfitReport": "تقرير أرباح الموردين والشركاء",
+    "errorOccurred": "حدث خطأ: {error}",
+    "@errorOccurred": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "noProfitsRecorded": "لا توجد أرباح مسجلة لعرضها.",
+    "partnersLabel": "الشركاء: {names}",
+    "@partnersLabel": {
+        "placeholders": {
+            "names": {
+                "type": "String"
+            }
+        }
+    },
+    "netProfitLabel": "الربح الصافي: {amount}",
+    "@netProfitLabel": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+
+    "selectDateRange": "تحديد فترة زمنية",
+    "totalCashSales": "إجمالي المبيعات النقدية",
+    "totalDebtPayments": "إجمالي مقبوضات الديون",
+    "totalCashInflow": "إجمالي الرصيد النقدي الوارد",
+    "showDetails": "إظهار التفاصيل",
+    "hideDetails": "إخفاء التفاصيل",
+    "noTransactions": "لا توجد معاملات نقدية في هذه الفترة.",
+    "cashSaleDescription": "بيع نقدي مباشر (فاتورة #{id})",
+    "@cashSaleDescription": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "debtPaymentDescription": "تسديد من الزبون: {name}",
+    "@debtPaymentDescription": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "recordWithdrawalFor": "تسجيل سحب لـ: {name}",
+    "@recordWithdrawalFor": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "availableNetProfit": "الربح الصافي المتاح للتوزيع: {amount}",
+    "@availableNetProfit": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdrawnAmount": "المبلغ المسحوب",
+    "amountExceedsProfit": "المبلغ أكبر من الربح المتاح",
+    "withdrawalSuccess": "تم تسجيل السحب بنجاح",
+    "totalProfitFromSupplier": "إجمالي الربح من المورد:",
+    "totalWithdrawals": "إجمالي المسحوبات:",
+    "remainingNetProfit": "الربح الصافي المتبقي:",
+    "partnersProfitDistribution": "توزيع أرباح الشركاء",
+    "partnerShare": "حصته من الربح الصافي: {amount}",
+    "@partnerShare": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdraw": "سحب",
+    "recordGeneralWithdrawal": "تسجيل سحب عام",
+    "withdrawalsHistory": "سجل المسحوبات",
+    "noWithdrawals": "لا توجد مسحوبات مسجلة.",
+    "withdrawalAmountLabel": "مبلغ: {amount}",
+    "@withdrawalAmountLabel": {
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
+    },
+    "withdrawalForLabel": "لـ: {name}",
+    "@withdrawalForLabel": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+    "generalProfitReport": "تقرير الأرباح العام",
+    "refresh": "تحديث",
+    "noDataToShow": "لا توجد بيانات لعرضها.",
+    "showSalesDetails": "إظهار تفاصيل المبيعات",
+    "hideSalesDetails": "إخفاء تفاصيل المبيعات",
+    "grossProfitFromSales": "إجمالي الربح من المبيعات",
+    "totalGeneralExpenses": "(-) إجمالي المصاريف العامة",
+    "totalProfitWithdrawals": "(-) إجمالي مسحوبات الأرباح",
+    "netProfit": "صافي الربح النهائي",
+    "noSalesRecorded": "لا توجد مبيعات مسجلة لعرضها.",
+    "customerLabel": "الزبون: {name}",
+    "@customerLabel": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "dateLabel": "التاريخ: {date}",
+    "@dateLabel": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "profitLabel": "الربح: {profit}",
+    "@profitLabel": {
+        "placeholders": {
+            "profit": {
+                "type": "String"
+            }
+        }
+    },
+    "saleLabel": "المبيع: {sale}",
+    "@saleLabel": {
+        "placeholders": {
+            "sale": {
+                "type": "String"
+            }
+        }
+    },
+
+    "totalProfitFromThisSupplier": "إجمالي الربح من هذا المورد",
+    "partnersProfitDistribution": "توزيع أرباح الشركاء",
+    "noPartnersForThisSupplier": "لا يوجد شركاء مسجلون لهذا المورد.",
+    "noSalesForThisSupplier": "لا توجد مبيعات لهذا المورد.",
+
+    "noProfitsRecorded": "لا توجد أرباح مسجلة لعرضها.",
+
+        "cashSalesHistory": "سجل المبيعات النقدية",
+    "searchByInvoiceNumber": "ابحث برقم الفاتورة...",
+    "showInvoices": "إظهار الفواتير",
+    "hideInvoices": "إخفاء الفواتير",
+    "noCashInvoices": "لا توجد فواتير بيع نقدي مسجلة.",
+    "noMatchingResults": "لا توجد نتائج مطابقة للبحث.",
+    "invoiceNo": "فاتورة رقم: {id}",
+    "@invoiceNo": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "modified": "معدلة",
+    "voided": "ملغاة",
+    "confirmVoidTitle": "تأكيد إلغاء الفاتورة",
+    "confirmVoidContent": "هل أنت متأكد من إلغاء هذه الفاتورة بالكامل؟ سيتم إرجاع جميع منتجاتها إلى المخزن.",
+    "confirmVoidAction": "نعم، قم بالإلغاء",
+    "voidSuccess": "تم إلغاء الفاتورة بنجاح.",
+    "detailsForInvoice": "تفاصيل الفاتورة #{id}",
+    "@detailsForInvoice": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+
+    "directselling": "بيع مباشر",
+
+    "directSalePoint": "نقطة البيع المباشر",
+    "scanBarcode": "مسح الباركود",
+    "reviewCart": "مراجعة سلة المشتريات",
+    "noProductsInStock": "لا توجد منتجات في المخزن.",
+    "productNotFound": "المنتج غير موجود أو غير نشط",
+    "quantityExceedsStock": "الكمية المطلوبة أكبر من المتوفر في المخزن!",
+    "cartIsEmpty": "سلة المشتريات فارغة!",
+    "completeSale": "إتمام البيع",
+    "saleSuccess": "تم البيع بنجاح!",
+    "available": "المتوفر",
+    "price": "السعر",
+    "quantity": "الكمية",
+    "delete": "حذف",
+    "save": "حفظ",
+    "product": "المنتج",
+    "total": "الإجمالي",
+    "finalTotal": "الإجمالي النهائي",
+    "close": "إغلاق",
+    "itemsCount": "عدد الأصناف: {count}",
+    "@itemsCount": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "pdfInvoiceTitle": "فاتورة بيع نقدي",
+    "pdfDate": "التاريخ",
+    "pdfInvoiceNumber": "فاتورة رقم",
+    "pdfHeaderProduct": "المنتج",
+    "pdfHeaderQty": "الكمية",
+    "pdfHeaderPrice": "السعر",
+    "pdfHeaderTotal": "الإجمالي",
+    "pdfFooterTotal": "المبلغ الإجمالي",
+    "pdfFooterThanks": "شكراً لتعاملكم معنا",
+
+    "manageExpenseCategories": "إدارة فئات المصاريف",
+    "noCategories": "لا توجد فئات. قم بإضافة أول فئة.",
+    "addCategory": "إضافة فئة جديدة",
+    "editCategory": "تعديل الفئة",
+    "categoryName": "اسم الفئة",
+    "categoryNameRequired": "اسم الفئة مطلوب",
+    "categoryExistsError": "خطأ: اسم الفئة هذا موجود بالفعل.",
+    "confirmDeleteTitle": "تأكيد الحذف",
+    "confirmDeleteCategory": "هل أنت متأكد من حذف الفئة \"{name}\"؟",
+    "@confirmDeleteCategory": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+
+
+    "expensesLog": "سجل المصاريف العامة",
+    "manageCategories": "إدارة الفئات",
+    "noExpenses": "لا توجد مصاريف مسجلة.",
+    "addExpense": "إضافة مصروف جديد",
+    "newExpense": "تسجيل مصروف جديد",
+    "expenseDescription": "وصف المصروف",
+    "descriptionRequired": "الوصف مطلوب",
+    "amount": "المبلغ",
+    "amountRequired": "المبلغ مطلوب",
+    "enterValidNumber": "أدخل رقماً صحيحاً",
+    "category": "الفئة",
+    "selectCategory": "الرجاء اختيار فئة",
+    "addCategoriesFirst": "الرجاء إضافة فئات المصاريف أولاً من شاشة إدارة الفئات.",
+    "notesOptional": "ملاحظات (اختياري)",
+    "expenseAddedSuccess": "تم تسجيل المصروف بنجاح.",
+    "unclassified": "غير مصنف",
+
+  "dashboard": "لوحة التحكم",
+  "today": "اليوم",
+  "thisMonth": "هذا الشهر",
+  "sales": "المبيعات",
+  "profit": "الأرباح",
+  "topSelling": "الأكثر مبيعاً",
+  "topCustomer": "العميل المميز",
+  "generalStats": "إحصائيات عامة",
+  "totalCustomers": "العملاء",
+  "totalProducts": "المنتجات",
+  "lowStock": "مخزون منخفض",
+  "pendingPayments": "مدفوعات معلقة",
+  "available": "المتوفر",
+  "topBuyerThisMonth": "العميل الأكثر شراءً هذا الشهر",
+  "noSalesData": "لا توجد بيانات كافية لعرض المنتجات الأكثر مبيعاً",
+  "noCustomersData": "لا توجد بيانات كافية لعرض العميل المميز",
+  "loadingStats": "جاري تحميل الإحصائيات...",
+  "currency": "د.ع"
+
+
+
+}
