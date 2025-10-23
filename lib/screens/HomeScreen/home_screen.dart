@@ -23,12 +23,6 @@ import '../settings/settings_screen.dart';
 /// ===========================================================================
 /// الصفحة الرئيسية (Home Screen)
 /// ===========================================================================
-/// الغرض:
-/// - عرض جميع الأقسام الرئيسية للتطبيق في شبكة منظمة
-/// - التحكم بظهور الأقسام حسب صلاحيات المستخدم
-/// - التنقل السريع بين مختلف أجزاء التطبيق
-/// - عرض إحصائيات سريعة (اختياري)
-/// ===========================================================================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -42,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   
   // ============= متغيرات الحالة =============
-  int _currentBottomNavIndex = 0; // للتحكم في BottomNavigationBar
+  int _currentBottomNavIndex = 0;
 
   // ===========================================================================
   // بناء واجهة المستخدم
@@ -144,15 +138,14 @@ class _HomeScreenState extends State<HomeScreen> {
   // بناء شبكة القوائم
   // ===========================================================================
   Widget _buildMenuGrid(AppLocalizations l10n) {
-    // --- جمع عناصر القائمة حسب الصلاحيات ---
     final menuItems = _getMenuItems(l10n);
 
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: context.isMobile ? 2 : 3, // عمودان للموبايل، 3 للتابلت
+        crossAxisCount: context.isMobile ? 2 : 3,
         mainAxisSpacing: AppConstants.spacingMd,
         crossAxisSpacing: AppConstants.spacingMd,
-        childAspectRatio: 1.1, // نسبة العرض للارتفاع
+        childAspectRatio: 1.1,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -162,7 +155,10 @@ class _HomeScreenState extends State<HomeScreen> {
             title: item['title'],
             icon: item['icon'],
             color: item['color'],
-            onTap: () => _navigateToPage(item['page']),
+            onTap: () {
+              final page = item['page'];
+              _navigateToPage(page);
+            },
           );
         },
         childCount: menuItems.length,
@@ -182,7 +178,16 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.users,
         'icon': Icons.people_alt,
         'color': AppColors.info,
-        // 'page': const UsersListScreen(),
+        // 'page': UsersListScreen(),
+      });
+    }
+
+     if (_authService.isAdmin) {
+      items.add({
+        'title': l10n.homePage,
+        'icon': Icons.home,
+        'color': AppColors.info,
+        'page': HomeScreen(),
       });
     }
 
@@ -192,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.suppliers,
         'icon': Icons.local_shipping,
         'color': AppColors.warning,
-        // 'page': const SuppliersListScreen(),
+        // 'page': SuppliersListScreen(),
       });
     }
 
@@ -202,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.products,
         'icon': Icons.inventory_2,
         'color': AppColors.primaryLight,
-        // 'page': const ProductsListScreen(),
+        // 'page': ProductsListScreen(),
       });
     }
 
@@ -212,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.employees,
         'icon': Icons.badge,
         'color': AppColors.secondaryLight,
-        // 'page': const EmployeesListScreen(),
+        // 'page': EmployeesListScreen(),
       });
     }
 
@@ -222,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.customers,
         'icon': Icons.groups,
         'color': AppColors.success,
-        'page':  CustomersListScreen(),
+        'page': CustomersListScreen(),
       });
     }
 
@@ -232,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': 'بيع مباشر',
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
-        // 'page': const DirectSaleScreen(),
+        // 'page': DirectSaleScreen(),
       });
     }
 
@@ -242,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.reports,
         'icon': Icons.assessment,
         'color': AppColors.income,
-        // 'page': const ReportsHubScreen(),
+        // 'page': ReportsHubScreen(),
       });
     }
 
@@ -252,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.settings,
         'icon': Icons.settings,
         'color': Colors.grey,
-        // 'page': const SettingsScreen(),
+        // 'page': SettingsScreen(),
       });
     }
 
@@ -338,14 +343,28 @@ class _HomeScreenState extends State<HomeScreen> {
   // ===========================================================================
   // التنقل إلى الصفحة
   // ===========================================================================
-  void _navigateToPage(Widget page) {
+  void _navigateToPage(dynamic page) {
+    if (page == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('هذه الميزة قيد التطوير'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppConstants.borderRadiusMd,
+          ),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => page),
+      MaterialPageRoute(builder: (context) => page as Widget),
     );
   }
 
   // ===========================================================================
-  // معالجة نقرات BottomNavigationBar
+  // ✅ معالجة نقرات BottomNavigationBar
   // ===========================================================================
   void _handleBottomNavTap(int index) {
     switch (index) {
@@ -356,14 +375,18 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         // المبيعات
         if (_authService.canViewCustomers) {
-          // _navigateToPage(const DirectSaleScreen());
+          // _navigateToPage(DirectSaleScreen());
+        } else {
+          _showNoPermissionMessage();
         }
         break;
       
       case 2:
         // التقارير
         if (_authService.canViewReports) {
-          // _navigateToPage(const ReportsHubScreen());
+          // _navigateToPage(ReportsHubScreen());
+        } else {
+          _showNoPermissionMessage();
         }
         break;
       
@@ -372,5 +395,21 @@ class _HomeScreenState extends State<HomeScreen> {
         Scaffold.of(context).openDrawer();
         break;
     }
+  }
+  
+  // ===========================================================================
+  // عرض رسالة عدم وجود صلاحية
+  // ===========================================================================
+  void _showNoPermissionMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('ليس لديك صلاحية للوصول إلى هذه الميزة'),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusMd,
+        ),
+      ),
+    );
   }
 }

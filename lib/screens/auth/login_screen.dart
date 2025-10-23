@@ -143,8 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // --- الخطوة 4: الانتقال إلى الصفحة الرئيسية ---
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          // builder: (context) => const HomeScreen(),
-          builder: (context) => const DashboardScreen(),
+          builder: (context) => const HomeScreen(),
         ),
       );
 
