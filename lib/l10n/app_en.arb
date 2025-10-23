@@ -742,7 +742,32 @@
   "noSalesData": "Not enough data to show top selling products",
   "noCustomersData": "Not enough data to show top customer",
   "loadingStats": "Loading statistics...",
-  "currency": "IQD"
+  "currency": "IQD",
+
+  "loadingStats": "Loading statistics...",
+  "errorLoadingData": "Error loading data",
+  "pleaseTryAgain": "Please try again",
+  "noSales": "No sales",
+  "noCustomers": "No customers",
+  "product": "product",
+
+  "enterCustomerName": "Enter customer name",
+  "enterAddress": "Enter address",
+  "enterPhone": "Enter phone number",
+  "updateCustomer": "Update customer",
+  "error": "Error",
+  "cancel": "Cancel",
+
+  "loadingCustomers": "Loading customers...",
+  "searchCustomers": "Search customers",
+  "noCustomers": "No customers",
+  "remainingOnHim": "Debt",
+  "remainingForHim": "Credit",
+  "balanced": "Balanced",
+  "unregistered": "Not registered",
+  "edit": "Edit",
+  "archiveCustomer": "Archive customer",
+  "customerArchivedSuccess": "Customer archived successfully"
 
 
 

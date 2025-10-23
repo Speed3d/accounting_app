@@ -78,7 +78,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phone => 'Phone';
 
   @override
-  String get unregistered => 'Unregistered';
+  String get unregistered => 'Not registered';
 
   @override
   String get remainingForHim => 'Credit';
@@ -953,7 +953,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cartIsEmpty => 'Shopping cart is empty!';
 
   @override
-  String get product => 'Product';
+  String get product => 'product';
 
   @override
   String get total => 'Total';
@@ -1390,4 +1390,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currency => 'IQD';
+
+  @override
+  String get errorLoadingData => 'Error loading data';
+
+  @override
+  String get pleaseTryAgain => 'Please try again';
+
+  @override
+  String get noSales => 'No sales';
+
+  @override
+  String get noCustomers => 'No customers';
+
+  @override
+  String get enterCustomerName => 'Enter customer name';
+
+  @override
+  String get enterAddress => 'Enter address';
+
+  @override
+  String get enterPhone => 'Enter phone number';
+
+  @override
+  String get updateCustomer => 'Update customer';
+
+  @override
+  String get loadingCustomers => 'Loading customers...';
+
+  @override
+  String get searchCustomers => 'Search customers';
+
+  @override
+  String get balanced => 'Balanced';
+
+  @override
+  String get archiveCustomer => 'Archive customer';
+
+  @override
+  String get customerArchivedSuccess => 'Customer archived successfully';
 }

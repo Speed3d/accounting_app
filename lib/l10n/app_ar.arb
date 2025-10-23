@@ -741,7 +741,32 @@
   "noSalesData": "لا توجد بيانات كافية لعرض المنتجات الأكثر مبيعاً",
   "noCustomersData": "لا توجد بيانات كافية لعرض العميل المميز",
   "loadingStats": "جاري تحميل الإحصائيات...",
-  "currency": "د.ع"
+  "currency": "د.ع",
+
+  "loadingStats": "جاري تحميل الإحصائيات...",
+  "errorLoadingData": "خطأ في تحميل البيانات",
+  "pleaseTryAgain": "يرجى المحاولة مرة أخرى",
+  "noSales": "لا توجد مبيعات",
+  "noCustomers": "لا يوجد عملاء",
+  "product": "منتج",
+
+  "enterCustomerName": "أدخل اسم العميل",
+  "enterAddress": "أدخل العنوان",
+  "enterPhone": "أدخل رقم الهاتف",
+  "updateCustomer": "تحديث بيانات العميل",
+  "error": "خطأ",
+  "cancel": "إلغاء",
+
+  "loadingCustomers": "جاري تحميل العملاء...",
+  "searchCustomers": "بحث في العملاء",
+  "noCustomers": "لا يوجد عملاء",
+  "remainingOnHim": "له دين",
+  "remainingForHim": "له رصيد",
+  "balanced": "متوازن",
+  "unregistered": "غير مسجل",
+  "edit": "تعديل",
+  "archiveCustomer": "أرشفة العميل",
+  "customerArchivedSuccess": "تم أرشفة العميل بنجاح"
 
 
 

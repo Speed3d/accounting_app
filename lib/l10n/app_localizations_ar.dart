@@ -81,10 +81,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unregistered => 'غير مسجل';
 
   @override
-  String get remainingForHim => 'المتبقي له';
+  String get remainingForHim => 'له رصيد';
 
   @override
-  String get remainingOnHim => 'المتبقي عليه';
+  String get remainingOnHim => 'له دين';
 
   @override
   String get balance => 'الرصيد';
@@ -943,7 +943,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cartIsEmpty => 'سلة المشتريات فارغة!';
 
   @override
-  String get product => 'المنتج';
+  String get product => 'منتج';
 
   @override
   String get total => 'الإجمالي';
@@ -1378,4 +1378,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get currency => 'د.ع';
+
+  @override
+  String get errorLoadingData => 'خطأ في تحميل البيانات';
+
+  @override
+  String get pleaseTryAgain => 'يرجى المحاولة مرة أخرى';
+
+  @override
+  String get noSales => 'لا توجد مبيعات';
+
+  @override
+  String get noCustomers => 'لا يوجد عملاء';
+
+  @override
+  String get enterCustomerName => 'أدخل اسم العميل';
+
+  @override
+  String get enterAddress => 'أدخل العنوان';
+
+  @override
+  String get enterPhone => 'أدخل رقم الهاتف';
+
+  @override
+  String get updateCustomer => 'تحديث بيانات العميل';
+
+  @override
+  String get loadingCustomers => 'جاري تحميل العملاء...';
+
+  @override
+  String get searchCustomers => 'بحث في العملاء';
+
+  @override
+  String get balanced => 'متوازن';
+
+  @override
+  String get archiveCustomer => 'أرشفة العميل';
+
+  @override
+  String get customerArchivedSuccess => 'تم أرشفة العميل بنجاح';
 }

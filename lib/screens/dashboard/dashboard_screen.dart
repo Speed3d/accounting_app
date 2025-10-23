@@ -6,11 +6,13 @@ import 'dart:io';
 // ============= استيراد الملفات =============
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../layouts/main_layout.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
+import '../../utils/helpers.dart'; // لاستخدام formatCurrency
 
 /// ===========================================================================
 /// لوحة التحكم الرئيسية (Dashboard Screen)
@@ -19,7 +21,6 @@ import '../../widgets/loading_state.dart';
 /// - عرض إحصائيات سريعة عن النشاط التجاري
 /// - إظهار أهم المنتجات والعملاء
 /// - ملخص المبيعات والأرباح اليومية/الشهرية
-/// - رسوم بيانية توضيحية (اختياري)
 /// ===========================================================================
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -56,27 +57,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _loadData() {
     _topProductsFuture = dbHelper.getTopSellingProducts();
     _topCustomersFuture = dbHelper.getTopCustomers();
-    
-    // TODO: استبدل هذا بدالة حقيقية من قاعدة البيانات
     _statsMapFuture = _fetchDashboardStats();
   }
 
   // ===========================================================================
-  // جلب إحصائيات Dashboard (مؤقت - استبدله بدالة حقيقية)
+  // جلب إحصائيات Dashboard
   // ===========================================================================
   Future<Map<String, dynamic>> _fetchDashboardStats() async {
-    // Hint: هنا تضع دالة حقيقية تجلب الإحصائيات من قاعدة البيانات
-    await Future.delayed(const Duration(milliseconds: 500)); // محاكاة تأخير الشبكة
+    // TODO: استبدل هذا بدوال حقيقية من database_helper
+    // يمكنك إنشاء دوال مثل:
+    // - getTodaySales()
+    // - getTodayProfit()
+    // - getMonthSales()
+    // - getMonthProfit()
+    // إلخ...
+    
+    await Future.delayed(const Duration(milliseconds: 500));
     
     return {
-      'todaySales': 1250000.0,      // مبيعات اليوم
-      'todayProfit': 350000.0,      // أرباح اليوم
-      'monthSales': 15000000.0,     // مبيعات الشهر
-      'monthProfit': 4200000.0,     // أرباح الشهر
-      'totalCustomers': 45,         // عدد العملاء
-      'totalProducts': 230,         // عدد المنتجات
-      'lowStockProducts': 12,       // منتجات منخفضة المخزون
-      'pendingPayments': 2500000.0, // مدفوعات معلقة
+      'todaySales': 1250000.0,
+      'todayProfit': 350000.0,
+      'monthSales': 15000000.0,
+      'monthProfit': 4200000.0,
+      'totalCustomers': 45,
+      'totalProducts': 230,
+      'lowStockProducts': 12,
+      'pendingPayments': 2500000.0,
     };
   }
 
@@ -146,21 +152,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // بناء الإحصائيات الرئيسية
   // ===========================================================================
   Widget _buildMainStats() {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<Map<String, dynamic>>(
       future: _statsMapFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
+          return SizedBox(
             height: 200,
-            child: LoadingState(message: 'جاري تحميل الإحصائيات...'),
+            child: LoadingState(message: l10n.loadingStats),
           );
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
-          return const EmptyState(
+          return  EmptyState(
             icon: Icons.error_outline,
-            title: 'خطأ في تحميل البيانات',
-            message: 'يرجى المحاولة مرة أخرى',
+            title: l10n.errorLoadingData, 
+          message: l10n.pleaseTryAgain,
           );
         }
 
@@ -171,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             // --- عنوان القسم ---
             Text(
-              'اليوم',
+              l10n.today,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -184,8 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: InfoCard(
-                    title: 'المبيعات',
-                    value: _formatCurrency(stats['todaySales']),
+                    title: l10n.sales,
+                    value: formatCurrency(stats['todaySales']),
                     icon: Icons.trending_up,
                     color: AppColors.success,
                   ),
@@ -193,8 +200,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: AppConstants.spacingMd),
                 Expanded(
                   child: InfoCard(
-                    title: 'الأرباح',
-                    value: _formatCurrency(stats['todayProfit']),
+                    title: l10n.profit,
+                    value: formatCurrency(stats['todayProfit']),
                     icon: Icons.attach_money,
                     color: AppColors.profit,
                   ),
@@ -206,7 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             // --- عنوان القسم ---
             Text(
-              'هذا الشهر',
+              l10n.thisMonth,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -219,8 +226,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: InfoCard(
-                    title: 'المبيعات',
-                    value: _formatCurrency(stats['monthSales']),
+                    title: l10n.sales,
+                    value: formatCurrency(stats['monthSales']),
                     icon: Icons.shopping_cart,
                     color: AppColors.info,
                   ),
@@ -228,8 +235,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: AppConstants.spacingMd),
                 Expanded(
                   child: InfoCard(
-                    title: 'الأرباح',
-                    value: _formatCurrency(stats['monthProfit']),
+                    title: l10n.profit,
+                    value: formatCurrency(stats['monthProfit']),
                     icon: Icons.trending_up,
                     color: AppColors.income,
                   ),
@@ -246,6 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // بناء قسم المنتجات الأكثر مبيعاً
   // ===========================================================================
   Widget _buildTopProductsSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -258,7 +266,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             AppConstants.spacingMd,
           ),
           child: Text(
-            'الأكثر مبيعاً',
+            l10n.topSelling,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -277,12 +285,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
 
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Padding(
+              return  Padding(
                 padding: AppConstants.paddingMd,
                 child: EmptyState(
                   icon: Icons.inventory_2_outlined,
-                  title: 'لا توجد مبيعات',
-                  message: 'لا توجد بيانات كافية لعرض المنتجات الأكثر مبيعاً',
+                  title: l10n.noSales,
+                  message: l10n.noSalesData,
                 ),
               );
             }
@@ -309,70 +317,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ===========================================================================
-  // بناء بطاقة المنتج
+  // بناء بطاقة المنتج (بدون صور - فقط أيقونات)
   // ===========================================================================
- Widget _buildProductCard(Product product) {
-
-   // صورة المنتج معطلة حاليا
-   
-  // final hasImage = product.imagePath != null && 
-  //                product.imagePath!.isNotEmpty;
-  // بدون صورة - فقط أيقونة
-  return Container(
-    width: 150,
-    margin: const EdgeInsets.only(right: AppConstants.spacingMd),
-    child: CustomCard(
-      padding: AppConstants.paddingMd,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // --- أيقونة المنتج ---
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusMd,
+  Widget _buildProductCard(Product product) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: AppConstants.spacingMd),
+      child: CustomCard(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // --- أيقونة المنتج ---
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Icon(
+                Icons.inventory_2,
+                size: 32,
+                color: AppColors.primaryLight,
+              ),
             ),
-            child: Icon(
-              Icons.inventory_2,
-              size: 32,
-              color: AppColors.primaryLight,
+            
+            const SizedBox(height: AppConstants.spacingSm),
+            
+            // --- اسم المنتج ---
+            Text(
+              product.productName,
+              style: Theme.of(context).textTheme.titleSmall,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          
-          const SizedBox(height: AppConstants.spacingSm),
-          
-          // --- اسم المنتج ---
-          Text(
-            product.productName,
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          
-          const SizedBox(height: AppConstants.spacingXs),
-          
-          // --- الكمية المتوفرة ---
-          Text(
-            'المتوفر: ${product.quantity}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: product.quantity < 10 
-                ? AppColors.error 
-                : AppColors.success,
+            
+            const SizedBox(height: AppConstants.spacingXs),
+            
+            // --- الكمية المتوفرة ---
+            Text(
+              '${l10n.available}: ${product.quantity}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: product.quantity < 10 
+                  ? AppColors.error 
+                  : AppColors.success,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // ===========================================================================
   // بناء قسم العميل المميز
   // ===========================================================================
   Widget _buildTopCustomerSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -385,7 +389,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             AppConstants.spacingMd,
           ),
           child: Text(
-            'العميل المميز',
+            l10n.topCustomer,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -404,12 +408,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
 
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Padding(
+              return  Padding(
                 padding: AppConstants.paddingMd,
                 child: EmptyState(
                   icon: Icons.person_outline,
-                  title: 'لا يوجد عملاء',
-                  message: 'لا توجد بيانات كافية لعرض العميل المميز',
+                  title: l10n.noCustomers, // ← استخدم التدوين
+                message: l10n.noCustomersData,
                 ),
               );
             }
@@ -429,11 +433,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ===========================================================================
-  // بناء بطاقة العميل
+  // بناء بطاقة العميل (مع دعم الصور)
   // ===========================================================================
   Widget _buildCustomerCard(Customer customer) {
+    final l10n = AppLocalizations.of(context)!;
+
+    // ✅ التحقق من وجود الصورة (Customer يدعم imagePath)
     final hasImage = customer.imagePath != null && 
-                     customer.imagePath!.isNotEmpty;
+                     customer.imagePath!.isNotEmpty &&
+                     File(customer.imagePath!).existsSync();
 
     return CustomCard(
       child: Row(
@@ -469,7 +477,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingXs),
                 Text(
-                  'العميل الأكثر شراءً هذا الشهر',
+                  l10n.topBuyerThisMonth,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -477,7 +485,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           
           // --- أيقونة التاج ---
-          Icon(
+          const Icon(
             Icons.emoji_events,
             color: Colors.amber,
             size: 40,
@@ -491,6 +499,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // بناء الإحصائيات الإضافية
   // ===========================================================================
   Widget _buildAdditionalStats() {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<Map<String, dynamic>>(
       future: _statsMapFuture,
       builder: (context, snapshot) {
@@ -503,7 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             // --- عنوان القسم ---
             Text(
-              'إحصائيات عامة',
+              l10n.generalStats,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -516,7 +525,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: StatCard(
-                    label: 'العملاء',
+                    label: l10n.totalCustomers,
                     value: '${stats['totalCustomers']}',
                     icon: Icons.people,
                     color: AppColors.info,
@@ -525,7 +534,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: AppConstants.spacingMd),
                 Expanded(
                   child: StatCard(
-                    label: 'المنتجات',
+                    label: l10n.totalProducts,
                     value: '${stats['totalProducts']}',
                     icon: Icons.inventory_2,
                     color: AppColors.primaryLight,
@@ -541,18 +550,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: StatCard(
-                    label: 'مخزون منخفض',
+                    label: l10n.lowStock,
                     value: '${stats['lowStockProducts']}',
                     icon: Icons.warning,
                     color: AppColors.warning,
-                    subtitle: 'منتج',
+                    subtitle: l10n.product,
                   ),
                 ),
                 const SizedBox(width: AppConstants.spacingMd),
                 Expanded(
                   child: StatCard(
-                    label: 'مدفوعات معلقة',
-                    value: _formatCurrency(stats['pendingPayments']),
+                    label: l10n.pendingPayments,
+                    value: formatCurrency(stats['pendingPayments']),
                     icon: Icons.pending_actions,
                     color: AppColors.error,
                   ),
@@ -563,20 +572,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       },
     );
-  }
-
-  // ===========================================================================
-  // تنسيق العملة
-  // ===========================================================================
-  String _formatCurrency(dynamic amount) {
-    if (amount == null) return '0 د.ع';
-    
-    final value = amount is double ? amount : double.tryParse(amount.toString()) ?? 0;
-    
-    // تنسيق بفواصل الآلاف
-    return '${value.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    )} د.ع';
   }
 }

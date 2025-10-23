@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @unregistered.
   ///
   /// In en, this message translates to:
-  /// **'Unregistered'**
+  /// **'Not registered'**
   String get unregistered;
 
   /// No description provided for @remainingForHim.
@@ -1787,7 +1787,7 @@ abstract class AppLocalizations {
   /// No description provided for @product.
   ///
   /// In en, this message translates to:
-  /// **'Product'**
+  /// **'product'**
   String get product;
 
   /// No description provided for @total.
@@ -2575,6 +2575,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'IQD'**
   String get currency;
+
+  /// No description provided for @errorLoadingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading data'**
+  String get errorLoadingData;
+
+  /// No description provided for @pleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again'**
+  String get pleaseTryAgain;
+
+  /// No description provided for @noSales.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales'**
+  String get noSales;
+
+  /// No description provided for @noCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'No customers'**
+  String get noCustomers;
+
+  /// No description provided for @enterCustomerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter customer name'**
+  String get enterCustomerName;
+
+  /// No description provided for @enterAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter address'**
+  String get enterAddress;
+
+  /// No description provided for @enterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone number'**
+  String get enterPhone;
+
+  /// No description provided for @updateCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Update customer'**
+  String get updateCustomer;
+
+  /// No description provided for @loadingCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading customers...'**
+  String get loadingCustomers;
+
+  /// No description provided for @searchCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search customers'**
+  String get searchCustomers;
+
+  /// No description provided for @balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get balanced;
+
+  /// No description provided for @archiveCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive customer'**
+  String get archiveCustomer;
+
+  /// No description provided for @customerArchivedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer archived successfully'**
+  String get customerArchivedSuccess;
 }
 
 class _AppLocalizationsDelegate

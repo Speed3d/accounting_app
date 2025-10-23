@@ -222,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.customers,
         'icon': Icons.groups,
         'color': AppColors.success,
-        // 'page': const CustomersListScreen(),
+        'page':  CustomersListScreen(),
       });
     }
 
