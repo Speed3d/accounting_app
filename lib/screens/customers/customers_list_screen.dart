@@ -220,27 +220,28 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  final l10n = AppLocalizations.of(context)!;
+  
+  return Scaffold(
+    // === AppBar بسيط ===
+    appBar: AppBar(
+      title: Text(l10n.customersList),
+      // زر الرجوع يظهر تلقائياً
+    ),
     
-    return MainLayout(
-      // === تكوين الـ Layout ===
-      title: l10n.customersList,
-      currentIndex: 0, // Hint: موقع الصفحة في الـ BottomNav (الرئيسية)
-      
-      // === المحتوى الأساسي ===
-      body: _buildBody(l10n),
-      
-      // === زر الإضافة العائم ===
-      // Hint: يظهر فقط إذا كان المستخدم لديه صلاحية تعديل الزبائن
-      floatingActionButton: (_authService.canEditCustomers || _authService.isAdmin)
-          ? FloatingActionButton(
-              onPressed: _navigateToAddCustomer,
-              child: const Icon(Icons.add),
-              tooltip: l10n.addCustomer,
-            )
-          : null,
-    );
-  }
+    // === المحتوى الأساسي ===
+    body: _buildBody(l10n),
+    
+    // === زر الإضافة العائم ===
+    floatingActionButton: (_authService.canEditCustomers || _authService.isAdmin)
+        ? FloatingActionButton(
+            onPressed: _navigateToAddCustomer,
+            child: const Icon(Icons.add),
+            tooltip: l10n.addCustomer,
+          )
+        : null,
+  );
+}
   
   /// Hint: بناء جسم الصفحة (حسب الحالة: تحميل/خطأ/بيانات)
   Widget _buildBody(AppLocalizations l10n) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/auth_service.dart'; // ← أضف هذا
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -105,6 +106,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// بناء معلومات المستخدم
   Widget _buildUserInfo(BuildContext context, bool isDark) {
+    final authService = AuthService(); // ← جلب بيانات المستخدم
+    final user = authService.currentUser;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
       child: Row(
@@ -115,7 +119,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'أحمد محمد', // TODO: جلب من قاعدة البيانات
+                user?.fullName ?? 'مستخدم', // ← الاسم الحقيقي!
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -123,7 +127,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               Text(
-                'مدير', // TODO: جلب من قاعدة البيانات
+                user?.isAdmin == true ? 'مدير النظام' : 'مستخدم', // ← الصلاحية!
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark 

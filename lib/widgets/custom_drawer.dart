@@ -1,3 +1,4 @@
+import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -63,12 +64,18 @@ class CustomDrawer extends StatelessWidget {
                 // قسم العملاء
                 _buildSection(context, 'العملاء والموردين', isDark),
                 _buildMenuItem(
-                  context,
-                  icon: Icons.people,
-                  title: 'العملاء',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                   context,
+                   icon: Icons.people,
+                   title: 'العملاء',
+                   onTap: () {
+                   Navigator.pop(context); // 1. أغلق الدرج
+                   Navigator.push(         // 2. افتح صفحة العملاء
+                   context,
+                   MaterialPageRoute(
+                   builder: (context) => const CustomersListScreen(),
+                   ),
+                  );
+                 },
                 ),
                 _buildMenuItem(
                   context,

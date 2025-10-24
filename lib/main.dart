@@ -55,8 +55,6 @@ class MyApp extends StatelessWidget {
           ],
           
           // الصفحة الأولى
-          // home: const DashboardScreen(),
-          // home: const HomeScreen(),
           home:  const SplashScreen(),
         );
       },

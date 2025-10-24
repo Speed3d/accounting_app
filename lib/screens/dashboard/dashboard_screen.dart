@@ -7,9 +7,9 @@ import 'dart:io';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
+import '../../layouts/main_layout.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
-import '../../layouts/main_layout.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../utils/helpers.dart'; // لاستخدام formatCurrency
@@ -100,14 +100,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ===========================================================================
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
-      title: 'لوحة التحكم',
-      currentIndex: _currentBottomNavIndex,
-      onBottomNavTap: (index) {
-        setState(() {
-          _currentBottomNavIndex = index;
-        });
-      },
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+
+    // === AppBar بسيط ===
+    appBar: AppBar(
+      title: Text(l10n.dashboard),
+      // زر الرجوع يظهر تلقائياً
+    ),
+
       body: RefreshIndicator(
         onRefresh: () async => _refreshData(),
         child: CustomScrollView(
