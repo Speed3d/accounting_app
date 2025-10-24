@@ -1,6 +1,7 @@
 // lib/screens/auth/login_screen.dart
 
 import 'dart:io';
+import 'package:accounting_app/layouts/main_screen.dart';
 import 'package:accounting_app/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:bcrypt/bcrypt.dart';
@@ -143,7 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // --- الخطوة 4: الانتقال إلى الصفحة الرئيسية ---
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          // builder: (context) => const HomeScreen(),
+          builder: (context) => const MainScreen(),
         ),
       );
 

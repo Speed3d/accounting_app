@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   
   // ============= متغيرات الحالة =============
-  int _currentBottomNavIndex = 0;
+  // int _currentBottomNavIndex = 0;
 
   // ===========================================================================
   // بناء واجهة المستخدم
@@ -47,13 +47,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return MainLayout(
       title: l10n.homePage,
-      currentIndex: _currentBottomNavIndex,
-      onBottomNavTap: (index) {
-        setState(() {
-          _currentBottomNavIndex = index;
-        });
-        _handleBottomNavTap(index);
-      },
+      // currentIndex: _currentBottomNavIndex,
+      // onBottomNavTap: (index) {
+      //   setState(() {
+      //     _currentBottomNavIndex = index;
+      //   });
+      //   _handleBottomNavTap(index);
+      // },
       body: _buildBody(l10n),
     );
   }
@@ -363,39 +363,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ===========================================================================
-  // ✅ معالجة نقرات BottomNavigationBar
-  // ===========================================================================
-  void _handleBottomNavTap(int index) {
-    switch (index) {
-      case 0:
-        // الرئيسية (نفس الصفحة - لا نفعل شيء)
-        break;
+  // // ===========================================================================
+  // // ✅ معالجة نقرات BottomNavigationBar
+  // // ===========================================================================
+  // void _handleBottomNavTap(int index) {
+  //   switch (index) {
+  //     case 0:
+  //       // الرئيسية (نفس الصفحة - لا نفعل شيء)
+  //       break;
       
-      case 1:
-        // المبيعات
-        if (_authService.canViewCustomers) {
-          // _navigateToPage(DirectSaleScreen());
-        } else {
-          _showNoPermissionMessage();
-        }
-        break;
+  //     case 1:
+  //       // المبيعات
+  //       if (_authService.canViewCustomers) {
+  //         // _navigateToPage(DirectSaleScreen());
+  //       } else {
+  //         _showNoPermissionMessage();
+  //       }
+  //       break;
       
-      case 2:
-        // التقارير
-        if (_authService.canViewReports) {
-          // _navigateToPage(ReportsHubScreen());
-        } else {
-          _showNoPermissionMessage();
-        }
-        break;
+  //     case 2:
+  //       // التقارير
+  //       if (_authService.canViewReports) {
+  //         // _navigateToPage(ReportsHubScreen());
+  //       } else {
+  //         _showNoPermissionMessage();
+  //       }
+  //       break;
       
-      case 3:
-        // المزيد (يفتح Drawer)
-        Scaffold.of(context).openDrawer();
-        break;
-    }
-  }
+  //     case 3:
+  //       // المزيد (يفتح Drawer)
+  //       Scaffold.of(context).openDrawer();
+  //       break;
+  //   }
+  // }
   
   // ===========================================================================
   // عرض رسالة عدم وجود صلاحية
