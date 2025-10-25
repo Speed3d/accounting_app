@@ -1,9 +1,12 @@
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
+import 'package:accounting_app/screens/sales/invoice_details_screen.dart';
+import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../screens/sales/cash_sales_history_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -28,18 +31,18 @@ class CustomDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 // قسم الرئيسية
-                _buildSection(context, 'القسم الرئيسي', isDark),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.dashboard,
-                  title: 'لوحة التحكم',
-                  onTap: () {
-                    Navigator.pop(context);
-                    // TODO: التنقل للصفحة
-                  },
-                ),
+                // _buildSection(context, 'القسم الرئيسي', isDark),
+                // _buildMenuItem(
+                //   context,
+                //   icon: Icons.dashboard,
+                //   title: 'لوحة التحكم',
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     // TODO: التنقل للصفحة
+                //   },
+                // ),
                 
-                const Divider(),
+                // const Divider(),
                 
                 // قسم المبيعات
                 _buildSection(context, 'المبيعات', isDark),
@@ -62,8 +65,14 @@ class CustomDrawer extends StatelessWidget {
                   icon: Icons.receipt_long,
                   title: 'الفواتير',
                   onTap: () {
-                    Navigator.pop(context);
-                  },
+                  Navigator.pop(context); // 1. أغلق الدرج
+                  Navigator.push(         // 2. افتح صفحة العملاء
+                  context,
+                  MaterialPageRoute(
+                  builder: (context) => const CashSalesHistoryScreen(),
+                   ),
+                  );
+                 },
                 ),
                 
                 const Divider(),
@@ -341,10 +350,15 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: const Text('حول التطبيق'),
             onTap: () {
-              Navigator.pop(context);
-              // TODO: فتح صفحة حول التطبيق
-            },
-          ),
+                  Navigator.pop(context); // 1. أغلق الدرج
+                  Navigator.push(         // 2. افتح صفحة العملاء
+                  context,
+                  MaterialPageRoute(
+                  builder: (context) => const AboutScreen(),
+                   ),
+                  );
+                 },
+                ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
             title: const Text(
