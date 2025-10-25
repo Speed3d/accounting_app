@@ -40,7 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: AppConstants.screenPadding,
-            child: _buildWelcomeSection(l10n),
+            // لعرض اسم المستخدم في صفحة الهوم في الاعلى 
+            // child: _buildWelcomeSection(l10n),
           ),
         ),
         SliverPadding(
@@ -56,42 +57,43 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+  // الويجت الخاص لعرض اسم المستخدم في صفحة الهوم في الاعلى 
 
-  Widget _buildWelcomeSection(AppLocalizations l10n) {
-    final userName = _authService.currentUser?.fullName ?? 'المستخدم';
-    final isAdmin = _authService.isAdmin;
+  // Widget _buildWelcomeSection(AppLocalizations l10n) {
+  //   final userName = _authService.currentUser?.fullName ?? 'المستخدم';
+  //   final isAdmin = _authService.isAdmin;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'مرحباً، $userName 👋',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: AppConstants.spacingXs),
-        Row(
-          children: [
-            Icon(
-              isAdmin ? Icons.verified_user : Icons.person,
-              size: 16,
-              color: isAdmin ? AppColors.success : AppColors.info,
-            ),
-            const SizedBox(width: AppConstants.spacingXs),
-            Text(
-              isAdmin ? 'مدير النظام' : 'مستخدم',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isAdmin ? AppColors.success : AppColors.info,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppConstants.spacingMd),
-        const Divider(),
-      ],
-    );
-  }
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         'مرحباً، $userName 👋',
+  //         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //       const SizedBox(height: AppConstants.spacingXs),
+  //       Row(
+  //         children: [
+  //           Icon(
+  //             isAdmin ? Icons.verified_user : Icons.person,
+  //             size: 16,
+  //             color: isAdmin ? AppColors.success : AppColors.info,
+  //           ),
+  //           const SizedBox(width: AppConstants.spacingXs),
+  //           Text(
+  //             isAdmin ? 'مدير النظام' : 'مستخدم',
+  //             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //               color: isAdmin ? AppColors.success : AppColors.info,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: AppConstants.spacingMd),
+  //       const Divider(),
+  //     ],
+  //   );
+  // }
 
   Widget _buildMenuGrid(AppLocalizations l10n) {
     final menuItems = _getMenuItems(l10n);
@@ -175,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': 'بيع مباشر',
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
-        // 'page': DirectSaleScreen(),
+        'page': DirectSaleScreen(),
       });
     }
 

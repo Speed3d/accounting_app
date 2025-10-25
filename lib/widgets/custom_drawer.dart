@@ -1,4 +1,5 @@
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
+import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -46,9 +47,14 @@ class CustomDrawer extends StatelessWidget {
                   icon: Icons.point_of_sale,
                   title: 'مبيعات مباشرة',
                   onTap: () {
-                    Navigator.pop(context);
-                    // TODO: التنقل للصفحة
-                  },
+                  Navigator.pop(context); // 1. أغلق الدرج
+                  Navigator.push(         // 2. افتح صفحة العملاء
+                  context,
+                  MaterialPageRoute(
+                  builder: (context) => const DirectSaleScreen(),
+                   ),
+                  );
+                 },
                 ),
                 _buildMenuItem(
                   context,
