@@ -1,321 +1,719 @@
-// // lib/screens/products/add_edit_product_screen.dart
+// lib/screens/products/add_edit_product_screen.dart
 
-// import 'package:flutter/material.dart';
-// import 'package:mobile_scanner/mobile_scanner.dart';
-// import 'package:accounting_app/l10n/app_localizations.dart';
-// import '../../data/database_helper.dart';
-// import '../../data/models.dart';
-// import '../../utils/helpers.dart';
-// import '../../theme/app_colors.dart';
-// import '../../widgets/gradient_background.dart';
+import 'package:flutter/material.dart';
+import '../../data/database_helper.dart';
+import '../../data/models.dart';
+import '../../utils/helpers.dart';
+import '../../l10n/app_localizations.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_constants.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_card.dart';
+import 'barcode_scanner_screen.dart';
 
-// class AddEditProductScreen extends StatefulWidget {
-//   final Product? product;
-//   const AddEditProductScreen({super.key, this.product});
+/// 📦 شاشة إضافة/تعديل منتج - صفحة فرعية
+/// Hint: نموذج شامل لإدخال بيانات المنتج
+class AddEditProductScreen extends StatefulWidget {
+  final Product? product;
 
-//   @override
-//   State<AddEditProductScreen> createState() => _AddEditProductScreenState();
-// }
+  const AddEditProductScreen({super.key, this.product});
 
-// class _AddEditProductScreenState extends State<AddEditProductScreen> {
-//   // ... (كل متغيرات الحالة والدوال المنطقية تبقى كما هي)
-//   final _formKey = GlobalKey<FormState>();
-//   final dbHelper = DatabaseHelper.instance;
-//   final _nameController = TextEditingController();
-//   final _detailsController = TextEditingController();
-//   final _quantityController = TextEditingController();
-//   final _costPriceController = TextEditingController();
-//   final _sellingPriceController = TextEditingController();
-//   final _barcodeController = TextEditingController();
-//   Supplier? _selectedSupplier;
-//   late Future<List<Supplier>> _suppliersFuture;
-//   bool get _isEditMode => widget.product != null;
+  @override
+  State<AddEditProductScreen> createState() => _AddEditProductScreenState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _suppliersFuture = dbHelper.getAllSuppliers();
-//     if (_isEditMode) {
-//       final p = widget.product!;
-//       _nameController.text = p.productName;
-//       _detailsController.text = p.productDetails ?? '';
-//       _quantityController.text = p.quantity.toString();
-//       _costPriceController.text = p.costPrice.toString();
-//       _sellingPriceController.text = p.sellingPrice.toString();
-//       _barcodeController.text = p.barcode ?? '';
-//       _suppliersFuture.then((suppliers) {
-//         if (suppliers.isNotEmpty) {
-//           try {
-//             final foundSupplier = suppliers.firstWhere((s) => s.supplierID == p.supplierID);
-//             setState(() => _selectedSupplier = foundSupplier);
-//           } catch (_) {}
-//         }
-//       });
-//     }
-//   }
+class _AddEditProductScreenState extends State<AddEditProductScreen> {
+  // ============= متغيرات النموذج =============
+  final _formKey = GlobalKey<FormState>();
+  final dbHelper = DatabaseHelper.instance;
 
-//   @override
-//   void dispose() {
-//     _nameController.dispose();
-//     _detailsController.dispose();
-//     _quantityController.dispose();
-//     _costPriceController.dispose();
-//     _sellingPriceController.dispose();
-//     _barcodeController.dispose();
-//     super.dispose();
-//   }
+  // Controllers
+  final _nameController = TextEditingController();
+  final _detailsController = TextEditingController();
+  final _quantityController = TextEditingController();
+  final _costPriceController = TextEditingController();
+  final _sellingPriceController = TextEditingController();
+  final _barcodeController = TextEditingController();
 
-//   Future<void> scanBarcode() async {
-//     final result = await Navigator.push<String>(context, MaterialPageRoute(builder: (context) => const BarcodeScannerScreen()));
-//     if (result != null && mounted) setState(() => _barcodeController.text = result);
-//   }
+  // ============= متغيرات الحالة =============
+  Supplier? _selectedSupplier;
+  late Future<List<Supplier>> _suppliersFuture;
+  bool _isLoading = false;
 
-//   void _saveProduct() async {
-//     final l10n = AppLocalizations.of(context)!;
-//     if (!_formKey.currentState!.validate()) return;
-//     if (_selectedSupplier == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectSupplier), backgroundColor: Colors.red));
-//       return;
-//     }
-//     String barcodeToSave = _barcodeController.text.trim();
-//     if (barcodeToSave.isEmpty) barcodeToSave = 'INTERNAL-${DateTime.now().millisecondsSinceEpoch}';
-//     final bool exists = await dbHelper.barcodeExists(barcodeToSave, currentProductId: _isEditMode ? widget.product!.productID : null);
-//     if (exists) {
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.barcodeExistsError), backgroundColor: Colors.red));
-//       return;
-//     }
-//     try {
-//       final product = Product(productID: _isEditMode ? widget.product!.productID : null, productName: _nameController.text, barcode: barcodeToSave, productDetails: _detailsController.text, quantity: int.parse(convertArabicNumbersToEnglish(_quantityController.text)), costPrice: double.parse(convertArabicNumbersToEnglish(_costPriceController.text)), sellingPrice: double.parse(convertArabicNumbersToEnglish(_sellingPriceController.text)), supplierID: _selectedSupplier!.supplierID!);
-//       if (_isEditMode) {
-//         await dbHelper.updateProduct(product);
-//       } else {
-//         await dbHelper.insertProduct(product);
-//       }
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_isEditMode ? l10n.productUpdatedSuccess : l10n.productAddedSuccess), backgroundColor: Colors.green));
-//       Navigator.of(context).pop(true);
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorOccurred(e.toString())), backgroundColor: Colors.red));
-//     }
-//   }
+  // ============= Getters =============
+  bool get _isEditMode => widget.product != null;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!;
-//     final theme = Theme.of(context);
+  // ============= دورة الحياة =============
+  @override
+  void initState() {
+    super.initState();
+    _suppliersFuture = dbHelper.getAllSuppliers();
+    _initializeForm();
+  }
 
-//     return Scaffold(
-//       // --- 2. توحيد بنية الصفحة ---
-//       backgroundColor: Colors.transparent,
-//       extendBodyBehindAppBar: true,
-//       appBar: AppBar(
-//         title: Text(_isEditMode ? l10n.editProduct : l10n.addProduct),
-//         backgroundColor: Colors.transparent,
-//         elevation: 0,
-//         actions: [IconButton(onPressed: _saveProduct, icon: const Icon(Icons.save))],
-//       ),
-//       body: GradientBackground(
-//         child: SafeArea(
-//           child: Form(
-//             key: _formKey,
-//             child: ListView(
-//               padding: const EdgeInsets.all(20.0),
-//               children: [
-//                 // --- 3. تعديل تصميم القائمة المنسدلة ---
-//                 _buildSuppliersDropdown(l10n),
-//                 const SizedBox(height: 20),
-//                 // --- 4. تطبيق التصميم الزجاجي على حقول الإدخال ---
-//                 TextFormField(controller: _nameController, decoration: _getGlassInputDecoration(l10n.productName), validator: (v) => (v == null || v.isEmpty) ? l10n.productNameRequired : null),
-//                 const SizedBox(height: 20),
-//                 TextFormField(
-//                   controller: _barcodeController,
-//                   decoration: _getGlassInputDecoration(
-//                     l10n.barcode,
-//                     null,
-//                     IconButton(icon: Icon(Icons.qr_code_scanner, color: AppColors.textGrey), onPressed: scanBarcode),
-//                   ),
-//                 ),
-//                 const SizedBox(height: 20),
-//                 TextFormField(controller: _detailsController, decoration: _getGlassInputDecoration(l10n.productDetailsOptional)),
-//                 const SizedBox(height: 20),
-//                 _buildNumberField(l10n, controller: _quantityController, labelText: l10n.quantity, allowDecimal: false),
-//                 const SizedBox(height: 20),
-//                 _buildNumberField(l10n, controller: _costPriceController, labelText: l10n.costPrice),
-//                 const SizedBox(height: 20),
-//                 _buildNumberField(l10n, controller: _sellingPriceController, labelText: l10n.sellingPrice),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _detailsController.dispose();
+    _quantityController.dispose();
+    _costPriceController.dispose();
+    _sellingPriceController.dispose();
+    _barcodeController.dispose();
+    super.dispose();
+  }
 
-//   Widget _buildSuppliersDropdown(AppLocalizations l10n) {
-//     return FutureBuilder<List<Supplier>>(
-//       future: _suppliersFuture,
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
-//           return const Center(child: CircularProgressIndicator(color: Colors.white));
-//         }
-//         if (snapshot.hasError) return Text(l10n.errorLoadingSuppliers, style: const TextStyle(color: Colors.redAccent));
-//         if (!snapshot.hasData || snapshot.data!.isEmpty) return Text(l10n.noSuppliersAddOneFirst, style: const TextStyle(color: Colors.orangeAccent));
-        
-//         final suppliers = snapshot.data!;
-//         final isValueInList = _selectedSupplier != null && suppliers.any((s) => s.supplierID == _selectedSupplier!.supplierID);
-        
-//         return DropdownButtonFormField<Supplier>(
-//           decoration: _getGlassInputDecoration(l10n.supplier),
-//           dropdownColor: AppColors.primaryPurple,
-//           value: isValueInList ? _selectedSupplier : null,
-//           hint: Text(l10n.selectSupplier),
-//           items: suppliers.map((supplier) => DropdownMenuItem<Supplier>(value: supplier, child: Text(supplier.supplierName))).toList(),
-//           onChanged: (value) => setState(() => _selectedSupplier = value),
-//           validator: (value) => (value == null) ? l10n.pleaseSelectSupplier : null,
-//         );
-//       },
-//     );
-//   }
+  /// تهيئة النموذج
+  void _initializeForm() {
+    if (_isEditMode) {
+      final p = widget.product!;
+      _nameController.text = p.productName;
+      _detailsController.text = p.productDetails ?? '';
+      _quantityController.text = p.quantity.toString();
+      _costPriceController.text = p.costPrice.toString();
+      _sellingPriceController.text = p.sellingPrice.toString();
+      _barcodeController.text = p.barcode ?? '';
 
-//   Widget _buildNumberField(AppLocalizations l10n, {required TextEditingController controller, required String labelText, bool allowDecimal = true}) {
-//     return TextFormField(
-//       controller: controller,
-//       decoration: _getGlassInputDecoration(labelText),
-//       keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-//       validator: (value) {
-//         if (value == null || value.isEmpty) return l10n.fieldRequired;
-//         final number = num.tryParse(convertArabicNumbersToEnglish(value));
-//         if (number == null) return l10n.enterValidNumber;
-//         if (number < 0) return l10n.fieldCannotBeNegative;
-//         return null;
-//       },
-//     );
-//   }
+      // تحميل المورد
+      _suppliersFuture.then((suppliers) {
+        if (suppliers.isNotEmpty) {
+          try {
+            final foundSupplier = suppliers.firstWhere(
+              (s) => s.supplierID == p.supplierID,
+            );
+            setState(() => _selectedSupplier = foundSupplier);
+          } catch (_) {}
+        }
+      });
+    }
+  }
 
-//   // دالة مساعدة للحصول على تصميم موحد لحقول الإدخال الزجاجية
-//   InputDecoration _getGlassInputDecoration(String labelText, [IconData? icon, Widget? suffixIcon]) {
-//     final theme = Theme.of(context);
-//     return InputDecoration(
-//       labelText: labelText,
-//       prefixIcon: icon != null ? Icon(icon, color: AppColors.textGrey.withOpacity(0.8)) : null,
-//       suffixIcon: suffixIcon,
-//       filled: true,
-//       fillColor: AppColors.glassBgColor,
-//       labelStyle: theme.textTheme.bodyMedium,
-//       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor, width: 1.5)),
-//       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor, width: 1.5)),
-//       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-//     );
-//   }
-// }
+  // ============================================================
+  // 📷 مسح الباركود
+  // ============================================================
+  Future<void> _scanBarcode() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BarcodeScannerScreen(),
+      ),
+    );
 
-// // =================================================================================================
-// // --- شاشة مسح الباركود باستخدام الكاميرا ---
-// // متوافقة مع آخر إصدار من mobile_scanner
-// // =================================================================================================
+    if (result != null && mounted) {
+      setState(() => _barcodeController.text = result);
+    }
+  }
 
-// class BarcodeScannerScreen extends StatefulWidget {
-//   const BarcodeScannerScreen({super.key});
+  // ============================================================
+  // 💾 حفظ المنتج
+  // ============================================================
+  Future<void> _saveProduct() async {
+    final l10n = AppLocalizations.of(context)!;
 
-//   @override
-//   State<BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
-// }
+    // التحقق من صحة البيانات
+    if (!_formKey.currentState!.validate()) return;
 
-// class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
-//   // 🎯 إنشاء المتحكم الرئيسي للماسح
-//   final MobileScannerController controller = MobileScannerController();
+    if (_selectedSupplier == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.pleaseSelectSupplier),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
-//   // 🔄 متغير لتجنب معالجة أكثر من نتيجة باركود بنفس الوقت
-//   bool _isProcessing = false;
+    setState(() => _isLoading = true);
 
-//   // 💡 متغير من نوع ValueNotifier لمتابعة حالة الفلاش (تشغيل/إيقاف)
-//   final ValueNotifier<bool> _torchEnabled = ValueNotifier(false);
+    try {
+      // معالجة الباركود
+      String barcodeToSave = _barcodeController.text.trim();
+      if (barcodeToSave.isEmpty) {
+        barcodeToSave = 'INTERNAL-${DateTime.now().millisecondsSinceEpoch}';
+      }
 
-//   // 🔁 متغير آخر لمتابعة الكاميرا الحالية (أمامية / خلفية)
-//   final ValueNotifier<CameraFacing> _cameraFacing =
-//       ValueNotifier(CameraFacing.back);
+      // التحقق من عدم تكرار الباركود
+      final exists = await dbHelper.barcodeExists(
+        barcodeToSave,
+        currentProductId: _isEditMode ? widget.product!.productID : null,
+      );
 
-//   @override
-//   void dispose() {
-//     // 🧹 تنظيف الموارد عند إغلاق الشاشة
-//     controller.dispose();
-//     _torchEnabled.dispose();
-//     _cameraFacing.dispose();
-//     super.dispose();
-//   }
+      if (exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.barcodeExistsError),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!; // للترجمة
-//     return Scaffold(
-//       // ✅ جعل المحتوى خلف AppBar ليبدو بتصميم شفاف جميل
-//       extendBodyBehindAppBar: true,
+      final product = Product(
+        productID: _isEditMode ? widget.product!.productID : null,
+        productName: _nameController.text.trim(),
+        barcode: barcodeToSave,
+        productDetails: _detailsController.text.trim(),
+        quantity: int.parse(
+          convertArabicNumbersToEnglish(_quantityController.text),
+        ),
+        costPrice: double.parse(
+          convertArabicNumbersToEnglish(_costPriceController.text),
+        ),
+        sellingPrice: double.parse(
+          convertArabicNumbersToEnglish(_sellingPriceController.text),
+        ),
+        supplierID: _selectedSupplier!.supplierID!,
+      );
 
-//       appBar: AppBar(
-//         title: Text(l10n.scanBarcode),
-//         backgroundColor: Colors.black.withOpacity(0.3), // شفافية جميلة
-//         elevation: 0,
+      if (_isEditMode) {
+        await dbHelper.updateProduct(product);
+      } else {
+        await dbHelper.insertProduct(product);
+      }
 
-//         // 🔘 الأزرار في الجهة اليمنى من AppBar
-//         actions: [
-//           // 🔦 زر التحكم بالفلاش
-//           ValueListenableBuilder<bool>(
-//             valueListenable: _torchEnabled,
-//             builder: (context, isOn, _) {
-//               return IconButton(
-//                 icon: Icon(
-//                   isOn ? Icons.flash_on : Icons.flash_off,
-//                   color: isOn ? Colors.yellow : Colors.grey,
-//                 ),
-//                 onPressed: () async {
-//                   // عند الضغط على الزر نبدل حالة الفلاش
-//                   await controller.toggleTorch();
-//                   _torchEnabled.value = !isOn; // تحديث الحالة المرئية
-//                 },
-//               );
-//             },
-//           ),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    _isEditMode
+                        ? l10n.productUpdatedSuccess
+                        : l10n.productAddedSuccess,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.errorOccurred(e.toString())),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
-//           // 🔁 زر تبديل الكاميرا الأمامية / الخلفية
-//           ValueListenableBuilder<CameraFacing>(
-//             valueListenable: _cameraFacing,
-//             builder: (context, facing, _) {
-//               return IconButton(
-//                 icon: Icon(
-//                   Icons.cameraswitch,
-//                   color: Colors.white.withOpacity(0.8),
-//                 ),
-//                 onPressed: () async {
-//                   // نبدل الكاميرا
-//                   await controller.switchCamera();
-//                   _cameraFacing.value = facing == CameraFacing.back
-//                       ? CameraFacing.front
-//                       : CameraFacing.back;
-//                 },
-//               );
-//             },
-//           ),
-//         ],
-//       ),
+  // ============================================================
+  // 🎨 بناء الواجهة
+  // ============================================================
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-//       // 📷 مكون الكاميرا الفعلي لمسح الباركود
-//       body: MobileScanner(
-//         controller: controller, // نمرر المتحكم
-//         onDetect: (capture) {
-//           // 🧠 عند اكتشاف باركود جديد
-//           if (_isProcessing) return; // لمنع التكرار
-//           setState(() => _isProcessing = true);
+    return Scaffold(
+      // ============= AppBar =============
+      appBar: AppBar(
+        title: Text(_isEditMode ? l10n.editProduct : l10n.addProduct),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: l10n.save,
+            onPressed: _isLoading ? null : _saveProduct,
+          ),
+        ],
+      ),
 
-//           final List<Barcode> barcodes = capture.barcodes;
-//           if (barcodes.isNotEmpty) {
-//             final barcode = barcodes.first.rawValue;
-//             if (barcode != null) {
-//               // ✅ إرجاع القيمة إلى الشاشة السابقة
-//               Navigator.of(context).pop(barcode);
-//             }
-//           }
-//         },
-//       ),
-//     );
-//   }
+      // ============= Body =============
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: AppConstants.screenPadding,
+          children: [
+            const SizedBox(height: AppConstants.spacingLg),
 
-// }
+            // ============= المورد =============
+            _buildSectionHeader('معلومات المورد', Icons.store, isDark),
+            const SizedBox(height: AppConstants.spacingMd),
+
+            _buildSupplierDropdown(l10n, isDark),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
+            // ============= معلومات المنتج =============
+            _buildSectionHeader('معلومات المنتج', Icons.info_outline, isDark),
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // اسم المنتج
+            CustomTextField(
+              controller: _nameController,
+              label: l10n.productName,
+              hint: 'أدخل اسم المنتج',
+              prefixIcon: Icons.inventory_2_outlined,
+              textInputAction: TextInputAction.next,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? l10n.productNameRequired : null,
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // الباركود
+             CustomTextField(
+             controller: _barcodeController,
+             label: l10n.barcode,
+             hint: 'امسح أو أدخل الباركود',
+             prefixIcon: Icons.qr_code,
+             suffixIcon: Icons.qr_code_scanner,
+             onSuffixIconPressed: _scanBarcode,
+             textInputAction: TextInputAction.next,
+             ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // التفاصيل
+            CustomTextField(
+              controller: _detailsController,
+              label: l10n.productDetailsOptional,
+              hint: 'أدخل تفاصيل المنتج',
+              prefixIcon: Icons.description_outlined,
+              maxLines: 3,
+              textInputAction: TextInputAction.next,
+            ),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
+            // ============= الكمية والأسعار =============
+            _buildSectionHeader('الكمية والأسعار', Icons.attach_money, isDark),
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // الكمية
+            CustomTextField(
+              controller: _quantityController,
+              label: l10n.quantity,
+              hint: 'أدخل الكمية',
+              prefixIcon: Icons.inventory_outlined,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false),
+              textInputAction: TextInputAction.next,
+              validator: _quantityValidator,
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // سعر التكلفة
+            CustomTextField(
+              controller: _costPriceController,
+              label: l10n.costPrice,
+              hint: 'سعر الشراء',
+              prefixIcon: Icons.shopping_cart_outlined,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.next,
+              validator: _priceValidator,
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // سعر البيع
+            CustomTextField(
+              controller: _sellingPriceController,
+              label: l10n.sellingPrice,
+              hint: 'سعر البيع',
+              prefixIcon: Icons.sell_outlined,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.done,
+              validator: _priceValidator,
+            ),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
+            // ============= ملخص الأسعار =============
+            _buildPriceSummary(l10n, isDark),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
+            // ============= زر الحفظ =============
+            CustomButton(
+              text: _isEditMode ? l10n.editProduct : l10n.addProduct,
+              icon: _isEditMode ? Icons.update : Icons.add,
+              onPressed: _saveProduct,
+              isLoading: _isLoading,
+              type: ButtonType.primary,
+              size: ButtonSize.large,
+            ),
+
+            const SizedBox(height: AppConstants.spacingLg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // 📋 بناء رأس القسم
+  // ============================================================
+  Widget _buildSectionHeader(String title, IconData icon, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppConstants.spacingSm),
+          decoration: BoxDecoration(
+            color: (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                .withOpacity(0.1),
+            borderRadius: AppConstants.borderRadiusSm,
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+          ),
+        ),
+        const SizedBox(width: AppConstants.spacingSm),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // 🏢 بناء قائمة الموردين
+  // ============================================================
+  Widget _buildSupplierDropdown(AppLocalizations l10n, bool isDark) {
+    return FutureBuilder<List<Supplier>>(
+      future: _suppliersFuture,
+      builder: (context, snapshot) {
+        // حالة التحميل
+        if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1.5,
+              ),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // حالة الخطأ
+        if (snapshot.hasError) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.error,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error, color: AppColors.error),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    l10n.errorLoadingSuppliers,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // حالة الفراغ
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.warning,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning, color: AppColors.warning),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    l10n.noSuppliersAddOneFirst,
+                    style: const TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final suppliers = snapshot.data!;
+        final isValueInList = _selectedSupplier != null &&
+            suppliers.any((s) => s.supplierID == _selectedSupplier!.supplierID);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            borderRadius: AppConstants.borderRadiusMd,
+            border: Border.all(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              width: 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spacingMd,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<Supplier>(
+              value: isValueInList ? _selectedSupplier : null,
+              hint: Row(
+                children: [
+                  Icon(
+                    Icons.store,
+                    size: 20,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight,
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Text(l10n.selectSupplier),
+                ],
+              ),
+              isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down),
+              items: suppliers
+                  .map(
+                    (supplier) => DropdownMenuItem<Supplier>(
+                      value: supplier,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.info.withOpacity(0.1),
+                              borderRadius: AppConstants.borderRadiusSm,
+                            ),
+                            child: const Icon(
+                              Icons.store,
+                              size: 16,
+                              color: AppColors.info,
+                            ),
+                          ),
+                          const SizedBox(width: AppConstants.spacingSm),
+                          Expanded(
+                            child: Text(
+                              supplier.supplierName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() => _selectedSupplier = value);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // 📊 بناء ملخص الأسعار
+  // ============================================================
+  Widget _buildPriceSummary(AppLocalizations l10n, bool isDark) {
+    final costPrice = double.tryParse(
+          convertArabicNumbersToEnglish(_costPriceController.text.trim()),
+        ) ?? 0.0;
+    final sellingPrice = double.tryParse(
+          convertArabicNumbersToEnglish(_sellingPriceController.text.trim()),
+        ) ?? 0.0;
+    final profit = sellingPrice - costPrice;
+    final profitPercentage = costPrice > 0 ? (profit / costPrice) * 100 : 0.0;
+
+    return CustomCard(
+      child: Container(
+        padding: AppConstants.paddingLg,
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.surfaceDark.withOpacity(0.5)
+              : AppColors.surfaceLight,
+          borderRadius: AppConstants.borderRadiusMd,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.calculate,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  'ملخص الأسعار',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingLg),
+
+            // سعر التكلفة
+            _buildPriceRow(
+              'سعر التكلفة',
+              formatCurrency(costPrice),
+              AppColors.warning,
+              Icons.shopping_cart_outlined,
+            ),
+
+            const SizedBox(height: AppConstants.spacingSm),
+
+            // سعر البيع
+            _buildPriceRow(
+              'سعر البيع',
+              formatCurrency(sellingPrice),
+              AppColors.info,
+              Icons.sell_outlined,
+            ),
+
+            Divider(
+              height: AppConstants.spacingLg,
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            ),
+
+            // الربح
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: profit >= 0
+                    ? AppColors.success.withOpacity(0.1)
+                    : AppColors.error.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        profit >= 0 ? Icons.trending_up : Icons.trending_down,
+                        color: profit >= 0 ? AppColors.success : AppColors.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Text(
+                        'الربح',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: profit >= 0 ? AppColors.success : AppColors.error,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatCurrency(profit),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: profit >= 0 ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                      Text(
+                        '${profitPercentage.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: profit >= 0 ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// بناء صف سعر
+  Widget _buildPriceRow(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: AppConstants.spacingSm),
+            Text(label),
+          ],
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // ✅ Validators
+  // ============================================================
+
+  String? _quantityValidator(String? v) {
+    final l10n = AppLocalizations.of(context)!;
+    if (v == null || v.isEmpty) return l10n.fieldRequired;
+    final number = int.tryParse(convertArabicNumbersToEnglish(v));
+    if (number == null) return l10n.enterValidNumber;
+    if (number < 0) return l10n.fieldCannotBeNegative;
+    return null;
+  }
+
+  String? _priceValidator(String? v) {
+    final l10n = AppLocalizations.of(context)!;
+    if (v == null || v.isEmpty) return l10n.fieldRequired;
+    final number = double.tryParse(convertArabicNumbersToEnglish(v));
+    if (number == null) return l10n.enterValidNumber;
+    if (number < 0) return l10n.fieldCannotBeNegative;
+    return null;
+  }
+}

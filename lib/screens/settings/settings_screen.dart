@@ -123,6 +123,8 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
 
+                _buildDivider(isDark),
+
                   _SettingsLinkTile(
                   title: l10n.archive,
                   subtitle: l10n.archiveCenter,

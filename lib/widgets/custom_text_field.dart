@@ -17,6 +17,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLength;
   final IconData? prefixIcon;
   final IconData? suffixIcon;
+  final VoidCallback? onSuffixIconPressed;
   final VoidCallback? onSuffixIconTap;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
@@ -38,6 +39,7 @@ class CustomTextField extends StatelessWidget {
     this.maxLength,
     this.prefixIcon,
     this.suffixIcon,
+    this.onSuffixIconPressed,
     this.onSuffixIconTap,
     this.validator,
     this.onChanged,

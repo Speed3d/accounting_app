@@ -1,4 +1,5 @@
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
+import 'package:accounting_app/screens/products/products_list_screen.dart';
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
 import 'package:accounting_app/screens/sales/invoice_details_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
@@ -111,8 +112,14 @@ class CustomDrawer extends StatelessWidget {
                   icon: Icons.inventory_2,
                   title: 'المنتجات',
                   onTap: () {
-                    Navigator.pop(context);
-                  },
+                   Navigator.pop(context); // 1. أغلق الدرج
+                   Navigator.push(         // 2. افتح صفحة العملاء
+                   context,
+                   MaterialPageRoute(
+                   builder: (context) => const ProductsListScreen(),
+                   ),
+                  );
+                 },
                 ),
                 
                 const Divider(),
@@ -183,6 +190,7 @@ class CustomDrawer extends StatelessWidget {
                   );
                  },
                 ),
+
                 _buildMenuItem(
                   context,
                   icon: Icons.backup,

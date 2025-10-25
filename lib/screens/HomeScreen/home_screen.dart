@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.products,
         'icon': Icons.inventory_2,
         'color': AppColors.primaryLight,
-        // 'page': ProductsListScreen(),
+        'page': ProductsListScreen(),
       });
     }
 
