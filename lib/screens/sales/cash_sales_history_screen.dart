@@ -1,193 +1,361 @@
-// // lib/screens/sales/cash_sales_history_screen.dart
+// lib/screens/sales/cash_sales_history_screen.dart
 
-// import 'dart:ui';
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import '../../data/database_helper.dart';
-// import 'package:accounting_app/l10n/app_localizations.dart';
-// import '../../utils/helpers.dart';
-// import '../../widgets/gradient_background.dart';
-// import 'invoice_details_screen.dart';
-// import '../../theme/app_colors.dart';
-// import '../../widgets/glass_container.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../data/database_helper.dart';
+import 'package:accounting_app/l10n/app_localizations.dart';
+import '../../utils/helpers.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_constants.dart';
+import '../../widgets/custom_card.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/loading_state.dart';
+import '../../widgets/status_badge.dart';
+import 'invoice_details_screen.dart';
 
-// class CashSalesHistoryScreen extends StatefulWidget {
-//   const CashSalesHistoryScreen({super.key});
+/// 📋 شاشة سجل المبيعات النقدية
+/// Hint: هذه صفحة فرعية، لذا نستخدم Scaffold العادي (وليس MainLayout)
+class CashSalesHistoryScreen extends StatefulWidget {
+  const CashSalesHistoryScreen({super.key});
 
-//   @override
-//   State<CashSalesHistoryScreen> createState() => _CashSalesHistoryScreenState();
-// }
+  @override
+  State<CashSalesHistoryScreen> createState() => _CashSalesHistoryScreenState();
+}
 
-// class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
-//   // ... (كل متغيرات الحالة والدوال المنطقية تبقى كما هي)
-//   final dbHelper = DatabaseHelper.instance;
-//   late Future<List<Map<String, dynamic>>> _invoicesFuture;
-//   final _searchController = TextEditingController();
-//   String _searchQuery = '';
-//   bool _isDetailsVisible = true;
+class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
+  // ============= المتغيرات =============
+  final dbHelper = DatabaseHelper.instance;
+  late Future<List<Map<String, dynamic>>> _invoicesFuture;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isDetailsVisible = true;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadInvoices();
-//     _searchController.addListener(() {
-//       setState(() => _searchQuery = _searchController.text);
-//     });
-//   }
+  // ============= دورة الحياة =============
+  @override
+  void initState() {
+    super.initState();
+    _loadInvoices();
+    // Hint: نستمع للتغييرات في حقل البحث لتحديث النتائج فوراً
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text);
+    });
+  }
 
-//   void _loadInvoices() {
-//     setState(() {
-//       _invoicesFuture = dbHelper.getCashInvoices();
-//     });
-//   }
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-//   @override
-//   void dispose() {
-//     _searchController.dispose();
-//     super.dispose();
-//   }
+  // ============= الدوال =============
+  
+  /// تحميل الفواتير من قاعدة البيانات
+  void _loadInvoices() {
+    setState(() {
+      _invoicesFuture = dbHelper.getCashInvoices();
+    });
+  }
 
-//   // --- 2. تعديل مربع حوار إلغاء الفاتورة ---
-//   // الشرح: تم تغليف AlertDialog بـ BackdropFilter وتعديل خصائصه ليتناسب مع التصميم الزجاجي.
-//   Future<void> _handleVoidInvoice(int invoiceId, AppLocalizations l10n) async {
-//     final confirm = await showDialog<bool>(
-//       context: context,
-//       builder: (ctx) => BackdropFilter(
-//         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-//         child: AlertDialog(
-//           backgroundColor: AppColors.glassBgColor.withOpacity(0.9),
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: AppColors.glassBorderColor)),
-//           title: Text(l10n.confirmVoidTitle),
-//           content: Text(l10n.confirmVoidContent),
-//           actions: [
-//             TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel, style: TextStyle(color: AppColors.textGrey))),
-//             TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.confirmVoidAction, style: const TextStyle(color: Colors.redAccent))),
-//           ],
-//         ),
-//       ),
-//     );
-//     if (confirm != true) return;
-//     try {
-//       await dbHelper.voidInvoice(invoiceId);
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.voidSuccess), backgroundColor: Colors.green));
-//       _loadInvoices();
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorOccurred(e.toString())), backgroundColor: Colors.red));
-//     }
-//   }
+  /// معالجة إلغاء الفاتورة
+  /// Hint: نستخدم مربع حوار بالتصميم الجديد للتأكيد
+  Future<void> _handleVoidInvoice(int invoiceId, AppLocalizations l10n) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.confirmVoidTitle),
+        content: Text(l10n.confirmVoidContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: Text(l10n.confirmVoidAction),
+          ),
+        ],
+      ),
+    );
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!;
-//     final theme = Theme.of(context);
+    if (confirm != true) return;
 
-//     return Scaffold(
-//       // --- 3. توحيد بنية الصفحة ---
-//       // الشرح: نجعل Scaffold شفافاً ونضع الخلفية المتدرجة في Container.
-//       backgroundColor: Colors.transparent,
-//       extendBodyBehindAppBar: true,
-//       appBar: AppBar(
-//         title: Text(l10n.cashSalesHistory),
-//         backgroundColor: Colors.transparent,
-//         elevation: 0,
-//       ),
-//       body: GradientBackground(
-//         child: SafeArea(
-//           child: Column(
-//             children: [
-//               // --- 4. تعديل تصميم حقل البحث ---
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-//                 child: TextField(
-//                   controller: _searchController,
-//                   decoration: InputDecoration(
-//                     hintText: l10n.searchByInvoiceNumber,
-//                     prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
-//                     filled: true,
-//                     fillColor: AppColors.glassBgColor,
-//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor, width: 1.5)),
-//                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor, width: 1.5)),
-//                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-//                   ),
-//                   keyboardType: TextInputType.number,
-//                 ),
-//               ),
+    try {
+      await dbHelper.voidInvoice(invoiceId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.voidSuccess),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        _loadInvoices();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.errorOccurred(e.toString())),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  // ============= البناء =============
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      // ============= App Bar =============
+      // Hint: AppBar بسيط مع عنوان فقط (بدون CustomAppBar لأنها صفحة فرعية)
+      appBar: AppBar(
+        title: Text(l10n.cashSalesHistory),
+        // Hint: الألوان تأتي تلقائياً من الثيم الموحد
+      ),
+
+      // ============= Body =============
+      body: Column(
+        children: [
+          // ============= حقل البحث =============
+          // Hint: نستخدم SearchTextField الجاهز مع padding موحد
+          Padding(
+            padding: AppConstants.paddingHorizontalMd.copyWith(
+              top: AppConstants.spacingMd,
+              bottom: AppConstants.spacingSm,
+            ),
+            child: SearchTextField(
+              hint: l10n.searchByInvoiceNumber,
+              controller: _searchController,
+              onClear: () {
+                setState(() => _searchQuery = '');
+              },
+            ),
+          ),
+
+          // ============= زر إظهار/إخفاء =============
+          // Hint: TextButton بسيط مع أيقونة
+          TextButton.icon(
+            icon: Icon(
+              _isDetailsVisible 
+                  ? Icons.visibility_off_outlined 
+                  : Icons.visibility_outlined,
+            ),
+            label: Text(
+              _isDetailsVisible ? l10n.hideInvoices : l10n.showInvoices,
+            ),
+            onPressed: () => setState(() => _isDetailsVisible = !_isDetailsVisible),
+          ),
+
+          // ============= القائمة =============
+          if (_isDetailsVisible)
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _invoicesFuture,
+                builder: (context, snapshot) {
+                  // --- حالة التحميل ---
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LoadingState(message: 'جاري تحميل الفواتير...');
+                  }
+
+                  // --- حالة الخطأ ---
+                  if (snapshot.hasError) {
+                    return ErrorState(
+                      message: snapshot.error.toString(),
+                      onRetry: _loadInvoices,
+                    );
+                  }
+
+                  // --- حالة عدم وجود بيانات ---
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.receipt_long,
+                      title: l10n.noCashInvoices,
+                      message: 'لم يتم تسجيل أي فاتورة بيع نقدي حتى الآن',
+                    );
+                  }
+
+                  // --- تصفية النتائج حسب البحث ---
+                  final filteredInvoices = snapshot.data!.where((invoice) {
+                    final invoiceId = invoice['InvoiceID'].toString();
+                    final searchText = convertArabicNumbersToEnglish(_searchQuery);
+                    return invoiceId.contains(searchText);
+                  }).toList();
+
+                  // --- حالة عدم وجود نتائج بحث ---
+                  if (filteredInvoices.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.search_off,
+                      title: l10n.noMatchingResults,
+                      message: 'جرب البحث برقم فاتورة آخر',
+                    );
+                  }
+
+                  // ============= عرض القائمة =============
+                  return ListView.builder(
+                    padding: AppConstants.screenPadding,
+                    itemCount: filteredInvoices.length,
+                    itemBuilder: (context, index) {
+                      return _buildInvoiceCard(
+                        context,
+                        filteredInvoices[index],
+                        l10n,
+                        isDark,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ============= بطاقة الفاتورة =============
+  /// Hint: نبني كل فاتورة في Card منفصل لسهولة القراءة والصيانة
+  Widget _buildInvoiceCard(
+    BuildContext context,
+    Map<String, dynamic> invoice,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    // --- استخراج البيانات ---
+    final invoiceId = invoice['InvoiceID'] as int;
+    final totalAmount = invoice['TotalAmount'] as double;
+    final invoiceDate = DateTime.parse(invoice['InvoiceDate'] as String);
+    final isVoid = invoice['IsVoid'] == 1;
+    final status = invoice['Status'] as String?;
+
+    // --- تحديد الألوان والأنماط حسب الحالة ---
+    final Color primaryColor = isVoid 
+        ? AppColors.textHintLight 
+        : (isDark ? AppColors.primaryDark : AppColors.primaryLight);
+    
+    final TextStyle titleStyle = TextStyle(
+      fontWeight: FontWeight.bold,
+      decoration: isVoid ? TextDecoration.lineThrough : null,
+      color: isVoid 
+          ? (isDark ? AppColors.textHintDark : AppColors.textHintLight)
+          : null,
+    );
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      onTap: isVoid ? null : () async {
+        // Hint: ننتقل لشاشة التفاصيل وننتظر النتيجة
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => InvoiceDetailsScreen(invoiceId: invoiceId),
+          ),
+        );
+        // Hint: إذا تم التعديل، نعيد تحميل القائمة
+        if (result == true) _loadInvoices();
+      },
+      child: Column(
+        children: [
+          // ============= العنوان =============
+          Row(
+            children: [
+              // --- أيقونة الفاتورة ---
+              CircleAvatar(
+                backgroundColor: primaryColor.withOpacity(0.1),
+                child: Text(
+                  '#$invoiceId',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
               
-//               // --- 5. تعديل زر إظهار/إخفاء التفاصيل ---
-//               TextButton.icon(
-//                 icon: Icon(_isDetailsVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textGrey),
-//                 label: Text(_isDetailsVisible ? l10n.hideInvoices : l10n.showInvoices, style: TextStyle(color: AppColors.textGrey)),
-//                 onPressed: () => setState(() => _isDetailsVisible = !_isDetailsVisible),
-//               ),
-
-//               if (_isDetailsVisible)
-//                 Expanded(
-//                   child: FutureBuilder<List<Map<String, dynamic>>>(
-//                     future: _invoicesFuture,
-//                     builder: (context, snapshot) {
-//                       if (snapshot.connectionState == ConnectionState.waiting) {
-//                         return const Center(child: CircularProgressIndicator(color: Colors.white));
-//                       }
-//                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//                         return Center(child: Text(l10n.noCashInvoices, style: theme.textTheme.bodyLarge));
-//                       }
-//                       final filteredInvoices = snapshot.data!.where((i) => i['InvoiceID'].toString().contains(convertArabicNumbersToEnglish(_searchQuery))).toList();
-//                       if (filteredInvoices.isEmpty) {
-//                         return Center(child: Text(l10n.noMatchingResults, style: theme.textTheme.bodyLarge));
-//                       }
-//                       // --- 6. تعديل تصميم القائمة ---
-//                       // الشرح: نستخدم ListView.builder لعرض البيانات، ونغلف كل عنصر بـ GlassContainer.
-//                       return ListView.builder(
-//                         padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-//                         itemCount: filteredInvoices.length,
-//                         itemBuilder: (context, index) {
-//                           final invoice = filteredInvoices[index];
-//                           final isVoid = invoice['IsVoid'] == 1;
-//                           final status = invoice['Status'] as String?;
-//                           final titleStyle = TextStyle(fontWeight: FontWeight.bold, decoration: isVoid ? TextDecoration.lineThrough : null, color: isVoid ? AppColors.textGrey : null);
-//                           final trailingStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isVoid ? AppColors.textGrey : Colors.greenAccent, decoration: isVoid ? TextDecoration.lineThrough : null);
-
-//                           return Padding(
-//                             padding: const EdgeInsets.only(bottom: 8.0),
-//                             child: GlassContainer(
-//                               borderRadius: 15,
-//                               color: isVoid ? AppColors.glassBgColor.withOpacity(0.1) : AppColors.glassBgColor,
-//                               child: ListTile(
-//                                 leading: CircleAvatar(
-//                                   backgroundColor: isVoid ? AppColors.primaryPurple.withOpacity(0.3) : AppColors.accentBlue.withOpacity(0.3),
-//                                   child: Text('#${invoice['InvoiceID']}', style: TextStyle(fontWeight: FontWeight.bold, color: isVoid ? AppColors.textGrey : Colors.white)),
-//                                 ),
-//                                 title: Row(
-//                                   children: [
-//                                     Text(l10n.invoiceNo(invoice['InvoiceID'].toString()), style: titleStyle),
-//                                     if (status == 'معدلة' && !isVoid) ...[const SizedBox(width: 8), Tooltip(message: l10n.modified, child: const Icon(Icons.edit, size: 16, color: Colors.orangeAccent))],
-//                                     if (isVoid) ...[const SizedBox(width: 8), Tooltip(message: l10n.voided, child: const Icon(Icons.delete_forever, size: 16, color: Colors.redAccent))]
-//                                   ],
-//                                 ),
-//                                 subtitle: Text(DateFormat('yyyy-MM-dd – hh:mm a').format(DateTime.parse(invoice['InvoiceDate']))),
-//                                 trailing: Row(
-//                                   mainAxisSize: MainAxisSize.min,
-//                                   children: [
-//                                     Text(formatCurrency(invoice['TotalAmount']), style: trailingStyle),
-//                                     if (!isVoid) IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () => _handleVoidInvoice(invoice['InvoiceID'], l10n)),
-//                                   ],
-//                                 ),
-//                                 onTap: () async {
-//                                   final result = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => InvoiceDetailsScreen(invoiceId: invoice['InvoiceID'])));
-//                                   if (result == true) _loadInvoices();
-//                                 },
-//                               ),
-//                             ),
-//                           );
-//                         },
-//                       );
-//                     },
-//                   ),
-//                 ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+              const SizedBox(width: AppConstants.spacingMd),
+              
+              // --- رقم الفاتورة ---
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          l10n.invoiceNo(invoiceId.toString()),
+                          style: titleStyle,
+                        ),
+                        
+                        // --- شارة الحالة ---
+                        if (status == 'معدلة' && !isVoid) ...[
+                          const SizedBox(width: AppConstants.spacingSm),
+                          const StatusBadge(
+                            text: 'معدلة',
+                            type: StatusType.warning,
+                            small: true,
+                          ),
+                        ],
+                        
+                        if (isVoid) ...[
+                          const SizedBox(width: AppConstants.spacingSm),
+                          const StatusBadge(
+                            text: 'ملغاة',
+                            type: StatusType.error,
+                            small: true,
+                          ),
+                        ],
+                      ],
+                    ),
+                    
+                    const SizedBox(height: AppConstants.spacingXs),
+                    
+                    // --- التاريخ ---
+                    Text(
+                      DateFormat('yyyy-MM-dd – hh:mm a').format(invoiceDate),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // --- المبلغ ---
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    formatCurrency(totalAmount),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isVoid 
+                          ? (isDark ? AppColors.textHintDark : AppColors.textHintLight)
+                          : AppColors.success,
+                      decoration: isVoid ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  
+                  // --- زر الحذف ---
+                  if (!isVoid)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
+                      onPressed: () => _handleVoidInvoice(invoiceId, l10n),
+                      tooltip: 'إلغاء الفاتورة',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

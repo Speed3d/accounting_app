@@ -1,299 +1,260 @@
-// import 'package:accounting_app/theme/app_colors.dart';
-// import 'package:flutter/material.dart';
-// import 'package:accounting_app/l10n/app_localizations.dart';
-// import 'package:accounting_app/providers/locale_provider.dart';
-// import 'package:accounting_app/providers/theme_provider.dart';
-// import 'package:accounting_app/widgets/glass_container.dart'; 
-// import '../archive/archive_center_screen.dart';
-// import 'about_screen.dart';
-// import 'backup_restore_screen.dart';
-// import 'company_info_screen.dart';
+import 'package:accounting_app/screens/settings/backup_restore_screen.dart';
+import 'package:accounting_app/screens/settings/company_info_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
+import '../../providers/locale_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../theme/app_constants.dart';
+import '../../layouts/main_layout.dart';
 
-// class SettingsScreen extends StatelessWidget {
-//   const SettingsScreen({super.key});
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!;
-//     final theme = Theme.of(context);
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
 
-//     return Scaffold(
-//       // --- خلفية شفافة للسماح بظهور التدرج من الخلف ---
-//       backgroundColor: Colors.transparent,
-//       extendBodyBehindAppBar: true,
-      
-//       // --- استخدام CustomScrollView لدمج AppBar مع القائمة ---
-//       body: Container(
-//         // --- التدرج اللوني حسب الثيم الحالي ---
-//         // Hint: هنا نحتاج للتحقق من الثيم الحالي لاستخدام الألوان الصحيحة
-//         // إذا كان الوضع فاتحاً، استخدم البنفسجي
-//         // إذا كان الوضع ليلياً، استخدم الرصاصي
-//         decoration: BoxDecoration(
-//           gradient: LinearGradient(
-//             // Hint: نستخدم Theme.of(context).brightness للتحقق من الثيم الحالي
-//             colors: theme.brightness == Brightness.light
-//                 // --- الوضع الفاتح: تدرج بنفسجي ---
-//                 ? [AppColors.lightPurple, AppColors.primaryPurple]
-//                 // --- الوضع الليلي: تدرج رصاصي ---
-//                 : [AppColors.darkScaffoldBg, AppColors.darkCardBg],
-//             begin: Alignment.topCenter,
-//             end: Alignment.bottomCenter,
-//           ),
-//         ),
-//         child: CustomScrollView(
-//           slivers: [
-//             // --- شريط العنوان ---
-//             // Hint: SliverAppBar يسمح بظهور AppBar مع التمرير
-//             SliverAppBar(
-//               pinned: true,
-//               title: Text(l10n.settings),
-//             ),
+    return MainLayout(
+      title: l10n.settings,
+      currentIndex: 3, // المزيد
+      showBottomNav: true,
+      body: ListView(
+        padding: AppConstants.screenPadding,
+        children: [
+          const SizedBox(height: AppConstants.spacingMd),
+          
+          // ============================================================
+          // --- قسم المظهر ---
+          // ============================================================
+          _SectionTitle(title: 'المظهر'),
+          const SizedBox(height: AppConstants.spacingSm),
+          
+          _SettingsCard(
+            child: Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return SwitchListTile(
+                  title: Text(
+                    'الوضع الليلي',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  subtitle: Text(
+                    'تفعيل أو إيقاف المظهر الداكن',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  secondary: Icon(
+                    themeProvider.isDarkMode 
+                        ? Icons.dark_mode 
+                        : Icons.light_mode,
+                  ),
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) {
+                    themeProvider.toggleTheme();
+                  },
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: AppConstants.spacingLg),
 
-//             // --- قائمة الإعدادات ---
-//             SliverList(
-//               delegate: SliverChildListDelegate(
-//                 [
-//                   // ============================================================
-//                   // --- قسم المظهر ---
-//                   // ============================================================
-//                   _SectionTitle(title: "المظهر"),
-//                   _SettingsSwitchTile(
-//                     title: "الوضع الليلي",
-//                     subtitle: "تفعيل أو إيقاف المظهر الداكن",
-//                     icon: Icons.brightness_4_outlined,
-//                     // --- التحقق من الثيم الحالي ---
-//                     // Hint: إذا كان الثيم الحالي هو dark، يكون المفتاح مشغل (true)
-//                     value: ThemeProvider.instance.themeMode == ThemeMode.dark,
-//                     onChanged: (isDark) {
-//                       // --- تغيير الثيم بناءً على حالة المفتاح ---
-//                       ThemeProvider.instance.setThemeMode(
-//                         isDark ? ThemeMode.dark : ThemeMode.light,
-//                       );
-//                     },
-//                   ),
-//                   const SizedBox(height: 20),
+          // ============================================================
+          // --- قسم اللغة ---
+          // ============================================================
+          _SectionTitle(title: l10n.language),
+          const SizedBox(height: AppConstants.spacingSm),
+          
+          _SettingsCard(
+            child: Consumer<LocaleProvider>(
+              builder: (context, localeProvider, child) {
+                final currentLocale = localeProvider.locale;
+                final isArabic = currentLocale?.languageCode == 'ar';
+                
+                return ListTile(
+                  leading: const Icon(Icons.language_outlined),
+                  title: Text(
+                    l10n.changeLanguage,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  subtitle: Text(
+                    isArabic ? 'العربية' : 'English',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    // تبديل اللغة
+                    final newLocale = isArabic 
+                        ? const Locale('en') 
+                        : const Locale('ar');
+                    localeProvider.setLocale(newLocale);
+                    
+                    // إظهار رسالة تأكيد
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isArabic 
+                              ? 'Language changed to English' 
+                              : 'تم تغيير اللغة إلى العربية',
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: AppConstants.spacingLg),
 
-//                   // ============================================================
-//                   // --- قسم اللغة ---
-//                   // ============================================================
-//                   _SectionTitle(title: l10n.language),
-//                   ValueListenableBuilder<Locale?>(
-//                     valueListenable: LocaleProvider.instance.locale,
-//                     builder: (context, currentLocale, child) {
-//                       return _SettingsLinkTile(
-//                         title: l10n.changeLanguage,
-//                         subtitle: currentLocale?.languageCode == 'ar' ? 'العربية' : 'English',
-//                         icon: Icons.language_outlined,
-//                         onTap: () {
-//                           // --- تبديل اللغة ---
-//                           final newLocale = currentLocale?.languageCode == 'ar' 
-//                             ? const Locale('en') 
-//                             : const Locale('ar');
-//                           LocaleProvider.instance.setLocale(newLocale);
-//                         },
-//                       );
-//                     },
-//                   ),
-//                   const SizedBox(height: 20),
+          // ============================================================
+          // --- قسم إدارة البيانات ---
+          // ============================================================
+          _SectionTitle(title: l10n.dataManagement),
+          const SizedBox(height: AppConstants.spacingSm),
+          
+          _SettingsCard(
+            child: Column(
+              children: [
+                _SettingsLinkTile(
+                  title: l10n.companyInformation,
+                  subtitle: l10n.changeAppNameAndLogo,
+                  icon: Icons.business_outlined,
+                  onTap: () { () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CompanyInfoScreen(),
+                      ),
+                    );
+                  },
+                ),
+                
+                const Divider(height: 1),
+                _SettingsLinkTile(
+                  title: l10n.archiveCenter,
+                  subtitle: l10n.restoreArchivedItems,
+                  icon: Icons.archive_outlined,
+                  onTap: () { () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ArchiveCenterScreen(),
+                      ),
+                    );
+                  },
+                ),
 
-//                   // ============================================================
-//                   // --- قسم إدارة البيانات ---
-//                   // ============================================================
-//                   _SectionTitle(title: l10n.dataManagement),
-//                   _SettingsLinkTile(
-//                     title: l10n.companyInformation,
-//                     subtitle: l10n.changeAppNameAndLogo,
-//                     icon: Icons.business_outlined,
-//                     onTap: () => Navigator.push(
-//                       context,
-//                       MaterialPageRoute(builder: (_) => const CompanyInfoScreen()),
-//                     ),
-//                   ),
-//                   _SettingsLinkTile(
-//                     title: l10n.archiveCenter,
-//                     subtitle: l10n.restoreArchivedItems,
-//                     icon: Icons.archive_outlined,
-//                     onTap: () => Navigator.push(
-//                       context,
-//                       MaterialPageRoute(builder: (_) => const ArchiveCenterScreen()),
-//                     ),
-//                   ),
-//                   _SettingsLinkTile(
-//                     title: l10n.backupAndRestore,
-//                     subtitle: l10n.saveAndRestoreAppData,
-//                     icon: Icons.storage_outlined,
-//                     onTap: () => Navigator.push(
-//                       context,
-//                       MaterialPageRoute(builder: (_) => const BackupRestoreScreen()),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 20),
+                const Divider(height: 1),
+                _SettingsLinkTile(
+                  title: l10n.backupAndRestore,
+                  subtitle: l10n.saveAndRestoreAppData,
+                  icon: Icons.storage_outlined,
+                  onTap: () { () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BackupRestoreScreen(),
+                      ),
+                    );
+                  },
+                ),
+          
+          const SizedBox(height: AppConstants.spacingLg),
 
-//                   // ============================================================
-//                   // --- قسم حول التطبيق ---
-//                   // ============================================================
-//                   _SectionTitle(title: l10n.about),
-//                   _SettingsLinkTile(
-//                     title: l10n.aboutTheApp,
-//                     subtitle: "معلومات التطبيق والمطور",
-//                     icon: Icons.info_outline,
-//                     onTap: () => Navigator.push(
-//                       context,
-//                       MaterialPageRoute(builder: (_) => const AboutScreen()),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 30),
-//                 ],
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+          // ============================================================
+          // --- قسم حول التطبيق ---
+          // ============================================================
+          _SectionTitle(title: l10n.about),
+          const SizedBox(height: AppConstants.spacingSm),
+          
+          // --- حول التطبيق ---
+          _SettingsLinkTile(
+            title: l10n.aboutTheApp,
+            subtitle: "معلومات التطبيق والمطور",
+            icon: Icons.info_outline,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AboutScreen(),
+              ),
+            ),
+          ),
 
-// // ============================================================
-// // --- ويدجت عنوان القسم ---
-// // ============================================================
-// /// ويدجت مخصصة لعناوين الأقسام
-// /// الفائدة: تجنب تكرار نفس الكود
-// class _SectionTitle extends StatelessWidget {
-//   final String title;
-//   const _SectionTitle({required this.title});
+          // --- مساحة إضافية في الأسفل ---
+          const SizedBox(height: AppConstants.spacingXl),
+        ],
+      ),
+    );
+  }
+}
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 8.0),
-//       child: Text(
-//         title,
-//         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-//           // --- اللون يتغير حسب الثيم ---
-//           // Hint: في الوضع الفاتح يكون بنفسجي فاتح
-//           //       في الوضع الليلي يكون رصاصي فاتح
-//           color: Theme.of(context).brightness == Brightness.light
-//               ? AppColors.lightTextSecondary
-//               : AppColors.darkTextSecondary,
-//           fontWeight: FontWeight.w600,
-//         ),
-//       ),
-//     );
-//   }
-// }
+// ============================================================
+// --- ويدجت عنوان القسم ---
+// ============================================================
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
 
-// // ============================================================
-// // --- ويدجت عنصر قائمة ينقلك لصفحة أخرى ---
-// // ============================================================
-// /// ويدجت مخصصة لعناصر الإعدادات التي تحتوي على رابط
-// /// تحتوي على أيقونة، عنوان، وسهم للأمام
-// class _SettingsLinkTile extends StatelessWidget {
-//   final String title;
-//   final String subtitle;
-//   final IconData icon;
-//   final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
 
-//   const _SettingsLinkTile({
-//     required this.title,
-//     required this.subtitle,
-//     required this.icon,
-//     required this.onTap,
-//   });
+// ============================================================
+// --- ويدجت بطاقة الإعدادات ---
+// ============================================================
+class _SettingsCard extends StatelessWidget {
+  final Widget child;
+  
+  const _SettingsCard({required this.child});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final theme = Theme.of(context);
-    
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-//       // --- استخدام GlassContainer للتأثير الزجاجي ---
-//       // Hint: GlassContainer توفر تأثير زجاج شفاف جميل
-//       child: GlassContainer(
-//         borderRadius: 15,
-//         child: ListTile(
-//           // --- الأيقونة على اليسار ---
-//           leading: Icon(
-//             icon,
-//             color: theme.textTheme.bodyMedium?.color,
-//           ),
-//           // --- العنوان ---
-//           title: Text(
-//             title,
-//             style: theme.textTheme.bodyLarge?.copyWith(
-//               fontWeight: FontWeight.w600,
-//             ),
-//           ),
-//           // --- النص الثانوي (الوصف) ---
-//           subtitle: Text(
-//             subtitle,
-//             style: theme.textTheme.bodyMedium,
-//           ),
-//           // --- السهم على اليمين ---
-//           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-//           // --- الإجراء عند الضغط ---
-//           onTap: onTap,
-//           dense: true,
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: child,
+    );
+  }
+}
 
-// // ============================================================
-// // --- ويدجت عنصر قائمة يحتوي على مفتاح تبديل ---
-// // ============================================================
-// /// ويدجت مخصصة لعناصر الإعدادات التي تحتوي على مفتاح تبديل (Switch)
-// /// مثل: تشغيل/إيقاف الوضع الليلي
-// class _SettingsSwitchTile extends StatelessWidget {
-//   final String title;
-//   final String subtitle;
-//   final IconData icon;
-//   final bool value; // القيمة الحالية للمفتاح
-//   final ValueChanged<bool> onChanged; // الدالة التي تُستدعى عند التغيير
+// ============================================================
+// --- ويدجت عنصر قائمة ينقلك لصفحة أخرى ---
+// ============================================================
+class _SettingsLinkTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
 
-//   const _SettingsSwitchTile({
-//     required this.title,
-//     required this.subtitle,
-//     required this.icon,
-//     required this.value,
-//     required this.onChanged,
-//   });
+  const _SettingsLinkTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final theme = Theme.of(context);
-    
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-//       // --- استخدام GlassContainer ---
-//       child: GlassContainer(
-//         borderRadius: 15,
-//         child: SwitchListTile(
-//           // --- الأيقونة على اليسار ---
-//           secondary: Icon(
-//             icon,
-//             color: theme.textTheme.bodyMedium?.color,
-//           ),
-//           // --- العنوان ---
-//           title: Text(
-//             title,
-//             style: theme.textTheme.bodyLarge?.copyWith(
-//               fontWeight: FontWeight.w600,
-//             ),
-//           ),
-//           // --- النص الثانوي ---
-//           subtitle: Text(
-//             subtitle,
-//             style: theme.textTheme.bodyMedium,
-//           ),
-//           // --- قيمة المفتاح (مشغل أم مطفأ) ---
-//           value: value,
-//           // --- الدالة عند تغيير المفتاح ---
-//           onChanged: onChanged,
-//           // --- لون المفتاح عندما يكون مشغلاً ---
-//           activeColor: theme.colorScheme.primary,
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, size: 22),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+}

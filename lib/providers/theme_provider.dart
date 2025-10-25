@@ -52,12 +52,15 @@ class ThemeProvider extends ChangeNotifier {
     await _saveThemeToPrefs();
     notifyListeners();
   }
+    // جديد
+    final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
   
   /// تعيين ثيم محدد
   Future<void> setThemeMode(ThemeMode mode) async {
     if (_themeMode == mode) return;
     
     _themeMode = mode;
+    themeModeNotifier.value = mode; // ← أضف هذا السطر
     await _saveThemeToPrefs();
     notifyListeners();
   }

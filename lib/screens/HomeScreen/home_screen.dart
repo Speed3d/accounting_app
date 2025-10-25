@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.settings,
         'icon': Icons.settings,
         'color': Colors.grey,
-        // 'page': SettingsScreen(),
+        'page': SettingsScreen(),
       });
     }
 
