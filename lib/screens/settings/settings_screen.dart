@@ -1,5 +1,6 @@
 import 'package:accounting_app/screens/settings/backup_restore_screen.dart';
 import 'package:accounting_app/screens/settings/company_info_screen.dart';
+import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
@@ -23,13 +24,12 @@ class SettingsScreen extends StatelessWidget {
         padding: AppConstants.screenPadding,
         children: [
           const SizedBox(height: AppConstants.spacingMd),
-          
+
           // ============================================================
           // --- قسم المظهر ---
           // ============================================================
           _SectionTitle(title: 'المظهر'),
           const SizedBox(height: AppConstants.spacingSm),
-          
           _SettingsCard(
             child: Consumer<ThemeProvider>(
               builder: (context, themeProvider, child) {
@@ -43,8 +43,8 @@ class SettingsScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   secondary: Icon(
-                    themeProvider.isDarkMode 
-                        ? Icons.dark_mode 
+                    themeProvider.isDarkMode
+                        ? Icons.dark_mode
                         : Icons.light_mode,
                   ),
                   value: themeProvider.isDarkMode,
@@ -55,7 +55,6 @@ class SettingsScreen extends StatelessWidget {
               },
             ),
           ),
-          
           const SizedBox(height: AppConstants.spacingLg),
 
           // ============================================================
@@ -63,13 +62,12 @@ class SettingsScreen extends StatelessWidget {
           // ============================================================
           _SectionTitle(title: l10n.language),
           const SizedBox(height: AppConstants.spacingSm),
-          
           _SettingsCard(
             child: Consumer<LocaleProvider>(
               builder: (context, localeProvider, child) {
                 final currentLocale = localeProvider.locale;
                 final isArabic = currentLocale?.languageCode == 'ar';
-                
+
                 return ListTile(
                   leading: const Icon(Icons.language_outlined),
                   title: Text(
@@ -83,17 +81,17 @@ class SettingsScreen extends StatelessWidget {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     // تبديل اللغة
-                    final newLocale = isArabic 
-                        ? const Locale('en') 
+                    final newLocale = isArabic
+                        ? const Locale('en')
                         : const Locale('ar');
                     localeProvider.setLocale(newLocale);
-                    
+
                     // إظهار رسالة تأكيد
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          isArabic 
-                              ? 'Language changed to English' 
+                          isArabic
+                              ? 'Language changed to English'
                               : 'تم تغيير اللغة إلى العربية',
                         ),
                         duration: const Duration(seconds: 2),
@@ -104,7 +102,6 @@ class SettingsScreen extends StatelessWidget {
               },
             ),
           ),
-          
           const SizedBox(height: AppConstants.spacingLg),
 
           // ============================================================
@@ -112,7 +109,6 @@ class SettingsScreen extends StatelessWidget {
           // ============================================================
           _SectionTitle(title: l10n.dataManagement),
           const SizedBox(height: AppConstants.spacingSm),
-          
           _SettingsCard(
             child: Column(
               children: [
@@ -120,63 +116,70 @@ class SettingsScreen extends StatelessWidget {
                   title: l10n.companyInformation,
                   subtitle: l10n.changeAppNameAndLogo,
                   icon: Icons.business_outlined,
-                  onTap: () { () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CompanyInfoScreen(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CompanyInfoScreen(),
                       ),
                     );
                   },
                 ),
                 
                 const Divider(height: 1),
-                _SettingsLinkTile(
-                  title: l10n.archiveCenter,
-                  subtitle: l10n.restoreArchivedItems,
-                  icon: Icons.archive_outlined,
-                  onTap: () { () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ArchiveCenterScreen(),
-                      ),
-                    );
-                  },
-                ),
+                // _SettingsLinkTile(
+                //   title: l10n.archiveCenter,
+                //   subtitle: l10n.restoreArchivedItems,
+                //   icon: Icons.archive_outlined,
+                //   onTap: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (_) => const ArchiveCenterScreen(),
+                //       ),
+                //     );
+                //   },
+                // ),
 
                 const Divider(height: 1),
                 _SettingsLinkTile(
                   title: l10n.backupAndRestore,
                   subtitle: l10n.saveAndRestoreAppData,
                   icon: Icons.storage_outlined,
-                  onTap: () { () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BackupRestoreScreen(),
                       ),
                     );
                   },
                 ),
-          
+              ],
+            ),
+          ),
           const SizedBox(height: AppConstants.spacingLg),
 
           // ============================================================
           // --- قسم حول التطبيق ---
           // ============================================================
-          _SectionTitle(title: l10n.about),
-          const SizedBox(height: AppConstants.spacingSm),
-          
-          // --- حول التطبيق ---
-          _SettingsLinkTile(
-            title: l10n.aboutTheApp,
-            subtitle: "معلومات التطبيق والمطور",
-            icon: Icons.info_outline,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const AboutScreen(),
-              ),
-            ),
-          ),
+          // _SectionTitle(title: l10n.about),
+          // const SizedBox(height: AppConstants.spacingSm),
+          // _SettingsCard(
+          //   child: _SettingsLinkTile(
+          //     title: l10n.aboutTheApp,
+          //     subtitle: "معلومات التطبيق والمطور",
+          //     icon: Icons.info_outline,
+          //     onTap: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (_) => const AboutScreen(),
+          //         ),
+          //       );
+          //     },
+          //   ),
+          // ),
 
           // --- مساحة إضافية في الأسفل ---
           const SizedBox(height: AppConstants.spacingXl),
@@ -191,6 +194,7 @@ class SettingsScreen extends StatelessWidget {
 // ============================================================
 class _SectionTitle extends StatelessWidget {
   final String title;
+
   const _SectionTitle({required this.title});
 
   @override
@@ -200,9 +204,9 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
       ),
     );
   }
@@ -213,7 +217,7 @@ class _SectionTitle extends StatelessWidget {
 // ============================================================
 class _SettingsCard extends StatelessWidget {
   final Widget child;
-  
+
   const _SettingsCard({required this.child});
 
   @override
