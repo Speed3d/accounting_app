@@ -1,5 +1,6 @@
 // lib/screens/settings/settings_screen.dart
 
+import 'package:accounting_app/screens/archive/archive_center_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/backup_restore_screen.dart';
 import 'package:accounting_app/screens/settings/company_info_screen.dart';
@@ -121,6 +122,24 @@ class SettingsScreen extends StatelessWidget {
                     );
                   },
                 ),
+
+                  _SettingsLinkTile(
+                  title: l10n.archive,
+                  subtitle: l10n.archiveCenter,
+                  icon: Icons.archive,
+                  iconColor: AppColors.info,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ArchiveCenterScreen(),
+                      ),
+                    );
+                  },
+                ),
+                
+                _buildDivider(isDark),
+
               ],
             ),
           ),
@@ -128,8 +147,8 @@ class SettingsScreen extends StatelessWidget {
           // --- مساحة إضافية في الأسفل ---
           const SizedBox(height: AppConstants.spacingXl),
 
-                  // ============================================================
-          // 📊 قسم إدارة البيانات
+          // ============================================================
+          //  قسم حول
           // ============================================================
           _buildSectionHeader(
             context,

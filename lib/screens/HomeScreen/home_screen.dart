@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.employees,
         'icon': Icons.badge,
         'color': AppColors.secondaryLight,
-        // 'page': EmployeesListScreen(),
+        'page': EmployeesListScreen(),
       });
     }
 
