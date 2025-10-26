@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.suppliers,
         'icon': Icons.local_shipping,
         'color': AppColors.warning,
-        // 'page': SuppliersListScreen(),
+        'page': SuppliersListScreen(),
       });
     }
 
