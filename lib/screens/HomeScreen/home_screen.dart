@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.users,
         'icon': Icons.people_alt,
         'color': AppColors.info,
-        // 'page': UsersListScreen(),
+        'page': UsersListScreen(),
       });
     }
 

@@ -766,7 +766,23 @@
   "unregistered": "غير مسجل",
   "edit": "تعديل",
   "archiveCustomer": "أرشفة العميل",
-  "customerArchivedSuccess": "تم أرشفة العميل بنجاح"
+  "customerArchivedSuccess": "تم أرشفة العميل بنجاح",
+
+"basicInformation": "المعلومات الأساسية",
+"suppliersManagement": "إدارة الموردين",
+"productsManagement": "إدارة المنتجات",
+"customersManagement": "إدارة العملاء",
+"employeesManagement": "إدارة الموظفين",
+"reportsAndSales": "التقارير والمبيعات",
+"systemSettings": "إعدادات النظام",
+"changeImage": "تغيير الصورة",
+"primaryAdminAccount": "حساب المدير الرئيسي",
+"primaryAdminNote": "يمكنك تعديل الاسم والصورة وكلمة المرور فقط. الصلاحيات محمية",
+"updateProfile": "تعديل الملف الشخصي",
+"updateUser": "تحديث المستخدم",
+"editingYourProfile": "تعديل ملفك الشخصي",
+"selfEditNote": "يمكنك تعديل اسمك، اسم المستخدم، كلمة المرور، والصورة الشخصية. الصلاحيات محمية"
+
 
 
 

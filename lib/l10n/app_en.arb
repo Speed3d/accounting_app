@@ -767,7 +767,22 @@
   "unregistered": "Not registered",
   "edit": "Edit",
   "archiveCustomer": "Archive customer",
-  "customerArchivedSuccess": "Customer archived successfully"
+  "customerArchivedSuccess": "Customer archived successfully",
+
+"basicInformation": "Basic Information",
+"suppliersManagement": "Suppliers Management",
+"productsManagement": "Products Management",
+"customersManagement": "Customers Management",
+"employeesManagement": "Employees Management",
+"reportsAndSales": "Reports And Sales",
+"systemSettings": "System Settings",
+"changeImage": "Change Image",
+"primaryAdminAccount": "Primary Admin Account",
+"primaryAdminNote": "You can only edit your name, photo, and password. Permissions protect",
+"updateProfile": "Edit profile",
+"updateUser": "Update User",
+"editingYourProfile": "Editing Your Profile",
+"selfEditNote": "You can edit your name, username, password, and profile picture. Permissions are protected"
 
 
 

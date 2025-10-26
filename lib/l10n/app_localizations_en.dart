@@ -1429,4 +1429,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customerArchivedSuccess => 'Customer archived successfully';
+
+  @override
+  String get basicInformation => 'Basic Information';
+
+  @override
+  String get suppliersManagement => 'Suppliers Management';
+
+  @override
+  String get productsManagement => 'Products Management';
+
+  @override
+  String get customersManagement => 'Customers Management';
+
+  @override
+  String get employeesManagement => 'Employees Management';
+
+  @override
+  String get reportsAndSales => 'Reports And Sales';
+
+  @override
+  String get systemSettings => 'System Settings';
+
+  @override
+  String get changeImage => 'Change Image';
+
+  @override
+  String get primaryAdminAccount => 'Primary Admin Account';
+
+  @override
+  String get primaryAdminNote =>
+      'You can only edit your name, photo, and password. Permissions protect';
+
+  @override
+  String get updateProfile => 'Edit profile';
+
+  @override
+  String get updateUser => 'Update User';
+
+  @override
+  String get editingYourProfile => 'Editing Your Profile';
+
+  @override
+  String get selfEditNote =>
+      'You can edit your name, username, password, and profile picture. Permissions are protected';
 }

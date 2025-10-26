@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../services/auth_service.dart';
-import '../../layouts/main_layout.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -75,10 +74,14 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return MainLayout(
-      title: l10n.suppliersList,
-      currentIndex: -1, // ليس في الـ Bottom Navigation
-      showBottomNav: false,
+    return Scaffold(
+      // ============= AppBar =============
+      appBar: AppBar(
+        title: Text(l10n.suppliersList),
+        centerTitle: false,
+      ),
+      
+      // ============= Body =============
       body: Column(
         children: [
           // ============= شريط البحث والإحصائيات =============

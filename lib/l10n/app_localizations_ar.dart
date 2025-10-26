@@ -1417,4 +1417,48 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customerArchivedSuccess => 'تم أرشفة العميل بنجاح';
+
+  @override
+  String get basicInformation => 'المعلومات الأساسية';
+
+  @override
+  String get suppliersManagement => 'إدارة الموردين';
+
+  @override
+  String get productsManagement => 'إدارة المنتجات';
+
+  @override
+  String get customersManagement => 'إدارة العملاء';
+
+  @override
+  String get employeesManagement => 'إدارة الموظفين';
+
+  @override
+  String get reportsAndSales => 'التقارير والمبيعات';
+
+  @override
+  String get systemSettings => 'إعدادات النظام';
+
+  @override
+  String get changeImage => 'تغيير الصورة';
+
+  @override
+  String get primaryAdminAccount => 'حساب المدير الرئيسي';
+
+  @override
+  String get primaryAdminNote =>
+      'يمكنك تعديل الاسم والصورة وكلمة المرور فقط. الصلاحيات محمية';
+
+  @override
+  String get updateProfile => 'تعديل الملف الشخصي';
+
+  @override
+  String get updateUser => 'تحديث المستخدم';
+
+  @override
+  String get editingYourProfile => 'تعديل ملفك الشخصي';
+
+  @override
+  String get selfEditNote =>
+      'يمكنك تعديل اسمك، اسم المستخدم، كلمة المرور، والصورة الشخصية. الصلاحيات محمية';
 }

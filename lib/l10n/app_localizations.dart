@@ -2653,6 +2653,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customer archived successfully'**
   String get customerArchivedSuccess;
+
+  /// No description provided for @basicInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Information'**
+  String get basicInformation;
+
+  /// No description provided for @suppliersManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Suppliers Management'**
+  String get suppliersManagement;
+
+  /// No description provided for @productsManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Products Management'**
+  String get productsManagement;
+
+  /// No description provided for @customersManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers Management'**
+  String get customersManagement;
+
+  /// No description provided for @employeesManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees Management'**
+  String get employeesManagement;
+
+  /// No description provided for @reportsAndSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports And Sales'**
+  String get reportsAndSales;
+
+  /// No description provided for @systemSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'System Settings'**
+  String get systemSettings;
+
+  /// No description provided for @changeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Image'**
+  String get changeImage;
+
+  /// No description provided for @primaryAdminAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Admin Account'**
+  String get primaryAdminAccount;
+
+  /// No description provided for @primaryAdminNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only edit your name, photo, and password. Permissions protect'**
+  String get primaryAdminNote;
+
+  /// No description provided for @updateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get updateProfile;
+
+  /// No description provided for @updateUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Update User'**
+  String get updateUser;
+
+  /// No description provided for @editingYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing Your Profile'**
+  String get editingYourProfile;
+
+  /// No description provided for @selfEditNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can edit your name, username, password, and profile picture. Permissions are protected'**
+  String get selfEditNote;
 }
 
 class _AppLocalizationsDelegate

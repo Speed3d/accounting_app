@@ -1,17 +1,19 @@
+// lib/widgets/custom_drawer.dart
+
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:accounting_app/screens/products/products_list_screen.dart';
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
-import 'package:accounting_app/screens/sales/invoice_details_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
+import '../services/auth_service.dart'; // ← جديد!
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
-/// القائمة الجانبية المخصصة
+/// القائمة الجانبية المخصصة مع نظام الصلاحيات
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
@@ -19,186 +21,237 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
+    final authService = AuthService(); // ← جديد!
 
     return Drawer(
       child: Column(
         children: [
           // ============= Header =============
-          _buildDrawerHeader(context, isDark),
+          _buildDrawerHeader(context, isDark, authService),
           
           // ============= القائمة =============
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // قسم الرئيسية
-                // _buildSection(context, 'القسم الرئيسي', isDark),
-                // _buildMenuItem(
-                //   context,
-                //   icon: Icons.dashboard,
-                //   title: 'لوحة التحكم',
-                //   onTap: () {
-                //     Navigator.pop(context);
-                //     // TODO: التنقل للصفحة
-                //   },
-                // ),
-                
-                // const Divider(),
-                
-                // قسم المبيعات
+                // ============= قسم المبيعات =============
+                // يظهر دائماً (أو يمكنك إضافة شرط إذا أردت)
                 _buildSection(context, 'المبيعات', isDark),
+                
                 _buildMenuItem(
                   context,
                   icon: Icons.point_of_sale,
                   title: 'مبيعات مباشرة',
                   onTap: () {
-                  Navigator.pop(context); // 1. أغلق الدرج
-                  Navigator.push(         // 2. افتح صفحة العملاء
-                  context,
-                  MaterialPageRoute(
-                  builder: (context) => const DirectSaleScreen(),
-                   ),
-                  );
-                 },
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DirectSaleScreen(),
+                      ),
+                    );
+                  },
                 ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.receipt_long,
-                  title: 'الفواتير',
-                  onTap: () {
-                  Navigator.pop(context); // 1. أغلق الدرج
-                  Navigator.push(         // 2. افتح صفحة العملاء
-                  context,
-                  MaterialPageRoute(
-                  builder: (context) => const CashSalesHistoryScreen(),
-                   ),
-                  );
-                 },
-                ),
+                
+                // ← تحقق من صلاحية عرض المبيعات النقدية
+                if (authService.canViewCashSales || authService.isAdmin)
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.receipt_long,
+                    title: 'الفواتير',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CashSalesHistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 
                 const Divider(),
                 
-                // قسم العملاء
-                _buildSection(context, 'العملاء والموردين', isDark),
-                _buildMenuItem(
-                   context,
-                   icon: Icons.people,
-                   title: 'العملاء',
-                   onTap: () {
-                   Navigator.pop(context); // 1. أغلق الدرج
-                   Navigator.push(         // 2. افتح صفحة العملاء
-                   context,
-                   MaterialPageRoute(
-                   builder: (context) => const CustomersListScreen(),
-                   ),
-                  );
-                 },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.local_shipping,
-                  title: 'الموردين',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
+                // ============= قسم العملاء والموردين =============
+                // يظهر فقط إذا كان لديه أي صلاحية متعلقة بالعملاء أو الموردين
+                if (authService.canViewCustomers || 
+                    authService.canViewSuppliers || 
+                    authService.isAdmin) ...[
+                  _buildSection(context, 'العملاء والموردين', isDark),
+                  
+                  // ← تحقق من صلاحية عرض العملاء
+                  if (authService.canViewCustomers || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.people,
+                      title: 'العملاء',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CustomersListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  
+                  // ← تحقق من صلاحية عرض الموردين
+                  if (authService.canViewSuppliers || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.local_shipping,
+                      title: 'الموردين',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة الموردين
+                      },
+                    ),
+                  
+                  const Divider(),
+                ],
                 
-                const Divider(),
+                // ============= قسم المخزون =============
+                // ← تحقق من صلاحية عرض المنتجات
+                if (authService.canViewProducts || authService.isAdmin) ...[
+                  _buildSection(context, 'المخزون', isDark),
+                  
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.inventory_2,
+                    title: 'المنتجات',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProductsListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const Divider(),
+                ],
                 
-                // قسم المنتجات
-                _buildSection(context, 'المخزون', isDark),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.inventory_2,
-                  title: 'المنتجات',
-                  onTap: () {
-                   Navigator.pop(context); // 1. أغلق الدرج
-                   Navigator.push(         // 2. افتح صفحة العملاء
-                   context,
-                   MaterialPageRoute(
-                   builder: (context) => const ProductsListScreen(),
-                   ),
-                  );
-                 },
-                ),
+                // ============= قسم الموظفين =============
+                // ← تحقق من صلاحيات الموظفين
+                if (authService.canManageEmployees || 
+                    authService.canViewEmployeesReport || 
+                    authService.isAdmin) ...[
+                  _buildSection(context, 'الموظفين', isDark),
+                  
+                  if (authService.canManageEmployees || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.badge,
+                      title: 'إدارة الموظفين',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة الموظفين
+                      },
+                    ),
+                  
+                  if (authService.canViewEmployeesReport || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.account_balance_wallet,
+                      title: 'الرواتب',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة الرواتب
+                      },
+                    ),
+                  
+                  const Divider(),
+                ],
                 
-                const Divider(),
+                // ============= قسم التقارير =============
+                // ← تحقق من صلاحيات التقارير
+                if (authService.canViewReports || 
+                    authService.canManageExpenses || 
+                    authService.isAdmin) ...[
+                  _buildSection(context, 'التقارير', isDark),
+                  
+                  if (authService.canViewReports || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.assessment,
+                      title: 'مركز التقارير',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة التقارير
+                      },
+                    ),
+                  
+                  if (authService.canViewReports || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.trending_up,
+                      title: 'تقرير الأرباح',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة تقرير الأرباح
+                      },
+                    ),
+                  
+                  if (authService.canViewReports || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.attach_money,
+                      title: 'التدفق النقدي',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة التدفق النقدي
+                      },
+                    ),
+                  
+                  if (authService.canManageExpenses || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.receipt,
+                      title: 'المصاريف',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة المصاريف
+                      },
+                    ),
+                  
+                  const Divider(),
+                ],
                 
-                // قسم الموظفين
-                _buildSection(context, 'الموظفين', isDark),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.badge,
-                  title: 'إدارة الموظفين',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.account_balance_wallet,
-                  title: 'الرواتب',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                
-                const Divider(),
-                
-                // قسم التقارير
-                _buildSection(context, 'التقارير', isDark),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.assessment,
-                  title: 'مركز التقارير',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.trending_up,
-                  title: 'تقرير الأرباح',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.attach_money,
-                  title: 'التدفق النقدي',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                
-                const Divider(),
-                
-                // قسم الإعدادات
-                _buildSection(context, 'النظام', isDark),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.settings,
-                  title: 'الإعدادات',
-                  onTap: () {
-                   Navigator.pop(context); // 1. أغلق الدرج
-                   Navigator.push(         // 2. افتح صفحة العملاء
-                   context,
-                   MaterialPageRoute(
-                   builder: (context) => const SettingsScreen(),
-                   ),
-                  );
-                 },
-                ),
-
-                _buildMenuItem(
-                  context,
-                  icon: Icons.backup,
-                  title: 'النسخ الاحتياطي',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
+                // ============= قسم النظام =============
+                // ← تحقق من صلاحيات النظام
+                if (authService.canViewSettings || authService.isAdmin) ...[
+                  _buildSection(context, 'النظام', isDark),
+                  
+                  if (authService.canViewSettings || authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.settings,
+                      title: 'الإعدادات',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  
+                  if (authService.isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.backup,
+                      title: 'النسخ الاحتياطي',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // TODO: إضافة صفحة النسخ الاحتياطي
+                      },
+                    ),
+                ],
               ],
             ),
           ),
@@ -211,7 +264,9 @@ class CustomDrawer extends StatelessWidget {
   }
 
   /// بناء رأس القائمة
-  Widget _buildDrawerHeader(BuildContext context, bool isDark) {
+  Widget _buildDrawerHeader(BuildContext context, bool isDark, AuthService authService) {
+    final currentUser = authService.currentUser;
+    
     return Container(
       height: AppConstants.drawerHeaderHeight,
       width: double.infinity,
@@ -248,10 +303,10 @@ class CustomDrawer extends StatelessWidget {
               
               const SizedBox(height: AppConstants.spacingMd),
               
-              // اسم الشركة
+              // اسم المستخدم
               Text(
-                'نظام المحاسبة', // TODO: جلب من قاعدة البيانات
-                style: TextStyle(
+                currentUser?.fullName ?? 'مستخدم',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -260,12 +315,22 @@ class CustomDrawer extends StatelessWidget {
               
               const SizedBox(height: AppConstants.spacingXs),
               
-              // وصف الشركة
-              Text(
-                'إدارة شاملة لأعمالك', // TODO: جلب من قاعدة البيانات
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 13,
+              // نوع المستخدم
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: AppConstants.borderRadiusSm,
+                ),
+                child: Text(
+                  currentUser?.isAdmin == true ? 'مدير النظام' : 'مستخدم',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -306,8 +371,6 @@ class CustomDrawer extends StatelessWidget {
     required VoidCallback onTap,
     String? badge,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return ListTile(
       leading: Icon(icon, size: 22),
       title: Text(title),
@@ -358,15 +421,15 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: const Text('حول التطبيق'),
             onTap: () {
-                  Navigator.pop(context); // 1. أغلق الدرج
-                  Navigator.push(         // 2. افتح صفحة العملاء
-                  context,
-                  MaterialPageRoute(
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
                   builder: (context) => const AboutScreen(),
-                   ),
-                  );
-                 },
                 ),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
             title: const Text(
@@ -375,8 +438,42 @@ class CustomDrawer extends StatelessWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              // TODO: تسجيل الخروج
+              _showLogoutDialog(context);
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// حوار تأكيد تسجيل الخروج
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسجيل الخروج'),
+        content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // تسجيل الخروج
+              AuthService().logout();
+              
+              // العودة إلى شاشة تسجيل الدخول
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('تسجيل الخروج'),
           ),
         ],
       ),
