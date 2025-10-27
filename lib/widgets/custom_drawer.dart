@@ -1,10 +1,12 @@
 // lib/widgets/custom_drawer.dart
 
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
+import 'package:accounting_app/screens/employees/employees_list_screen.dart';
 import 'package:accounting_app/screens/products/products_list_screen.dart';
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/settings_screen.dart';
+import 'package:accounting_app/screens/suppliers/suppliers_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -102,11 +104,16 @@ class CustomDrawer extends StatelessWidget {
                       context,
                       icon: Icons.local_shipping,
                       title: 'الموردين',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة الموردين
-                      },
-                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SuppliersListScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   
                   const Divider(),
                 ],
@@ -147,21 +154,26 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.badge,
                       title: 'إدارة الموظفين',
                       onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة الموظفين
-                      },
-                    ),
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EmployeesListScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   
-                  if (authService.canViewEmployeesReport || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.account_balance_wallet,
-                      title: 'الرواتب',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة الرواتب
-                      },
-                    ),
+                  // if (authService.canViewEmployeesReport || authService.isAdmin)
+                  //   _buildMenuItem(
+                  //     context,
+                  //     icon: Icons.account_balance_wallet,
+                  //     title: 'الرواتب',
+                  //     onTap: () {
+                  //       Navigator.pop(context);
+                  //       // TODO: إضافة صفحة الرواتب
+                  //     },
+                  //   ),
                   
                   const Divider(),
                 ],
@@ -184,38 +196,38 @@ class CustomDrawer extends StatelessWidget {
                       },
                     ),
                   
-                  if (authService.canViewReports || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.trending_up,
-                      title: 'تقرير الأرباح',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة تقرير الأرباح
-                      },
-                    ),
+                  // if (authService.canViewReports || authService.isAdmin)
+                  //   _buildMenuItem(
+                  //     context,
+                  //     icon: Icons.trending_up,
+                  //     title: 'تقرير الأرباح',
+                  //     onTap: () {
+                  //       Navigator.pop(context);
+                  //       // TODO: إضافة صفحة تقرير الأرباح
+                  //     },
+                  //   ),
                   
-                  if (authService.canViewReports || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.attach_money,
-                      title: 'التدفق النقدي',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة التدفق النقدي
-                      },
-                    ),
+                  // if (authService.canViewReports || authService.isAdmin)
+                  //   _buildMenuItem(
+                  //     context,
+                  //     icon: Icons.attach_money,
+                  //     title: 'التدفق النقدي',
+                  //     onTap: () {
+                  //       Navigator.pop(context);
+                  //       // TODO: إضافة صفحة التدفق النقدي
+                  //     },
+                  //   ),
                   
-                  if (authService.canManageExpenses || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.receipt,
-                      title: 'المصاريف',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة المصاريف
-                      },
-                    ),
+                  // if (authService.canManageExpenses || authService.isAdmin)
+                  //   _buildMenuItem(
+                  //     context,
+                  //     icon: Icons.receipt,
+                  //     title: 'المصاريف',
+                  //     onTap: () {
+                  //       Navigator.pop(context);
+                  //       // TODO: إضافة صفحة المصاريف
+                  //     },
+                  //   ),
                   
                   const Divider(),
                 ],
@@ -241,16 +253,16 @@ class CustomDrawer extends StatelessWidget {
                       },
                     ),
                   
-                  if (authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.backup,
-                      title: 'النسخ الاحتياطي',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة النسخ الاحتياطي
-                      },
-                    ),
+                  // if (authService.isAdmin)
+                  //   _buildMenuItem(
+                  //     context,
+                  //     icon: Icons.backup,
+                  //     title: 'النسخ الاحتياطي',
+                  //     onTap: () {
+                  //       Navigator.pop(context);
+                  //       // TODO: إضافة صفحة النسخ الاحتياطي
+                  //     },
+                  //   ),
                 ],
               ],
             ),
