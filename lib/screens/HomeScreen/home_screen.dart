@@ -180,14 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    // if (_authService.canViewReports) {
-    //   items.add({
-    //     'title': l10n.reports,
-    //     'icon': Icons.assessment,
-    //     'color': AppColors.income,
-    //     'page': ReportsHubScreen(),
-    //   });
-    // }
+    if (_authService.canViewReports) {
+      items.add({
+        'title': l10n.reports,
+        'icon': Icons.assessment,
+        'color': AppColors.income,
+        'page': ReportsHubScreen(),
+      });
+    }
 
     if (_authService.canViewSettings) {
       items.add({

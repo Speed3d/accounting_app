@@ -10,6 +10,7 @@ import 'package:accounting_app/screens/settings/settings_screen.dart';
 import 'package:accounting_app/screens/suppliers/suppliers_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../layouts/main_screen.dart';
 import '../providers/theme_provider.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
 import '../services/auth_service.dart'; // ← جديد!
@@ -192,15 +193,12 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.assessment,
                       title: 'مركز التقارير',
                       onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ReportsHubScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                      Navigator.pop(context); // أغلق الـ Drawer أولاً
+      
+                 // ✅ بدلاً من Navigator.push، غير الـ Tab مباشرة
+                     mainScreenKey.currentState?.changeTab(2); // index 2 = التقارير
+                     },
+                    ),
                   
                   // if (authService.canViewReports || authService.isAdmin)
                   //   _buildMenuItem(

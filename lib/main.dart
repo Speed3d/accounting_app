@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'widgets/test_widgets_screen.dart';
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
           
           // ============= الصفحة الأولى =============
           home: const SplashScreen(),
+          
         );
       },
     );
