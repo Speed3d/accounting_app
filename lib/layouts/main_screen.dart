@@ -1,15 +1,10 @@
-// lib/layouts/main_screen.dart
-
+import 'package:accounting_app/screens/reports/reports_hub_screen.dart';
 import 'package:flutter/material.dart';
 import '../layouts/main_layout.dart';
 import '../screens/HomeScreen/home_screen.dart';
-import '../screens/reports/reports_hub_screen.dart'; // ← أضف هذا
-
-// ✅ GlobalKey للوصول للـ State من أي مكان
-final GlobalKey<_MainScreenState> mainScreenKey = GlobalKey<_MainScreenState>();
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key); // ← بدون super.key، استخدم key
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -32,19 +27,10 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _pages = [
       const HomeScreen(),
-      const Scaffold(body: Center(child: Text('المبيعات - قريباً'))), // أو SalesHubScreen إذا جاهز
-      const ReportsHubScreen(), // ← استخدم الصفحة الحقيقية
+      const Scaffold(body: Center(child: Text('المبيعات - قريباً'))),
+      const ReportsHubScreen(),
       const Scaffold(body: Center(child: Text('المزيد - قريباً'))),
     ];
-  }
-
-  // ✅ دالة عامة لتغيير الـ Tab من أي مكان
-  void changeTab(int index) {
-    if (index >= 0 && index < _pages.length) {
-      setState(() {
-        _currentIndex = index;
-      });
-    }
   }
 
   @override
