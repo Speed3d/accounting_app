@@ -1,230 +1,539 @@
-// // lib/screens/reports/expenses_screen.dart
+// lib/screens/reports/expenses_screen.dart
 
-// import 'dart:ui';
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import '../../data/database_helper.dart';
-// import '../../utils/helpers.dart';
-// import '../../widgets/gradient_background.dart';
-// import 'manage_categories_screen.dart';
-// import 'package:accounting_app/l10n/app_localizations.dart';
-// import '../../theme/app_colors.dart';
-// import '../../widgets/glass_container.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../data/database_helper.dart';
+import '../../utils/helpers.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_constants.dart';
+import '../../widgets/custom_card.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/loading_state.dart';
+import 'manage_categories_screen.dart';
 
-// class ExpensesScreen extends StatefulWidget {
-//   const ExpensesScreen({super.key});
-//   @override
-//   State<ExpensesScreen> createState() => _ExpensesScreenState();
-// }
+/// 💰 شاشة سجل المصاريف
+/// ---------------------------
+/// صفحة فرعية تعرض:
+/// 1. قائمة جميع المصاريف المسجلة
+/// 2. إمكانية إضافة مصروف جديد
+/// 3. إدارة فئات المصاريف
+class ExpensesScreen extends StatefulWidget {
+  const ExpensesScreen({super.key});
 
-// class _ExpensesScreenState extends State<ExpensesScreen> {
-//   // ... (كل متغيرات الحالة والدوال المنطقية تبقى كما هي)
-//   final dbHelper = DatabaseHelper.instance;
-//   late Future<List<Map<String, dynamic>>> _expensesFuture;
+  @override
+  State<ExpensesScreen> createState() => _ExpensesScreenState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadExpenses();
-//   }
+class _ExpensesScreenState extends State<ExpensesScreen> {
+  // ============= المتغيرات =============
+  final dbHelper = DatabaseHelper.instance;
+  late Future<List<Map<String, dynamic>>> _expensesFuture;
 
-//   void _loadExpenses() {
-//     setState(() {
-//       _expensesFuture = dbHelper.getExpenses();
-//     });
-//   }
+  // ============= التهيئة =============
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
 
-//   // --- 2. تعديل مربع الحوار للتصميم الزجاجي ---
-//   void _showAddExpenseDialog(AppLocalizations l10n) async {
-//     final categories = await dbHelper.getExpenseCategories();
-//     final categoryNames = categories.map((cat) => cat['CategoryName'] as String).toList();
+  /// تحميل قائمة المصاريف من قاعدة البيانات
+  void _loadExpenses() {
+    setState(() {
+      _expensesFuture = dbHelper.getExpenses();
+    });
+  }
 
-//     if (!mounted) return;
+  // ============= البناء الرئيسي =============
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // --- AppBar مع زر إدارة الفئات ---
+      appBar: AppBar(
+        title: const Text('سجل المصاريف'),
+        elevation: 0,
+        actions: [
+          // زر إدارة فئات المصاريف
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ManageCategoriesScreen(),
+                ),
+              );
+              // تحديث القائمة عند الرجوع
+              _loadExpenses();
+            },
+            tooltip: 'إدارة الفئات',
+          ),
+        ],
+      ),
 
-//     final formKey = GlobalKey<FormState>();
-//     final descriptionController = TextEditingController();
-//     final amountController = TextEditingController();
-//     final notesController = TextEditingController();
-//     String? selectedCategory = categoryNames.isNotEmpty ? categoryNames.first : null;
+      // --- الجسم: قائمة المصاريف ---
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _expensesFuture,
+        builder: (context, snapshot) {
+          // --- حالة التحميل ---
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const LoadingState(message: 'جاري تحميل المصاريف...');
+          }
 
-//     showDialog(
-//       context: context,
-//       // استخدام BackdropFilter لجعل الخلفية ضبابية
-//       builder: (ctx) => BackdropFilter(
-//         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-//         child: AlertDialog(
-//           backgroundColor: AppColors.glassBgColor.withOpacity(0.9),
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(20),
-//             side: const BorderSide(color: AppColors.glassBorderColor),
-//           ),
-//           title: Text(l10n.newExpense),
-//           content: Form(
-//             key: formKey,
-//             child: SingleChildScrollView(
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   // استخدام ويدجت حقل الإدخال الزجاجي المخصصة
-//                   _buildGlassTextFormField(controller: descriptionController, labelText: l10n.expenseDescription, validator: (v) => (v == null || v.isEmpty) ? l10n.descriptionRequired : null),
-//                   const SizedBox(height: 16),
-//                   _buildGlassTextFormField(controller: amountController, labelText: l10n.amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) {
-//                     if (v == null || v.isEmpty) return l10n.amountRequired;
-//                     if (double.tryParse(convertArabicNumbersToEnglish(v)) == null) return l10n.enterValidNumber;
-//                     return null;
-//                   }),
-//                   const SizedBox(height: 16),
-//                   if (categoryNames.isNotEmpty)
-//                     // تعديل تصميم DropdownButton
-//                     DropdownButtonFormField<String>(
-//                       value: selectedCategory,
-//                       decoration: _getGlassInputDecoration(l10n.category),
-//                       dropdownColor: AppColors.primaryPurple,
-//                       items: categoryNames.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
-//                       onChanged: (value) => selectedCategory = value,
-//                       validator: (v) => v == null ? l10n.selectCategory : null,
-//                     )
-//                   else
-//                     Padding(padding: const EdgeInsets.only(top: 16.0), child: Text(l10n.addCategoriesFirst, style: TextStyle(color: Colors.red.shade300))),
-//                   const SizedBox(height: 16),
-//                   _buildGlassTextFormField(controller: notesController, labelText: l10n.notesOptional),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           actions: [
-//             TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.cancel, style: TextStyle(color: AppColors.textGrey))),
-//             ElevatedButton(
-//               onPressed: () async {
-//                 if (formKey.currentState!.validate()) {
-//                   if (selectedCategory == null && categoryNames.isNotEmpty) return;
-//                   final data = {
-//                     'Description': descriptionController.text,
-//                     'Amount': double.parse(convertArabicNumbersToEnglish(amountController.text)),
-//                     'ExpenseDate': DateTime.now().toIso8601String(),
-//                     'Category': selectedCategory,
-//                     'Notes': notesController.text,
-//                   };
-//                   await dbHelper.recordExpense(data);
-//                   Navigator.of(ctx).pop();
-//                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.expenseAddedSuccess), backgroundColor: Colors.green));
-//                   _loadExpenses();
-//                 }
-//               },
-//               child: Text(l10n.save),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
+          // --- حالة الخطأ ---
+          if (snapshot.hasError) {
+            return ErrorState(
+              message: 'حدث خطأ أثناء تحميل البيانات',
+              onRetry: _loadExpenses,
+            );
+          }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!;
-//     final theme = Theme.of(context);
+          // --- حالة عدم وجود مصاريف ---
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return EmptyState(
+              icon: Icons.receipt_long_outlined,
+              title: 'لا توجد مصاريف',
+              message: 'لم يتم تسجيل أي مصروف حتى الآن',
+              actionText: 'إضافة مصروف',
+              onAction: _showAddExpenseDialog,
+            );
+          }
 
-//     return Scaffold(
-//       // --- 3. توحيد بنية الصفحة ---
-//       backgroundColor: Colors.transparent,
-//       extendBodyBehindAppBar: true,
-//       body: GradientBackground(
-//         child: CustomScrollView(
-//           slivers: [
-//             SliverAppBar(
-//               title: Text(l10n.expensesLog),
-//               pinned: true,
-//               actions: [
-//                 IconButton(
-//                   icon: const Icon(Icons.category_outlined),
-//                   onPressed: () async {
-//                     await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ManageCategoriesScreen()));
-//                   },
-//                   tooltip: l10n.manageCategories,
-//                 ),
-//               ],
-//             ),
-//             // --- 4. استخدام SliverList لعرض قائمة المصاريف ---
-//             FutureBuilder<List<Map<String, dynamic>>>(
-//               future: _expensesFuture,
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Colors.white)));
-//                 }
-//                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//                   return SliverFillRemaining(child: Center(child: Text(l10n.noExpenses, style: theme.textTheme.bodyLarge)));
-//                 }
-//                 final expenses = snapshot.data!;
-//                 return SliverList(
-//                   delegate: SliverChildBuilderDelegate(
-//                     (context, index) {
-//                       final expense = expenses[index];
-//                       // --- 5. تعديل تصميم عنصر القائمة ---
-//                       return Padding(
-//                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-//                         child: GlassContainer(
-//                           borderRadius: 15,
-//                           child: ListTile(
-//                             leading: const CircleAvatar(
-//                               backgroundColor: Color.fromARGB(50, 239, 83, 80),
-//                               child: Icon(Icons.arrow_upward, color: Colors.redAccent),
-//                             ),
-//                             title: Text(expense['Description']),
-//                             subtitle: Text(expense['Category'] ?? l10n.unclassified, style: theme.textTheme.bodySmall),
-//                             trailing: Column(
-//                               mainAxisAlignment: MainAxisAlignment.center,
-//                               crossAxisAlignment: CrossAxisAlignment.end,
-//                               children: [
-//                                 Text(
-//                                   '- ${formatCurrency(expense['Amount'])}',
-//                                   style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16),
-//                                 ),
-//                                 Text(DateFormat('yyyy-MM-dd').format(DateTime.parse(expense['ExpenseDate'])), style: theme.textTheme.bodySmall),
-//                               ],
-//                             ),
-//                           ),
-//                         ),
-//                       );
-//                     },
-//                     childCount: expenses.length,
-//                   ),
-//                 );
-//               },
-//             ),
-//           ],
-//         ),
-//       ),
-//       // --- 6. تعديل تصميم الزر العائم ---
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () => _showAddExpenseDialog(l10n),
-//         backgroundColor: theme.colorScheme.primary,
-//         foregroundColor: theme.colorScheme.onPrimary,
-//         tooltip: l10n.addExpense,
-//         child: const Icon(Icons.add),
-//       ),
-//     );
-//   }
+          // --- عرض قائمة المصاريف ---
+          final expenses = snapshot.data!;
 
-//   // دالة مساعدة لبناء حقول الإدخال الزجاجية داخل مربع الحوار
-//   Widget _buildGlassTextFormField({required TextEditingController controller, required String labelText, String? Function(String?)? validator, TextInputType? keyboardType}) {
-//     return TextFormField(
-//       controller: controller,
-//       decoration: _getGlassInputDecoration(labelText),
-//       validator: validator,
-//       keyboardType: keyboardType,
-//     );
-//   }
+          return ListView.builder(
+            padding: AppConstants.screenPadding,
+            itemCount: expenses.length,
+            itemBuilder: (context, index) {
+              final expense = expenses[index];
+              return _buildExpenseCard(expense);
+            },
+          );
+        },
+      ),
 
-//   // دالة مساعدة للحصول على تصميم موحد لحقول الإدخال الزجاجية
-//   InputDecoration _getGlassInputDecoration(String labelText) {
-//     final theme = Theme.of(context);
-//     return InputDecoration(
-//       labelText: labelText,
-//       filled: true,
-//       fillColor: AppColors.glassBgColor,
-//       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor)),
-//       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: AppColors.glassBorderColor)),
-//       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-//     );
-//   }
-// }
+      // --- زر الإضافة العائم ---
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddExpenseDialog,
+        icon: const Icon(Icons.add),
+        label: const Text('إضافة مصروف'),
+        tooltip: 'إضافة مصروف جديد',
+      ),
+    );
+  }
+
+  // ============= بناء بطاقة المصروف =============
+  /// يعرض كل مصروف في بطاقة منفصلة
+  Widget _buildExpenseCard(Map<String, dynamic> expense) {
+    final amount = expense['Amount'] as double;
+    final description = expense['Description'] as String;
+    final category = expense['Category'] as String?;
+    final date = DateTime.parse(expense['ExpenseDate'] as String);
+    final notes = expense['Notes'] as String?;
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      child: InkWell(
+        onTap: () => _showExpenseDetails(expense),
+        borderRadius: AppConstants.cardBorderRadius,
+        child: Padding(
+          padding: AppConstants.paddingMd,
+          child: Row(
+            children: [
+              // --- أيقونة المصروف ---
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: Icon(
+                  Icons.arrow_upward,
+                  color: AppColors.error,
+                  size: 24,
+                ),
+              ),
+
+              const SizedBox(width: AppConstants.spacingMd),
+
+              // --- تفاصيل المصروف ---
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // الوصف
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingXs),
+
+                    // الفئة
+                    Text(
+                      category ?? 'غير مصنف',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+
+                    // الملاحظات (إن وجدت)
+                    if (notes != null && notes.isNotEmpty) ...[
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        notes,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: AppConstants.spacingMd),
+
+              // --- المبلغ والتاريخ ---
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // المبلغ
+                  Text(
+                    '- ${formatCurrency(amount)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingXs),
+
+                  // التاريخ
+                  Text(
+                    DateFormat('yyyy-MM-dd').format(date),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============= نافذة إضافة مصروف =============
+  /// نافذة حوار لإضافة مصروف جديد
+  void _showAddExpenseDialog() async {
+    // --- جلب قائمة الفئات ---
+    final categories = await dbHelper.getExpenseCategories();
+    final categoryNames = categories
+        .map((cat) => cat['CategoryName'] as String)
+        .toList();
+
+    if (!mounted) return;
+
+    // --- التحقق من وجود فئات ---
+    if (categoryNames.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('يرجى إضافة فئات المصاريف أولاً'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    // --- متغيرات النموذج ---
+    final formKey = GlobalKey<FormState>();
+    final descriptionController = TextEditingController();
+    final amountController = TextEditingController();
+    final notesController = TextEditingController();
+    String? selectedCategory = categoryNames.first;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        // --- عنوان النافذة ---
+        title: const Row(
+          children: [
+            Icon(Icons.add_circle_outline, size: 28),
+            SizedBox(width: 12),
+            Text('إضافة مصروف جديد'),
+          ],
+        ),
+
+        // --- محتوى النموذج ---
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // --- حقل الوصف ---
+                CustomTextField(
+                  controller: descriptionController,
+                  label: 'وصف المصروف',
+                  hint: 'مثال: فاتورة كهرباء',
+                  prefixIcon: Icons.description_outlined,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الوصف مطلوب';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // --- حقل المبلغ ---
+                CustomTextField(
+                  controller: amountController,
+                  label: 'المبلغ',
+                  hint: '0.00',
+                  prefixIcon: Icons.attach_money,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'المبلغ مطلوب';
+                    }
+                    final convertedValue = convertArabicNumbersToEnglish(value);
+                    if (double.tryParse(convertedValue) == null) {
+                      return 'أدخل رقماً صحيحاً';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // --- قائمة الفئات ---
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: InputDecoration(
+                    labelText: 'الفئة',
+                    prefixIcon: const Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: AppConstants.inputBorderRadius,
+                    ),
+                  ),
+                  items: categoryNames.map((cat) {
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Text(cat),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    selectedCategory = value;
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'اختر الفئة';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // --- حقل الملاحظات (اختياري) ---
+                CustomTextField(
+                  controller: notesController,
+                  label: 'ملاحظات (اختياري)',
+                  hint: 'أضف ملاحظة...',
+                  prefixIcon: Icons.note_outlined,
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // --- أزرار الإجراءات ---
+        actions: [
+          // زر الإلغاء
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+
+          // زر الحفظ
+          ElevatedButton.icon(
+            onPressed: () async {
+              // --- التحقق من صحة البيانات ---
+              if (!formKey.currentState!.validate()) return;
+
+              // --- تحضير البيانات ---
+              final expenseData = {
+                'Description': descriptionController.text.trim(),
+                'Amount': double.parse(
+                  convertArabicNumbersToEnglish(amountController.text),
+                ),
+                'ExpenseDate': DateTime.now().toIso8601String(),
+                'Category': selectedCategory,
+                'Notes': notesController.text.trim(),
+              };
+
+              try {
+                // --- حفظ المصروف ---
+                await dbHelper.recordExpense(expenseData);
+
+                if (!ctx.mounted) return;
+
+                // إغلاق النافذة
+                Navigator.pop(ctx);
+
+                // رسالة نجاح
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('تم إضافة المصروف بنجاح'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+
+                // تحديث القائمة
+                _loadExpenses();
+              } catch (e) {
+                // رسالة خطأ
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('حدث خطأ: $e'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.save),
+            label: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============= نافذة تفاصيل المصروف =============
+  /// عرض تفاصيل المصروف عند النقر عليه
+  void _showExpenseDetails(Map<String, dynamic> expense) {
+    final amount = expense['Amount'] as double;
+    final description = expense['Description'] as String;
+    final category = expense['Category'] as String?;
+    final date = DateTime.parse(expense['ExpenseDate'] as String);
+    final notes = expense['Notes'] as String?;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.receipt_long, size: 28),
+            SizedBox(width: 12),
+            Text('تفاصيل المصروف'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // الوصف
+            _buildDetailRow(
+              icon: Icons.description_outlined,
+              label: 'الوصف',
+              value: description,
+            ),
+
+            const Divider(height: 24),
+
+            // المبلغ
+            _buildDetailRow(
+              icon: Icons.attach_money,
+              label: 'المبلغ',
+              value: formatCurrency(amount),
+              valueColor: AppColors.error,
+            ),
+
+            const Divider(height: 24),
+
+            // الفئة
+            _buildDetailRow(
+              icon: Icons.category_outlined,
+              label: 'الفئة',
+              value: category ?? 'غير مصنف',
+            ),
+
+            const Divider(height: 24),
+
+            // التاريخ
+            _buildDetailRow(
+              icon: Icons.calendar_today_outlined,
+              label: 'التاريخ',
+              value: DateFormat('yyyy-MM-dd').format(date),
+            ),
+
+            // الملاحظات
+            if (notes != null && notes.isNotEmpty) ...[
+              const Divider(height: 24),
+              _buildDetailRow(
+                icon: Icons.note_outlined,
+                label: 'الملاحظات',
+                value: notes,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// صف تفصيلي موحد
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.grey),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: valueColor,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

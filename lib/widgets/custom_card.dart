@@ -72,7 +72,7 @@ class InfoCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 32),
+              Icon(icon, color: color, size: 28),
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -131,7 +131,7 @@ class StatCard extends StatelessWidget {
               color: cardColor.withOpacity(0.1),
               borderRadius: AppConstants.borderRadiusMd,
             ),
-            child: Icon(icon, color: cardColor, size: 28),
+            child: Icon(icon, color: cardColor, size: 20),
           ),
           const SizedBox(width: AppConstants.spacingMd),
           Expanded(

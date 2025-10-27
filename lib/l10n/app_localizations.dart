@@ -2737,6 +2737,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can edit your name, username, password, and profile picture. Permissions are protected'**
   String get selfEditNote;
+
+  /// No description provided for @transactionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction details'**
+  String get transactionDetails;
+
+  /// No description provided for @noTransactionsInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No Transactions In Period'**
+  String get noTransactionsInPeriod;
+
+  /// No description provided for @cashIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash In'**
+  String get cashIn;
 }
 
 class _AppLocalizationsDelegate

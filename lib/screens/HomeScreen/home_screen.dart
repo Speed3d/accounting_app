@@ -5,7 +5,6 @@ import '../../services/auth_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
-import '../../widgets/custom_card.dart';
 import '../customers/customers_list_screen.dart';
 import '../employees/employees_list_screen.dart';
 import '../products/products_list_screen.dart';
@@ -181,14 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    if (_authService.canViewReports) {
-      items.add({
-        'title': l10n.reports,
-        'icon': Icons.assessment,
-        'color': AppColors.income,
-        // 'page': ReportsHubScreen(),
-      });
-    }
+    // if (_authService.canViewReports) {
+    //   items.add({
+    //     'title': l10n.reports,
+    //     'icon': Icons.assessment,
+    //     'color': AppColors.income,
+    //     'page': ReportsHubScreen(),
+    //   });
+    // }
 
     if (_authService.canViewSettings) {
       items.add({

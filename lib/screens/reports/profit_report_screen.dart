@@ -1,187 +1,414 @@
-// // lib/screens/reports/profit_report_screen.dart
+// lib/screens/reports/profit_report_screen.dart
 
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import '../../data/database_helper.dart';
-// import '../../data/models.dart';
-// import '../../utils/helpers.dart';
-// import 'package:accounting_app/l10n/app_localizations.dart';
-// import '../../theme/app_colors.dart';
-// import '../../widgets/glass_container.dart';
-// import '../../widgets/gradient_background.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../data/database_helper.dart';
+import '../../data/models.dart';
+import '../../utils/helpers.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_constants.dart';
+import '../../widgets/custom_card.dart';
+import '../../widgets/loading_state.dart';
 
-// class ProfitReportScreen extends StatefulWidget {
-//   const ProfitReportScreen({super.key});
-//   @override
-//   State<ProfitReportScreen> createState() => _ProfitReportScreenState();
-// }
+/// 📈 شاشة تقرير الأرباح العام
+/// ---------------------------
+/// صفحة فرعية تعرض:
+/// 1. ملخص مالي شامل (الأرباح، المصاريف، المسحوبات، الربح الصافي)
+/// 2. تفاصيل المبيعات (قابلة للإظهار/الإخفاء)
+class ProfitReportScreen extends StatefulWidget {
+  const ProfitReportScreen({super.key});
 
-// class _ProfitReportScreenState extends State<ProfitReportScreen> {
-//   // ... (كل متغيرات الحالة والدوال المنطقية تبقى كما هي)
-//   final dbHelper = DatabaseHelper.instance;
-//   late Future<FinancialSummary> _summaryFuture;
-//   bool _isDetailsVisible = false;
+  @override
+  State<ProfitReportScreen> createState() => _ProfitReportScreenState();
+}
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadFinancialSummary();
-//   }
+class _ProfitReportScreenState extends State<ProfitReportScreen> {
+  // ============= المتغيرات =============
+  final dbHelper = DatabaseHelper.instance;
+  late Future<FinancialSummary> _summaryFuture;
+  bool _isDetailsVisible = false; // للتحكم في إظهار/إخفاء التفاصيل
 
-//   void _loadFinancialSummary() {
-//     setState(() {
-//       _summaryFuture = _getFinancialSummary();
-//     });
-//   }
+  // ============= التهيئة =============
+  @override
+  void initState() {
+    super.initState();
+    _loadFinancialSummary();
+  }
 
-//   Future<FinancialSummary> _getFinancialSummary() async {
-//     final results = await Future.wait([
-//       dbHelper.getTotalProfit(),
-//       dbHelper.getTotalExpenses(),
-//       dbHelper.getTotalAllProfitWithdrawals(),
-//       dbHelper.getAllSales(),
-//     ]);
-//     return FinancialSummary(grossProfit: results[0] as double, totalExpenses: results[1] as double, totalWithdrawals: results[2] as double, sales: results[3] as List<CustomerDebt>);
-//   }
+  /// تحميل الملخص المالي من قاعدة البيانات
+  void _loadFinancialSummary() {
+    setState(() {
+      _summaryFuture = _getFinancialSummary();
+    });
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final l10n = AppLocalizations.of(context)!;
-//     final theme = Theme.of(context);
+  /// جلب البيانات المالية من قاعدة البيانات
+  Future<FinancialSummary> _getFinancialSummary() async {
+    // تنفيذ جميع الاستعلامات بالتوازي لتحسين الأداء
+    final results = await Future.wait([
+      dbHelper.getTotalProfit(),
+      dbHelper.getTotalExpenses(),
+      dbHelper.getTotalAllProfitWithdrawals(),
+      dbHelper.getAllSales(),
+    ]);
 
-//     return Scaffold(
-//       // --- 2. توحيد بنية الصفحة ---
-//       // الشرح: نجعل Scaffold شفافاً ونضع الخلفية المتدرجة في Container
-//       // ليغطي الشاشة بأكملها، مما يضمن ظهور التأثير الزجاجي بشكل صحيح.
-//       backgroundColor: Colors.transparent,
-//       extendBodyBehindAppBar: true,
-//       appBar: AppBar(
-//         title: Text(l10n.generalProfitReport),
-//         backgroundColor: Colors.transparent,
-//         elevation: 0,
-//         actions: [
-//           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadFinancialSummary, tooltip: l10n.refresh),
-//         ],
-//       ),
-//       body: GradientBackground(
-//         child: SafeArea(
-//           child: FutureBuilder<FinancialSummary>(
-//             future: _summaryFuture,
-//             builder: (context, snapshot) {
-//               if (snapshot.connectionState == ConnectionState.waiting) {
-//                 return const Center(child: CircularProgressIndicator(color: Colors.white));
-//               }
-//               if (snapshot.hasError) {
-//                 return Center(child: Text(l10n.errorOccurred(snapshot.error.toString()), style: theme.textTheme.bodyLarge));
-//               }
-//               if (!snapshot.hasData) {
-//                 return Center(child: Text(l10n.noDataToShow, style: theme.textTheme.bodyLarge));
-//               }
+    return FinancialSummary(
+      grossProfit: results[0] as double,
+      totalExpenses: results[1] as double,
+      totalWithdrawals: results[2] as double,
+      sales: results[3] as List<CustomerDebt>,
+    );
+  }
 
-//               final summary = snapshot.data!;
-//               final netProfit = summary.grossProfit - summary.totalExpenses - summary.totalWithdrawals;
+  // ============= البناء الرئيسي =============
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // --- AppBar مع زر التحديث ---
+      appBar: AppBar(
+        title: const Text('تقرير الأرباح العام'),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadFinancialSummary,
+            tooltip: 'تحديث',
+          ),
+        ],
+      ),
 
-//               return Column(
-//                 children: [
-//                   // --- 3. تعديل بطاقة الملخص المالي ---
-//                   // الشرح: نمرر البيانات إلى دالة بناء البطاقة الزجاجية.
-//                   _buildFinancialSummaryCard(l10n, summary, netProfit),
-//                   const Divider(color: AppColors.glassBorderColor, indent: 20, endIndent: 20),
-                  
-//                   // --- 4. تعديل زر إظهار/إخفاء التفاصيل ---
-//                   TextButton.icon(
-//                     icon: Icon(_isDetailsVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textGrey),
-//                     label: Text(_isDetailsVisible ? l10n.hideSalesDetails : l10n.showSalesDetails, style: TextStyle(color: AppColors.textGrey)),
-//                     onPressed: () => setState(() => _isDetailsVisible = !_isDetailsVisible),
-//                   ),
+      // --- الجسم: الملخص المالي والتفاصيل ---
+      body: FutureBuilder<FinancialSummary>(
+        future: _summaryFuture,
+        builder: (context, snapshot) {
+          // --- حالة التحميل ---
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const LoadingState(
+              message: 'جاري حساب الأرباح...',
+            );
+          }
 
-//                   // --- 5. تعديل قائمة تفاصيل المبيعات ---
-//                   if (_isDetailsVisible)
-//                     Expanded(
-//                       child: _buildSalesList(l10n, summary.sales),
-//                     ),
-//                 ],
-//               );
-//             },
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+          // --- حالة الخطأ ---
+          if (snapshot.hasError) {
+            return ErrorState(
+              message: 'حدث خطأ: ${snapshot.error}',
+              onRetry: _loadFinancialSummary,
+            );
+          }
 
-//   // --- 6. تعديل دالة بناء بطاقة الملخص المالي ---
-//   // الشرح: نستبدل Card بـ GlassContainer ونعدل الألوان لتكون أكثر إشراقاً.
-//   Widget _buildFinancialSummaryCard(AppLocalizations l10n, FinancialSummary summary, double netProfit) {
-//     return GlassContainer(
-//       borderRadius: 15,
-//       margin: const EdgeInsets.all(12.0),
-//       padding: const EdgeInsets.all(16.0),
-//       child: Column(
-//         children: [
-//           _buildSummaryRow(l10n.grossProfitFromSales, summary.grossProfit, Colors.blueAccent),
-//           const SizedBox(height: 8),
-//           _buildSummaryRow(l10n.totalGeneralExpenses, summary.totalExpenses, Colors.redAccent),
-//           const SizedBox(height: 8),
-//           _buildSummaryRow(l10n.totalProfitWithdrawals, summary.totalWithdrawals, Colors.orangeAccent),
-//           const Divider(height: 20, thickness: 0.5, color: AppColors.glassBorderColor),
-//           _buildSummaryRow(l10n.netProfit, netProfit, Colors.greenAccent, isTotal: true),
-//         ],
-//       ),
-//     );
-//   }
+          // --- حالة عدم وجود بيانات ---
+          if (!snapshot.hasData) {
+            return const EmptyState(
+              icon: Icons.trending_up,
+              title: 'لا توجد بيانات',
+              message: 'لم يتم تسجيل أي عمليات حتى الآن',
+            );
+          }
 
-//   Widget _buildSummaryRow(String title, double amount, Color color, {bool isTotal = false}) {
-//     return Row(
-//       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//       children: [
-//         Text(title, style: TextStyle(fontSize: 16, fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
-//         Text(formatCurrency(amount), style: TextStyle(fontSize: isTotal ? 22 : 18, fontWeight: FontWeight.bold, color: color)),
-//       ],
-//     );
-//   }
+          // --- عرض البيانات ---
+          final summary = snapshot.data!;
+          final netProfit = summary.grossProfit -
+              summary.totalExpenses -
+              summary.totalWithdrawals;
 
-//   // --- 7. تعديل دالة بناء قائمة تفاصيل المبيعات ---
-//   // الشرح: نغلف كل عنصر في القائمة بـ GlassContainer.
-//   Widget _buildSalesList(AppLocalizations l10n, List<CustomerDebt> sales) {
-//     if (sales.isEmpty) {
-//       return Center(child: Text(l10n.noSalesRecorded, style: Theme.of(context).textTheme.bodyLarge));
-//     }
-//     return ListView.builder(
-//       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-//       itemCount: sales.length,
-//       itemBuilder: (context, index) {
-//         final sale = sales[index];
-//         return Padding(
-//           padding: const EdgeInsets.only(bottom: 8.0),
-//           child: GlassContainer(
-//             borderRadius: 12,
-//             child: ListTile(
-//               leading: const CircleAvatar(
-//                 backgroundColor: AppColors.primaryPurple,
-//                 child: Icon(Icons.receipt, color: AppColors.accentBlue),
-//               ),
-//               title: Text(sale.details),
-//               subtitle: Text('${l10n.customerLabel(sale.customerName ?? l10n.unregistered)} | ${l10n.dateLabel(DateFormat('yyyy-MM-dd').format(DateTime.parse(sale.dateT)))}'),
-//               trailing: Column(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 crossAxisAlignment: CrossAxisAlignment.end,
-//                 children: [
-//                   Text(l10n.profitLabel(formatCurrency(sale.profitAmount)), style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-//                   Text(l10n.saleLabel(formatCurrency(sale.debt)), style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
+          return SingleChildScrollView(
+            padding: AppConstants.screenPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 💰 قسم الملخص المالي
+                _buildFinancialSummarySection(summary, netProfit),
 
-// class FinancialSummary {
-//   final double grossProfit;
-//   final double totalExpenses;
-//   final double totalWithdrawals;
-//   final List<CustomerDebt> sales;
-//   FinancialSummary({required this.grossProfit, required this.totalExpenses, required this.totalWithdrawals, required this.sales});
-// }
+                const SizedBox(height: AppConstants.spacingXl),
+
+                // 🔍 زر إظهار/إخفاء التفاصيل
+                _buildToggleDetailsButton(),
+
+                // 📋 قائمة تفاصيل المبيعات
+                if (_isDetailsVisible) ...[
+                  const SizedBox(height: AppConstants.spacingMd),
+                  _buildSalesList(summary.sales),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ============= قسم الملخص المالي =============
+  /// يعرض 4 بطاقات إحصائية:
+  /// 1. إجمالي الأرباح من المبيعات
+  /// 2. إجمالي المصاريف العامة
+  /// 3. إجمالي مسحوبات الأرباح
+  /// 4. صافي الربح (النتيجة النهائية)
+  Widget _buildFinancialSummarySection(
+    FinancialSummary summary,
+    double netProfit,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // --- بطاقة إجمالي الأرباح ---
+        StatCard(
+          label: 'إجمالي الأرباح من المبيعات',
+          value: formatCurrency(summary.grossProfit),
+          icon: Icons.trending_up,
+          color: AppColors.info,
+          subtitle: 'قبل المصاريف',
+          // iconSize: 22,
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // --- بطاقة المصاريف ---
+        StatCard(
+          label: 'إجمالي المصاريف العامة',
+          value: formatCurrency(summary.totalExpenses),
+          icon: Icons.receipt_long,
+          color: AppColors.error,
+          subtitle: 'فواتير ونفقات',
+          // iconSize: 22,
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // --- بطاقة المسحوبات ---
+        StatCard(
+          label: 'إجمالي مسحوبات الأرباح',
+          value: formatCurrency(summary.totalWithdrawals),
+          icon: Icons.account_balance_wallet,
+          color: AppColors.warning,
+          subtitle: 'للموردين والشركاء',
+          // iconSize: 22,
+        ),
+
+        const Divider(height: 32),
+
+        // --- بطاقة صافي الربح (النتيجة النهائية) ---
+        CustomCard(
+          color: netProfit >= 0
+              ? AppColors.success.withOpacity(0.1)
+              : AppColors.error.withOpacity(0.1),
+          child: Padding(
+            padding: AppConstants.paddingLg,
+            child: Row(
+              children: [
+                // أيقونة النتيجة
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: netProfit >= 0
+                        ? AppColors.success.withOpacity(0.2)
+                        : AppColors.error.withOpacity(0.2),
+                    borderRadius: AppConstants.borderRadiusLg,
+                  ),
+                  child: Icon(
+                    netProfit >= 0
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                    color: netProfit >= 0
+                        ? AppColors.success
+                        : AppColors.error,
+                    size: 28,
+                  ),
+                ),
+
+                const SizedBox(width: AppConstants.spacingMd),
+
+                // النص والمبلغ
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'صافي الربح',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        formatCurrency(netProfit),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: netProfit >= 0
+                              ? AppColors.success
+                              : AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============= زر إظهار/إخفاء التفاصيل =============
+  /// زر لتبديل عرض قائمة تفاصيل المبيعات
+  Widget _buildToggleDetailsButton() {
+    return OutlinedButton.icon(
+      onPressed: () {
+        setState(() {
+          _isDetailsVisible = !_isDetailsVisible;
+        });
+      },
+      icon: Icon(
+        _isDetailsVisible
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
+      ),
+      label: Text(
+        _isDetailsVisible
+            ? 'إخفاء تفاصيل المبيعات'
+            : 'عرض تفاصيل المبيعات',
+      ),
+    );
+  }
+
+  // ============= قائمة تفاصيل المبيعات =============
+  /// يعرض جدول بجميع عمليات البيع مع الربح لكل عملية
+  Widget _buildSalesList(List<CustomerDebt> sales) {
+    // --- حالة عدم وجود مبيعات ---
+    if (sales.isEmpty) {
+      return const EmptyState(
+        icon: Icons.shopping_cart_outlined,
+        title: 'لا توجد مبيعات',
+        message: 'لم يتم تسجيل أي عمليات بيع حتى الآن',
+      );
+    }
+
+    // --- عرض قائمة المبيعات ---
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // عنوان القائمة
+        Text(
+          'تفاصيل المبيعات (${sales.length})',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // القائمة
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: sales.length,
+          itemBuilder: (context, index) {
+            final sale = sales[index];
+            return _buildSaleCard(sale);
+          },
+        ),
+      ],
+    );
+  }
+
+  // ============= بطاقة المبيعة الواحدة =============
+  /// يعرض تفاصيل عملية بيع واحدة
+  Widget _buildSaleCard(CustomerDebt sale) {
+    final saleDate = DateTime.parse(sale.dateT);
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Row(
+          children: [
+            // --- أيقونة الفاتورة ---
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Icon(
+                Icons.receipt,
+                color: AppColors.primaryLight,
+                size: 24,
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // --- تفاصيل المبيعة ---
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // اسم المنتج
+                  Text(
+                    sale.details,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingXs),
+
+                  // اسم الزبون والتاريخ
+                  Text(
+                    '${sale.customerName ?? "غير مسجل"} • '
+                    '${DateFormat('yyyy-MM-dd').format(saleDate)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // --- الربح والمبلغ ---
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // الربح
+                Text(
+                  formatCurrency(sale.profitAmount),
+                  style: const TextStyle(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+
+                const SizedBox(height: AppConstants.spacingXs),
+
+                // مبلغ البيع
+                Text(
+                  'من ${formatCurrency(sale.debt)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============= نموذج بيانات الملخص المالي =============
+/// كلاس مساعد لتمثيل الملخص المالي الشامل
+class FinancialSummary {
+  final double grossProfit; // إجمالي الأرباح قبل المصاريف
+  final double totalExpenses; // إجمالي المصاريف العامة
+  final double totalWithdrawals; // إجمالي مسحوبات الأرباح
+  final List<CustomerDebt> sales; // قائمة جميع المبيعات
+
+  FinancialSummary({
+    required this.grossProfit,
+    required this.totalExpenses,
+    required this.totalWithdrawals,
+    required this.sales,
+  });
+}

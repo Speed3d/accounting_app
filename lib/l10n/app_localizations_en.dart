@@ -1473,4 +1473,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get selfEditNote =>
       'You can edit your name, username, password, and profile picture. Permissions are protected';
+
+  @override
+  String get transactionDetails => 'Transaction details';
+
+  @override
+  String get noTransactionsInPeriod => 'No Transactions In Period';
+
+  @override
+  String get cashIn => 'Cash In';
 }

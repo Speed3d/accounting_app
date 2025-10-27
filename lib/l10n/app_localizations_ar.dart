@@ -1461,4 +1461,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get selfEditNote =>
       'يمكنك تعديل اسمك، اسم المستخدم، كلمة المرور، والصورة الشخصية. الصلاحيات محمية';
+
+  @override
+  String get transactionDetails => 'تفاصيل المعاملات';
+
+  @override
+  String get noTransactionsInPeriod => 'لا توجد معاملات في هذه الفترة';
+
+  @override
+  String get cashIn => 'الوارد';
 }

@@ -782,8 +782,9 @@
 "updateProfile": "Edit profile",
 "updateUser": "Update User",
 "editingYourProfile": "Editing Your Profile",
-"selfEditNote": "You can edit your name, username, password, and profile picture. Permissions are protected"
-
-
+"selfEditNote": "You can edit your name, username, password, and profile picture. Permissions are protected",
+"transactionDetails": "Transaction details",
+"noTransactionsInPeriod": "No Transactions In Period",
+"cashIn": "Cash In"
 
 }

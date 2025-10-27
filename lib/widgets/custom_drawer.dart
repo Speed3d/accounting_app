@@ -3,6 +3,7 @@
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:accounting_app/screens/employees/employees_list_screen.dart';
 import 'package:accounting_app/screens/products/products_list_screen.dart';
+import 'package:accounting_app/screens/reports/reports_hub_screen.dart';
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/settings_screen.dart';
@@ -191,10 +192,15 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.assessment,
                       title: 'مركز التقارير',
                       onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة التقارير
-                      },
-                    ),
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReportsHubScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   
                   // if (authService.canViewReports || authService.isAdmin)
                   //   _buildMenuItem(
