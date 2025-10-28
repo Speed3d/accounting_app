@@ -155,6 +155,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
       // ============= AppBar =============
       appBar: AppBar(
         title: Text(l10n.newAdvanceFor(widget.employee.fullName)),
+        
         actions: [
           IconButton(
             icon: const Icon(Icons.check),

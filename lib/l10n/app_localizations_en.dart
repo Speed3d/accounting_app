@@ -189,7 +189,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String errorOccurred(String error) {
-    return 'An error occurred: $error';
+    return 'Error occurred';
   }
 
   @override
@@ -206,7 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get advanceAmount => 'Advance Amount';
+  String get advanceAmount => 'Advance amount';
 
   @override
   String get advanceDate => 'Advance Date';
@@ -221,7 +221,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unpaid => 'Unpaid';
 
   @override
-  String get addEmployee => 'Add Employee';
+  String get addEmployee => 'Add employee';
 
   @override
   String get editEmployee => 'Edit Employee';
@@ -278,10 +278,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payrollSavedSuccess => 'Payroll saved successfully!';
 
   @override
-  String get bonuses => 'Bonuses (+)';
+  String get bonuses => 'Bonuses & incentives';
 
   @override
-  String get deductions => 'Deductions (-)';
+  String get deductions => 'Deductions';
 
   @override
   String get advanceRepayment => 'Advance Repayment (-)';
@@ -321,7 +321,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noPayrolls => 'No payrolls recorded.';
 
   @override
-  String get noAdvances => 'No advances recorded.';
+  String get noAdvances => 'No advances recorded';
 
   @override
   String payrollDetailsFor(Object month) {
@@ -349,7 +349,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get fullyPaid => 'Fully Paid';
+  String get fullyPaid => 'Fully paid';
 
   @override
   String get employeesList => 'Employees List';
@@ -389,7 +389,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partner => 'Partner';
 
   @override
-  String get addSupplier => 'Add New Supplier';
+  String get addSupplier => 'Add supplier';
 
   @override
   String get editSupplier => 'Edit Supplier';
@@ -428,7 +428,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supplierUpdatedSuccess => 'Supplier updated successfully!';
 
   @override
-  String get addNewPartner => 'Add New Partner';
+  String get addNewPartner => 'Add new partner';
 
   @override
   String get partnerName => 'Partner Name';
@@ -472,7 +472,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get addUser => 'Add New User';
+  String get addUser => 'Add user';
 
   @override
   String get editUser => 'Edit User';
@@ -544,7 +544,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get usersList => 'Users List';
 
   @override
-  String get noUsers => 'No users yet.';
+  String get noUsers => 'No users available';
 
   @override
   String get you => '(You)';
@@ -628,7 +628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get addProduct => 'Add New Product';
+  String get addProduct => 'Add product';
 
   @override
   String get editProduct => 'Edit Product';
@@ -652,7 +652,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productDetailsOptional => 'Product Details (Optional)';
 
   @override
-  String get costPrice => 'Cost Price';
+  String get costPrice => 'Cost price';
 
   @override
   String get fieldCannotBeNegative => 'Field cannot be negative';
@@ -674,7 +674,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get barcodeOptional => 'Barcode (Optional)';
 
   @override
-  String get scanBarcode => 'Scan Barcode';
+  String get scanBarcode => 'Scan barcode';
 
   @override
   String get cameraPermissionRequired =>
@@ -1322,7 +1322,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get descriptionRequired => 'Description is required';
 
   @override
-  String get amount => 'Amount';
+  String get amount => 'Amount:';
 
   @override
   String get category => 'Category';
@@ -1482,4 +1482,471 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashIn => 'Cash In';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get darkModeEnabled => 'Enabled - Relax your eyes 😌';
+
+  @override
+  String get darkModeDisabled => 'Disabled - Enjoy the light ☀️';
+
+  @override
+  String get appTitle => 'Smart Accounting System';
+
+  @override
+  String get appVersion => 'Version 1.0.0';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get appDescription =>
+      'A smart and integrated accounting system to manage your business easily and professionally';
+
+  @override
+  String get companyInfo => 'Company Information';
+
+  @override
+  String get companyName => 'Company Name';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get developerInfo => 'Developer Information';
+
+  @override
+  String get developer => 'Developer';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get rightsReserved => '© 2025 All rights reserved';
+
+  @override
+  String get madeWith => 'Made with';
+
+  @override
+  String get madeInIraq => 'In Iraq 🇮🇶';
+
+  @override
+  String get loadingData => 'Loading data...';
+
+  @override
+  String get saveChanges => 'Save changes';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get loadingUsers => 'Loading users...';
+
+  @override
+  String get loadError => 'An error occurred while loading data';
+
+  @override
+  String get addNewUser => 'Add new user';
+
+  @override
+  String get noResults => 'No results';
+
+  @override
+  String get noUsersMatch => 'No users found with these criteria';
+
+  @override
+  String get searchUser => 'Search for a user...';
+
+  @override
+  String get totalUsers => 'Total users';
+
+  @override
+  String get admins => 'Admins';
+
+  @override
+  String get permission => 'Permission';
+
+  @override
+  String get viewEdit => 'View & Edit';
+
+  @override
+  String get viewOnly => 'View only';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get fullAccess => 'Full Access';
+
+  @override
+  String get employeeReports => 'Employee Reports';
+
+  @override
+  String get expenses => 'Expenses';
+
+  @override
+  String get cashSales => 'Cash Sales';
+
+  @override
+  String get noPermissions => 'No permissions granted';
+
+  @override
+  String get noUndo => 'This action cannot be undone';
+
+  @override
+  String get userDeleted => 'User deleted successfully';
+
+  @override
+  String get deleteError => 'An error occurred while deleting';
+
+  @override
+  String get loadingSuppliers => 'Loading suppliers...';
+
+  @override
+  String get noSuppliers => 'No suppliers available';
+
+  @override
+  String get addNewSupplier => 'Add new supplier';
+
+  @override
+  String get noSuppliersMatch => 'No suppliers found with this name';
+
+  @override
+  String get searchSupplier => 'Search for a supplier...';
+
+  @override
+  String get totalSuppliers => 'Total suppliers';
+
+  @override
+  String get individuals => 'Individuals';
+
+  @override
+  String get canRestoreSupplier =>
+      'You can restore this supplier later from the archive center';
+
+  @override
+  String get supplierArchived => 'Supplier archived';
+
+  @override
+  String get archiveError => 'Archiving error';
+
+  @override
+  String get basicInfo => 'Basic Information';
+
+  @override
+  String get enterSupplierName => 'Enter supplier name';
+
+  @override
+  String get additionalInfoOptional => 'Additional information (optional)';
+
+  @override
+  String get enterPhoneNumber => 'Enter phone number';
+
+  @override
+  String get enterNotes => 'Enter any notes';
+
+  @override
+  String get updateSupplier => 'Update supplier';
+
+  @override
+  String get createSupplier => 'Add supplier';
+
+  @override
+  String get deletePartner => 'Delete partner';
+
+  @override
+  String get confirmDeletePartner =>
+      'Are you sure you want to delete the partner';
+
+  @override
+  String get updateSupplierInfo => 'Update supplier information';
+
+  @override
+  String get addNewSupplierAgain => 'Add new supplier';
+
+  @override
+  String get saveError => 'An error occurred while saving';
+
+  @override
+  String get editPartnerInfo => 'Edit partner information';
+
+  @override
+  String get partnerInfo => 'Partner information';
+
+  @override
+  String get enterPartnerName => 'Enter partner name';
+
+  @override
+  String get enterPartnerShare => 'Enter partnership percentage (1-100)';
+
+  @override
+  String get invalidShare => 'Invalid percentage';
+
+  @override
+  String get additionalInfo => 'Additional information';
+
+  @override
+  String get updatePartner => 'Update partner';
+
+  @override
+  String get createPartner => 'Add partner';
+
+  @override
+  String get archiveProduct => 'Archive product';
+
+  @override
+  String get productArchived => 'Product archived';
+
+  @override
+  String get loadingProducts => 'Loading products...';
+
+  @override
+  String get startByAddingProduct =>
+      'Start by adding your first product in inventory';
+
+  @override
+  String get addNewProduct => 'Add new product';
+
+  @override
+  String get totalQuantity => 'Total quantity';
+
+  @override
+  String get low => 'Low';
+
+  @override
+  String get value => 'Value';
+
+  @override
+  String get tryAnotherSearch => 'Try searching another keyword';
+
+  @override
+  String get purchase => 'Purchase';
+
+  @override
+  String get sell => 'Sell';
+
+  @override
+  String get pointCameraToBarcode => 'Point the camera at the barcode to scan';
+
+  @override
+  String get supplierInfo => 'Supplier information';
+
+  @override
+  String get productInfo => 'Product information';
+
+  @override
+  String get enterProductName => 'Enter product name';
+
+  @override
+  String get scanOrEnterBarcode => 'Scan or enter barcode';
+
+  @override
+  String get enterProductDetails => 'Enter product details';
+
+  @override
+  String get quantityAndPrices => 'Quantity and prices';
+
+  @override
+  String get enterQuantity => 'Enter quantity';
+
+  @override
+  String get purchasePrice => 'Purchase price';
+
+  @override
+  String get salePrice => 'Sale price';
+
+  @override
+  String get pricesSummary => 'Prices summary';
+
+  @override
+  String get loadingEmployees => 'Loading employees...';
+
+  @override
+  String get startByAddingEmployee => 'Start by adding your first employee';
+
+  @override
+  String get addNewEmployee => 'Add new employee';
+
+  @override
+  String get totalSalaries => 'Total salaries';
+
+  @override
+  String get totalAdvances => 'Total advances';
+
+  @override
+  String get salary => 'Salary';
+
+  @override
+  String get advance => 'Advance';
+
+  @override
+  String get months => 'Months';
+
+  @override
+  String get january => 'January';
+
+  @override
+  String get february => 'February';
+
+  @override
+  String get march => 'March';
+
+  @override
+  String get april => 'April';
+
+  @override
+  String get may => 'May';
+
+  @override
+  String get june => 'June';
+
+  @override
+  String get july => 'July';
+
+  @override
+  String get august => 'August';
+
+  @override
+  String get september => 'September';
+
+  @override
+  String get october => 'October';
+
+  @override
+  String get november => 'November';
+
+  @override
+  String get december => 'December';
+
+  @override
+  String get noSalaryPaidYet => 'No salary has been paid yet';
+
+  @override
+  String get addSalary => 'Add salary';
+
+  @override
+  String get paySalary => 'Pay salary';
+
+  @override
+  String get addNewSalary => 'Add new salary';
+
+  @override
+  String get paidAt => 'Paid on:';
+
+  @override
+  String get net => 'Net';
+
+  @override
+  String get addAdvance => 'Add advance';
+
+  @override
+  String get addNewAdvance => 'Add new advance';
+
+  @override
+  String get salaryDetails => 'Salary details';
+
+  @override
+  String get recordSalaryFor => 'Record salary for month';
+
+  @override
+  String get forEmployee => 'for employee';
+
+  @override
+  String get selectPaymentDate => 'Select payment date';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get financialPeriod => 'Financial period';
+
+  @override
+  String get salaryComponents => 'Salary components';
+
+  @override
+  String get basicSalary => 'Basic salary';
+
+  @override
+  String get deductionAndPenalties => 'Deductions & penalties';
+
+  @override
+  String get deductAdvance => 'Deduct advances from salary';
+
+  @override
+  String get selectDate => 'Select date';
+
+  @override
+  String get anyAdditionalNotes => 'Any additional notes';
+
+  @override
+  String get detailedSummary => 'Detailed summary';
+
+  @override
+  String get updateEmployeeData => 'Update employee data:';
+
+  @override
+  String get addNewEmployeeData => 'Add new employee:';
+
+  @override
+  String get selectHiringDate => 'Select hiring date';
+
+  @override
+  String get personalInfo => 'Personal information';
+
+  @override
+  String get enterFullName => 'Enter full name';
+
+  @override
+  String get jobInfo => 'Job information';
+
+  @override
+  String get enterJobTitle => 'Enter job title';
+
+  @override
+  String get financialInfo => 'Financial information';
+
+  @override
+  String get enterBasicSalary => 'Enter basic salary';
+
+  @override
+  String get recordEmployeeAdvance => 'Record an advance for employee:';
+
+  @override
+  String get selectAdvanceDate => 'Select advance date';
+
+  @override
+  String get advanceData => 'Advance data';
+
+  @override
+  String get enterAdvanceAmount => 'Enter advance amount';
+
+  @override
+  String get enterAdvanceNotes => 'Enter any additional notes';
+
+  @override
+  String get currentBalance => 'Current balance';
+
+  @override
+  String get financialSummary => 'Financial summary';
+
+  @override
+  String get expectedBalance => 'Expected balance';
+
+  @override
+  String get autoDeductAdvance =>
+      'The advance amount will be automatically deducted from upcoming salaries until fully paid';
 }

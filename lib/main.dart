@@ -1,6 +1,3 @@
-import 'package:accounting_app/screens/HomeScreen/home_screen.dart';
-import 'package:accounting_app/screens/dashboard/dashboard_screen.dart';
-import 'package:accounting_app/screens/test_layout_screen.dart';
 import 'package:accounting_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:accounting_app/l10n/app_localizations.dart';
@@ -9,7 +6,6 @@ import 'package:accounting_app/providers/locale_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
-import 'widgets/test_widgets_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -341,7 +341,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                       const SizedBox(width: AppConstants.spacingSm),
                       Icon(
                         Icons.phone,
-                        size: 14,
+                        size: 18,
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                       const SizedBox(width: AppConstants.spacingXs),
@@ -363,7 +363,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                     children: [
                       Icon(
                         Icons.people,
-                        size: 14,
+                        size: 18,
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                       const SizedBox(width: AppConstants.spacingXs),
@@ -387,7 +387,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
                   color: AppColors.info,
-                  iconSize: 20,
+                  iconSize: 26,
                   tooltip: l10n.edit,
                   onPressed: () => _navigateToEditSupplier(supplier),
                 ),
@@ -396,7 +396,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                 IconButton(
                   icon: const Icon(Icons.archive_outlined),
                   color: AppColors.error,
-                  iconSize: 20,
+                  iconSize: 26,
                   tooltip: l10n.archive,
                   onPressed: () => _handleArchiveSupplier(supplier),
                 ),

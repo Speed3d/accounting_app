@@ -158,7 +158,7 @@ class _AboutScreenState extends State<AboutScreen> {
               color: (isDark ? AppColors.primaryDark : AppColors.primaryLight)
                   .withOpacity(0.3),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 1),
             ),
           ],
         ),

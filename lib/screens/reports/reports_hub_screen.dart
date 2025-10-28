@@ -14,18 +14,16 @@ import 'supplier_profit_report_screen.dart';
 
 /// 📊 مركز التقارير - الصفحة الرئيسية
 /// ---------------------------
-/// 🔴 ملاحظة: هذه صفحة رئيسية، لذلك يتم عرضها عبر MainLayout
-/// في ملف main_screen.dart (الصفحة الرئيسية 3 من 4)
-/// 
-/// تعرض قائمة بجميع التقارير المتاحة حسب صلاحيات المستخدم:
-/// 1. تقرير الأرباح العام
-/// 2. تقرير أرباح الموردين (للمدير فقط)
-/// 3. سجل المبيعات النقدية
-/// 4. تقرير التدفق النقدي
-/// 5. سجل المصاريف
-/// 6. تقرير الموظفين والرواتب
+/// يمكن عرضها بطريقتين:
+/// 1. من خلال MainLayout (من الشريط السفلي) - بدون Scaffold
+/// 2. مباشرة (من الأزرار أو القائمة الجانبية) - تحتاج Scaffold
 class ReportsHubScreen extends StatefulWidget {
-  const ReportsHubScreen({super.key});
+  final bool useScaffold; // ✅ إضافة متغير للتحكم في استخدام Scaffold
+  
+  const ReportsHubScreen({
+    super.key, 
+    this.useScaffold = true, // ✅ القيمة الافتراضية true
+  });
 
   @override
   State<ReportsHubScreen> createState() => _ReportsHubScreenState();
@@ -36,13 +34,31 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   final AuthService _authService = AuthService();
 
   // ============= البناء الرئيسي =============
-  /// ملاحظة: هذه الصفحة تُعرض داخل MainLayout
-  /// لذلك نحن نبني فقط محتوى الـ body
   @override
   Widget build(BuildContext context) {
     // --- جمع التقارير المتاحة حسب الصلاحيات ---
     final availableReports = _getAvailableReports();
-
+    
+    // --- المحتوى الأساسي ---
+    Widget content = _buildContent(availableReports);
+    
+    // ✅ إذا كنا نحتاج Scaffold (عند الفتح المباشر)
+    if (widget.useScaffold) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('مركز التقارير'),
+          centerTitle: false,
+        ),
+        body: content,
+      );
+    }
+    
+    // ✅ إذا كنا داخل MainLayout (لا نحتاج Scaffold)
+    return content;
+  }
+  
+  // ============= بناء المحتوى =============
+  Widget _buildContent(List<ReportItem> availableReports) {
     // --- حالة عدم وجود تقارير متاحة ---
     if (availableReports.isEmpty) {
       return Center(

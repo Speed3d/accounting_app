@@ -164,7 +164,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: AppColors.primaryLight.withOpacity(0.3),
-                  width: 3,
+                  width: 4,
                 ),
                 image: hasImage
                     ? DecorationImage(

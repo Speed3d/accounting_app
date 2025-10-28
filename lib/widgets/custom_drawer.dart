@@ -3,6 +3,7 @@
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:accounting_app/screens/employees/employees_list_screen.dart';
 import 'package:accounting_app/screens/products/products_list_screen.dart';
+import 'package:accounting_app/screens/reports/reports_hub_screen.dart'; // ✅ أضف هذا
 import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/settings_screen.dart';
@@ -11,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
-import '../services/auth_service.dart'; // ← جديد!
+import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -23,7 +24,7 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final authService = AuthService(); // ← جديد!
+    final authService = AuthService();
 
     return Drawer(
       child: Column(
@@ -37,7 +38,6 @@ class CustomDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 // ============= قسم المبيعات =============
-                // يظهر دائماً (أو يمكنك إضافة شرط إذا أردت)
                 _buildSection(context, 'المبيعات', isDark),
                 
                 _buildMenuItem(
@@ -55,7 +55,6 @@ class CustomDrawer extends StatelessWidget {
                   },
                 ),
                 
-                // ← تحقق من صلاحية عرض المبيعات النقدية
                 if (authService.canViewCashSales || authService.isAdmin)
                   _buildMenuItem(
                     context,
@@ -75,13 +74,11 @@ class CustomDrawer extends StatelessWidget {
                 const Divider(),
                 
                 // ============= قسم العملاء والموردين =============
-                // يظهر فقط إذا كان لديه أي صلاحية متعلقة بالعملاء أو الموردين
                 if (authService.canViewCustomers || 
                     authService.canViewSuppliers || 
                     authService.isAdmin) ...[
                   _buildSection(context, 'العملاء والموردين', isDark),
                   
-                  // ← تحقق من صلاحية عرض العملاء
                   if (authService.canViewCustomers || authService.isAdmin)
                     _buildMenuItem(
                       context,
@@ -98,28 +95,26 @@ class CustomDrawer extends StatelessWidget {
                       },
                     ),
                   
-                  // ← تحقق من صلاحية عرض الموردين
                   if (authService.canViewSuppliers || authService.isAdmin)
                     _buildMenuItem(
                       context,
                       icon: Icons.local_shipping,
                       title: 'الموردين',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SuppliersListScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SuppliersListScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   
                   const Divider(),
                 ],
                 
                 // ============= قسم المخزون =============
-                // ← تحقق من صلاحية عرض المنتجات
                 if (authService.canViewProducts || authService.isAdmin) ...[
                   _buildSection(context, 'المخزون', isDark),
                   
@@ -142,7 +137,6 @@ class CustomDrawer extends StatelessWidget {
                 ],
                 
                 // ============= قسم الموظفين =============
-                // ← تحقق من صلاحيات الموظفين
                 if (authService.canManageEmployees || 
                     authService.canViewEmployeesReport || 
                     authService.isAdmin) ...[
@@ -154,32 +148,21 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.badge,
                       title: 'إدارة الموظفين',
                       onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EmployeesListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  // if (authService.canViewEmployeesReport || authService.isAdmin)
-                  //   _buildMenuItem(
-                  //     context,
-                  //     icon: Icons.account_balance_wallet,
-                  //     title: 'الرواتب',
-                  //     onTap: () {
-                  //       Navigator.pop(context);
-                  //       // TODO: إضافة صفحة الرواتب
-                  //     },
-                  //   ),
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EmployeesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   
                   const Divider(),
                 ],
                 
                 // ============= قسم التقارير =============
-                // ← تحقق من صلاحيات التقارير
+                // ✅✅✅ التعديل المهم - إضافة التنقل الصحيح للتقارير ✅✅✅
                 if (authService.canViewReports || 
                     authService.canManageExpenses || 
                     authService.isAdmin) ...[
@@ -191,49 +174,32 @@ class CustomDrawer extends StatelessWidget {
                       icon: Icons.assessment,
                       title: 'مركز التقارير',
                       onTap: () {
-                        Navigator.pop(context);
-                        // TODO: إضافة صفحة التقارير
+                        Navigator.pop(context); // إغلاق الدرج أولاً
+                        
+                        // ✅ التنقل الصحيح لصفحة التقارير
+                        try {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ReportsHubScreen(),
+                            ),
+                          );
+                        } catch (e) {
+                          debugPrint('❌ خطأ في فتح التقارير: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('خطأ في فتح صفحة التقارير: ${e.toString()}'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
                       },
                     ),
-                  
-                  // if (authService.canViewReports || authService.isAdmin)
-                  //   _buildMenuItem(
-                  //     context,
-                  //     icon: Icons.trending_up,
-                  //     title: 'تقرير الأرباح',
-                  //     onTap: () {
-                  //       Navigator.pop(context);
-                  //       // TODO: إضافة صفحة تقرير الأرباح
-                  //     },
-                  //   ),
-                  
-                  // if (authService.canViewReports || authService.isAdmin)
-                  //   _buildMenuItem(
-                  //     context,
-                  //     icon: Icons.attach_money,
-                  //     title: 'التدفق النقدي',
-                  //     onTap: () {
-                  //       Navigator.pop(context);
-                  //       // TODO: إضافة صفحة التدفق النقدي
-                  //     },
-                  //   ),
-                  
-                  // if (authService.canManageExpenses || authService.isAdmin)
-                  //   _buildMenuItem(
-                  //     context,
-                  //     icon: Icons.receipt,
-                  //     title: 'المصاريف',
-                  //     onTap: () {
-                  //       Navigator.pop(context);
-                  //       // TODO: إضافة صفحة المصاريف
-                  //     },
-                  //   ),
                   
                   const Divider(),
                 ],
                 
                 // ============= قسم النظام =============
-                // ← تحقق من صلاحيات النظام
                 if (authService.canViewSettings || authService.isAdmin) ...[
                   _buildSection(context, 'النظام', isDark),
                   
@@ -252,17 +218,6 @@ class CustomDrawer extends StatelessWidget {
                         );
                       },
                     ),
-                  
-                  // if (authService.isAdmin)
-                  //   _buildMenuItem(
-                  //     context,
-                  //     icon: Icons.backup,
-                  //     title: 'النسخ الاحتياطي',
-                  //     onTap: () {
-                  //       Navigator.pop(context);
-                  //       // TODO: إضافة صفحة النسخ الاحتياطي
-                  //     },
-                  //   ),
                 ],
               ],
             ),

@@ -1,3 +1,5 @@
+// lib/layouts/main_screen.dart
+
 import 'package:accounting_app/screens/reports/reports_hub_screen.dart';
 import 'package:flutter/material.dart';
 import '../layouts/main_layout.dart';
@@ -28,7 +30,8 @@ class _MainScreenState extends State<MainScreen> {
     _pages = [
       const HomeScreen(),
       const Scaffold(body: Center(child: Text('المبيعات - قريباً'))),
-      const ReportsHubScreen(),
+      // ✅ تمرير useScaffold: false لأنها داخل MainLayout
+      const ReportsHubScreen(useScaffold: false), 
       const Scaffold(body: Center(child: Text('المزيد - قريباً'))),
     ];
   }

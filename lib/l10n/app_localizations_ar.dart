@@ -21,13 +21,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get suppliers => 'الموردين';
 
   @override
-  String get products => 'المخزن';
+  String get products => 'المنتجات';
 
   @override
   String get employees => 'الموظفين';
 
   @override
-  String get customers => 'الزبائن';
+  String get customers => 'العملاء';
 
   @override
   String get reports => 'التقارير';
@@ -189,7 +189,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String errorOccurred(String error) {
-    return 'حدث خطأ: $error';
+    return 'حدث خطأ';
   }
 
   @override
@@ -221,7 +221,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unpaid => 'غير مسددة';
 
   @override
-  String get addEmployee => 'إضافة موظف جديد';
+  String get addEmployee => 'إضافة موظف';
 
   @override
   String get editEmployee => 'تعديل بيانات موظف';
@@ -277,10 +277,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payrollSavedSuccess => 'تم تسجيل الراتب بنجاح!';
 
   @override
-  String get bonuses => 'مكافآت (+)';
+  String get bonuses => 'المكافآت والحوافز';
 
   @override
-  String get deductions => 'خصومات (-)';
+  String get deductions => 'الخصومات';
 
   @override
   String get advanceRepayment => 'تسديد من السلفة (-)';
@@ -318,7 +318,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noPayrolls => 'لا توجد رواتب مسجلة.';
 
   @override
-  String get noAdvances => 'لا توجد سلف مسجلة.';
+  String get noAdvances => 'لا توجد سلف مسجلة';
 
   @override
   String payrollDetailsFor(Object month) {
@@ -386,7 +386,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partner => 'شريك';
 
   @override
-  String get addSupplier => 'إضافة مورد جديد';
+  String get addSupplier => 'إضافة مورد';
 
   @override
   String get editSupplier => 'تعديل مورد';
@@ -404,7 +404,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partnership => 'شراكة';
 
   @override
-  String get partners => 'الشركاء';
+  String get partners => 'شراكات';
 
   @override
   String get addPartner => 'إضافة شريك';
@@ -468,7 +468,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get addUser => 'إضافة مستخدم جديد';
+  String get addUser => 'إضافة مستخدم';
 
   @override
   String get editUser => 'تعديل مستخدم';
@@ -539,7 +539,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get usersList => 'قائمة المستخدمين';
 
   @override
-  String get noUsers => 'لا يوجد مستخدمون حتى الآن.';
+  String get noUsers => 'لا يوجد مستخدمين حالياً';
 
   @override
   String get you => '(أنت)';
@@ -622,7 +622,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get addProduct => 'إضافة منتج جديد';
+  String get addProduct => 'إضافة منتج';
 
   @override
   String get editProduct => 'تعديل منتج';
@@ -750,7 +750,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get error => 'خطأ';
 
   @override
-  String get success => 'نجاح';
+  String get success => 'بنجاح';
 
   @override
   String get backupStarted => 'تم بدء مشاركة النسخة الاحتياطية.';
@@ -1310,7 +1310,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get descriptionRequired => 'الوصف مطلوب';
 
   @override
-  String get amount => 'المبلغ';
+  String get amount => 'بقيمة:';
 
   @override
   String get category => 'الفئة';
@@ -1341,7 +1341,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sales => 'المبيعات';
 
   @override
-  String get profit => 'الأرباح';
+  String get profit => 'الربح';
 
   @override
   String get topSelling => 'الأكثر مبيعاً';
@@ -1470,4 +1470,469 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashIn => 'الوارد';
+
+  @override
+  String get appearance => 'المظهر';
+
+  @override
+  String get darkMode => 'الوضع الليلي';
+
+  @override
+  String get darkModeEnabled => 'مفعّل - العيون مرتاحة 😌';
+
+  @override
+  String get darkModeDisabled => 'معطّل - استمتع بالنور ☀️';
+
+  @override
+  String get appTitle => 'نظام المحاسبة الذكي';
+
+  @override
+  String get appVersion => 'الإصدار 1.0.0';
+
+  @override
+  String get loading => 'جاري التحميل...';
+
+  @override
+  String get appDescription =>
+      'نظام محاسبي ذكي ومتكامل لإدارة أعمالك بسهولة واحترافية';
+
+  @override
+  String get companyInfo => 'معلومات الشركة';
+
+  @override
+  String get companyName => 'اسم الشركة';
+
+  @override
+  String get notSpecified => 'غير محدد';
+
+  @override
+  String get description => 'الوصف';
+
+  @override
+  String get developerInfo => 'معلومات المطور';
+
+  @override
+  String get developer => 'المطور';
+
+  @override
+  String get email => 'البريد الإلكتروني';
+
+  @override
+  String get rightsReserved => '© 2025 جميع الحقوق محفوظة';
+
+  @override
+  String get madeWith => 'صُنع بـ';
+
+  @override
+  String get madeInIraq => 'في العراق 🇮🇶';
+
+  @override
+  String get loadingData => 'جاري تحميل البيانات...';
+
+  @override
+  String get saveChanges => 'حفظ التغييرات';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get user => 'مستخدم';
+
+  @override
+  String get loadingUsers => 'جاري تحميل المستخدمين...';
+
+  @override
+  String get loadError => 'حدث خطأ أثناء تحميل البيانات';
+
+  @override
+  String get addNewUser => 'إضافة مستخدم جديد';
+
+  @override
+  String get noResults => 'لا توجد نتائج';
+
+  @override
+  String get noUsersMatch => 'لم يتم العثور على مستخدمين بهذه المعايير';
+
+  @override
+  String get searchUser => 'البحث عن مستخدم...';
+
+  @override
+  String get totalUsers => 'إجمالي المستخدمين';
+
+  @override
+  String get admins => 'المدراء';
+
+  @override
+  String get permission => 'صلاحية';
+
+  @override
+  String get viewEdit => 'عرض وتعديل';
+
+  @override
+  String get viewOnly => 'عرض فقط';
+
+  @override
+  String get none => 'لا يوجد';
+
+  @override
+  String get view => 'عرض';
+
+  @override
+  String get fullAccess => 'إدارة كاملة';
+
+  @override
+  String get employeeReports => 'تقارير الموظفين';
+
+  @override
+  String get expenses => 'المصاريف';
+
+  @override
+  String get cashSales => 'المبيعات النقدية';
+
+  @override
+  String get noPermissions => 'لا توجد صلاحيات ممنوحة';
+
+  @override
+  String get noUndo => 'هذا الإجراء لا يمكن التراجع عنه';
+
+  @override
+  String get userDeleted => 'تم حذف المستخدم';
+
+  @override
+  String get deleteError => 'حدث خطأ أثناء الحذف';
+
+  @override
+  String get loadingSuppliers => 'جاري تحميل الموردين...';
+
+  @override
+  String get noSuppliers => 'لا يوجد موردين حالياً';
+
+  @override
+  String get addNewSupplier => 'إضافة مورد جديد';
+
+  @override
+  String get noSuppliersMatch => 'لم يتم العثور على موردين بهذا الاسم';
+
+  @override
+  String get searchSupplier => 'البحث عن مورد...';
+
+  @override
+  String get totalSuppliers => 'إجمالي الموردين';
+
+  @override
+  String get individuals => 'أفراد';
+
+  @override
+  String get canRestoreSupplier =>
+      'يمكنك استعادة المورد لاحقاً من مركز الأرشيف';
+
+  @override
+  String get supplierArchived => 'تم أرشفة المورد';
+
+  @override
+  String get archiveError => 'خطأ في الأرشفة';
+
+  @override
+  String get basicInfo => 'المعلومات الأساسية';
+
+  @override
+  String get enterSupplierName => 'أدخل اسم المورد';
+
+  @override
+  String get additionalInfoOptional => 'معلومات إضافية (اختيارية)';
+
+  @override
+  String get enterPhoneNumber => 'أدخل رقم الهاتف';
+
+  @override
+  String get enterNotes => 'أدخل أي ملاحظات';
+
+  @override
+  String get updateSupplier => 'تحديث المورد';
+
+  @override
+  String get createSupplier => 'إضافة المورد';
+
+  @override
+  String get deletePartner => 'حذف الشريك';
+
+  @override
+  String get confirmDeletePartner => 'هل أنت متأكد من حذف الشريك';
+
+  @override
+  String get updateSupplierInfo => 'تحديث بيانات المورد';
+
+  @override
+  String get addNewSupplierAgain => 'إضافة مورد جديد';
+
+  @override
+  String get saveError => 'حدث خطأ أثناء الحفظ';
+
+  @override
+  String get editPartnerInfo => 'تعديل بيانات الشريك';
+
+  @override
+  String get partnerInfo => 'معلومات الشريك';
+
+  @override
+  String get enterPartnerName => 'أدخل اسم الشريك';
+
+  @override
+  String get enterPartnerShare => 'أدخل نسبة الشراكة (1-100)';
+
+  @override
+  String get invalidShare => 'النسبة المدخلة';
+
+  @override
+  String get additionalInfo => 'معلومات إضافية';
+
+  @override
+  String get updatePartner => 'تحديث الشريك';
+
+  @override
+  String get createPartner => 'اضافة الشريك';
+
+  @override
+  String get archiveProduct => 'أرشفة المنتج';
+
+  @override
+  String get productArchived => 'تم أرشفة';
+
+  @override
+  String get loadingProducts => 'جاري تحميل المنتجات...';
+
+  @override
+  String get startByAddingProduct => 'ابدأ بإضافة أول منتج في المخزون';
+
+  @override
+  String get addNewProduct => 'إضافة منتج جديد';
+
+  @override
+  String get totalQuantity => 'إجمالي الكمية';
+
+  @override
+  String get low => 'منخفضة';
+
+  @override
+  String get value => 'القيمة';
+
+  @override
+  String get tryAnotherSearch => 'جرب البحث بكلمة أخرى';
+
+  @override
+  String get purchase => 'الشراء';
+
+  @override
+  String get sell => 'البيع';
+
+  @override
+  String get pointCameraToBarcode => 'وجّه الكاميرا نحو الباركود للمسح';
+
+  @override
+  String get supplierInfo => 'معلومات المورد';
+
+  @override
+  String get productInfo => 'معلومات المنتج';
+
+  @override
+  String get enterProductName => 'أدخل اسم المنتج';
+
+  @override
+  String get scanOrEnterBarcode => 'امسح أو أدخل الباركود';
+
+  @override
+  String get enterProductDetails => 'أدخل تفاصيل المنتج';
+
+  @override
+  String get quantityAndPrices => 'الكمية والأسعار';
+
+  @override
+  String get enterQuantity => 'أدخل الكمية';
+
+  @override
+  String get purchasePrice => 'سعر الشراء';
+
+  @override
+  String get salePrice => 'سعر البيع';
+
+  @override
+  String get pricesSummary => 'ملخص الأسعار';
+
+  @override
+  String get loadingEmployees => 'جاري تحميل الموظفين...';
+
+  @override
+  String get startByAddingEmployee => 'ابدأ بإضافة أول موظف في فريقك';
+
+  @override
+  String get addNewEmployee => 'إضافة موظف جديد';
+
+  @override
+  String get totalSalaries => 'إجمالي الرواتب';
+
+  @override
+  String get totalAdvances => 'إجمالي السلف';
+
+  @override
+  String get salary => 'الراتب';
+
+  @override
+  String get advance => 'السلف';
+
+  @override
+  String get months => 'الأشهر';
+
+  @override
+  String get january => 'يناير';
+
+  @override
+  String get february => 'فبراير';
+
+  @override
+  String get march => 'مارس';
+
+  @override
+  String get april => 'أبريل';
+
+  @override
+  String get may => 'مايو';
+
+  @override
+  String get june => 'يونيو';
+
+  @override
+  String get july => 'يوليو';
+
+  @override
+  String get august => 'أغسطس';
+
+  @override
+  String get september => 'سبتمبر';
+
+  @override
+  String get october => 'أكتوبر';
+
+  @override
+  String get november => 'نوفمبر';
+
+  @override
+  String get december => 'ديسمبر';
+
+  @override
+  String get noSalaryPaidYet => 'لم يتم صرف أي راتب بعد';
+
+  @override
+  String get addSalary => 'إضافة راتب';
+
+  @override
+  String get paySalary => 'صرف راتب';
+
+  @override
+  String get addNewSalary => 'إضافة راتب جديد';
+
+  @override
+  String get paidAt => 'دُفع في:';
+
+  @override
+  String get net => 'صافي';
+
+  @override
+  String get addAdvance => 'إضافة سلفة';
+
+  @override
+  String get addNewAdvance => 'إضافة سلفة جديدة';
+
+  @override
+  String get salaryDetails => 'تفاصيل راتب';
+
+  @override
+  String get recordSalaryFor => 'تسجيل راتب شهر';
+
+  @override
+  String get forEmployee => 'للموظف';
+
+  @override
+  String get selectPaymentDate => 'اختر تاريخ الدفع';
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String get financialPeriod => 'الفترة المالية';
+
+  @override
+  String get salaryComponents => 'مكونات الراتب';
+
+  @override
+  String get basicSalary => 'الراتب الأساسي';
+
+  @override
+  String get deductionAndPenalties => 'الخصومات والغرامات';
+
+  @override
+  String get deductAdvance => 'خصم السلف من الراتب';
+
+  @override
+  String get selectDate => 'اختر التاريخ';
+
+  @override
+  String get anyAdditionalNotes => 'أي ملاحظات إضافية';
+
+  @override
+  String get detailedSummary => 'الملخص التفصيلي';
+
+  @override
+  String get updateEmployeeData => 'تحديث بيانات الموظف:';
+
+  @override
+  String get addNewEmployeeData => 'إضافة موظف جديد:';
+
+  @override
+  String get selectHiringDate => 'اختر تاريخ التعيين';
+
+  @override
+  String get personalInfo => 'المعلومات الشخصية';
+
+  @override
+  String get enterFullName => 'أدخل الاسم الكامل';
+
+  @override
+  String get jobInfo => 'معلومات الوظيفة';
+
+  @override
+  String get enterJobTitle => 'أدخل المسمى الوظيفي';
+
+  @override
+  String get financialInfo => 'المعلومات المالية';
+
+  @override
+  String get enterBasicSalary => 'أدخل الراتب الأساسي';
+
+  @override
+  String get recordEmployeeAdvance => 'تسجيل سلفة للموظف:';
+
+  @override
+  String get selectAdvanceDate => 'اختر تاريخ السلفة';
+
+  @override
+  String get advanceData => 'بيانات السلفة';
+
+  @override
+  String get enterAdvanceAmount => 'أدخل مبلغ السلفة';
+
+  @override
+  String get enterAdvanceNotes => 'أدخل أي ملاحظات إضافية';
+
+  @override
+  String get currentBalance => 'الرصيد الحالي';
+
+  @override
+  String get financialSummary => 'الملخص المالي';
+
+  @override
+  String get expectedBalance => 'الرصيد المتوقع';
+
+  @override
+  String get autoDeductAdvance =>
+      'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل';
 }

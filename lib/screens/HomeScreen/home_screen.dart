@@ -56,43 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-  // الويجت الخاص لعرض اسم المستخدم في صفحة الهوم في الاعلى 
-
-  // Widget _buildWelcomeSection(AppLocalizations l10n) {
-  //   final userName = _authService.currentUser?.fullName ?? 'المستخدم';
-  //   final isAdmin = _authService.isAdmin;
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'مرحباً، $userName 👋',
-  //         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-  //           fontWeight: FontWeight.bold,
-  //         ),
-  //       ),
-  //       const SizedBox(height: AppConstants.spacingXs),
-  //       Row(
-  //         children: [
-  //           Icon(
-  //             isAdmin ? Icons.verified_user : Icons.person,
-  //             size: 16,
-  //             color: isAdmin ? AppColors.success : AppColors.info,
-  //           ),
-  //           const SizedBox(width: AppConstants.spacingXs),
-  //           Text(
-  //             isAdmin ? 'مدير النظام' : 'مستخدم',
-  //             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-  //               color: isAdmin ? AppColors.success : AppColors.info,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       const SizedBox(height: AppConstants.spacingMd),
-  //       const Divider(),
-  //     ],
-  //   );
-  // }
 
   Widget _buildMenuGrid(AppLocalizations l10n) {
     final menuItems = _getMenuItems(l10n);
@@ -131,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.users,
         'icon': Icons.people_alt,
         'color': AppColors.info,
-        'page': UsersListScreen(),
+        'page': const UsersListScreen(), // ✅ أضف const
       });
     }
 
@@ -140,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.suppliers,
         'icon': Icons.local_shipping,
         'color': AppColors.warning,
-        'page': SuppliersListScreen(),
+        'page': const SuppliersListScreen(), // ✅ أضف const
       });
     }
 
@@ -149,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.products,
         'icon': Icons.inventory_2,
         'color': AppColors.primaryLight,
-        'page': ProductsListScreen(),
+        'page': const ProductsListScreen(), // ✅ أضف const
       });
     }
 
@@ -158,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.employees,
         'icon': Icons.badge,
         'color': AppColors.secondaryLight,
-        'page': EmployeesListScreen(),
+        'page': const EmployeesListScreen(), // ✅ أضف const
       });
     }
 
@@ -176,25 +139,26 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': 'بيع مباشر',
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
-        'page': DirectSaleScreen(),
+        'page': const DirectSaleScreen(), // ✅ أضف const
       });
     }
 
-    // if (_authService.canViewReports) {
-    //   items.add({
-    //     'title': l10n.reports,
-    //     'icon': Icons.assessment,
-    //     'color': AppColors.income,
-    //     'page': ReportsHubScreen(),
-    //   });
-    // }
+    // ✅✅✅ التعديل المهم - إضافة زر التقارير بشكل صحيح ✅✅✅
+    if (_authService.canViewReports || _authService.isAdmin) {
+      items.add({
+        'title': l10n.reports,
+        'icon': Icons.assessment,
+        'color': AppColors.income,
+        'page': const ReportsHubScreen(), // ✅ أضف const هنا
+      });
+    }
 
     if (_authService.canViewSettings) {
       items.add({
         'title': l10n.settings,
         'icon': Icons.settings,
         'color': Colors.grey,
-        'page': SettingsScreen(),
+        'page': const SettingsScreen(), // ✅ أضف const
       });
     }
 
@@ -264,6 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToPage(dynamic page) {
     if (page == null) {
+      // ✅ معالجة أفضل للخطأ
+      debugPrint('❌ Error: Page is null');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('هذه الميزة قيد التطوير'),
@@ -277,8 +243,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => page as Widget),
-    );
+    // ✅ إضافة معالجة أفضل للأخطاء
+    try {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => page as Widget),
+      );
+    } catch (e) {
+      debugPrint('❌ Navigation error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('خطأ في فتح الصفحة: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }

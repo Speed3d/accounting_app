@@ -1,5 +1,7 @@
 // lib/screens/settings/settings_screen.dart
 
+import 'dart:math';
+
 import 'package:accounting_app/screens/archive/archive_center_screen.dart';
 import 'package:accounting_app/screens/settings/about_screen.dart';
 import 'package:accounting_app/screens/settings/backup_restore_screen.dart';
@@ -40,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
           // ============================================================
           _buildSectionHeader(
             context,
-            title: 'المظهر',
+            title: l10n.appearance,
             icon: Icons.palette_outlined,
             isDark: isDark,
           ),
@@ -239,7 +241,7 @@ class SettingsScreen extends StatelessWidget {
   // ============================================================
   Widget _buildThemeTile(BuildContext context, ThemeProvider themeProvider) {
     final isDark = themeProvider.isDarkMode;
-    
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -256,21 +258,21 @@ class SettingsScreen extends StatelessWidget {
                 ],
         ),
       ),
-      child: SwitchListTile(
+      child:  SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingMd,
           vertical: AppConstants.spacingSm,
         ),
         title: Text(
-          'الوضع الليلي',
+           l10n.darkMode,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
         ),
         subtitle: Text(
           isDark
-              ? 'مفعّل - العيون مرتاحة 😌'
-              : 'معطّل - استمتع بالنور ☀️',
+              ? l10n.darkModeEnabled
+              : l10n.darkModeDisabled,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         secondary: Container(
@@ -341,6 +343,7 @@ class SettingsScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isArabic ? AppColors.success : null,
                   fontWeight: isArabic ? FontWeight.w600 : null,
+                  
                 ),
           ),
         ],
@@ -395,6 +398,7 @@ class SettingsScreen extends StatelessWidget {
   // ℹ️ معلومات الإصدار
   // ============================================================
   Widget _buildVersionInfo(BuildContext context, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         children: [
@@ -407,7 +411,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppConstants.spacingSm),
           Text(
-            'نظام المحاسبة الذكي',
+            l10n.appTitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? AppColors.textSecondaryDark
@@ -417,7 +421,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppConstants.spacingXs),
           Text(
-            'الإصدار 1.0.0',
+            l10n.appVersion,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? AppColors.textHintDark

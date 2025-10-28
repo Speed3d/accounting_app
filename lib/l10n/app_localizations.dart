@@ -455,7 +455,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOccurred.
   ///
   /// In en, this message translates to:
-  /// **'An error occurred: {error}'**
+  /// **'Error occurred'**
   String errorOccurred(String error);
 
   /// No description provided for @returnItem.
@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @advanceAmount.
   ///
   /// In en, this message translates to:
-  /// **'Advance Amount'**
+  /// **'Advance amount'**
   String get advanceAmount;
 
   /// No description provided for @advanceDate.
@@ -509,7 +509,7 @@ abstract class AppLocalizations {
   /// No description provided for @addEmployee.
   ///
   /// In en, this message translates to:
-  /// **'Add Employee'**
+  /// **'Add employee'**
   String get addEmployee;
 
   /// No description provided for @editEmployee.
@@ -617,13 +617,13 @@ abstract class AppLocalizations {
   /// No description provided for @bonuses.
   ///
   /// In en, this message translates to:
-  /// **'Bonuses (+)'**
+  /// **'Bonuses & incentives'**
   String get bonuses;
 
   /// No description provided for @deductions.
   ///
   /// In en, this message translates to:
-  /// **'Deductions (-)'**
+  /// **'Deductions'**
   String get deductions;
 
   /// No description provided for @advanceRepayment.
@@ -695,7 +695,7 @@ abstract class AppLocalizations {
   /// No description provided for @noAdvances.
   ///
   /// In en, this message translates to:
-  /// **'No advances recorded.'**
+  /// **'No advances recorded'**
   String get noAdvances;
 
   /// No description provided for @payrollDetailsFor.
@@ -731,7 +731,7 @@ abstract class AppLocalizations {
   /// No description provided for @fullyPaid.
   ///
   /// In en, this message translates to:
-  /// **'Fully Paid'**
+  /// **'Fully paid'**
   String get fullyPaid;
 
   /// No description provided for @employeesList.
@@ -797,7 +797,7 @@ abstract class AppLocalizations {
   /// No description provided for @addSupplier.
   ///
   /// In en, this message translates to:
-  /// **'Add New Supplier'**
+  /// **'Add supplier'**
   String get addSupplier;
 
   /// No description provided for @editSupplier.
@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @addNewPartner.
   ///
   /// In en, this message translates to:
-  /// **'Add New Partner'**
+  /// **'Add new partner'**
   String get addNewPartner;
 
   /// No description provided for @partnerName.
@@ -935,7 +935,7 @@ abstract class AppLocalizations {
   /// No description provided for @addUser.
   ///
   /// In en, this message translates to:
-  /// **'Add New User'**
+  /// **'Add user'**
   String get addUser;
 
   /// No description provided for @editUser.
@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @noUsers.
   ///
   /// In en, this message translates to:
-  /// **'No users yet.'**
+  /// **'No users available'**
   String get noUsers;
 
   /// No description provided for @you.
@@ -1211,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @addProduct.
   ///
   /// In en, this message translates to:
-  /// **'Add New Product'**
+  /// **'Add product'**
   String get addProduct;
 
   /// No description provided for @editProduct.
@@ -1259,7 +1259,7 @@ abstract class AppLocalizations {
   /// No description provided for @costPrice.
   ///
   /// In en, this message translates to:
-  /// **'Cost Price'**
+  /// **'Cost price'**
   String get costPrice;
 
   /// No description provided for @fieldCannotBeNegative.
@@ -1301,7 +1301,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanBarcode.
   ///
   /// In en, this message translates to:
-  /// **'Scan Barcode'**
+  /// **'Scan barcode'**
   String get scanBarcode;
 
   /// No description provided for @cameraPermissionRequired.
@@ -2441,7 +2441,7 @@ abstract class AppLocalizations {
   /// No description provided for @amount.
   ///
   /// In en, this message translates to:
-  /// **'Amount'**
+  /// **'Amount:'**
   String get amount;
 
   /// No description provided for @category.
@@ -2755,6 +2755,930 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash In'**
   String get cashIn;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @darkModeEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled - Relax your eyes 😌'**
+  String get darkModeEnabled;
+
+  /// No description provided for @darkModeDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled - Enjoy the light ☀️'**
+  String get darkModeDisabled;
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Accounting System'**
+  String get appTitle;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.0.0'**
+  String get appVersion;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @appDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A smart and integrated accounting system to manage your business easily and professionally'**
+  String get appDescription;
+
+  /// No description provided for @companyInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Information'**
+  String get companyInfo;
+
+  /// No description provided for @companyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Name'**
+  String get companyName;
+
+  /// No description provided for @notSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get notSpecified;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @developerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer Information'**
+  String get developerInfo;
+
+  /// No description provided for @developer.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get developer;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @rightsReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2025 All rights reserved'**
+  String get rightsReserved;
+
+  /// No description provided for @madeWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with'**
+  String get madeWith;
+
+  /// No description provided for @madeInIraq.
+  ///
+  /// In en, this message translates to:
+  /// **'In Iraq 🇮🇶'**
+  String get madeInIraq;
+
+  /// No description provided for @loadingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading data...'**
+  String get loadingData;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @loadingUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading users...'**
+  String get loadingUsers;
+
+  /// No description provided for @loadError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while loading data'**
+  String get loadError;
+
+  /// No description provided for @addNewUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new user'**
+  String get addNewUser;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
+
+  /// No description provided for @noUsersMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found with these criteria'**
+  String get noUsersMatch;
+
+  /// No description provided for @searchUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a user...'**
+  String get searchUser;
+
+  /// No description provided for @totalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total users'**
+  String get totalUsers;
+
+  /// No description provided for @admins.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins'**
+  String get admins;
+
+  /// No description provided for @permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission'**
+  String get permission;
+
+  /// No description provided for @viewEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'View & Edit'**
+  String get viewEdit;
+
+  /// No description provided for @viewOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'View only'**
+  String get viewOnly;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @fullAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Access'**
+  String get fullAccess;
+
+  /// No description provided for @employeeReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Reports'**
+  String get employeeReports;
+
+  /// No description provided for @expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get expenses;
+
+  /// No description provided for @cashSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Sales'**
+  String get cashSales;
+
+  /// No description provided for @noPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'No permissions granted'**
+  String get noPermissions;
+
+  /// No description provided for @noUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone'**
+  String get noUndo;
+
+  /// No description provided for @userDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'User deleted successfully'**
+  String get userDeleted;
+
+  /// No description provided for @deleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while deleting'**
+  String get deleteError;
+
+  /// No description provided for @loadingSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading suppliers...'**
+  String get loadingSuppliers;
+
+  /// No description provided for @noSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'No suppliers available'**
+  String get noSuppliers;
+
+  /// No description provided for @addNewSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new supplier'**
+  String get addNewSupplier;
+
+  /// No description provided for @noSuppliersMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No suppliers found with this name'**
+  String get noSuppliersMatch;
+
+  /// No description provided for @searchSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a supplier...'**
+  String get searchSupplier;
+
+  /// No description provided for @totalSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total suppliers'**
+  String get totalSuppliers;
+
+  /// No description provided for @individuals.
+  ///
+  /// In en, this message translates to:
+  /// **'Individuals'**
+  String get individuals;
+
+  /// No description provided for @canRestoreSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'You can restore this supplier later from the archive center'**
+  String get canRestoreSupplier;
+
+  /// No description provided for @supplierArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier archived'**
+  String get supplierArchived;
+
+  /// No description provided for @archiveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Archiving error'**
+  String get archiveError;
+
+  /// No description provided for @basicInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Information'**
+  String get basicInfo;
+
+  /// No description provided for @enterSupplierName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter supplier name'**
+  String get enterSupplierName;
+
+  /// No description provided for @additionalInfoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional information (optional)'**
+  String get additionalInfoOptional;
+
+  /// No description provided for @enterPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone number'**
+  String get enterPhoneNumber;
+
+  /// No description provided for @enterNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter any notes'**
+  String get enterNotes;
+
+  /// No description provided for @updateSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Update supplier'**
+  String get updateSupplier;
+
+  /// No description provided for @createSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Add supplier'**
+  String get createSupplier;
+
+  /// No description provided for @deletePartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete partner'**
+  String get deletePartner;
+
+  /// No description provided for @confirmDeletePartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the partner'**
+  String get confirmDeletePartner;
+
+  /// No description provided for @updateSupplierInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Update supplier information'**
+  String get updateSupplierInfo;
+
+  /// No description provided for @addNewSupplierAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new supplier'**
+  String get addNewSupplierAgain;
+
+  /// No description provided for @saveError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while saving'**
+  String get saveError;
+
+  /// No description provided for @editPartnerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit partner information'**
+  String get editPartnerInfo;
+
+  /// No description provided for @partnerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner information'**
+  String get partnerInfo;
+
+  /// No description provided for @enterPartnerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter partner name'**
+  String get enterPartnerName;
+
+  /// No description provided for @enterPartnerShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter partnership percentage (1-100)'**
+  String get enterPartnerShare;
+
+  /// No description provided for @invalidShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid percentage'**
+  String get invalidShare;
+
+  /// No description provided for @additionalInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional information'**
+  String get additionalInfo;
+
+  /// No description provided for @updatePartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Update partner'**
+  String get updatePartner;
+
+  /// No description provided for @createPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Add partner'**
+  String get createPartner;
+
+  /// No description provided for @archiveProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive product'**
+  String get archiveProduct;
+
+  /// No description provided for @productArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Product archived'**
+  String get productArchived;
+
+  /// No description provided for @loadingProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading products...'**
+  String get loadingProducts;
+
+  /// No description provided for @startByAddingProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Start by adding your first product in inventory'**
+  String get startByAddingProduct;
+
+  /// No description provided for @addNewProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new product'**
+  String get addNewProduct;
+
+  /// No description provided for @totalQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Total quantity'**
+  String get totalQuantity;
+
+  /// No description provided for @low.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get low;
+
+  /// No description provided for @value.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get value;
+
+  /// No description provided for @tryAnotherSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching another keyword'**
+  String get tryAnotherSearch;
+
+  /// No description provided for @purchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get purchase;
+
+  /// No description provided for @sell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get sell;
+
+  /// No description provided for @pointCameraToBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the barcode to scan'**
+  String get pointCameraToBarcode;
+
+  /// No description provided for @supplierInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier information'**
+  String get supplierInfo;
+
+  /// No description provided for @productInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Product information'**
+  String get productInfo;
+
+  /// No description provided for @enterProductName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter product name'**
+  String get enterProductName;
+
+  /// No description provided for @scanOrEnterBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan or enter barcode'**
+  String get scanOrEnterBarcode;
+
+  /// No description provided for @enterProductDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter product details'**
+  String get enterProductDetails;
+
+  /// No description provided for @quantityAndPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity and prices'**
+  String get quantityAndPrices;
+
+  /// No description provided for @enterQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter quantity'**
+  String get enterQuantity;
+
+  /// No description provided for @purchasePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase price'**
+  String get purchasePrice;
+
+  /// No description provided for @salePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale price'**
+  String get salePrice;
+
+  /// No description provided for @pricesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices summary'**
+  String get pricesSummary;
+
+  /// No description provided for @loadingEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading employees...'**
+  String get loadingEmployees;
+
+  /// No description provided for @startByAddingEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Start by adding your first employee'**
+  String get startByAddingEmployee;
+
+  /// No description provided for @addNewEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new employee'**
+  String get addNewEmployee;
+
+  /// No description provided for @totalSalaries.
+  ///
+  /// In en, this message translates to:
+  /// **'Total salaries'**
+  String get totalSalaries;
+
+  /// No description provided for @totalAdvances.
+  ///
+  /// In en, this message translates to:
+  /// **'Total advances'**
+  String get totalAdvances;
+
+  /// No description provided for @salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get salary;
+
+  /// No description provided for @advance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get advance;
+
+  /// No description provided for @months.
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get months;
+
+  /// No description provided for @january.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get january;
+
+  /// No description provided for @february.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get february;
+
+  /// No description provided for @march.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get march;
+
+  /// No description provided for @april.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get april;
+
+  /// No description provided for @may.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get may;
+
+  /// No description provided for @june.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get june;
+
+  /// No description provided for @july.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get july;
+
+  /// No description provided for @august.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get august;
+
+  /// No description provided for @september.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get september;
+
+  /// No description provided for @october.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get october;
+
+  /// No description provided for @november.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get november;
+
+  /// No description provided for @december.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get december;
+
+  /// No description provided for @noSalaryPaidYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No salary has been paid yet'**
+  String get noSalaryPaidYet;
+
+  /// No description provided for @addSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add salary'**
+  String get addSalary;
+
+  /// No description provided for @paySalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay salary'**
+  String get paySalary;
+
+  /// No description provided for @addNewSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new salary'**
+  String get addNewSalary;
+
+  /// No description provided for @paidAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid on:'**
+  String get paidAt;
+
+  /// No description provided for @net.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get net;
+
+  /// No description provided for @addAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add advance'**
+  String get addAdvance;
+
+  /// No description provided for @addNewAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new advance'**
+  String get addNewAdvance;
+
+  /// No description provided for @salaryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary details'**
+  String get salaryDetails;
+
+  /// No description provided for @recordSalaryFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Record salary for month'**
+  String get recordSalaryFor;
+
+  /// No description provided for @forEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'for employee'**
+  String get forEmployee;
+
+  /// No description provided for @selectPaymentDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select payment date'**
+  String get selectPaymentDate;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @financialPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial period'**
+  String get financialPeriod;
+
+  /// No description provided for @salaryComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary components'**
+  String get salaryComponents;
+
+  /// No description provided for @basicSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic salary'**
+  String get basicSalary;
+
+  /// No description provided for @deductionAndPenalties.
+  ///
+  /// In en, this message translates to:
+  /// **'Deductions & penalties'**
+  String get deductionAndPenalties;
+
+  /// No description provided for @deductAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduct advances from salary'**
+  String get deductAdvance;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get selectDate;
+
+  /// No description provided for @anyAdditionalNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Any additional notes'**
+  String get anyAdditionalNotes;
+
+  /// No description provided for @detailedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed summary'**
+  String get detailedSummary;
+
+  /// No description provided for @updateEmployeeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Update employee data:'**
+  String get updateEmployeeData;
+
+  /// No description provided for @addNewEmployeeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new employee:'**
+  String get addNewEmployeeData;
+
+  /// No description provided for @selectHiringDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select hiring date'**
+  String get selectHiringDate;
+
+  /// No description provided for @personalInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal information'**
+  String get personalInfo;
+
+  /// No description provided for @enterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter full name'**
+  String get enterFullName;
+
+  /// No description provided for @jobInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Job information'**
+  String get jobInfo;
+
+  /// No description provided for @enterJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter job title'**
+  String get enterJobTitle;
+
+  /// No description provided for @financialInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial information'**
+  String get financialInfo;
+
+  /// No description provided for @enterBasicSalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter basic salary'**
+  String get enterBasicSalary;
+
+  /// No description provided for @recordEmployeeAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Record an advance for employee:'**
+  String get recordEmployeeAdvance;
+
+  /// No description provided for @selectAdvanceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select advance date'**
+  String get selectAdvanceDate;
+
+  /// No description provided for @advanceData.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance data'**
+  String get advanceData;
+
+  /// No description provided for @enterAdvanceAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter advance amount'**
+  String get enterAdvanceAmount;
+
+  /// No description provided for @enterAdvanceNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter any additional notes'**
+  String get enterAdvanceNotes;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get currentBalance;
+
+  /// No description provided for @financialSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial summary'**
+  String get financialSummary;
+
+  /// No description provided for @expectedBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected balance'**
+  String get expectedBalance;
+
+  /// No description provided for @autoDeductAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'The advance amount will be automatically deducted from upcoming salaries until fully paid'**
+  String get autoDeductAdvance;
 }
 
 class _AppLocalizationsDelegate

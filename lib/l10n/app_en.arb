@@ -785,6 +785,248 @@
 "selfEditNote": "You can edit your name, username, password, and profile picture. Permissions are protected",
 "transactionDetails": "Transaction details",
 "noTransactionsInPeriod": "No Transactions In Period",
-"cashIn": "Cash In"
+"cashIn": "Cash In",
+
+  "appearance": "Appearance",
+  "darkMode": "Dark Mode",
+  "darkModeEnabled": "Enabled - Relax your eyes 😌",
+  "darkModeDisabled": "Disabled - Enjoy the light ☀️",
+  "appTitle": "Smart Accounting System",
+  "appVersion": "Version 1.0.0",
+  
+  "loading": "Loading...",
+  "appDescription": "A smart and integrated accounting system to manage your business easily and professionally",
+  
+  "companyInfo": "Company Information",
+  "companyName": "Company Name",
+  "notSpecified": "Not specified",
+  "description": "Description",
+  
+  "developerInfo": "Developer Information",
+  "developer": "Developer",
+  "email": "Email",
+  "phone": "Phone",
+  "rightsReserved": "© 2025 All rights reserved",
+  "madeWith": "Made with",
+  "madeInIraq": "In Iraq 🇮🇶",
+  
+  "loadingData": "Loading data...",
+  "saveChanges": "Save changes",
+
+  "all": "All",
+  "admin": "Admin",
+  "user": "User",
+  
+  "loadingUsers": "Loading users...",
+  "loadError": "An error occurred while loading data",
+  "noUsers": "No users available",
+  "addNewUser": "Add new user",
+  
+  "noResults": "No results",
+  "noUsersMatch": "No users found with these criteria",
+  "addUser": "Add user",
+  "searchUser": "Search for a user...",
+  
+  "totalUsers": "Total users",
+  "admins": "Admins",
+  "users": "Users",
+  
+  "permission": "Permission",
+  
+  "suppliers": "Suppliers",
+  "viewEdit": "View & Edit",
+  "viewOnly": "View only",
+  "none": "None",
+  
+  "products": "Products",
+  "customers": "Customers",
+  "reports": "Reports",
+  "view": "View",
+  "employees": "Employees",
+  "fullAccess": "Full Access",
+  "employeeReports": "Employee Reports",
+  "expenses": "Expenses",
+  "cashSales": "Cash Sales",
+  "settings": "Settings",
+  
+  "noPermissions": "No permissions granted",
+  "noUndo": "This action cannot be undone",
+  "success": "Success",
+  "userDeleted": "User deleted successfully",
+  "deleteError": "An error occurred while deleting",
+
+  "loadingSuppliers": "Loading suppliers...",
+  "loadError": "An error occurred while loading data",
+  "noSuppliers": "No suppliers available",
+  "addNewSupplier": "Add new supplier",
+
+  "noResults": "No results",
+  "noSuppliersMatch": "No suppliers found with this name",
+  "addSupplier": "Add supplier",
+  "searchSupplier": "Search for a supplier...",
+
+  "totalSuppliers": "Total suppliers",
+  "partners": "Partners",
+  "individuals": "Individuals",
+
+  "canRestoreSupplier": "You can restore this supplier later from the archive center",
+  "supplierArchived": "Supplier archived",
+  "success": "Success",
+  "archiveError": "Error while archiving",
+
+  "basicInfo": "Basic Information",
+  "enterSupplierName": "Enter supplier name",
+  "additionalInfoOptional": "Additional information (optional)",
+  "enterAddress": "Enter address",
+  "enterPhoneNumber": "Enter phone number",
+  "enterNotes": "Enter any notes",
+  "updateSupplier": "Update supplier",
+  "createSupplier": "Add supplier",
+
+  "deletePartner": "Delete partner",
+  "confirmDeletePartner": "Are you sure you want to delete the partner",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "updateSupplierInfo": "Update supplier information",
+  "addNewSupplierAgain": "Add new supplier",
+  "saveError": "An error occurred while saving",
+
+  "addNewPartner": "Add new partner",
+  "editPartnerInfo": "Edit partner information",
+  "partnerInfo": "Partner information",
+  "enterPartnerName": "Enter partner name",
+  "enterPartnerShare": "Enter partnership percentage (1-100)",
+  "invalidShare": "Invalid percentage",
+  "additionalInfo": "Additional information (optional)",
+  "updatePartner": "Update partner",
+  "createPartner": "Add partner",
+  "errorOccurred": "Error occurred",
+
+  "archiveProduct": "Archive product",
+  "productArchived": "Product archived",
+  "archiveError": "Archiving error",
+
+  "loadingProducts": "Loading products...",
+  "startByAddingProduct": "Start by adding your first product in inventory",
+  "addProduct": "Add product",
+  "addNewProduct": "Add new product",
+
+  "totalQuantity": "Total quantity",
+  "low": "Low",
+  "value": "Value",
+
+  "tryAnotherSearch": "Try searching another keyword",
+  "edit": "Edit",
+  "archive": "Archive",
+  "purchase": "Purchase",
+  "sell": "Sell",
+
+  "scanBarcode": "Scan barcode",
+  "pointCameraToBarcode": "Point the camera at the barcode to scan",
+
+  "supplierInfo": "Supplier information",
+  "productInfo": "Product information",
+  "enterProductName": "Enter product name",
+  "scanOrEnterBarcode": "Scan or enter barcode",
+  "enterProductDetails": "Enter product details",
+
+  "quantityAndPrices": "Quantity and prices",
+  "enterQuantity": "Enter quantity",
+  "purchasePrice": "Purchase price",
+  "salePrice": "Sale price",
+
+  "pricesSummary": "Prices summary",
+  "costPrice": "Cost price",
+  "profit": "Profit",
+
+  "loadingEmployees": "Loading employees...",
+  "startByAddingEmployee": "Start by adding your first employee",
+  "addEmployee": "Add employee",
+  "addNewEmployee": "Add new employee",
+
+  "totalSalaries": "Total salaries",
+  "totalAdvances": "Total advances",
+
+  "noResults": "No results",
+  "tryAnotherSearch": "Try searching another keyword",
+
+  "salary": "Salary",
+  "advance": "Advance",
+
+  "months": "Months",
+  "january": "January",
+  "february": "February",
+  "march": "March",
+  "april": "April",
+  "may": "May",
+  "june": "June",
+  "july": "July",
+  "august": "August",
+  "september": "September",
+  "october": "October",
+  "november": "November",
+  "december": "December",
+
+  "loading": "Loading...",
+  "noSalaryPaidYet": "No salary has been paid yet",
+  "addSalary": "Add salary",
+  "paySalary": "Pay salary",
+  "addNewSalary": "Add new salary",
+
+  "paidAt": "Paid on:",
+  "net": "Net",
+
+  "noAdvances": "No advances recorded",
+  "addAdvance": "Add advance",
+  "addNewAdvance": "Add new advance",
+  "fullyPaid": "Fully paid",
+
+  "salaryDetails": "Salary details",
+  "recordSalaryFor": "Record salary for month",
+  "forEmployee": "for employee",
+  "selectPaymentDate": "Select payment date",
+
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+
+  "financialPeriod": "Financial period",
+  "salaryComponents": "Salary components",
+  "basicSalary": "Basic salary",
+  "bonuses": "Bonuses & incentives",
+  "deductions": "Deductions",
+  "deductionAndPenalties": "Deductions & penalties",
+  "deductAdvance": "Deduct advances from salary",
+  "additionalInfo": "Additional information",
+  "selectDate": "Select date",
+  "anyAdditionalNotes": "Any additional notes",
+  "detailedSummary": "Detailed summary",
+
+  "updateEmployeeData": "Update employee data:",
+  "addNewEmployeeData": "Add new employee:",
+  "selectHiringDate": "Select hiring date",
+
+  "personalInfo": "Personal information",
+  "enterFullName": "Enter full name",
+  "enterPhoneNumber": "Enter phone number",
+  "enterAddress": "Enter address",
+
+  "jobInfo": "Job information",
+  "enterJobTitle": "Enter job title",
+
+  "financialInfo": "Financial information",
+  "enterBasicSalary": "Enter basic salary",
+
+  "recordEmployeeAdvance": "Record an advance for employee:",
+  "amount": "Amount:",
+  "selectAdvanceDate": "Select advance date",
+  "advanceData": "Advance data",
+  "enterAdvanceAmount": "Enter advance amount",
+  "enterAdvanceNotes": "Enter any additional notes",
+
+  "currentBalance": "Current balance",
+  "financialSummary": "Financial summary",
+  "advanceAmount": "Advance amount",
+  "expectedBalance": "Expected balance",
+  "autoDeductAdvance": "The advance amount will be automatically deducted from upcoming salaries until fully paid"
 
 }
