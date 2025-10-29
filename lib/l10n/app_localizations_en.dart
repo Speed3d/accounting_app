@@ -1980,4 +1980,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteUserError(String error) {
     return 'An error occurred while deleting: $error';
   }
+
+  @override
+  String get permissions => 'Permissions';
+
+  @override
+  String deleteSupplierSuccess(String userName, Object supplierName) {
+    return 'Resource deleted \"$supplierName\" Success';
+  }
+
+  @override
+  String deleteSupplierError(String error) {
+    return 'An error occurred during deletion: $error';
+  }
 }

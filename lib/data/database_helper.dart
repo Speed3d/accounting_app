@@ -608,15 +608,6 @@ class DatabaseHelper {
       }
     });
 
-          // final partnerData = {
-          //   'SupplierID': supplierId, // <-- استخدام الـ ID المؤكد
-          //   'PartnerName': partner.partnerName,
-          //   'SharePercentage': partner.sharePercentage,
-          //   'PartnerAddress': partner.partnerAddress,
-          //   'PartnerPhone': partner.partnerPhone,
-          //   'DateAdded': DateTime.now().toIso8601String(),
-          //   'Notes': partner.notes,
-          // };
   
   }
 

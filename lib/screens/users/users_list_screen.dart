@@ -67,8 +67,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
               user.userName.toLowerCase().contains(query.toLowerCase());
           
           final matchesRole = _filterRole == l10n.all ||
-              (_filterRole == 'مدير' && user.isAdmin) ||
-              (_filterRole == 'مستخدم' && !user.isAdmin);
+              (_filterRole == l10n.admin && user.isAdmin) ||
+              (_filterRole == l10n.user && !user.isAdmin);
           
           return matchesSearch && matchesRole;
         }).toList();
@@ -353,6 +353,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
     
     final hasImage = imageFile != null && imageFile.existsSync();
     final isCurrentUser = user.id == _authService.currentUser?.id;
+    final l10n = AppLocalizations.of(context)!;
     
     // حساب عدد الصلاحيات الممنوحة
     final permissionsCount = _countActivePermissions(user);
@@ -504,8 +505,10 @@ class _UsersListScreenState extends State<UsersListScreen> {
                             color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                           const SizedBox(width: AppConstants.spacingXs),
+                          
                           Text(
-                            '$permissionsCount صلاحية',
+                            // '$permissionsCount صلاحية',
+                            '$permissionsCount ${l10n.permission}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],

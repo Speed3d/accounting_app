@@ -232,7 +232,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'المعلومات الأساسية',
+                l10n.basicInfo,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -246,7 +246,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           CustomTextField(
             controller: _nameController,
             label: l10n.supplierName,
-            hint: 'أدخل اسم المورد',
+            hint: l10n.enterSupplierName,
             prefixIcon: Icons.store,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -402,7 +402,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'معلومات إضافية (اختيارية)',
+                l10n.additionalInfoOptional,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -416,7 +416,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           CustomTextField(
             controller: _addressController,
             label: l10n.addressOptional,
-            hint: 'أدخل العنوان',
+            hint: l10n.enterAddress,
             prefixIcon: Icons.location_on,
             maxLines: 2,
           ),
@@ -427,7 +427,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           CustomTextField(
             controller: _phoneController,
             label: l10n.phoneOptional,
-            hint: 'أدخل رقم الهاتف',
+            hint: l10n.enterPhoneNumber,
             prefixIcon: Icons.phone,
             keyboardType: TextInputType.phone,
           ),
@@ -438,7 +438,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           CustomTextField(
             controller: _notesController,
             label: l10n.notesOptional,
-            hint: 'أدخل أي ملاحظات',
+            hint: l10n.enterNotes,
             prefixIcon: Icons.note,
             maxLines: 3,
           ),
@@ -688,7 +688,8 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
   /// بناء زر الحفظ
   Widget _buildSaveButton(AppLocalizations l10n) {
     return CustomButton(
-      text: _isEditMode ? 'تحديث المورد' : 'إضافة المورد',
+      //هنا تغيير اسم الزر
+      text: _isEditMode ? l10n.updateSupplier : l10n.createSupplier,
       icon: _isEditMode ? Icons.update : Icons.add,
       isLoading: _isSaving,
       onPressed: _saveSupplier,

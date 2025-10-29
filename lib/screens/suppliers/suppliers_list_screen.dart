@@ -94,13 +94,13 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
               builder: (context, snapshot) {
                 // حالة التحميل
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState(message: 'جاري تحميل الموردين...');
+                  return  LoadingState(message: l10n.loadingSuppliers);
                 }
 
                 // حالة الخطأ
                 if (snapshot.hasError) {
                   return ErrorState(
-                    message: 'حدث خطأ أثناء تحميل البيانات',
+                    message: l10n.loadError,
                     onRetry: _loadSuppliers,
                   );
                 }
@@ -110,8 +110,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                   return EmptyState(
                     icon: Icons.store_outlined,
                     title: l10n.noActiveSuppliers,
-                    message: 'لا يوجد موردين حالياً',
-                    actionText: _isAdmin ? 'إضافة مورد جديد' : null,
+                    message: l10n.noSuppliers,
+                    actionText: _isAdmin ? l10n.addNewSupplier : null,
                     onAction: _isAdmin ? _navigateToAddSupplier : null,
                   );
                 }
@@ -128,8 +128,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                   child: displayList.isEmpty
                       ? EmptyState(
                           icon: Icons.search_off,
-                          title: 'لا توجد نتائج',
-                          message: 'لم يتم العثور على موردين بهذا الاسم',
+                          title: l10n.noResults,
+                          message: l10n.noSuppliersMatch,
                         )
                       : ListView.builder(
                           padding: AppConstants.screenPadding,
@@ -150,7 +150,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddSupplier,
               icon: const Icon(Icons.add),
-              label: const Text('إضافة مورد'),
+              label:  Text(l10n.addSupplier),
             )
           : null,
     );
@@ -173,7 +173,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
           // شريط البحث
           SearchTextField(
             controller: _searchController,
-            hint: 'البحث عن مورد...',
+            hint: l10n.searchSupplier,
             onChanged: _filterSuppliers,
             onClear: () {
               setState(() {
@@ -200,7 +200,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                 children: [
                   Expanded(
                     child: _buildQuickStat(
-                      'إجمالي الموردين',
+                      l10n.totalSuppliers,
                       '${suppliers.length}',
                       Icons.store,
                       AppColors.primaryLight,
@@ -503,7 +503,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
                   child: Text(
-                    'يمكنك استعادة المورد لاحقاً من مركز الأرشيف',
+                    l10n.canRestoreSupplier,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.warning,
                     ),
@@ -545,7 +545,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم أرشفة المورد "${supplier.supplierName}" بنجاح'),
+          content: Text('تم أرشفة المورد - The resource has been archived "${supplier.supplierName}"Success - بنجاح'),
+          // content: Text(l10n.deleteSupplierSuccess(supplier.supplierName)),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -557,7 +558,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('حدث خطأ أثناء الأرشفة: $e'),
+          // content: Text('حدث خطأ أثناء الأرشفة: $e'),
+          content: Text(l10n.deleteSupplierError(e.toString())),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

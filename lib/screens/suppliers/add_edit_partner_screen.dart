@@ -79,7 +79,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditMode ? 'تعديل بيانات الشريك' : 'إضافة شريك جديد'),
+        title: Text(_isEditMode ? l10n.editPartnerInfo : l10n.addNewPartner),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
@@ -209,7 +209,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'معلومات الشريك',
+                l10n.partnerInfo,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -223,7 +223,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           CustomTextField(
             controller: _nameController,
             label: l10n.partnerName,
-            hint: 'أدخل اسم الشريك',
+            hint: l10n.enterPartnerName,
             prefixIcon: Icons.person,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -306,7 +306,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           CustomTextField(
             controller: _shareController,
             label: l10n.sharePercentage,
-            hint: 'أدخل نسبة الشراكة (1-100)',
+            hint: l10n.enterPartnerShare,
             prefixIcon: Icons.percent,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (value) {
@@ -339,6 +339,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
   Widget _buildPercentageVisualizer() {
     final normalizedValue = convertArabicNumbersToEnglish(_shareController.text);
     final percentage = double.tryParse(normalizedValue) ?? 0;
+    final l10n = AppLocalizations.of(context)!;
     
     if (percentage <= 0 || percentage > 100) return const SizedBox.shrink();
     
@@ -349,7 +350,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'النسبة المدخلة:',
+              l10n.invalidShare,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(
@@ -398,7 +399,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'معلومات إضافية (اختيارية)',
+                l10n.additionalInfo,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -412,7 +413,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           CustomTextField(
             controller: _addressController,
             label: l10n.addressOptional,
-            hint: 'أدخل العنوان',
+            hint: l10n.enterAddress,
             prefixIcon: Icons.location_on,
             maxLines: 2,
           ),
@@ -423,7 +424,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           CustomTextField(
             controller: _phoneController,
             label: l10n.phoneOptional,
-            hint: 'أدخل رقم الهاتف',
+            hint: l10n.enterPhoneNumber,
             prefixIcon: Icons.phone,
             keyboardType: TextInputType.phone,
           ),
@@ -434,7 +435,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           CustomTextField(
             controller: _notesController,
             label: l10n.notesOptional,
-            hint: 'أدخل أي ملاحظات',
+            hint: l10n.enterNotes,
             prefixIcon: Icons.note,
             maxLines: 3,
           ),
@@ -446,7 +447,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
   /// بناء زر الحفظ
   Widget _buildSaveButton(AppLocalizations l10n) {
     return CustomButton(
-      text: _isEditMode ? 'تحديث الشريك' : 'إضافة الشريك',
+      text: _isEditMode ? l10n.updatePartner : l10n.createPartner,
       icon: _isEditMode ? Icons.update : Icons.add,
       isLoading: _isSaving,
       onPressed: _savePartner,

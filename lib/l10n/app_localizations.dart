@@ -2954,7 +2954,7 @@ abstract class AppLocalizations {
   /// **'Admins'**
   String get admins;
 
-  /// No description provided for @permission.
+  /// Single permission word
   ///
   /// In en, this message translates to:
   /// **'Permission'**
@@ -3721,6 +3721,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An error occurred while deleting: {error}'**
   String deleteUserError(String error);
+
+  /// Plural permissions word
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permissions;
+
+  /// Success message when resource deletion failed
+  ///
+  /// In en, this message translates to:
+  /// **'Resource deleted \"{supplierName}\" Success'**
+  String deleteSupplierSuccess(String userName, Object supplierName);
+
+  /// Error message when resource deletion failed
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred during deletion: {error}'**
+  String deleteSupplierError(String error);
 }
 
 class _AppLocalizationsDelegate

@@ -1054,6 +1054,36 @@
         "example": "خطأ في قاعدة البيانات"
       }
     }
+  },
+
+    "permission": "صلاحية",
+  "@permission": {
+    "description": "كلمة صلاحية مفردة"
+  },
+  "permissions": "صلاحيات",
+  "@permissions": {
+    "description": "كلمة صلاحيات جمع"
+  },
+
+  "deleteSupplierSuccess": "تم حذف المورد \"{supplierName}\" بنجاح",
+  "@deleteSupplierSuccess": {
+    "description": "رسالة النجاح عند حذف المورد",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "شهد احمد"
+      }
+    }
+  },
+  "deleteSupplierError": "حدث خطأ أثناء الحذف: {error}",
+  "@deleteSupplierError": {
+    "description": "رسالة الخطأ عند فشل حذف المورد",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "خطأ في قاعدة البيانات"
+      }
+    }
   }
 
 

@@ -1966,4 +1966,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String deleteUserError(String error) {
     return 'حدث خطأ أثناء الحذف: $error';
   }
+
+  @override
+  String get permissions => 'صلاحيات';
+
+  @override
+  String deleteSupplierSuccess(String userName, Object supplierName) {
+    return 'تم حذف المورد \"$supplierName\" بنجاح';
+  }
+
+  @override
+  String deleteSupplierError(String error) {
+    return 'حدث خطأ أثناء الحذف: $error';
+  }
 }

@@ -1054,6 +1054,37 @@
         "example": "Database error"
       }
     }
+  },
+
+    "permission": "Permission",
+  "@permission": {
+    "description": "Single permission word"
+  },
+  "permissions": "Permissions",
+  "@permissions": {
+    "description": "Plural permissions word"
+  },
+
+    "deleteSupplierSuccess": "Resource deleted \"{supplierName}\" Success",
+  "@deleteSupplierSuccess": {
+    "description": "Success message when resource deletion failed",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "Shahad Ahmed"
+      }
+    }
+  },
+  "deleteSupplierError": "An error occurred during deletion: {error}",
+  "@deleteSupplierError": {
+    "description": "Error message when resource deletion failed",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Database error"
+      }
+    }
   }
+
 
 }
