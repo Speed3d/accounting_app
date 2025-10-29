@@ -182,6 +182,24 @@ abstract class AppLocalizations {
   /// **'Restore archived items'**
   String get restoreArchivedItems;
 
+  /// No description provided for @noarchivedcustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived customers'**
+  String get noarchivedcustomers;
+
+  /// No description provided for @noarchivedproducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived products'**
+  String get noarchivedproducts;
+
+  /// No description provided for @noarchivedsuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived suppliers'**
+  String get noarchivedsuppliers;
+
   /// No description provided for @backupAndRestore.
   ///
   /// In en, this message translates to:
@@ -3002,12 +3020,6 @@ abstract class AppLocalizations {
   /// **'This action cannot be undone'**
   String get noUndo;
 
-  /// No description provided for @userDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'User deleted successfully'**
-  String get userDeleted;
-
   /// No description provided for @deleteError.
   ///
   /// In en, this message translates to:
@@ -3205,6 +3217,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Product archived'**
   String get productArchived;
+
+  /// No description provided for @errorArchiveRestor.
+  ///
+  /// In en, this message translates to:
+  /// **'Error restoring: {error}'**
+  String errorArchiveRestor(Object error);
+
+  /// No description provided for @restoreConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to restore \"{name}\"?'**
+  String restoreConfirm(Object name);
+
+  /// No description provided for @restoretheitem.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore The Item \"{name}\"?'**
+  String restoretheitem(Object name);
 
   /// No description provided for @loadingProducts.
   ///
@@ -3679,6 +3709,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The advance amount will be automatically deducted from upcoming salaries until fully paid'**
   String get autoDeductAdvance;
+
+  /// Success message shown when a user is deleted
+  ///
+  /// In en, this message translates to:
+  /// **'User \"{userName}\" deleted successfully'**
+  String deleteUserSuccess(String userName);
+
+  /// Error message shown when user deletion fails
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while deleting: {error}'**
+  String deleteUserError(String error);
 }
 
 class _AppLocalizationsDelegate

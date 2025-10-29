@@ -125,6 +125,7 @@ enum _ItemType { customer, supplier, product }
 class _ArchivedItemsList extends StatefulWidget {
   final _ItemType itemType;
   final AppLocalizations l10n;
+  
 
   const _ArchivedItemsList({
     required this.itemType,
@@ -136,9 +137,11 @@ class _ArchivedItemsList extends StatefulWidget {
 }
 
 class _ArchivedItemsListState extends State<_ArchivedItemsList> {
+  
   final dbHelper = DatabaseHelper.instance;
   final AuthService _authService = AuthService();
   late Future<List<dynamic>> _archivedItemsFuture;
+  
 
   @override
   void initState() {
@@ -194,11 +197,13 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
     }
 
     // تأكيد الاستعادة
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(widget.l10n.restore),
-        content: Text('هل تريد استعادة "$name"؟'),
+        // content: Text('هل تريد استعادة "$name"؟'),
+        content: Text(l10n.restoreConfirm(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -218,7 +223,8 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
     try {
       await dbHelper.restoreItem(tableName, idColumn, id);
       await dbHelper.logActivity(
-        'استعادة العنصر: $name',
+        // 'استعادة العنصر: $name',
+        l10n.restoreConfirm(name),
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
       );
@@ -244,9 +250,11 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
       _loadArchivedItems();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في الاستعادة: $e'),
+            // content: Text('خطأ في الاستعادة: $e'),
+            content: Text(l10n.errorArchiveRestor(e.toString())),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -255,14 +263,17 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<List<dynamic>>(
       future: _archivedItemsFuture,
       builder: (context, snapshot) {
         // حالة التحميل
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingState(message: 'جاري التحميل...');
+          return  LoadingState(message: l10n.loading);
         }
 
         // حالة الخطأ
@@ -296,21 +307,22 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
   // 🎨 بناء حالة الفراغ
   // ============================================================
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     IconData icon;
     String message;
 
     switch (widget.itemType) {
       case _ItemType.customer:
         icon = Icons.people_outline;
-        message = 'لا توجد زبائن مؤرشفة';
+        message = l10n.noarchivedcustomers;
         break;
       case _ItemType.supplier:
         icon = Icons.store_outlined;
-        message = 'لا توجد موردين مؤرشفين';
+        message = l10n.noarchivedsuppliers;
         break;
       case _ItemType.product:
         icon = Icons.inventory_2_outlined;
-        message = 'لا توجد منتجات مؤرشفة';
+        message = l10n.noarchivedproducts;
         break;
     }
 

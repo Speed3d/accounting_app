@@ -219,7 +219,7 @@ class _CompanyInfoScreenState extends State<CompanyInfoScreen> {
       // ============= Body =============
       body: _isLoading
           // --- حالة التحميل ---
-          ? const LoadingState(message: 'جاري تحميل البيانات...')
+          ?  LoadingState(message: l10n.loadingData)
           
           // --- المحتوى الرئيسي ---
           : SingleChildScrollView(
@@ -264,7 +264,7 @@ class _CompanyInfoScreenState extends State<CompanyInfoScreen> {
                     
                     // ============= زر الحفظ =============
                     CustomButton(
-                      text: 'حفظ التغييرات',
+                      text: l10n.saveChanges,
                       icon: Icons.save,
                       onPressed: _saveSettings,
                       isLoading: _isSaving,

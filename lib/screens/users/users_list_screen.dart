@@ -54,8 +54,9 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
   /// البحث والفلترة في المستخدمين
   void _filterUsers(String query) {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
-      if (query.isEmpty && _filterRole == 'الكل') {
+      if (query.isEmpty && _filterRole == l10n.all) {
         _filteredUsers = _allUsers;
         _isSearching = false;
       } else {
@@ -65,7 +66,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
               user.fullName.toLowerCase().contains(query.toLowerCase()) ||
               user.userName.toLowerCase().contains(query.toLowerCase());
           
-          final matchesRole = _filterRole == 'الكل' ||
+          final matchesRole = _filterRole == l10n.all ||
               (_filterRole == 'مدير' && user.isAdmin) ||
               (_filterRole == 'مستخدم' && !user.isAdmin);
           
@@ -97,15 +98,16 @@ class _UsersListScreenState extends State<UsersListScreen> {
             child: FutureBuilder<List<User>>(
               future: _usersFuture,
               builder: (context, snapshot) {
+                
                 // حالة التحميل
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState(message: 'جاري تحميل المستخدمين...');
+                  return  LoadingState(message: l10n.loadingUsers);
                 }
 
                 // حالة الخطأ
                 if (snapshot.hasError) {
                   return ErrorState(
-                    message: 'حدث خطأ أثناء تحميل البيانات',
+                    message: l10n.loadError,
                     onRetry: _loadUsers,
                   );
                 }
@@ -115,8 +117,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   return EmptyState(
                     icon: Icons.people_outline,
                     title: l10n.noUsers,
-                    message: 'لا يوجد مستخدمين حالياً',
-                    actionText: _authService.isAdmin ? 'إضافة مستخدم جديد' : null,
+                    message: l10n.noUsers,
+                    actionText: _authService.isAdmin ? l10n.addNewUser : null,
                     onAction: _authService.isAdmin ? _navigateToAddUser : null,
                   );
                 }
@@ -129,8 +131,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 return displayList.isEmpty
                     ? EmptyState(
                         icon: Icons.search_off,
-                        title: 'لا توجد نتائج',
-                        message: 'لم يتم العثور على مستخدمين بهذه المعايير',
+                        title: l10n.noResults,
+                        message: l10n.noUsersMatch,
                       )
                     : ListView.builder(
                         padding: AppConstants.screenPadding,
@@ -150,7 +152,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddUser,
               icon: const Icon(Icons.person_add),
-              label: const Text('إضافة مستخدم'),
+              label:  Text(l10n.addUser),
             )
           : null,
     );
@@ -173,7 +175,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
           // شريط البحث
           SearchTextField(
             controller: _searchController,
-            hint: 'البحث عن مستخدم...',
+            hint: l10n.searchUser,
             onChanged: _filterUsers,
             onClear: () {
               setState(() {
@@ -188,11 +190,11 @@ class _UsersListScreenState extends State<UsersListScreen> {
           // فلاتر الصلاحيات
           Row(
             children: [
-              _buildFilterChip('الكل', Icons.people),
+              _buildFilterChip(l10n.all, Icons.people),
               const SizedBox(width: AppConstants.spacingSm),
-              _buildFilterChip('مدير', Icons.admin_panel_settings),
+              _buildFilterChip(l10n.admin, Icons.admin_panel_settings),
               const SizedBox(width: AppConstants.spacingSm),
-              _buildFilterChip('مستخدم', Icons.person),
+              _buildFilterChip(l10n.user, Icons.person),
             ],
           ),
           
@@ -212,7 +214,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 children: [
                   Expanded(
                     child: _buildQuickStat(
-                      'إجمالي المستخدمين',
+                      l10n.totalUsers,
                       '${users.length}',
                       Icons.people,
                       AppColors.primaryLight,
@@ -221,7 +223,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: _buildQuickStat(
-                      'المدراء',
+                      l10n.admins,
                       '$adminsCount',
                       Icons.admin_panel_settings,
                       AppColors.error,
@@ -230,7 +232,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: _buildQuickStat(
-                      'المستخدمين',
+                      l10n.users,
                       '$regularCount',
                       Icons.person,
                       AppColors.info,
@@ -552,37 +554,38 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
   /// بناء قسم الصلاحيات
   Widget _buildPermissionsSection(User user) {
+    final l10n = AppLocalizations.of(context)!;
     final permissions = [
       if (user.canViewSuppliers || user.canEditSuppliers)
-        _PermissionItem('الموردين', 
-          user.canViewSuppliers ? (user.canEditSuppliers ? 'عرض وتعديل' : 'عرض فقط') : 'لا يوجد',
+        _PermissionItem(l10n.suppliers, 
+          user.canViewSuppliers ? (user.canEditSuppliers ? l10n.viewEdit : l10n.viewOnly) : l10n.none,
           Icons.store,
           user.canEditSuppliers ? AppColors.success : AppColors.warning,
         ),
       if (user.canViewProducts || user.canEditProducts)
-        _PermissionItem('المنتجات',
-          user.canViewProducts ? (user.canEditProducts ? 'عرض وتعديل' : 'عرض فقط') : 'لا يوجد',
+        _PermissionItem(l10n.products,
+          user.canViewProducts ? (user.canEditProducts ? l10n.viewEdit : l10n.viewOnly) : l10n.none,
           Icons.inventory_2,
           user.canEditProducts ? AppColors.success : AppColors.warning,
         ),
       if (user.canViewCustomers || user.canEditCustomers)
-        _PermissionItem('العملاء',
-          user.canViewCustomers ? (user.canEditCustomers ? 'عرض وتعديل' : 'عرض فقط') : 'لا يوجد',
+        _PermissionItem(l10n.customers,
+          user.canViewCustomers ? (user.canEditCustomers ? l10n.viewEdit : l10n.viewOnly) : l10n.none,
           Icons.people,
           user.canEditCustomers ? AppColors.success : AppColors.warning,
         ),
       if (user.canViewReports)
-        _PermissionItem('التقارير', 'عرض', Icons.assessment, AppColors.info),
+        _PermissionItem(l10n.reports, l10n.view, Icons.assessment, AppColors.info),
       if (user.canManageEmployees)
-        _PermissionItem('الموظفين', 'إدارة كاملة', Icons.badge, AppColors.success),
+        _PermissionItem(l10n.employees, l10n.fullAccess, Icons.badge, AppColors.success),
       if (user.canViewEmployeesReport)
-        _PermissionItem('تقارير الموظفين', 'عرض', Icons.description, AppColors.info),
+        _PermissionItem(l10n.employeeReports, l10n.view, Icons.description, AppColors.info),
       if (user.canManageExpenses)
-        _PermissionItem('المصاريف', 'إدارة كاملة', Icons.receipt_long, AppColors.success),
+        _PermissionItem(l10n.expenses, l10n.fullAccess, Icons.receipt_long, AppColors.success),
       if (user.canViewCashSales)
-        _PermissionItem('المبيعات النقدية', 'عرض', Icons.point_of_sale, AppColors.info),
+        _PermissionItem(l10n.cashSales, l10n.view, Icons.point_of_sale, AppColors.info),
       if (user.canViewSettings)
-        _PermissionItem('الإعدادات', 'عرض', Icons.settings, AppColors.warning),
+        _PermissionItem(l10n.settings, l10n.view, Icons.settings, AppColors.warning),
     ];
 
     if (permissions.isEmpty) {
@@ -597,7 +600,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
             Icon(Icons.warning_amber, size: 16, color: AppColors.warning),
             const SizedBox(width: AppConstants.spacingSm),
             Text(
-              'لا توجد صلاحيات ممنوحة',
+              //لا توجد صلاحيات ممنوحة
+              l10n.noPermissions,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.warning,
               ),
@@ -766,7 +770,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
                   child: Text(
-                    'هذا الإجراء لا يمكن التراجع عنه',
+                    // 'هذا الإجراء لا يمكن التراجع عنه'
+                    l10n.noUndo,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.error,
                     ),
@@ -804,7 +809,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حذف المستخدم "${user.fullName}" بنجاح'),
+          // content: Text('تم حذف المستخدم "${user.fullName}" بنجاح'),
+          content: Text(l10n.deleteUserSuccess(user.fullName)),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -816,7 +822,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('حدث خطأ أثناء الحذف: $e'),
+          // content: Text('حدث خطأ أثناء الحذف: $e'),
+          content: Text(l10n.deleteUserError(e.toString())),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

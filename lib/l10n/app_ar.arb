@@ -16,6 +16,10 @@
     "dataManagement": "إدارة البيانات",
     "archiveCenter": "مركز الأرشفة",
     "restoreArchivedItems": "استعادة العناصر المؤرشفة",
+    "noarchivedcustomers": "لا يوجد زبائن مؤرشفة",
+    "noarchivedproducts": "لا يوجد منتجات مؤرشفة",
+    "noarchivedsuppliers": "لا يوجد موردين مؤرشفة",
+
     "backupAndRestore": "النسخ الاحتياطي والاستعادة",
     "saveAndRestoreAppData": "حفظ واستعادة بيانات التطبيق",
     "about": "حول",
@@ -851,7 +855,7 @@
   "noPermissions": "لا توجد صلاحيات ممنوحة",
   "noUndo": "هذا الإجراء لا يمكن التراجع عنه",
   "success": "بنجاح",
-  "userDeleted": "تم حذف المستخدم",
+  
   "deleteError": "حدث خطأ أثناء الحذف",
 
   "loadingSuppliers": "جاري تحميل الموردين...",
@@ -904,6 +908,9 @@
   "archiveProduct": "أرشفة المنتج",
   "productArchived": "تم أرشفة",
   "archiveError": "خطأ في الأرشفة",
+  "errorArchiveRestor": "حدث خطأ أثناء الاستعادة: {error}",
+  "restoreConfirm": "هل تريد استعادة \"{name}\"؟",
+  "restoretheitem": "استعادة العنصر \"{name}\"?",
 
   "loadingProducts": "جاري تحميل المنتجات...",
   "startByAddingProduct": "ابدأ بإضافة أول منتج في المخزون",
@@ -1026,8 +1033,28 @@
   "financialSummary": "الملخص المالي",
   "advanceAmount": "مبلغ السلفة",
   "expectedBalance": "الرصيد المتوقع",
-  "autoDeductAdvance": "سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل"
+  "autoDeductAdvance": "سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل",
 
+    "deleteUserSuccess": "تم حذف المستخدم \"{userName}\" بنجاح",
+  "@deleteUserSuccess": {
+    "description": "رسالة النجاح عند حذف مستخدم",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "أحمد محمد"
+      }
+    }
+  },
+  "deleteUserError": "حدث خطأ أثناء الحذف: {error}",
+  "@deleteUserError": {
+    "description": "رسالة الخطأ عند فشل حذف المستخدم",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "خطأ في قاعدة البيانات"
+      }
+    }
+  }
 
 
 

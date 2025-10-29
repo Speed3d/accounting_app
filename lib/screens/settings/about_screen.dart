@@ -91,7 +91,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
       // ============= Body =============
       body: _isLoading
-          ? const LoadingState(message: 'جاري التحميل...')
+          ? LoadingState(message: l10n.loading)
           : SingleChildScrollView(
               padding: AppConstants.screenPadding,
               child: Column(
@@ -182,6 +182,8 @@ class _AboutScreenState extends State<AboutScreen> {
   // 📱 بناء بطاقة معلومات التطبيق
   // ============================================================
   Widget _buildAppInfoCard(AppLocalizations l10n, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
+
     return CustomCard(
       child: Column(
         children: [
@@ -228,7 +230,8 @@ class _AboutScreenState extends State<AboutScreen> {
               borderRadius: AppConstants.borderRadiusFull,
             ),
             child: Text(
-              'الإصدار ${_version ?? '1.0.0'} (${_buildNumber ?? '1'})',
+              // 'الإصدار ${_version ?? '1.0.0'} (${_buildNumber ?? '1'})',
+              l10n.appVersion,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
@@ -240,7 +243,7 @@ class _AboutScreenState extends State<AboutScreen> {
           
           // الوصف
           Text(
-            'نظام محاسبي ذكي ومتكامل لإدارة أعمالك بسهولة واحترافية',
+            l10n.appDescription,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -253,6 +256,7 @@ class _AboutScreenState extends State<AboutScreen> {
   // 🏢 بناء بطاقة معلومات الشركة
   // ============================================================
   Widget _buildCompanyInfoCard(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +270,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'معلومات الشركة',
+                l10n.companyInfo,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -279,8 +283,8 @@ class _AboutScreenState extends State<AboutScreen> {
           // اسم الشركة
           _buildInfoRow(
             icon: Icons.store_outlined,
-            label: 'اسم الشركة',
-            value: _companyName ?? 'غير محدد',
+            label: l10n.companyName,
+            value: _companyName ?? l10n.notSpecified,
             isDark: isDark,
           ),
           
@@ -289,7 +293,7 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(height: AppConstants.spacingMd),
             _buildInfoRow(
               icon: Icons.description_outlined,
-              label: 'الوصف',
+              label: l10n.description,
               value: _companyDescription!,
               isDark: isDark,
             ),
@@ -303,6 +307,7 @@ class _AboutScreenState extends State<AboutScreen> {
   // 👨‍💻 بناء بطاقة معلومات المطور
   // ============================================================
   Widget _buildDeveloperCard(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +321,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                'معلومات المطور',
+                l10n.developerInfo,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -329,7 +334,7 @@ class _AboutScreenState extends State<AboutScreen> {
           // الاسم
           _buildInfoRow(
             icon: Icons.person_outline,
-            label: 'المطور',
+            label: l10n.developer,
             value: 'Sinan',
             isDark: isDark,
           ),
@@ -339,7 +344,7 @@ class _AboutScreenState extends State<AboutScreen> {
           // البريد الإلكتروني
           _buildInfoRow(
             icon: Icons.email_outlined,
-            label: 'البريد الإلكتروني',
+            label: l10n.email,
             value: 'SenanXsh@gmail.com',
             isDark: isDark,
             isLink: true,
@@ -350,7 +355,7 @@ class _AboutScreenState extends State<AboutScreen> {
           // رقم الهاتف
           _buildInfoRow(
             icon: Icons.phone_outlined,
-            label: 'الهاتف',
+            label: l10n.phone,
             value: '07700270555',
             isDark: isDark,
             isLink: true,
@@ -420,6 +425,7 @@ class _AboutScreenState extends State<AboutScreen> {
   // © حقوق النشر
   // ============================================================
   Widget _buildCopyright(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Divider(
@@ -428,7 +434,7 @@ class _AboutScreenState extends State<AboutScreen> {
         ),
         const SizedBox(height: AppConstants.spacingMd),
         Text(
-          '© 2025 جميع الحقوق محفوظة',
+          l10n.rightsReserved,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isDark
                     ? AppColors.textSecondaryDark
@@ -440,7 +446,7 @@ class _AboutScreenState extends State<AboutScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'صُنع بـ',
+              l10n.madeWith,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppColors.textHintDark
@@ -455,7 +461,7 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const SizedBox(width: 4),
             Text(
-              'في العراق 🇮🇶',
+              l10n.madeInIraq,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppColors.textHintDark

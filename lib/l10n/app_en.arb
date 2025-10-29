@@ -16,6 +16,9 @@
     "dataManagement": "Data Management",
     "archiveCenter": "Archive Center",
     "restoreArchivedItems": "Restore archived items",
+    "noarchivedcustomers": "No archived customers",
+    "noarchivedproducts": "No archived products",
+    "noarchivedsuppliers": "No archived suppliers",
     "backupAndRestore": "Backup and Restore",
     "saveAndRestoreAppData": "Save and restore app data",
     "about": "About",
@@ -852,7 +855,7 @@
   "noPermissions": "No permissions granted",
   "noUndo": "This action cannot be undone",
   "success": "Success",
-  "userDeleted": "User deleted successfully",
+  
   "deleteError": "An error occurred while deleting",
 
   "loadingSuppliers": "Loading suppliers...",
@@ -905,6 +908,9 @@
   "archiveProduct": "Archive product",
   "productArchived": "Product archived",
   "archiveError": "Archiving error",
+  "errorArchiveRestor": "Error restoring: {error}",
+  "restoreConfirm": "Do you want to restore \"{name}\"?",
+  "restoretheitem": "Restore The Item \"{name}\"?",
 
   "loadingProducts": "Loading products...",
   "startByAddingProduct": "Start by adding your first product in inventory",
@@ -1027,6 +1033,27 @@
   "financialSummary": "Financial summary",
   "advanceAmount": "Advance amount",
   "expectedBalance": "Expected balance",
-  "autoDeductAdvance": "The advance amount will be automatically deducted from upcoming salaries until fully paid"
+  "autoDeductAdvance": "The advance amount will be automatically deducted from upcoming salaries until fully paid",
+
+    "deleteUserSuccess": "User \"{userName}\" deleted successfully",
+  "@deleteUserSuccess": {
+    "description": "Success message shown when a user is deleted",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "John Doe"
+      }
+    }
+  },
+  "deleteUserError": "An error occurred while deleting: {error}",
+  "@deleteUserError": {
+    "description": "Error message shown when user deletion fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Database error"
+      }
+    }
+  }
 
 }

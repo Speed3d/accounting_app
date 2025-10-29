@@ -51,6 +51,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get restoreArchivedItems => 'استعادة العناصر المؤرشفة';
 
   @override
+  String get noarchivedcustomers => 'لا يوجد زبائن مؤرشفة';
+
+  @override
+  String get noarchivedproducts => 'لا يوجد منتجات مؤرشفة';
+
+  @override
+  String get noarchivedsuppliers => 'لا يوجد موردين مؤرشفة';
+
+  @override
   String get backupAndRestore => 'النسخ الاحتياطي والاستعادة';
 
   @override
@@ -1596,9 +1605,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noUndo => 'هذا الإجراء لا يمكن التراجع عنه';
 
   @override
-  String get userDeleted => 'تم حذف المستخدم';
-
-  @override
   String get deleteError => 'حدث خطأ أثناء الحذف';
 
   @override
@@ -1697,6 +1703,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get productArchived => 'تم أرشفة';
+
+  @override
+  String errorArchiveRestor(Object error) {
+    return 'حدث خطأ أثناء الاستعادة: $error';
+  }
+
+  @override
+  String restoreConfirm(Object name) {
+    return 'هل تريد استعادة \"$name\"؟';
+  }
+
+  @override
+  String restoretheitem(Object name) {
+    return 'استعادة العنصر \"$name\"?';
+  }
 
   @override
   String get loadingProducts => 'جاري تحميل المنتجات...';
@@ -1935,4 +1956,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get autoDeductAdvance =>
       'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل';
+
+  @override
+  String deleteUserSuccess(String userName) {
+    return 'تم حذف المستخدم \"$userName\" بنجاح';
+  }
+
+  @override
+  String deleteUserError(String error) {
+    return 'حدث خطأ أثناء الحذف: $error';
+  }
 }

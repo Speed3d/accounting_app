@@ -51,6 +51,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreArchivedItems => 'Restore archived items';
 
   @override
+  String get noarchivedcustomers => 'No archived customers';
+
+  @override
+  String get noarchivedproducts => 'No archived products';
+
+  @override
+  String get noarchivedsuppliers => 'No archived suppliers';
+
+  @override
   String get backupAndRestore => 'Backup and Restore';
 
   @override
@@ -1608,9 +1617,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noUndo => 'This action cannot be undone';
 
   @override
-  String get userDeleted => 'User deleted successfully';
-
-  @override
   String get deleteError => 'An error occurred while deleting';
 
   @override
@@ -1710,6 +1716,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productArchived => 'Product archived';
+
+  @override
+  String errorArchiveRestor(Object error) {
+    return 'Error restoring: $error';
+  }
+
+  @override
+  String restoreConfirm(Object name) {
+    return 'Do you want to restore \"$name\"?';
+  }
+
+  @override
+  String restoretheitem(Object name) {
+    return 'Restore The Item \"$name\"?';
+  }
 
   @override
   String get loadingProducts => 'Loading products...';
@@ -1949,4 +1970,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoDeductAdvance =>
       'The advance amount will be automatically deducted from upcoming salaries until fully paid';
+
+  @override
+  String deleteUserSuccess(String userName) {
+    return 'User \"$userName\" deleted successfully';
+  }
+
+  @override
+  String deleteUserError(String error) {
+    return 'An error occurred while deleting: $error';
+  }
 }
