@@ -77,7 +77,8 @@ class CustomTextField extends StatelessWidget {
         suffixIcon: suffixIcon != null
             ? IconButton(
                 icon: Icon(suffixIcon),
-                onPressed: onSuffixIconTap,
+                // onPressed: onSuffixIconTap,
+                onPressed: onSuffixIconPressed ?? onSuffixIconTap,
               )
             : null,
         counterText: maxLength != null ? null : '',

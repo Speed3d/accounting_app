@@ -589,7 +589,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noActiveProducts => 'لا توجد منتجات نشطة في المخزن.';
 
   @override
-  String get searchForProduct => 'ابحث عن منتج...';
+  String get searchForProduct => ' ابحث عن منتج  ...';
+
+  @override
+  String get searchForProduct2 => ' ابحث عن منتج او مورد ...';
 
   @override
   String get noMatchingResults => 'لا توجد نتائج مطابقة للبحث.';
@@ -1660,10 +1663,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get createSupplier => 'إضافة المورد';
 
   @override
-  String get deletePartner => 'حذف الشريك';
+  String get deletePartner => 'حذف شريك';
 
   @override
-  String get confirmDeletePartner => 'هل أنت متأكد من حذف الشريك';
+  String confirmDeletePartner(String name) {
+    return 'هل أنت متأكد من حذف الشريك \"$name\"؟';
+  }
 
   @override
   String get updateSupplierInfo => 'تحديث بيانات المورد';
@@ -1978,5 +1983,59 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String deleteSupplierError(String error) {
     return 'حدث خطأ أثناء الحذف: $error';
+  }
+
+  @override
+  String partnersCount(int count) {
+    return '$count شريك';
+  }
+
+  @override
+  String partnerShareWarning(String percentage) {
+    return 'مجموع النسب المئوية للشركاء هو $percentage% فقط.\nهل تريد المتابعة؟';
+  }
+
+  @override
+  String activityUpdateSupplier(String name) {
+    return 'تحديث بيانات المورد: $name';
+  }
+
+  @override
+  String activityAddSupplier(String name) {
+    return 'إضافة مورد جديد: $name';
+  }
+
+  @override
+  String errorSaving(String error) {
+    return 'حدث خطأ أثناء الحفظ: $error';
+  }
+
+  @override
+  String get warning => 'تحذير';
+
+  @override
+  String get continueButton => 'متابعة';
+
+  @override
+  String get partnerships => 'شراكات';
+
+  @override
+  String supplierArchivedSuccess(String name) {
+    return 'تم أرشفة المورد \"$name\" بنجاح';
+  }
+
+  @override
+  String productArchivedSuccess(String name) {
+    return 'تم أرشفة \"$name\" بنجاح';
+  }
+
+  @override
+  String productArchivedError(String error) {
+    return 'خطأ في الأرشفة: $error';
+  }
+
+  @override
+  String archiveProductAction(String name) {
+    return 'أرشفة المنتج: $name';
   }
 }

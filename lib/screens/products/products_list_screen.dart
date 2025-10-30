@@ -10,7 +10,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
-import '../../widgets/status_badge.dart';
 import 'add_edit_product_screen.dart';
 
 /// 📦 شاشة قائمة المنتجات - صفحة فرعية
@@ -32,6 +31,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
   bool _isAdmin = false;
+  String? _selectedFilter; // null = الكل، 'low' = منخفضة
 
   // ============= دورة الحياة =============
   @override
@@ -57,20 +57,48 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       final products = await _productsFuture;
       setState(() {
         _allProducts = products;
-        _filteredProducts = products;
+        _applyFilter();
       });
     } catch (e) {
       // معالجة الخطأ
     }
   }
 
+  /// تطبيق الفلتر المحدد
+  void _applyFilter() {
+    if (_selectedFilter == null) {
+      _filteredProducts = _allProducts;
+    } else if (_selectedFilter == 'low') {
+      _filteredProducts = _allProducts.where((product) {
+        return product.quantity < 5;
+      }).toList();
+    }
+    
+    // إعادة تطبيق البحث إذا كان موجوداً
+    if (_searchController.text.isNotEmpty) {
+      _filterProducts(_searchController.text);
+    }
+  }
+
+  /// تغيير الفلتر
+  void _changeFilter(String? filter) {
+    setState(() {
+      _selectedFilter = filter;
+      _applyFilter();
+    });
+  }
+
   /// البحث في قائمة المنتجات
   void _filterProducts(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredProducts = _allProducts;
+        _applyFilter();
       } else {
-        _filteredProducts = _allProducts.where((product) {
+        List<Product> baseList = _selectedFilter == null 
+            ? _allProducts 
+            : _allProducts.where((p) => p.quantity < 10).toList();
+            
+        _filteredProducts = baseList.where((product) {
           final nameLower = product.productName.toLowerCase();
           final supplierLower = (product.supplierName ?? '').toLowerCase();
           final barcodeLower = (product.barcode ?? '').toLowerCase();
@@ -105,6 +133,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
     // تأكيد الأرشفة
     final confirm = await showDialog<bool>(
+      
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.confirmArchive),
@@ -126,12 +155,16 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
 
     if (confirm != true) return;
+    
 
     // تنفيذ الأرشفة
     try {
       await dbHelper.archiveProduct(product.productID!);
       await dbHelper.logActivity(
-        'أرشفة المنتج: ${product.productName}',
+        
+        // ارشفة المنتج
+        // 'أرشفة المنتج: ${product.productName}',
+        l10n.archiveProductAction(product.productName),
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
       );
@@ -144,7 +177,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
-                  child: Text('تم أرشفة "${product.productName}" بنجاح'),
+                  // تم ارشفة المنتج بنجاح
+                  child: Text(l10n.productArchivedSuccess(product.productName)),
                 ),
               ],
             ),
@@ -159,7 +193,10 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في الأرشفة: $e'),
+            content: Text(
+              // حدث خطا في الارشفة
+               l10n.productArchivedError(e.toString()),
+              ),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -233,7 +270,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري تحميل المنتجات...');
+            return  LoadingState(message: l10n.loadingProducts);
           }
 
           // حالة الخطأ
@@ -249,8 +286,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             return EmptyState(
               icon: Icons.inventory_2_outlined,
               title: l10n.noActiveProducts,
-              message: 'ابدأ بإضافة أول منتج في المخزون',
-              actionText: _isAdmin ? 'إضافة منتج' : null,
+              message: l10n.startByAddingProduct,
+              actionText: _isAdmin ? l10n.addProduct : null,
               onAction: _isAdmin ? _navigateToAddProduct : null,
             );
           }
@@ -280,8 +317,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddProduct,
               icon: const Icon(Icons.add),
-              label: const Text('إضافة منتج'),
-              tooltip: 'إضافة منتج جديد',
+              label:  Text(l10n.addProduct),
+              tooltip: l10n.addNewProduct,
             )
           : null,
     );
@@ -297,7 +334,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         controller: _searchController,
         onChanged: _filterProducts,
         decoration: InputDecoration(
-          hintText: l10n.searchForProduct,
+          hintText: l10n.searchForProduct2,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -344,10 +381,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.inventory_outlined,
-              label: 'إجمالي الكمية',
+              label: l10n.totalQuantity,
               value: totalQuantity.toString(),
               color: AppColors.info,
               isDark: isDark,
+              filterType: null, // عرض الكل
             ),
           ),
           const SizedBox(width: AppConstants.spacingSm),
@@ -356,10 +394,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.warning_amber,
-              label: 'منخفضة',
+              label: l10n.low,
               value: lowStockCount.toString(),
               color: lowStockCount > 0 ? AppColors.warning : AppColors.success,
               isDark: isDark,
+              filterType: 'low', // فلتر المنخفضة
             ),
           ),
           const SizedBox(width: AppConstants.spacingSm),
@@ -368,11 +407,12 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.attach_money,
-              label: 'القيمة',
+              label: l10n.value,
               value: formatCurrency(totalValue),
               color: AppColors.success,
               isDark: isDark,
               isCompact: true,
+              filterType: null, // عرض الكل
             ),
           ),
         ],
@@ -388,42 +428,49 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     required Color color,
     required bool isDark,
     bool isCompact = false,
+    String? filterType,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(AppConstants.spacingSm),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: AppConstants.borderRadiusSm,
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
+    final isSelected = _selectedFilter == filterType;
+    
+    return InkWell(
+      onTap: () => _changeFilter(filterType),
+      borderRadius: AppConstants.borderRadiusSm,
+      child: Container(
+        padding: const EdgeInsets.all(AppConstants.spacingSm),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+          borderRadius: AppConstants.borderRadiusSm,
+          border: Border.all(
+            color: isSelected ? color : color.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: color,
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isCompact ? 11 : 14,
-              fontWeight: FontWeight.bold,
-              color: color,
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: isCompact ? 11 : 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -435,7 +482,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     return EmptyState(
       icon: Icons.search_off,
       title: l10n.noMatchingResults,
-      message: 'جرب البحث بكلمة أخرى',
+      message: l10n.tryAnotherSearch,
     );
   }
 
@@ -461,7 +508,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     // تحديد حالة المخزون
-    final isLowStock = product.quantity < 10;
+    final isLowStock = product.quantity < 5;
     final stockColor = isLowStock ? AppColors.warning : AppColors.success;
 
     return CustomCard(
@@ -498,7 +545,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                       // اسم المنتج
                       Text(
                         product.productName,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -510,7 +557,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                         children: [
                           Icon(
                             Icons.store,
-                            size: 14,
+                            size: 18,
                             color: isDark
                                 ? AppColors.textSecondaryDark
                                 : AppColors.textSecondaryLight,
@@ -536,13 +583,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
                     color: AppColors.info,
-                    tooltip: 'تعديل',
+                    tooltip: l10n.edit,
                     onPressed: () => _navigateToEditProduct(product),
                   ),
                   IconButton(
                     icon: const Icon(Icons.archive_outlined),
                     color: AppColors.error,
-                    tooltip: 'أرشفة',
+                    tooltip: l10n.archive,
                     onPressed: () => _handleArchiveProduct(product),
                   ),
                 ],
@@ -564,7 +611,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.inventory_outlined,
-                    label: 'الكمية',
+                    label: l10n.quantity,
                     value: product.quantity.toString(),
                     color: stockColor,
                   ),
@@ -574,7 +621,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.shopping_cart_outlined,
-                    label: 'الشراء',
+                    label: l10n.purchase,
                     value: formatCurrency(product.costPrice),
                     color: AppColors.warning,
                   ),
@@ -584,7 +631,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.sell_outlined,
-                    label: 'البيع',
+                    label: l10n.sell,
                     value: formatCurrency(product.sellingPrice),
                     color: AppColors.success,
                   ),
@@ -614,7 +661,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 children: [
                   Icon(
                     Icons.qr_code,
-                    size: 14,
+                    size: 18,
                     color: isDark
                         ? AppColors.textSecondaryDark
                         : AppColors.textSecondaryLight,
@@ -623,7 +670,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   Text(
                     product.barcode!,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontFamily: 'monospace',
                       color: isDark
                           ? AppColors.textSecondaryDark
@@ -664,7 +711,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 13,
               color: color,
               fontWeight: FontWeight.w600,
             ),

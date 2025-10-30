@@ -282,7 +282,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
             children: [
               Icon(
                 icon,
-                size: 16,
+                size: 18,
                 color: isSelected
                     ? AppColors.primaryLight
                     : Theme.of(context).iconTheme.color,
@@ -292,7 +292,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 16,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     color: isSelected
                         ? AppColors.primaryLight
@@ -324,18 +324,18 @@ class _UsersListScreenState extends State<UsersListScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: color, size: 26),
           const SizedBox(height: AppConstants.spacingXs),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 14),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -415,7 +415,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                         ),
                         child: const Icon(
                           Icons.admin_panel_settings,
-                          size: 12,
+                          size: 14,
                           color: Colors.white,
                         ),
                       ),
@@ -446,8 +446,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           const SizedBox(width: AppConstants.spacingXs),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
+                              horizontal: 8,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.info.withOpacity(0.2),
@@ -456,7 +456,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                             child: Text(
                               l10n.you,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.info,
                               ),
@@ -473,7 +473,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       children: [
                         Icon(
                           Icons.alternate_email,
-                          size: 14,
+                          size: 18,
                           color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                         const SizedBox(width: AppConstants.spacingXs),
@@ -501,7 +501,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           const SizedBox(width: AppConstants.spacingSm),
                           Icon(
                             Icons.shield,
-                            size: 14,
+                            size: 16,
                             color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                           const SizedBox(width: AppConstants.spacingXs),
@@ -526,14 +526,14 @@ class _UsersListScreenState extends State<UsersListScreen> {
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),
                       color: AppColors.info,
-                      iconSize: 20,
+                      iconSize: 24,
                       tooltip: l10n.edit,
                       onPressed: () => _handleEditUser(user, isCurrentUser, l10n),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       color: AppColors.error,
-                      iconSize: 20,
+                      iconSize: 24,
                       tooltip: l10n.delete,
                       onPressed: () => _handleDeleteUser(user, isCurrentUser, l10n),
                     ),
@@ -633,12 +633,12 @@ class _UsersListScreenState extends State<UsersListScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(perm.icon, size: 14, color: perm.color),
+              Icon(perm.icon, size: 18, color: perm.color),
               const SizedBox(width: AppConstants.spacingXs),
               Text(
                 perm.name,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: perm.color,
                 ),
@@ -647,7 +647,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
               Text(
                 '(${perm.level})',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
+                  fontSize: 11,
                   color: perm.color.withOpacity(0.7),
                 ),
               ),

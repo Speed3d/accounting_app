@@ -560,31 +560,133 @@ class DatabaseHelper {
     }  
 
 
+  /// =============================================================================
+  /// قسم: دوال إدارة الموردين والشركاء
+  /// =============================================================================
+  
+  /// =============================================================================
+/// ملاحظات مهمة للمطورين:
+/// =============================================================================
+/// 
+/// 1. **المصطلحات:**
+///    - "فردي": مورد واحد بدون شركاء
+///    - "شراكة": مورد متعدد الشركاء (يجب أن يكون لديه شريك واحد على الأقل)
+///    - "شريك": شخص داخل شراكة (ليس نوع مورد!)
+/// 
+/// 2. **قواعد النسب المئوية:**
+///    - مجموع نسب الشركاء يجب ألا يتجاوز 100%
+///    - يجب التحقق من هذا في الواجهة قبل الحفظ
+/// 
+/// 3. **الأرشفة vs الحذف:**
+///    - نستخدم الأرشفة (IsActive = 0) بدلاً من الحذف النهائي
+///    - هذا يحافظ على السجلات التاريخية ويمنع فقد البيانات
+/// 
+/// 4. **Transactions:**
+///    - نستخدم Transactions عند إجراء عمليات متعددة مرتبطة
+///    - إما تنجح كلها أو تفشل كلها (All or Nothing)
+///    - مثال: إضافة مورد + إضافة شركائه
+/// 
+/// 5. **Foreign Keys:**
+///    - العلاقة بين TB_Suppliers و Supplier_Partners هي One-to-Many
+///    - كل شريك يرتبط بمورد واحد فقط (SupplierID)
+///    - لكن المورد يمكن أن يكون له عدة شركاء
+/// 
+/// =============================================================================
 
 
+  /// دالة لإدراج مورد جديد مع شركائه (إن وجدوا) في قاعدة البيانات.
+  /// 
+  /// **المعاملات:**
+  /// - `supplier`: كائن المورد الجديد الذي سيتم إضافته
+  /// - `partners`: قائمة بالشركاء (قد تكون فارغة إذا كان المورد فرديًا)
+  /// 
+  /// **آلية العمل:**
+  /// 1. تستخدم Transaction لضمان تكامل البيانات (إما تنجح العملية كلها أو تفشل كلها)
+  /// 2. تدرج المورد أولاً في جدول `TB_Suppliers` وتحصل على `supplierID`
+  /// 3. إذا كان نوع المورد "شراكة"، تدرج كل الشركاء في جدول `Supplier_Partners`
+  /// 4. تربط كل شريك بـ `supplierID` الصحيح
+  /// 
+  /// **مثال الاستخدام:**
+  /// ```dart
+  /// final newSupplier = Supplier(
+  ///   supplierName: 'شركة النور',
+  ///   supplierType: 'شراكة',
+  ///   ...
+  /// );
+  /// 
+  /// final partners = [
+  ///   Partner(partnerName: 'أحمد', sharePercentage: 50),
+  ///   Partner(partnerName: 'محمد', sharePercentage: 50),
+  /// ];
+  /// 
+  /// await dbHelper.insertSupplierWithPartners(newSupplier, partners);
+  /// ```
   Future<void> insertSupplierWithPartners(Supplier supplier, List<Partner> partners) async {
     final db = await instance.database;
+    
+    // استخدام Transaction لضمان تنفيذ العمليات كوحدة واحدة
     await db.transaction((txn) async {
+      // الخطوة 1: إدراج المورد والحصول على ID الخاص به
       final supplierId = await txn.insert('TB_Suppliers', supplier.toMap());
+      
+      // الخطوة 2: إذا كان النوع "شراكة"، ندرج الشركاء
       if (supplier.supplierType == 'شراكة') {
         for (final partner in partners) {
-          await txn.insert('Supplier_Partners', partner.copyWith(supplierID: supplierId, dateAdded: DateTime.now().toIso8601String()).toMap());
+          // نربط كل شريك بالمورد باستخدام supplierID
+          // ونضيف تاريخ الإضافة الحالي
+          await txn.insert(
+            'Supplier_Partners', 
+            partner.copyWith(
+              supplierID: supplierId, 
+              dateAdded: DateTime.now().toIso8601String()
+            ).toMap()
+          );
         }
       }
     });
   }
 
-  //  الدالة الجديدة والمصححة بالكامل 
-  /// دالة محدثة لتعديل بيانات مورد مع شركائه. تضمن حذف الشركاء القدامى وإضافة الجدد بشكل صحيح.
+  /// دالة لتحديث بيانات مورد موجود مع إدارة شركائه.
+  /// 
+  /// **المعاملات:**
+  /// - `supplier`: كائن المورد المحدّث (يجب أن يحتوي على `supplierID`)
+  /// - `partners`: قائمة الشركاء الجديدة (ستحل محل القائمة القديمة)
+  /// 
+  /// **آلية العمل:**
+  /// 1. تتحقق من وجود `supplierID` (لا يمكن التحديث بدونه)
+  /// 2. تحدّث بيانات المورد الأساسية في جدول `TB_Suppliers`
+  /// 3. تحذف **جميع** الشركاء القدامى المرتبطين بهذا المورد
+  /// 4. إذا كان النوع "شراكة"، تضيف الشركاء الجدد
+  /// 
+  /// **ملاحظة مهمة:**
+  /// - هذه الدالة تستبدل الشركاء القدامى بالكامل، لا تضيف عليهم
+  /// - إذا تم تغيير النوع من "شراكة" إلى "فردي"، سيتم حذف كل الشركاء
+  /// 
+  /// **مثال الاستخدام:**
+  /// ```dart
+  /// // تحديث بيانات المورد
+  /// supplier.supplierName = 'شركة النور المحدثة';
+  /// 
+  /// // قائمة شركاء جديدة (ستحذف القديمة)
+  /// final newPartners = [
+  ///   Partner(partnerName: 'أحمد', sharePercentage: 60),
+  ///   Partner(partnerName: 'خالد', sharePercentage: 40),
+  /// ];
+  /// 
+  /// await dbHelper.updateSupplierWithPartners(supplier, newPartners);
+  /// ```
   Future<void> updateSupplierWithPartners(Supplier supplier, List<Partner> partners) async {
-   final db = await instance.database;
+    final db = await instance.database;
     final supplierId = supplier.supplierID;
+    
+    // التحقق من وجود ID المورد
     if (supplierId == null) {
-      return; // لا يمكن تحديث مورد بدون ID
+      return; // لا يمكن تحديث مورد بدون معرّف
     }
 
+    // استخدام Transaction لضمان تكامل البيانات
     await db.transaction((txn) async {
-      // 1. تحديث بيانات المورد الأساسية
+      // الخطوة 1: تحديث بيانات المورد الأساسية
       await txn.update(
         'TB_Suppliers',
         supplier.toMap(),
@@ -592,47 +694,159 @@ class DatabaseHelper {
         whereArgs: [supplierId],
       );
 
-      // 2. حذف كل الشركاء القدامى
+      // الخطوة 2: حذف **جميع** الشركاء القدامى المرتبطين بهذا المورد
+      // هذا يضمن عدم وجود بيانات متضاربة
       await txn.delete(
         'Supplier_Partners',
         where: 'SupplierID = ?',
         whereArgs: [supplierId],
       );
 
-      // 3. إضافة الشركاء الجدد إذا كان النوع "شراكة"
+      // الخطوة 3: إضافة الشركاء الجدد إذا كان النوع "شراكة"
       if (supplier.supplierType == 'شراكة') {
         for (final partner in partners) {
-          // استخدام `copyWith` لضمان أن كل شريك جديد يحمل الـ ID الصحيح للمورد
-          await txn.insert('Supplier_Partners', partner.copyWith(supplierID: supplierId).toMap());
+          // نستخدم copyWith لضمان أن كل شريك يحمل supplierID الصحيح
+          await txn.insert(
+            'Supplier_Partners', 
+            partner.copyWith(supplierID: supplierId).toMap()
+          );
         }
       }
+      // ملاحظة: إذا كان النوع "فردي"، لن يتم إضافة أي شركاء (وقد تم حذف القدامى)
     });
-
-  
   }
 
 
-
+  /// دالة لجلب كل الموردين النشطين من قاعدة البيانات.
+  /// 
+  /// **الوظيفة:**
+  /// - تجلب جميع الموردين الذين `IsActive = 1` (نشطين فقط)
+  /// - ترتبهم أبجديًا حسب `SupplierName`
+  /// - إذا كان المورد من نوع "شراكة"، تجلب أيضًا قائمة شركائه
+  /// 
+  /// **العائد:**
+  /// قائمة `List<Supplier>` تحتوي على كل الموردين النشطين مع شركائهم (إن وجدوا).
+  /// 
+  /// **مثال الاستخدام:**
+  /// ```dart
+  /// final suppliers = await dbHelper.getAllSuppliers();
+  /// 
+  /// for (var supplier in suppliers) {
+  ///   print('${supplier.supplierName} - ${supplier.supplierType}');
+  ///   
+  ///   if (supplier.supplierType == 'شراكة') {
+  ///     print('  الشركاء:');
+  ///     for (var partner in supplier.partners) {
+  ///       print('    - ${partner.partnerName}: ${partner.sharePercentage}%');
+  ///     }
+  ///   }
+  /// }
+  /// ```
   Future<List<Supplier>> getAllSuppliers() async {
     final db = await instance.database;
-    final supplierMaps = await db.query('TB_Suppliers', where: 'IsActive = ?', whereArgs: [1], orderBy: 'SupplierName ASC');
+    
+    // جلب كل الموردين النشطين مرتبين أبجديًا
+    final supplierMaps = await db.query(
+      'TB_Suppliers', 
+      where: 'IsActive = ?', 
+      whereArgs: [1], 
+      orderBy: 'SupplierName ASC'
+    );
+    
+    // تحويل النتائج من Map إلى كائنات Supplier
     List<Supplier> suppliers = supplierMaps.map((map) => Supplier.fromMap(map)).toList();
+    
+    // لكل مورد، إذا كان نوعه "شراكة"، نجلب قائمة شركائه
     for (var supplier in suppliers) {
-      if (supplier.supplierType == 'شريك') {
+      // ✅ التصحيح المطبق: تغيير 'شريك' إلى 'شراكة'
+      if (supplier.supplierType == 'شراكة') {
         supplier.partners = await getPartnersForSupplier(supplier.supplierID!);
       }
     }
+    
     return suppliers;
   }
 
-  Future<int> archiveSupplier(int id) async => await (await instance.database).update('TB_Suppliers', {'IsActive': 0}, where: 'SupplierID = ?', whereArgs: [id]);
+  /// دالة لأرشفة مورد (جعله غير نشط).
+  /// 
+  /// **المعامل:**
+  /// - `id`: معرّف المورد (SupplierID) المراد أرشفته
+  /// 
+  /// **آلية العمل:**
+  /// - لا تحذف المورد من قاعدة البيانات
+  /// - فقط تغير `IsActive` من `1` إلى `0`
+  /// - بهذا يبقى في السجلات لكن لا يظهر في القوائم العادية
+  /// 
+  /// **العائد:**
+  /// عدد الصفوف المتأثرة (يجب أن يكون 1 في حالة النجاح)
+  /// 
+  /// **ملاحظة:**
+  /// يجب التحقق من عدم وجود منتجات نشطة مرتبطة بهذا المورد قبل الأرشفة.
+  /// استخدم `hasActiveProducts(supplierId)` للتحقق.
+  Future<int> archiveSupplier(int id) async => 
+    await (await instance.database).update(
+      'TB_Suppliers', 
+      {'IsActive': 0}, 
+      where: 'SupplierID = ?', 
+      whereArgs: [id]
+    );
+
+
+  /// دالة للتحقق من وجود منتجات نشطة مرتبطة بمورد معين.
+  /// 
+  /// **المعامل:**
+  /// - `supplierId`: معرّف المورد (SupplierID)
+  /// 
+  /// **العائد:**
+  /// - `true`: إذا كان هناك منتج واحد على الأقل نشط (`IsActive = 1`) لهذا المورد
+  /// - `false`: إذا لم يكن هناك منتجات نشطة
+  /// 
+  /// **الاستخدام:**
+  /// هذه الدالة مهمة جداً قبل أرشفة المورد. يجب التأكد من عدم وجود منتجات
+  /// نشطة مرتبطة به، وإلا سيحدث تضارب في البيانات.
+  /// 
+  /// **مثال الاستخدام:**
+  /// ```dart
+  /// if (await dbHelper.hasActiveProducts(supplierId)) {
+  ///   showError('لا يمكن أرشفة المورد لوجود منتجات نشطة مرتبطة به');
+  ///   return;
+  /// }
+  /// 
+  /// await dbHelper.archiveSupplier(supplierId);
+  /// ```
   Future<bool> hasActiveProducts(int supplierId) async {
-    final result = await (await instance.database).rawQuery('SELECT COUNT(*) as count FROM Store_Products WHERE SupplierID = ? AND IsActive = 1', [supplierId]);
+    final result = await (await instance.database).rawQuery(
+      'SELECT COUNT(*) as count FROM Store_Products WHERE SupplierID = ? AND IsActive = 1', 
+      [supplierId]
+    );
+    
     return (result.first['count'] as int) > 0;
   }
 
+  /// دالة لجلب قائمة شركاء مورد معين.
+  /// 
+  /// **المعامل:**
+  /// - `supplierId`: معرّف المورد (ID) الذي نريد جلب شركائه
+  /// 
+  /// **العائد:**
+  /// قائمة `List<Partner>` تحتوي على جميع الشركاء المرتبطين بهذا المورد.
+  /// 
+  /// **مثال الاستخدام:**
+  /// ```dart
+  /// final partners = await dbHelper.getPartnersForSupplier(5);
+  /// 
+  /// print('عدد الشركاء: ${partners.length}');
+  /// double totalPercentage = partners.fold(0, (sum, p) => sum + p.sharePercentage);
+  /// print('إجمالي النسب: $totalPercentage%');
+  /// ```
   Future<List<Partner>> getPartnersForSupplier(int supplierId) async {
-    final maps = await (await instance.database).query('Supplier_Partners', where: 'SupplierID = ?', whereArgs: [supplierId]);
+    final maps = await (await instance.database).query(
+      'Supplier_Partners', 
+      where: 'SupplierID = ?', 
+      whereArgs: [supplierId]
+    );
+    
+    // تحويل النتائج من Map إلى كائنات Partner
     return maps.map((map) => Partner.fromMap(map)).toList();
   }
 

@@ -230,7 +230,8 @@
 
     "productsList": "Products List",
     "noActiveProducts": "No active products in stock.",
-    "searchForProduct": "Search for a product...",
+    "searchForProduct": "Search for a product ...",
+    "searchForProduct2": "Search for a product or supplier...",
     "noMatchingResults": "No matching results found.",
     "supplier": "Supplier",
     "quantity": "Quantity",
@@ -1084,7 +1085,121 @@
         "example": "Database error"
       }
     }
+  },
+
+    "partnersCount": "{count} partner(s)",
+  "@partnersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "confirmDeletePartner": "Are you sure you want to delete partner \"{name}\"?",
+  "@confirmDeletePartner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "partnerShareWarning": "Total partner shares is only {percentage}%.\nDo you want to continue?",
+  "@partnerShareWarning": {
+    "placeholders": {
+      "percentage": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "activityUpdateSupplier": "Update supplier data: {name}",
+  "@activityUpdateSupplier": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "activityAddSupplier": "Add new supplier: {name}",
+  "@activityAddSupplier": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "errorSaving": "An error occurred while saving: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "deletePartner": "Delete Partner ",
+   "cancel": "Cancel",
+  "delete": "Delete",
+  "warning": "Warning",
+  "continueButton": "Continue",
+
+  "partnerships": "Partnerships",
+  "@partnerships": {
+    "description": "Filter button - show only partnerships"
+  },
+  
+  "individuals": "Individuals",
+  "@individuals": {
+    "description": "Filter button - show only individuals"
+  },
+  
+  "supplierArchivedSuccess": "Supplier \"{name}\" has been archived successfully",
+  "@supplierArchivedSuccess": {
+    "description": "Success message after archiving supplier",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+    "productArchivedSuccess": "\"{name}\" has been archived successfully",
+  "@productArchivedSuccess": {
+    "description": "Shown when a product is successfully archived",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Laptop"
+      }
+    }
+  },
+
+  "productArchivedError": "Error archiving product: {error}",
+  "@productArchivedError": {
+    "description": "Shown when archiving fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+
+    "archiveProductAction": "Archive product: {name}",
+  "@archiveProductAction": {
+    "description": "Used when logging product archive action",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Laptop"
+      }
+    }
   }
+  
 
 
 }

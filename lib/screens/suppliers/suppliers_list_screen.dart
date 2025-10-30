@@ -32,6 +32,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   List<Supplier> _allSuppliers = [];
   List<Supplier> _filteredSuppliers = [];
   bool _isSearching = false;
+  String? _selectedTypeFilter; // null = الكل، 'شراكة' = شراكات، 'فردي' = أفراد
 
   @override
   void initState() {
@@ -57,15 +58,44 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   void _filterSuppliers(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredSuppliers = _allSuppliers;
+        _applyTypeFilter();
         _isSearching = false;
       } else {
         _isSearching = true;
         _filteredSuppliers = _allSuppliers.where((supplier) {
-          return supplier.supplierName.toLowerCase().contains(query.toLowerCase()) ||
+          final matchesSearch = supplier.supplierName.toLowerCase().contains(query.toLowerCase()) ||
                  supplier.supplierType.contains(query) ||
                  (supplier.phone?.contains(query) ?? false);
+          
+          // تطبيق فلتر النوع إذا كان محدداً
+          final matchesType = _selectedTypeFilter == null || supplier.supplierType == _selectedTypeFilter;
+          
+          return matchesSearch && matchesType;
         }).toList();
+      }
+    });
+  }
+
+  /// تطبيق فلتر النوع
+  void _applyTypeFilter() {
+    if (_selectedTypeFilter == null) {
+      _filteredSuppliers = _allSuppliers;
+    } else {
+      _filteredSuppliers = _allSuppliers.where((supplier) {
+        return supplier.supplierType == _selectedTypeFilter;
+      }).toList();
+    }
+  }
+
+  /// تغيير فلتر النوع
+  void _changeTypeFilter(String? type) {
+    setState(() {
+      _selectedTypeFilter = type;
+      if (_searchController.text.isEmpty) {
+        _applyTypeFilter();
+      } else {
+        // إعادة تطبيق البحث مع الفلتر الجديد
+        _filterSuppliers(_searchController.text);
       }
     });
   }
@@ -118,7 +148,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
 
                 // حفظ البيانات للبحث
                 _allSuppliers = snapshot.data!;
-                final displayList = _isSearching ? _filteredSuppliers : _allSuppliers;
+                final displayList = _isSearching || _selectedTypeFilter != null ? _filteredSuppliers : _allSuppliers;
 
                 // عرض القائمة
                 return RefreshIndicator(
@@ -179,7 +209,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
               setState(() {
                 _searchController.clear();
                 _isSearching = false;
-                _filteredSuppliers = _allSuppliers;
+                _applyTypeFilter();
               });
             },
           ),
@@ -204,24 +234,27 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                       '${suppliers.length}',
                       Icons.store,
                       AppColors.primaryLight,
+                      null, // الكل
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: _buildQuickStat(
-                      'شراكات',
+                      l10n.partnership,
                       '$partnershipCount',
                       Icons.handshake,
                       AppColors.info,
+                      'شراكة',
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: _buildQuickStat(
-                      'أفراد',
+                      l10n.supplier,
                       '$individualCount',
                       Icons.person,
                       AppColors.warning,
+                      'فردي',
                     ),
                   ),
                 ],
@@ -234,36 +267,43 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   }
 
   /// بناء إحصائية سريعة
-  Widget _buildQuickStat(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.spacingSm,
-        vertical: AppConstants.spacingMd,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: AppConstants.borderRadiusMd,
-        border: Border.all(
-          color: color.withOpacity(0.3),
+  Widget _buildQuickStat(String label, String value, IconData icon, Color color, String? filterType) {
+    final isSelected = _selectedTypeFilter == filterType;
+    
+    return InkWell(
+      onTap: () => _changeTypeFilter(filterType),
+      borderRadius: AppConstants.borderRadiusMd,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spacingSm,
+          vertical: AppConstants.spacingMd,
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: AppConstants.spacingXs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+          borderRadius: AppConstants.borderRadiusMd,
+          border: Border.all(
+            color: isSelected ? color : color.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: AppConstants.spacingXs),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -368,7 +408,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                       ),
                       const SizedBox(width: AppConstants.spacingXs),
                       Text(
-                        '${supplier.partners.length} شريك',
+                        '${supplier.partners.length} Partner - شريك',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -545,8 +585,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم أرشفة المورد - The resource has been archived "${supplier.supplierName}"Success - بنجاح'),
-          // content: Text(l10n.deleteSupplierSuccess(supplier.supplierName)),
+          // content: Text('تم أرشفة المورد - The resource has been archived "${supplier.supplierName}"Success - بنجاح'),
+          content: Text(l10n.supplierArchivedSuccess(supplier.supplierName)),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),

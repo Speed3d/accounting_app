@@ -245,7 +245,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: AppConstants.spacingLg),
 
             // ============= المورد =============
-            _buildSectionHeader('معلومات المورد', Icons.store, isDark),
+            _buildSectionHeader(l10n.supplierInfo, Icons.store, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             _buildSupplierDropdown(l10n, isDark),
@@ -253,14 +253,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= معلومات المنتج =============
-            _buildSectionHeader('معلومات المنتج', Icons.info_outline, isDark),
+            _buildSectionHeader(l10n.productInfo, Icons.info_outline, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // اسم المنتج
             CustomTextField(
               controller: _nameController,
               label: l10n.productName,
-              hint: 'أدخل اسم المنتج',
+              hint: l10n.enterProductName,
               prefixIcon: Icons.inventory_2_outlined,
               textInputAction: TextInputAction.next,
               validator: (v) =>
@@ -269,16 +269,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
             const SizedBox(height: AppConstants.spacingMd),
 
-            // الباركود
-             CustomTextField(
-             controller: _barcodeController,
-             label: l10n.barcode,
-             hint: 'امسح أو أدخل الباركود',
-             prefixIcon: Icons.qr_code,
-             suffixIcon: Icons.qr_code_scanner,
-             onSuffixIconPressed: _scanBarcode,
-             textInputAction: TextInputAction.next,
-             ),
+            // الباركود مع زر المسح
+            CustomTextField(
+              controller: _barcodeController,
+              label: l10n.barcode,
+              hint: l10n.scanOrEnterBarcode,
+              prefixIcon: Icons.qr_code,
+              suffixIcon: Icons.qr_code_scanner,
+              onSuffixIconPressed: _scanBarcode,  // ✅ هنا التعديل - سيعمل الآن!
+              textInputAction: TextInputAction.next,
+            ),
 
             const SizedBox(height: AppConstants.spacingMd),
 
@@ -286,7 +286,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             CustomTextField(
               controller: _detailsController,
               label: l10n.productDetailsOptional,
-              hint: 'أدخل تفاصيل المنتج',
+              hint: l10n.enterProductDetails,
               prefixIcon: Icons.description_outlined,
               maxLines: 3,
               textInputAction: TextInputAction.next,
@@ -295,14 +295,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= الكمية والأسعار =============
-            _buildSectionHeader('الكمية والأسعار', Icons.attach_money, isDark),
+            _buildSectionHeader(l10n.quantityAndPrices, Icons.attach_money, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // الكمية
             CustomTextField(
               controller: _quantityController,
               label: l10n.quantity,
-              hint: 'أدخل الكمية',
+              hint: l10n.enterQuantity,
               prefixIcon: Icons.inventory_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: false),
               textInputAction: TextInputAction.next,
@@ -315,7 +315,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             CustomTextField(
               controller: _costPriceController,
               label: l10n.costPrice,
-              hint: 'سعر الشراء',
+              hint: l10n.purchasePrice,
               prefixIcon: Icons.shopping_cart_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -328,7 +328,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             CustomTextField(
               controller: _sellingPriceController,
               label: l10n.sellingPrice,
-              hint: 'سعر البيع',
+              hint: l10n.salePrice,
               prefixIcon: Icons.sell_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,
@@ -575,7 +575,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 ),
                 const SizedBox(width: AppConstants.spacingSm),
                 Text(
-                  'ملخص الأسعار',
+                  l10n.pricesSummary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -587,7 +587,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
             // سعر التكلفة
             _buildPriceRow(
-              'سعر التكلفة',
+              l10n.costPrice,
               formatCurrency(costPrice),
               AppColors.warning,
               Icons.shopping_cart_outlined,
@@ -597,7 +597,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
             // سعر البيع
             _buildPriceRow(
-              'سعر البيع',
+              l10n.salePrice,
               formatCurrency(sellingPrice),
               AppColors.info,
               Icons.sell_outlined,
@@ -629,7 +629,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       ),
                       const SizedBox(width: AppConstants.spacingSm),
                       Text(
-                        'الربح',
+                        l10n.profit,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: profit >= 0 ? AppColors.success : AppColors.error,

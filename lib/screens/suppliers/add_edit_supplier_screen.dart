@@ -38,7 +38,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
   final _notesController = TextEditingController();
   
   // State
-  String _supplierType = 'فردي';
+  String _supplierType = 'فردي'; // نوع المورد: فردي أو شراكة
   List<Partner> _partners = [];
   File? _imageFile;
   bool _isSaving = false;
@@ -110,25 +110,25 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
         child: ListView(
           padding: AppConstants.screenPadding,
           children: [
-            // ============= صورة المورد =============
+            // صورة المورد
             _buildImagePicker(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= معلومات المورد الأساسية =============
+            // معلومات المورد الأساسية
             _buildBasicInfoSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= نوع المورد =============
+            // نوع المورد
             _buildSupplierTypeSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= معلومات إضافية =============
+            // معلومات إضافية
             _buildAdditionalInfoSection(l10n),
             
-            // ============= قسم الشركاء (إذا كان النوع شراكة) =============
+            // قسم الشركاء (إذا كان النوع شراكة)
             if (_isPartnerType) ...[
               const SizedBox(height: AppConstants.spacingXl),
               _buildPartnersSection(l10n),
@@ -136,7 +136,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= زر الحفظ =============
+            // زر الحفظ
             _buildSaveButton(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
@@ -300,7 +300,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                 child: _buildTypeOption(
                   icon: Icons.person,
                   label: l10n.individual,
-                  value: 'فردي',
+                  value: 'فردي', // نوع: فردي (شخص واحد)
                   isSelected: _supplierType == 'فردي',
                 ),
               ),
@@ -309,7 +309,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                 child: _buildTypeOption(
                   icon: Icons.handshake,
                   label: l10n.partnership,
-                  value: 'شراكة',
+                  value: 'شراكة', // نوع: شراكة (عدة شركاء)
                   isSelected: _supplierType == 'شراكة',
                 ),
               ),
@@ -331,8 +331,10 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
       onTap: () {
         setState(() {
           _supplierType = value;
-          if (value == 'فردي') {
-            _partners.clear();
+          if (value == 'فردي') { // إذا تم اختيار "فردي"
+            _partners.clear(); // مسح قائمة الشركاء
+          } else if (value == 'شراكة' && _isEditMode) { // إذا تم اختيار "شراكة" في وضع التعديل
+            _loadPartners(); // تحميل الشركاء من قاعدة البيانات
           }
         });
       },
@@ -486,7 +488,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                       ),
                     ),
                     Text(
-                      '${_partners.length} شريك',
+                      l10n.partnersCount(_partners.length),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -521,7 +523,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                     ),
                     const SizedBox(width: AppConstants.spacingXs),
                     Text(
-                      '${totalPercentage.toStringAsFixed(1)}%',
+                      '${totalPercentage.toStringAsFixed(1)}%', // مجموع النسب المئوية
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isPercentageValid
@@ -675,7 +677,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
                 icon: const Icon(Icons.delete_outline),
                 color: AppColors.error,
                 iconSize: 20,
-                tooltip: 'حذف',
+                tooltip: 'حذف', // نص زر الحذف
                 onPressed: () => _confirmDeletePartner(index, partner.partnerName),
               ),
             ],
@@ -688,7 +690,6 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
   /// بناء زر الحفظ
   Widget _buildSaveButton(AppLocalizations l10n) {
     return CustomButton(
-      //هنا تغيير اسم الزر
       text: _isEditMode ? l10n.updateSupplier : l10n.createSupplier,
       icon: _isEditMode ? Icons.update : Icons.add,
       isLoading: _isSaving,
@@ -841,8 +842,9 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
     }
   }
 
-  /// تأكيد حذف شريك
+  /// تأكيد حذف شريك (حذف من القائمة المحلية فقط - لا يحذف من قاعدة البيانات)
   Future<void> _confirmDeletePartner(int index, String partnerName) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -851,12 +853,12 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           size: 48,
           color: AppColors.error,
         ),
-        title: const Text('حذف الشريك'),
-        content: Text('هل أنت متأكد من حذف الشريك "$partnerName"؟'),
+        title: Text(l10n.deletePartner),
+        content: Text(l10n.confirmDeletePartner(partnerName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -864,13 +866,14 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('حذف'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
     );
     
     if (confirmed == true) {
+      // حذف من القائمة المحلية فقط (لن يتم الحذف من قاعدة البيانات للحفاظ على الارتباطات)
       setState(() => _partners.removeAt(index));
     }
   }
@@ -897,6 +900,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
       }
       
       final totalPercentage = _partners.fold<double>(
+        
         0.0,
         (sum, partner) => sum + partner.sharePercentage,
       );
@@ -909,6 +913,44 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
           ),
         );
         return;
+      }
+      
+      
+      // تحذير إذا كانت النسب أقل من 100%
+      if (totalPercentage < 100) {
+        
+        final proceed = await showDialog<bool>(
+          
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(
+              Icons.warning_outlined,
+              size: 48,
+              color: AppColors.warning,
+            ),
+            title: Text(l10n.warning),
+            content: Text(
+              l10n.partnerShareWarning(totalPercentage.toStringAsFixed(1))
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.warning,
+                  foregroundColor: Colors.white,
+                ),
+                
+                child: Text(l10n.continueButton),
+              ),
+            ],
+          ),
+        );
+        
+        if (proceed != true) return;
       }
     }
     
@@ -933,7 +975,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
         );
         
         await dbHelper.updateSupplierWithPartners(updatedSupplier, _partners);
-        action = 'تحديث بيانات المورد: ${updatedSupplier.supplierName}';
+        action = l10n.activityUpdateSupplier(updatedSupplier.supplierName);
         successMessage = l10n.supplierUpdatedSuccess;
       } else {
         // إضافة مورد جديد
@@ -948,7 +990,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
         );
         
         await dbHelper.insertSupplierWithPartners(newSupplier, _partners);
-        action = 'إضافة مورد جديد: ${newSupplier.supplierName}';
+        action = l10n.activityAddSupplier(newSupplier.supplierName);
         successMessage = l10n.supplierAddedSuccess;
       }
       
@@ -978,7 +1020,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('حدث خطأ أثناء الحفظ: $e'),
+          content: Text(l10n.errorSaving(e.toString())),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

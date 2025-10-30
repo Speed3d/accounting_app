@@ -1163,8 +1163,14 @@ abstract class AppLocalizations {
   /// No description provided for @searchForProduct.
   ///
   /// In en, this message translates to:
-  /// **'Search for a product...'**
+  /// **'Search for a product ...'**
   String get searchForProduct;
+
+  /// No description provided for @searchForProduct2.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a product or supplier...'**
+  String get searchForProduct2;
 
   /// No description provided for @noMatchingResults.
   ///
@@ -3062,7 +3068,7 @@ abstract class AppLocalizations {
   /// **'Total suppliers'**
   String get totalSuppliers;
 
-  /// No description provided for @individuals.
+  /// Filter button - show only individuals
   ///
   /// In en, this message translates to:
   /// **'Individuals'**
@@ -3131,14 +3137,14 @@ abstract class AppLocalizations {
   /// No description provided for @deletePartner.
   ///
   /// In en, this message translates to:
-  /// **'Delete partner'**
+  /// **'Delete Partner '**
   String get deletePartner;
 
   /// No description provided for @confirmDeletePartner.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete the partner'**
-  String get confirmDeletePartner;
+  /// **'Are you sure you want to delete partner \"{name}\"?'**
+  String confirmDeletePartner(String name);
 
   /// No description provided for @updateSupplierInfo.
   ///
@@ -3739,6 +3745,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An error occurred during deletion: {error}'**
   String deleteSupplierError(String error);
+
+  /// No description provided for @partnersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} partner(s)'**
+  String partnersCount(int count);
+
+  /// No description provided for @partnerShareWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Total partner shares is only {percentage}%.\nDo you want to continue?'**
+  String partnerShareWarning(String percentage);
+
+  /// No description provided for @activityUpdateSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Update supplier data: {name}'**
+  String activityUpdateSupplier(String name);
+
+  /// No description provided for @activityAddSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new supplier: {name}'**
+  String activityAddSupplier(String name);
+
+  /// No description provided for @errorSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while saving: {error}'**
+  String errorSaving(String error);
+
+  /// No description provided for @warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get warning;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// Filter button - show only partnerships
+  ///
+  /// In en, this message translates to:
+  /// **'Partnerships'**
+  String get partnerships;
+
+  /// Success message after archiving supplier
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier \"{name}\" has been archived successfully'**
+  String supplierArchivedSuccess(String name);
+
+  /// Shown when a product is successfully archived
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" has been archived successfully'**
+  String productArchivedSuccess(String name);
+
+  /// Shown when archiving fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error archiving product: {error}'**
+  String productArchivedError(String error);
+
+  /// Used when logging product archive action
+  ///
+  /// In en, this message translates to:
+  /// **'Archive product: {name}'**
+  String archiveProductAction(String name);
 }
 
 class _AppLocalizationsDelegate

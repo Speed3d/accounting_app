@@ -350,7 +350,7 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              l10n.invalidShare,
+              l10n.sharePercentage,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(

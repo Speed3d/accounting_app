@@ -595,7 +595,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noActiveProducts => 'No active products in stock.';
 
   @override
-  String get searchForProduct => 'Search for a product...';
+  String get searchForProduct => 'Search for a product ...';
+
+  @override
+  String get searchForProduct2 => 'Search for a product or supplier...';
 
   @override
   String get noMatchingResults => 'No matching results found.';
@@ -1672,11 +1675,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createSupplier => 'Add supplier';
 
   @override
-  String get deletePartner => 'Delete partner';
+  String get deletePartner => 'Delete Partner ';
 
   @override
-  String get confirmDeletePartner =>
-      'Are you sure you want to delete the partner';
+  String confirmDeletePartner(String name) {
+    return 'Are you sure you want to delete partner \"$name\"?';
+  }
 
   @override
   String get updateSupplierInfo => 'Update supplier information';
@@ -1992,5 +1996,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deleteSupplierError(String error) {
     return 'An error occurred during deletion: $error';
+  }
+
+  @override
+  String partnersCount(int count) {
+    return '$count partner(s)';
+  }
+
+  @override
+  String partnerShareWarning(String percentage) {
+    return 'Total partner shares is only $percentage%.\nDo you want to continue?';
+  }
+
+  @override
+  String activityUpdateSupplier(String name) {
+    return 'Update supplier data: $name';
+  }
+
+  @override
+  String activityAddSupplier(String name) {
+    return 'Add new supplier: $name';
+  }
+
+  @override
+  String errorSaving(String error) {
+    return 'An error occurred while saving: $error';
+  }
+
+  @override
+  String get warning => 'Warning';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get partnerships => 'Partnerships';
+
+  @override
+  String supplierArchivedSuccess(String name) {
+    return 'Supplier \"$name\" has been archived successfully';
+  }
+
+  @override
+  String productArchivedSuccess(String name) {
+    return '\"$name\" has been archived successfully';
+  }
+
+  @override
+  String productArchivedError(String error) {
+    return 'Error archiving product: $error';
+  }
+
+  @override
+  String archiveProductAction(String name) {
+    return 'Archive product: $name';
   }
 }

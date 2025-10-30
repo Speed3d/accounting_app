@@ -231,7 +231,8 @@
 
     "productsList": "قائمة المنتجات",
     "noActiveProducts": "لا توجد منتجات نشطة في المخزن.",
-    "searchForProduct": "ابحث عن منتج...",
+    "searchForProduct": " ابحث عن منتج  ...",
+    "searchForProduct2": " ابحث عن منتج او مورد ...",
     "noMatchingResults": "لا توجد نتائج مطابقة للبحث.",
     "supplier": "المورد",
     "quantity": "الكمية",
@@ -1082,6 +1083,56 @@
       "error": {
         "type": "String",
         "example": "خطأ في قاعدة البيانات"
+      }
+    }
+  },
+
+    "partnersCount": "{count} شريك",
+  "confirmDeletePartner": "هل أنت متأكد من حذف الشريك \"{name}\"؟",
+  "partnerShareWarning": "مجموع النسب المئوية للشركاء هو {percentage}% فقط.\nهل تريد المتابعة؟",
+  "activityUpdateSupplier": "تحديث بيانات المورد: {name}",
+  "activityAddSupplier": "إضافة مورد جديد: {name}",
+  "errorSaving": "حدث خطأ أثناء الحفظ: {error}",
+
+ "deletePartner": "حذف شريك",
+   "cancel": "إلغاء",
+  "delete": "حذف",
+  "warning": "تحذير",
+  "continueButton": "متابعة",
+
+  "partnerships": "شراكات",
+  "individuals": "أفراد",
+  "supplierArchivedSuccess": "تم أرشفة المورد \"{name}\" بنجاح",
+
+  "productArchivedSuccess": "تم أرشفة \"{name}\" بنجاح",
+  "@productArchivedSuccess": {
+    "description": "رسالة نجاح عند أرشفة المنتج",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "حاسوب محمول"
+      }
+    }
+  },
+
+  "productArchivedError": "خطأ في الأرشفة: {error}",
+  "@productArchivedError": {
+    "description": "رسالة خطأ أثناء الأرشفة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "فشل الاتصال بالخادم"
+      }
+    }
+  },
+
+    "archiveProductAction": "أرشفة المنتج: {name}",
+  "@archiveProductAction": {
+    "description": "يُستخدم عند تسجيل عملية أرشفة منتج",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "حاسوب محمول"
       }
     }
   }
