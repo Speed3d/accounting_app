@@ -260,10 +260,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hireDate => 'تاريخ التعيين';
 
   @override
-  String get employeeAddedSuccess => 'تم إضافة الموظف بنجاح!';
+  String get employeeAddedSuccess => 'تمت إضافة الموظف بنجاح';
 
   @override
-  String get employeeUpdatedSuccess => 'تم تحديث الموظف بنجاح!';
+  String get employeeUpdatedSuccess => 'تم تحديث بيانات الموظف بنجاح';
 
   @override
   String payrollFor(Object name) {
@@ -2043,5 +2043,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String archiveProductAction(String name) {
     return 'أرشفة المنتج: $name';
+  }
+
+  @override
+  String updateEmployeeAction(String name) {
+    return 'تحديث بيانات الموظف: $name';
+  }
+
+  @override
+  String addEmployeeAction(String name) {
+    return 'إضافة موظف جديد: $name';
   }
 }

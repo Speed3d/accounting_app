@@ -1200,7 +1200,32 @@
         "example": "Laptop"
       }
     }
-  }
+  },
+
+    "updateEmployeeAction": "Update employee data: {name}",
+  "@updateEmployeeAction": {
+    "description": "Used when updating an employee's data",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Ahmed Ali"
+      }
+    }
+  },
+
+  "addEmployeeAction": "Add new employee: {name}",
+  "@addEmployeeAction": {
+    "description": "Used when adding a new employee",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Mohammed Hassan"
+      }
+    }
+  },
+
+  "employeeUpdatedSuccess": "Employee data updated successfully",
+  "employeeAddedSuccess": "Employee added successfully"
   
 
 

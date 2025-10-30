@@ -587,13 +587,13 @@ abstract class AppLocalizations {
   /// No description provided for @employeeAddedSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Employee added successfully!'**
+  /// **'Employee added successfully'**
   String get employeeAddedSuccess;
 
   /// No description provided for @employeeUpdatedSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Employee updated successfully!'**
+  /// **'Employee data updated successfully'**
   String get employeeUpdatedSuccess;
 
   /// No description provided for @payrollFor.
@@ -3829,6 +3829,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Archive product: {name}'**
   String archiveProductAction(String name);
+
+  /// Used when updating an employee's data
+  ///
+  /// In en, this message translates to:
+  /// **'Update employee data: {name}'**
+  String updateEmployeeAction(String name);
+
+  /// Used when adding a new employee
+  ///
+  /// In en, this message translates to:
+  /// **'Add new employee: {name}'**
+  String addEmployeeAction(String name);
 }
 
 class _AppLocalizationsDelegate

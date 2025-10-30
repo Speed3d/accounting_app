@@ -260,10 +260,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hireDate => 'Hire Date';
 
   @override
-  String get employeeAddedSuccess => 'Employee added successfully!';
+  String get employeeAddedSuccess => 'Employee added successfully';
 
   @override
-  String get employeeUpdatedSuccess => 'Employee updated successfully!';
+  String get employeeUpdatedSuccess => 'Employee data updated successfully';
 
   @override
   String payrollFor(Object name) {
@@ -2057,5 +2057,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String archiveProductAction(String name) {
     return 'Archive product: $name';
+  }
+
+  @override
+  String updateEmployeeAction(String name) {
+    return 'Update employee data: $name';
+  }
+
+  @override
+  String addEmployeeAction(String name) {
+    return 'Add new employee: $name';
   }
 }

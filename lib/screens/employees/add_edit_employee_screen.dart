@@ -123,11 +123,13 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
 
       if (_isEditMode) {
         await dbHelper.updateEmployee(employee);
-        action = 'تحديث بيانات الموظف: ${employee.fullName}';
+        // action = 'تحديث بيانات الموظف: ${employee.fullName}';
+        action = l10n.updateEmployeeAction(employee.fullName);
         successMessage = l10n.employeeUpdatedSuccess;
       } else {
         await dbHelper.insertEmployee(employee);
-        action = 'إضافة موظف جديد: ${employee.fullName}';
+        // action = 'إضافة موظف جديد: ${employee.fullName}';
+        action = l10n.addEmployeeAction(employee.fullName);
         successMessage = l10n.employeeAddedSuccess;
       }
 
@@ -175,14 +177,15 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
   // 📅 اختيار تاريخ التعيين
   // ============================================================
   Future<void> _pickHireDate() async {
+    final l10n = AppLocalizations.of(context)!;
     final pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedHireDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
-      helpText: 'اختر تاريخ التعيين',
-      cancelText: 'إلغاء',
-      confirmText: 'تأكيد',
+      helpText: l10n.selectHiringDate,
+      cancelText: l10n.cancel,
+      confirmText: l10n.ok,
     );
 
     if (pickedDate != null && pickedDate != _selectedHireDate) {
@@ -265,14 +268,14 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= قسم المعلومات الشخصية =============
-            _buildSectionHeader('المعلومات الشخصية', Icons.person_outline, isDark),
+            _buildSectionHeader(l10n.personalInfo, Icons.person_outline, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // الاسم الكامل
             CustomTextField(
               controller: _nameController,
               label: l10n.employeeName,
-              hint: 'أدخل الاسم الكامل',
+              hint: l10n.enterFullName,
               prefixIcon: Icons.badge_outlined,
               textInputAction: TextInputAction.next,
               validator: (v) =>
@@ -285,7 +288,7 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             CustomTextField(
               controller: _phoneController,
               label: l10n.phoneOptional,
-              hint: 'أدخل رقم الهاتف',
+              hint: l10n.enterPhoneNumber,
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
@@ -297,7 +300,7 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             CustomTextField(
               controller: _addressController,
               label: l10n.addressOptional,
-              hint: 'أدخل العنوان',
+              hint: l10n.enterAddress,
               prefixIcon: Icons.location_on_outlined,
               maxLines: 2,
               textInputAction: TextInputAction.next,
@@ -306,14 +309,14 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= قسم الوظيفة =============
-            _buildSectionHeader('معلومات الوظيفة', Icons.work_outline, isDark),
+            _buildSectionHeader(l10n.jobInfo, Icons.work_outline, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // المسمى الوظيفي
             CustomTextField(
               controller: _jobTitleController,
               label: l10n.jobTitle,
-              hint: 'أدخل المسمى الوظيفي',
+              hint: l10n.enterJobTitle,
               prefixIcon: Icons.work_outline,
               textInputAction: TextInputAction.next,
               validator: (v) =>
@@ -326,7 +329,7 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             CustomTextField(
               controller: _hireDateController,
               label: l10n.hireDate,
-              hint: 'اختر التاريخ',
+              hint: l10n.selectDate,
               prefixIcon: Icons.calendar_today,
               readOnly: true,
               onTap: _pickHireDate,
@@ -335,14 +338,14 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= قسم الراتب =============
-            _buildSectionHeader('المعلومات المالية', Icons.attach_money, isDark),
+            _buildSectionHeader(l10n.financialInfo, Icons.attach_money, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // الراتب الأساسي
             CustomTextField(
               controller: _salaryController,
               label: l10n.baseSalary,
-              hint: 'أدخل الراتب الأساسي',
+              hint: l10n.enterBasicSalary,
               prefixIcon: Icons.paid_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,

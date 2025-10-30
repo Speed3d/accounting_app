@@ -976,6 +976,7 @@
   "november": "نوفمبر",
   "december": "ديسمبر",
 
+
   "loading": "جاري التحميل...",
   "noSalaryPaidYet": "لم يتم صرف أي راتب بعد",
   "addSalary": "إضافة راتب",
@@ -1137,7 +1138,32 @@
         "example": "حاسوب محمول"
       }
     }
-  }
+  },
+
+  "updateEmployeeAction": "تحديث بيانات الموظف: {name}",
+  "@updateEmployeeAction": {
+    "description": "يُستخدم عند تحديث بيانات موظف",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "أحمد علي"
+      }
+    }
+  },
+
+  "addEmployeeAction": "إضافة موظف جديد: {name}",
+  "@addEmployeeAction": {
+    "description": "يُستخدم عند إضافة موظف جديد",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "محمد حسن"
+      }
+    }
+  },
+
+  "employeeUpdatedSuccess": "تم تحديث بيانات الموظف بنجاح",
+  "employeeAddedSuccess": "تمت إضافة الموظف بنجاح"
 
 
 

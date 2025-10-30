@@ -31,6 +31,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
   final _searchController = TextEditingController();
   List<Employee> _allEmployees = [];
   List<Employee> _filteredEmployees = [];
+  String? _selectedFilter; // null = الكل (totalSalaries)، 'advances' = موظفين عليهم سلف
 
   // ============= دورة الحياة =============
   @override
@@ -55,20 +56,50 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
       final employees = await _employeesFuture;
       setState(() {
         _allEmployees = employees;
-        _filteredEmployees = employees;
+        _applyFilter();
       });
     } catch (e) {
       // معالجة الخطأ
     }
   }
 
+  /// تطبيق الفلتر المحدد
+  void _applyFilter() {
+    if (_selectedFilter == null) {
+      // عرض الكل
+      _filteredEmployees = _allEmployees;
+    } else if (_selectedFilter == 'advances') {
+      // عرض الموظفين الذين عليهم سلف فقط
+      _filteredEmployees = _allEmployees.where((employee) {
+        return employee.balance > 0;
+      }).toList();
+    }
+    
+    // إعادة تطبيق البحث إذا كان موجوداً
+    if (_searchController.text.isNotEmpty) {
+      _filterEmployees(_searchController.text);
+    }
+  }
+
+  /// تغيير الفلتر
+  void _changeFilter(String? filter) {
+    setState(() {
+      _selectedFilter = filter;
+      _applyFilter();
+    });
+  }
+
   /// البحث في قائمة الموظفين
   void _filterEmployees(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredEmployees = _allEmployees;
+        _applyFilter();
       } else {
-        _filteredEmployees = _allEmployees.where((employee) {
+        List<Employee> baseList = _selectedFilter == null 
+            ? _allEmployees 
+            : _allEmployees.where((e) => e.balance > 0).toList();
+            
+        _filteredEmployees = baseList.where((employee) {
           final nameLower = employee.fullName.toLowerCase();
           final jobTitleLower = employee.jobTitle.toLowerCase();
           final queryLower = query.toLowerCase();
@@ -260,6 +291,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               value: formatCurrency(totalSalaries),
               color: AppColors.success,
               isDark: isDark,
+              filterType: null, // عرض الكل
             ),
           ),
           const SizedBox(width: AppConstants.spacingMd),
@@ -272,6 +304,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               value: formatCurrency(totalAdvances),
               color: totalAdvances > 0 ? AppColors.error : AppColors.info,
               isDark: isDark,
+              filterType: 'advances', // فلتر السلف
             ),
           ),
         ],
@@ -286,45 +319,52 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
     required String value,
     required Color color,
     required bool isDark,
+    String? filterType,
   }) {
-    return Container(
-      padding: AppConstants.paddingMd,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: AppConstants.borderRadiusMd,
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
+    final isSelected = _selectedFilter == filterType;
+    
+    return InkWell(
+      onTap: () => _changeFilter(filterType),
+      borderRadius: AppConstants.borderRadiusMd,
+      child: Container(
+        padding: AppConstants.paddingMd,
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.2) : color.withOpacity(0.1),
+          borderRadius: AppConstants.borderRadiusMd,
+          border: Border.all(
+            color: isSelected ? color : color.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: AppConstants.spacingSm),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                  overflow: TextOverflow.ellipsis,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppConstants.spacingXs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: AppConstants.spacingXs),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
