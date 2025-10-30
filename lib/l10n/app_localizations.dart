@@ -3380,6 +3380,18 @@ abstract class AppLocalizations {
   /// **'Add new employee'**
   String get addNewEmployee;
 
+  /// No description provided for @searchNewEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Employee'**
+  String get searchNewEmployee;
+
+  /// No description provided for @searchNewEmployee2.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for employee or employee specialization'**
+  String get searchNewEmployee2;
+
   /// No description provided for @totalSalaries.
   ///
   /// In en, this message translates to:

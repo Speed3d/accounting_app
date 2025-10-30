@@ -950,6 +950,8 @@
   "startByAddingEmployee": "ابدأ بإضافة أول موظف في فريقك",
   "addEmployee": "إضافة موظف",
   "addNewEmployee": "إضافة موظف جديد",
+  "searchNewEmployee": "ابحث عن موظف",
+  "searchNewEmployee2": "ابحث عن موظف او تخصص الموظف",
 
   "totalSalaries": "إجمالي الرواتب",
   "totalAdvances": "إجمالي السلف",

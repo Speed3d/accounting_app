@@ -950,6 +950,8 @@
   "startByAddingEmployee": "Start by adding your first employee",
   "addEmployee": "Add employee",
   "addNewEmployee": "Add new employee",
+  "searchNewEmployee": "Search Employee",
+  "searchNewEmployee2": "Search for employee or employee specialization",
 
   "totalSalaries": "Total salaries",
   "totalAdvances": "Total advances",

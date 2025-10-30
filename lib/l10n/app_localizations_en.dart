@@ -1807,6 +1807,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addNewEmployee => 'Add new employee';
 
   @override
+  String get searchNewEmployee => 'Search Employee';
+
+  @override
+  String get searchNewEmployee2 =>
+      'Search for employee or employee specialization';
+
+  @override
   String get totalSalaries => 'Total salaries';
 
   @override

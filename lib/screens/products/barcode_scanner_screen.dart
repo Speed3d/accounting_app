@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../l10n/app_localizations.dart';
+
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({Key? key}) : super(key: key);
 
@@ -32,9 +34,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مسح الباركود'),
+        title:  Text(l10n.scanBarcode),
         backgroundColor: const Color(0xFF1976D2),
         actions: [
           // ✅ زر الفلاش بدون torchState
@@ -99,8 +102,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 color: Colors.black.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'وجّه الكاميرا نحو الباركود للمسح',
+              child:  Text(
+                l10n.pointCameraToBarcode,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,

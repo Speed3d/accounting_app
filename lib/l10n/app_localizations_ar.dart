@@ -1794,6 +1794,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addNewEmployee => 'إضافة موظف جديد';
 
   @override
+  String get searchNewEmployee => 'ابحث عن موظف';
+
+  @override
+  String get searchNewEmployee2 => 'ابحث عن موظف او تخصص الموظف';
+
+  @override
   String get totalSalaries => 'إجمالي الرواتب';
 
   @override

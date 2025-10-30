@@ -11,7 +11,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
-import '../../widgets/status_badge.dart';
 import 'add_edit_employee_screen.dart';
 import 'employee_details_screen.dart';
 
@@ -122,7 +121,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                 children: [
                   Icon(
                     Icons.people,
-                    size: 16,
+                    size: 18,
                     color: isDark ? Colors.white : Colors.white,
                   ),
                   const SizedBox(width: 4),
@@ -131,7 +130,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                     style: TextStyle(
                       color: isDark ? Colors.white : Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 18,
                     ),
                   ),
                 ],
@@ -146,7 +145,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري تحميل الموظفين...');
+            return  LoadingState(message: l10n.loadingEmployees);
           }
 
           // حالة الخطأ
@@ -162,9 +161,9 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
             return EmptyState(
               icon: Icons.badge_outlined,
               title: l10n.noEmployees,
-              message: 'ابدأ بإضافة أول موظف في فريقك',
+              message: l10n.startByAddingEmployee,
               actionText: _authService.canManageEmployees 
-                  ? 'إضافة موظف' 
+                  ? l10n.addEmployee 
                   : null,
               onAction: _authService.canManageEmployees 
                   ? _navigateToAddEmployee 
@@ -197,8 +196,8 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddEmployee,
               icon: const Icon(Icons.add),
-              label: const Text('إضافة موظف'),
-              tooltip: 'إضافة موظف جديد',
+              label:  Text(l10n.addEmployee),
+              tooltip: l10n.addNewEmployee,
             )
           : null,
     );
@@ -214,7 +213,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
         controller: _searchController,
         onChanged: _filterEmployees,
         decoration: InputDecoration(
-          hintText: 'ابحث عن موظف...',
+          hintText: l10n.searchNewEmployee2,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -257,7 +256,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.attach_money,
-              label: 'إجمالي الرواتب',
+              label: l10n.totalSalaries,
               value: formatCurrency(totalSalaries),
               color: AppColors.success,
               isDark: isDark,
@@ -269,7 +268,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
           Expanded(
             child: _buildStatCard(
               icon: Icons.account_balance_wallet,
-              label: 'إجمالي السلف',
+              label: l10n.totalAdvances,
               value: formatCurrency(totalAdvances),
               color: totalAdvances > 0 ? AppColors.error : AppColors.info,
               isDark: isDark,
@@ -336,8 +335,8 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
   Widget _buildNoResultsState(AppLocalizations l10n) {
     return EmptyState(
       icon: Icons.search_off,
-      title: 'لا توجد نتائج',
-      message: 'جرب البحث بكلمة أخرى',
+      title: l10n.noResults,
+      message: l10n.tryAnotherSearch,
     );
   }
 
@@ -451,7 +450,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                     child: Text(
                       employee.jobTitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppColors.info,
                       ),
@@ -467,7 +466,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                       Expanded(
                         child: _buildInfoChip(
                           icon: Icons.paid_outlined,
-                          label: 'الراتب',
+                          label: l10n.salary,
                           value: formatCurrency(employee.baseSalary),
                           color: AppColors.success,
                         ),
@@ -478,7 +477,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                       Expanded(
                         child: _buildInfoChip(
                           icon: Icons.account_balance_wallet_outlined,
-                          label: 'السلف',
+                          label: l10n.advance,
                           value: formatCurrency(employee.balance),
                           color: advanceColor,
                         ),
@@ -492,7 +491,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
             // ============= سهم التنقل =============
             Icon(
               Icons.arrow_forward_ios,
-              size: 16,
+              size: 24,
               color: isDark 
                   ? AppColors.textSecondaryDark 
                   : AppColors.textSecondaryLight,
@@ -528,7 +527,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 18, color: color),
           const SizedBox(width: 4),
           Expanded(
             child: Column(
@@ -537,7 +536,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 14,
                     color: color,
                     fontWeight: FontWeight.w500,
                   ),
@@ -545,7 +544,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: color,
                     fontWeight: FontWeight.bold,
                   ),
