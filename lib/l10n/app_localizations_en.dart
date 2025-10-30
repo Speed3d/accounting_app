@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fieldRequiredEnterZero =>
-      'Field is required, enter 0 for zero value';
+      'This field is required, enter 0 if no value';
 
   @override
   String get payrollHistory => 'Payroll History';
@@ -1898,16 +1898,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forEmployee => 'for employee';
 
   @override
-  String get selectPaymentDate => 'Select payment date';
+  String get selectPaymentDate => 'Select Payment Date';
 
   @override
   String get confirm => 'Confirm';
 
   @override
-  String get financialPeriod => 'Financial period';
+  String get financialPeriod => 'Financial Period';
 
   @override
-  String get salaryComponents => 'Salary components';
+  String get salaryComponents => 'Salary Components';
 
   @override
   String get basicSalary => 'Basic salary';
@@ -1919,13 +1919,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deductAdvance => 'Deduct advances from salary';
 
   @override
-  String get selectDate => 'Select date';
+  String get selectDate => 'Select Date';
 
   @override
   String get anyAdditionalNotes => 'Any additional notes';
 
   @override
-  String get detailedSummary => 'Detailed summary';
+  String get detailedSummary => 'Detailed Summary';
 
   @override
   String get updateEmployeeData => 'Update employee data:';
@@ -2067,5 +2067,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String addEmployeeAction(String name) {
     return 'Add new employee: $name';
+  }
+
+  @override
+  String get deductionsSection => 'Deductions';
+
+  @override
+  String get additionalInformation => 'Additional Information';
+
+  @override
+  String get baseSalaryHint => 'Base Salary';
+
+  @override
+  String get bonusesAndIncentivesHint => 'Bonuses and Incentives';
+
+  @override
+  String get deductionsAndPenaltiesHint => 'Deductions and Penalties';
+
+  @override
+  String get advanceDeductionFromSalaryHint => 'Advance Deduction from Salary';
+
+  @override
+  String get anyAdditionalNotesHint => 'Any Additional Notes';
+
+  @override
+  String payrollRegisteredForEmployee(String month, String employeeName) {
+    return 'Payroll registered for $month for employee: $employeeName';
   }
 }

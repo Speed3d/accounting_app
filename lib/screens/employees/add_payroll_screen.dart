@@ -45,12 +45,6 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   double _netSalary = 0.0;
   bool _isLoading = false;
 
-  // أسماء الأشهر
-  final List<String> _months = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-  ];
-
   // ============= دورة الحياة =============
   @override
   void initState() {
@@ -100,6 +94,60 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
     setState(() {
       _netSalary = (baseSalary + bonuses) - (deductions + advanceRepayment);
     });
+  }
+
+  // ============================================================
+  // 📅 الحصول على اسم الشهر المترجم
+  // ============================================================
+  String _getMonthName(int month, AppLocalizations l10n) {
+    switch (month) {
+      case 1:
+        return l10n.january;
+      case 2:
+        return l10n.february;
+      case 3:
+        return l10n.march;
+      case 4:
+        return l10n.april;
+      case 5:
+        return l10n.may;
+      case 6:
+        return l10n.june;
+      case 7:
+        return l10n.july;
+      case 8:
+        return l10n.august;
+      case 9:
+        return l10n.september;
+      case 10:
+        return l10n.october;
+      case 11:
+        return l10n.november;
+      case 12:
+        return l10n.december;
+      default:
+        return '';
+    }
+  }
+
+  // ============================================================
+  // 📅 الحصول على قائمة أسماء الأشهر المترجمة
+  // ============================================================
+  List<String> _getMonthNames(AppLocalizations l10n) {
+    return [
+      l10n.january,
+      l10n.february,
+      l10n.march,
+      l10n.april,
+      l10n.may,
+      l10n.june,
+      l10n.july,
+      l10n.august,
+      l10n.september,
+      l10n.october,
+      l10n.november,
+      l10n.december,
+    ];
   }
 
   // ============================================================
@@ -164,7 +212,11 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
       await dbHelper.recordNewPayroll(newPayroll, advanceRepayment);
 
       // تسجيل النشاط
-      final action = 'تسجيل راتب شهر ${_months[_selectedMonth - 1]} للموظف: ${widget.employee.fullName}';
+      final monthName = _getMonthName(_selectedMonth, l10n);
+      final action = l10n.payrollRegisteredForEmployee(
+        monthName,
+        widget.employee.fullName,
+      );
       await dbHelper.logActivity(
         action,
         userId: _authService.currentUser?.id,
@@ -208,14 +260,16 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // 📅 اختيار التاريخ
   // ============================================================
   Future<void> _pickDate() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     final pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'اختر تاريخ الدفع',
-      cancelText: 'إلغاء',
-      confirmText: 'تأكيد',
+      helpText: l10n.selectPaymentDate,
+      cancelText: l10n.cancel,
+      confirmText: l10n.confirm,
     );
 
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -266,7 +320,8 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= اختيار الشهر والسنة =============
-            _buildSectionHeader('الفترة المالية', Icons.calendar_month, isDark),
+            _buildSectionHeader(l10n.financialPeriod, Icons.calendar_month, isDark),
+
             const SizedBox(height: AppConstants.spacingMd),
 
             Row(
@@ -282,13 +337,14 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= الراتب الأساسي =============
-            _buildSectionHeader('مكونات الراتب', Icons.attach_money, isDark),
+            _buildSectionHeader(l10n.salaryComponents, Icons.attach_money, isDark),
+
             const SizedBox(height: AppConstants.spacingMd),
 
             CustomTextField(
               controller: _baseSalaryController,
               label: l10n.baseSalary,
-              hint: 'الراتب الأساسي',
+              hint: l10n.baseSalaryHint,
               prefixIcon: Icons.account_balance_wallet_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -301,7 +357,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             CustomTextField(
               controller: _bonusesController,
               label: l10n.bonuses,
-              hint: 'المكافآت والحوافز',
+              hint: l10n.bonusesAndIncentivesHint,
               prefixIcon: Icons.card_giftcard_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -311,13 +367,14 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= الخصومات =============
-            _buildSectionHeader('الخصومات', Icons.remove_circle_outline, isDark),
+            _buildSectionHeader(l10n.deductionsSection, Icons.remove_circle_outline, isDark),
+
             const SizedBox(height: AppConstants.spacingMd),
 
             CustomTextField(
               controller: _deductionsController,
               label: l10n.deductions,
-              hint: 'الخصومات والغرامات',
+              hint: l10n.deductionsAndPenaltiesHint,
               prefixIcon: Icons.remove_circle_outline,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -330,7 +387,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             CustomTextField(
               controller: _advanceRepaymentController,
               label: l10n.advanceRepayment,
-              hint: 'خصم السلف من الراتب',
+              hint: l10n.advanceDeductionFromSalaryHint,
               prefixIcon: Icons.request_quote_outlined,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -385,14 +442,15 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= معلومات إضافية =============
-            _buildSectionHeader('معلومات إضافية', Icons.info_outline, isDark),
+            _buildSectionHeader(l10n.additionalInformation, Icons.info_outline, isDark),
+
             const SizedBox(height: AppConstants.spacingMd),
 
             // تاريخ الدفع
             CustomTextField(
               controller: _dateController,
               label: l10n.paymentDate,
-              hint: 'اختر التاريخ',
+              hint: l10n.selectDate,
               prefixIcon: Icons.calendar_today,
               readOnly: true,
               onTap: _pickDate,
@@ -404,7 +462,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             CustomTextField(
               controller: _notesController,
               label: l10n.notesOptional,
-              hint: 'أي ملاحظات إضافية',
+              hint: l10n.anyAdditionalNotesHint,
               prefixIcon: Icons.notes,
               maxLines: 3,
               textInputAction: TextInputAction.done,
@@ -593,6 +651,8 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // 📅 بناء قائمة الشهر
   // ============================================================
   Widget _buildMonthDropdown(AppLocalizations l10n, bool isDark) {
+    final monthNames = _getMonthNames(l10n);
+    
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
@@ -612,7 +672,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
             12,
             (index) => DropdownMenuItem(
               value: index + 1,
-              child: Text(_months[index]),
+              child: Text(monthNames[index]),
             ),
           ),
           onChanged: (v) {
@@ -702,7 +762,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
                 ),
                 const SizedBox(width: AppConstants.spacingSm),
                 Text(
-                  'الملخص التفصيلي',
+                  l10n.detailedSummary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

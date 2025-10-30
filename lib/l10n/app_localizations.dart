@@ -689,7 +689,7 @@ abstract class AppLocalizations {
   /// No description provided for @fieldRequiredEnterZero.
   ///
   /// In en, this message translates to:
-  /// **'Field is required, enter 0 for zero value'**
+  /// **'This field is required, enter 0 if no value'**
   String get fieldRequiredEnterZero;
 
   /// No description provided for @payrollHistory.
@@ -3563,7 +3563,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectPaymentDate.
   ///
   /// In en, this message translates to:
-  /// **'Select payment date'**
+  /// **'Select Payment Date'**
   String get selectPaymentDate;
 
   /// No description provided for @confirm.
@@ -3575,13 +3575,13 @@ abstract class AppLocalizations {
   /// No description provided for @financialPeriod.
   ///
   /// In en, this message translates to:
-  /// **'Financial period'**
+  /// **'Financial Period'**
   String get financialPeriod;
 
   /// No description provided for @salaryComponents.
   ///
   /// In en, this message translates to:
-  /// **'Salary components'**
+  /// **'Salary Components'**
   String get salaryComponents;
 
   /// No description provided for @basicSalary.
@@ -3605,7 +3605,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectDate.
   ///
   /// In en, this message translates to:
-  /// **'Select date'**
+  /// **'Select Date'**
   String get selectDate;
 
   /// No description provided for @anyAdditionalNotes.
@@ -3617,7 +3617,7 @@ abstract class AppLocalizations {
   /// No description provided for @detailedSummary.
   ///
   /// In en, this message translates to:
-  /// **'Detailed summary'**
+  /// **'Detailed Summary'**
   String get detailedSummary;
 
   /// No description provided for @updateEmployeeData.
@@ -3841,6 +3841,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add new employee: {name}'**
   String addEmployeeAction(String name);
+
+  /// No description provided for @deductionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Deductions'**
+  String get deductionsSection;
+
+  /// No description provided for @additionalInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Information'**
+  String get additionalInformation;
+
+  /// No description provided for @baseSalaryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Salary'**
+  String get baseSalaryHint;
+
+  /// No description provided for @bonusesAndIncentivesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonuses and Incentives'**
+  String get bonusesAndIncentivesHint;
+
+  /// No description provided for @deductionsAndPenaltiesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deductions and Penalties'**
+  String get deductionsAndPenaltiesHint;
+
+  /// No description provided for @advanceDeductionFromSalaryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Deduction from Salary'**
+  String get advanceDeductionFromSalaryHint;
+
+  /// No description provided for @anyAdditionalNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any Additional Notes'**
+  String get anyAdditionalNotesHint;
+
+  /// No description provided for @payrollRegisteredForEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Payroll registered for {month} for employee: {employeeName}'**
+  String payrollRegisteredForEmployee(String month, String employeeName);
 }
 
 class _AppLocalizationsDelegate

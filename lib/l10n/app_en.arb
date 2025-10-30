@@ -1225,8 +1225,51 @@
   },
 
   "employeeUpdatedSuccess": "Employee data updated successfully",
-  "employeeAddedSuccess": "Employee added successfully"
-  
+  "employeeAddedSuccess": "Employee added successfully",
+
+  "financialPeriod": "Financial Period",
+  "salaryComponents": "Salary Components",
+  "deductionsSection": "Deductions",
+  "additionalInformation": "Additional Information",
+  "detailedSummary": "Detailed Summary",
+
+  "baseSalaryHint": "Base Salary",
+  "bonusesAndIncentivesHint": "Bonuses and Incentives",
+  "deductionsAndPenaltiesHint": "Deductions and Penalties",
+  "advanceDeductionFromSalaryHint": "Advance Deduction from Salary",
+  "selectDate": "Select Date",
+  "anyAdditionalNotesHint": "Any Additional Notes",
+
+  "fieldRequiredEnterZero": "This field is required, enter 0 if no value",
+
+  "selectPaymentDate": "Select Payment Date",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+
+  "payrollRegisteredForEmployee": "Payroll registered for {month} for employee: {employeeName}",
+  "@payrollRegisteredForEmployee": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "employeeName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "january": "January",
+  "february": "February",
+  "march": "March",
+  "april": "April",
+  "may": "May",
+  "june": "June",
+  "july": "July",
+  "august": "August",
+  "september": "September",
+  "october": "October",
+  "november": "November",
+  "december": "December"
 
 
 }

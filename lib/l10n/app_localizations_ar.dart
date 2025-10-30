@@ -315,7 +315,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get netSalaryDue => 'الراتب الصافي المستحق للدفع';
 
   @override
-  String get fieldRequiredEnterZero => 'الحقل مطلوب، أدخل 0 للقيمة الصفرية';
+  String get fieldRequiredEnterZero =>
+      'هذا الحقل مطلوب، أدخل 0 إذا لم يكن هناك قيمة';
 
   @override
   String get payrollHistory => 'سجل الرواتب';
@@ -2053,5 +2054,31 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String addEmployeeAction(String name) {
     return 'إضافة موظف جديد: $name';
+  }
+
+  @override
+  String get deductionsSection => 'الخصومات';
+
+  @override
+  String get additionalInformation => 'معلومات إضافية';
+
+  @override
+  String get baseSalaryHint => 'الراتب الأساسي';
+
+  @override
+  String get bonusesAndIncentivesHint => 'المكافآت والحوافز';
+
+  @override
+  String get deductionsAndPenaltiesHint => 'الخصومات والغرامات';
+
+  @override
+  String get advanceDeductionFromSalaryHint => 'خصم السلف من الراتب';
+
+  @override
+  String get anyAdditionalNotesHint => 'أي ملاحظات إضافية';
+
+  @override
+  String payrollRegisteredForEmployee(String month, String employeeName) {
+    return 'تسجيل راتب شهر $month للموظف: $employeeName';
   }
 }

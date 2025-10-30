@@ -1163,8 +1163,50 @@
   },
 
   "employeeUpdatedSuccess": "تم تحديث بيانات الموظف بنجاح",
-  "employeeAddedSuccess": "تمت إضافة الموظف بنجاح"
+  "employeeAddedSuccess": "تمت إضافة الموظف بنجاح",
 
+  "financialPeriod": "الفترة المالية",
+  "salaryComponents": "مكونات الراتب",
+  "deductionsSection": "الخصومات",
+  "additionalInformation": "معلومات إضافية",
+  "detailedSummary": "الملخص التفصيلي",
 
+  "baseSalaryHint": "الراتب الأساسي",
+  "bonusesAndIncentivesHint": "المكافآت والحوافز",
+  "deductionsAndPenaltiesHint": "الخصومات والغرامات",
+  "advanceDeductionFromSalaryHint": "خصم السلف من الراتب",
+  "selectDate": "اختر التاريخ",
+  "anyAdditionalNotesHint": "أي ملاحظات إضافية",
+
+  "fieldRequiredEnterZero": "هذا الحقل مطلوب، أدخل 0 إذا لم يكن هناك قيمة",
+
+  "selectPaymentDate": "اختر تاريخ الدفع",
+  "cancel": "إلغاء",
+  "confirm": "تأكيد",
+
+  "payrollRegisteredForEmployee": "تسجيل راتب شهر {month} للموظف: {employeeName}",
+  "@payrollRegisteredForEmployee": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "employeeName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "january": "يناير",
+  "february": "فبراير",
+  "march": "مارس",
+  "april": "أبريل",
+  "may": "مايو",
+  "june": "يونيو",
+  "july": "يوليو",
+  "august": "أغسطس",
+  "september": "سبتمبر",
+  "october": "أكتوبر",
+  "november": "نوفمبر",
+  "december": "ديسمبر"
 
 }
