@@ -120,7 +120,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEditCustomer => 'Add/Edit Customer';
 
   @override
-  String get nopurchasesyetrecorded => 'No purchases have been recorded yet.';
+  String get nopurchasesyetrecorded => 'No purchases have been recorded yet';
 
   @override
   String get nopaymentsyetrecorded => 'No payments have been recorded yet';
@@ -1983,7 +1983,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterAdvanceNotes => 'Enter any additional notes';
 
   @override
-  String get currentBalance => 'Current balance';
+  String get currentBalance => 'Current Balance';
 
   @override
   String get financialSummary => 'Financial summary';
@@ -2155,4 +2155,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String archivedSuccess(String name) {
     return 'Archived \"$name\" Successful';
   }
+
+  @override
+  String newSaleActivityLog(String customerName, String amount) {
+    return 'New sale recorded for customer: $customerName with amount: $amount';
+  }
+
+  @override
+  String paymentActivityLog(String customerName, String amount) {
+    return 'Payment recorded for customer: $customerName with amount: $amount';
+  }
+
+  @override
+  String returnActivityLog(String productDetails, String customerName) {
+    return 'Product returned: $productDetails for customer: $customerName';
+  }
+
+  @override
+  String saleRecordError(String error) {
+    return 'Error recording sale: $error';
+  }
+
+  @override
+  String paymentRecordError(String error) {
+    return 'Error recording payment: $error';
+  }
+
+  @override
+  String get loadingPurchases => 'Loading purchases...';
+
+  @override
+  String get loadingPayments => 'Loading payments...';
+
+  @override
+  String get newSale => 'New Sale';
 }

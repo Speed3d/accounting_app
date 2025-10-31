@@ -1273,6 +1273,71 @@
         "example": "زبون"
       }
     }
-  }
+  },
+
+  "newSaleActivityLog": "تسجيل عملية بيع جديدة للزبون: {customerName} بقيمة: {amount}",
+  "@newSaleActivityLog": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentActivityLog": "تسجيل دفعة للزبون: {customerName} بقيمة: {amount}",
+  "@paymentActivityLog": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "returnActivityLog": "إرجاع منتج: {productDetails} للزبون: {customerName}",
+  "@returnActivityLog": {
+    "placeholders": {
+      "productDetails": {
+        "type": "String"
+      },
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "saleRecordError": "خطأ في تسجيل البيع: {error}",
+  "@saleRecordError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentRecordError": "خطأ في تسجيل الدفعة: {error}",
+  "@paymentRecordError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "currentBalance": "الرصيد الحالي",
+
+  "loadingPurchases": "جاري تحميل المشتريات...",
+  "loadingPayments": "جاري تحميل الدفعات...",
+
+  "newSale": "بيع جديد",
+  "newPayment": "دفعة جديدة",
+
+  "nopurchasesyetrecorded": "لم يتم تسجيل أي مشتريات بعد",
+  "nopaymentsyetrecorded": "لم يتم تسجيل أي دفعات بعد"
 
 }

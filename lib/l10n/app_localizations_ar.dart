@@ -180,7 +180,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newSaleSuccess => 'تم تسجيل عملية الشراء بنجاح!';
 
   @override
-  String get newPayment => 'تسجيل دفعة جديدة';
+  String get newPayment => 'دفعة جديدة';
 
   @override
   String get paidAmount => 'المبلغ المدفوع';
@@ -2142,4 +2142,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String archivedSuccess(String name) {
     return 'تم أرشفة \"$name\" بنجاح';
   }
+
+  @override
+  String newSaleActivityLog(String customerName, String amount) {
+    return 'تسجيل عملية بيع جديدة للزبون: $customerName بقيمة: $amount';
+  }
+
+  @override
+  String paymentActivityLog(String customerName, String amount) {
+    return 'تسجيل دفعة للزبون: $customerName بقيمة: $amount';
+  }
+
+  @override
+  String returnActivityLog(String productDetails, String customerName) {
+    return 'إرجاع منتج: $productDetails للزبون: $customerName';
+  }
+
+  @override
+  String saleRecordError(String error) {
+    return 'خطأ في تسجيل البيع: $error';
+  }
+
+  @override
+  String paymentRecordError(String error) {
+    return 'خطأ في تسجيل الدفعة: $error';
+  }
+
+  @override
+  String get loadingPurchases => 'جاري تحميل المشتريات...';
+
+  @override
+  String get loadingPayments => 'جاري تحميل الدفعات...';
+
+  @override
+  String get newSale => 'بيع جديد';
 }

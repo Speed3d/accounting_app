@@ -323,7 +323,7 @@ abstract class AppLocalizations {
   /// No description provided for @nopurchasesyetrecorded.
   ///
   /// In en, this message translates to:
-  /// **'No purchases have been recorded yet.'**
+  /// **'No purchases have been recorded yet'**
   String get nopurchasesyetrecorded;
 
   /// No description provided for @nopaymentsyetrecorded.
@@ -3737,7 +3737,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentBalance.
   ///
   /// In en, this message translates to:
-  /// **'Current balance'**
+  /// **'Current Balance'**
   String get currentBalance;
 
   /// No description provided for @financialSummary.
@@ -4003,6 +4003,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Archived \"{name}\" Successful'**
   String archivedSuccess(String name);
+
+  /// No description provided for @newSaleActivityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'New sale recorded for customer: {customerName} with amount: {amount}'**
+  String newSaleActivityLog(String customerName, String amount);
+
+  /// No description provided for @paymentActivityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment recorded for customer: {customerName} with amount: {amount}'**
+  String paymentActivityLog(String customerName, String amount);
+
+  /// No description provided for @returnActivityLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Product returned: {productDetails} for customer: {customerName}'**
+  String returnActivityLog(String productDetails, String customerName);
+
+  /// No description provided for @saleRecordError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error recording sale: {error}'**
+  String saleRecordError(String error);
+
+  /// No description provided for @paymentRecordError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error recording payment: {error}'**
+  String paymentRecordError(String error);
+
+  /// No description provided for @loadingPurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading purchases...'**
+  String get loadingPurchases;
+
+  /// No description provided for @loadingPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading payments...'**
+  String get loadingPayments;
+
+  /// No description provided for @newSale.
+  ///
+  /// In en, this message translates to:
+  /// **'New Sale'**
+  String get newSale;
 }
 
 class _AppLocalizationsDelegate

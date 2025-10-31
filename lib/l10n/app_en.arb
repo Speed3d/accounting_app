@@ -1335,7 +1335,72 @@
         "example": "customer"
       }
     }
-  }
+  },
+
+  "newSaleActivityLog": "New sale recorded for customer: {customerName} with amount: {amount}",
+  "@newSaleActivityLog": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentActivityLog": "Payment recorded for customer: {customerName} with amount: {amount}",
+  "@paymentActivityLog": {
+    "placeholders": {
+      "customerName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "returnActivityLog": "Product returned: {productDetails} for customer: {customerName}",
+  "@returnActivityLog": {
+    "placeholders": {
+      "productDetails": {
+        "type": "String"
+      },
+      "customerName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "saleRecordError": "Error recording sale: {error}",
+  "@saleRecordError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentRecordError": "Error recording payment: {error}",
+  "@paymentRecordError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "currentBalance": "Current Balance",
+
+  "loadingPurchases": "Loading purchases...",
+  "loadingPayments": "Loading payments...",
+
+  "newSale": "New Sale",
+  "newPayment": "New Payment",
+
+  "nopurchasesyetrecorded": "No purchases have been recorded yet",
+  "nopaymentsyetrecorded": "No payments have been recorded yet"
 
 
 }

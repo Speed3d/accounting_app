@@ -248,7 +248,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       
       // === الخطوة 3: تسجيل النشاط ===
       await _dbHelper.logActivity(
-        'تسجيل عملية بيع جديدة للزبون: ${_currentCustomer.customerName} بقيمة: ${formatCurrency(totalSaleAmount)}',
+        l10n.newSaleActivityLog(_currentCustomer.customerName, formatCurrency(totalSaleAmount)),
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
       );
@@ -270,7 +270,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ في تسجيل البيع: $e'),
+            content: Text(l10n.saleRecordError(e.toString())),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -384,7 +384,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         
         // تسجيل النشاط
         await _dbHelper.logActivity(
-          'تسجيل دفعة للزبون: ${_currentCustomer.customerName} بقيمة: ${formatCurrency(amount)}',
+          l10n.paymentActivityLog(_currentCustomer.customerName, formatCurrency(amount)),
           userId: _authService.currentUser?.id,
           userName: _authService.currentUser?.fullName,
         );
@@ -404,7 +404,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('خطأ في تسجيل الدفعة: $e'),
+              content: Text(l10n.paymentRecordError(e.toString())),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -452,7 +452,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         
         // تسجيل النشاط
         await _dbHelper.logActivity(
-          'إرجاع منتج: ${sale.details} للزبون: ${_currentCustomer.customerName}',
+          l10n.returnActivityLog(sale.details, _currentCustomer.customerName),
           userId: _authService.currentUser?.id,
           userName: _authService.currentUser?.fullName,
         );
@@ -579,7 +579,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'الرصيد الحالي',
+                  l10n.currentBalance,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: AppConstants.spacingXs),
@@ -608,7 +608,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _recordNewSale,
         icon: const Icon(Icons.add_shopping_cart),
-        label: const Text('بيع جديد'),
+        label: Text(l10n.newSale),
       ),
     );
   }
@@ -617,7 +617,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   Widget _buildDebtsContent(AppLocalizations l10n) {
     // === حالة التحميل ===
     if (_isLoadingDebts) {
-      return const LoadingState(message: 'جاري تحميل المشتريات...');
+      return LoadingState(message: l10n.loadingPurchases);
     }
     
     // === حالة الخطأ ===
@@ -748,7 +748,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _recordNewPayment,
         icon: const Icon(Icons.add),
-        label: const Text('دفعة جديدة'),
+        label: Text(l10n.newPayment),
       ),
     );
   }
@@ -757,7 +757,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   Widget _buildPaymentsContent(AppLocalizations l10n) {
     // === حالة التحميل ===
     if (_isLoadingPayments) {
-      return const LoadingState(message: 'جاري تحميل الدفعات...');
+      return LoadingState(message: l10n.loadingPayments);
     }
     
     // === حالة الخطأ ===
@@ -862,7 +862,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('إغلاق'),
+                        child: Text(l10n.close),
                       ),
                     ],
                   ),
