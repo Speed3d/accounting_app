@@ -320,17 +320,47 @@ abstract class AppLocalizations {
   /// **'Add/Edit Customer'**
   String get addEditCustomer;
 
+  /// No description provided for @nopurchasesyetrecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases have been recorded yet.'**
+  String get nopurchasesyetrecorded;
+
+  /// No description provided for @nopaymentsyetrecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments have been recorded yet'**
+  String get nopaymentsyetrecorded;
+
   /// No description provided for @customerName.
   ///
   /// In en, this message translates to:
   /// **'Customer Name'**
   String get customerName;
 
+  /// No description provided for @startfirstcustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with your first customer'**
+  String get startfirstcustomer;
+
+  /// No description provided for @loadingcustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading customers ...'**
+  String get loadingcustomers;
+
   /// No description provided for @addressOptional.
   ///
   /// In en, this message translates to:
   /// **'Address (Optional)'**
   String get addressOptional;
+
+  /// No description provided for @searchcustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'search for a customer'**
+  String get searchcustomer;
 
   /// No description provided for @phoneOptional.
   ///
@@ -726,7 +756,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Paid on: {date}'**
-  String paidOn(Object date);
+  String paidOn(String date);
 
   /// No description provided for @payrollOfMonth.
   ///
@@ -1871,8 +1901,8 @@ abstract class AppLocalizations {
   /// No description provided for @salaryLabel.
   ///
   /// In en, this message translates to:
-  /// **'Salary: {salary}'**
-  String salaryLabel(Object salary);
+  /// **'Salary'**
+  String get salaryLabel;
 
   /// No description provided for @totalNetProfit.
   ///
@@ -3889,6 +3919,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payroll registered for {month} for employee: {employeeName}'**
   String payrollRegisteredForEmployee(String month, String employeeName);
+
+  /// No description provided for @advancesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advances'**
+  String get advancesLabel;
+
+  /// No description provided for @loadingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loadingMessage;
+
+  /// No description provided for @noPayrollsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No salaries have been paid yet'**
+  String get noPayrollsMessage;
+
+  /// No description provided for @addPayrollAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Payroll'**
+  String get addPayrollAction;
+
+  /// No description provided for @paymentAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Salary'**
+  String get paymentAction;
+
+  /// No description provided for @addNewPayrollTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new payroll'**
+  String get addNewPayrollTooltip;
+
+  /// No description provided for @noAdvancesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No advances recorded'**
+  String get noAdvancesMessage;
+
+  /// No description provided for @addAdvanceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Advance'**
+  String get addAdvanceAction;
+
+  /// No description provided for @addAdvanceButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Advance'**
+  String get addAdvanceButton;
+
+  /// No description provided for @addNewAdvanceTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new advance'**
+  String get addNewAdvanceTooltip;
+
+  /// No description provided for @netLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get netLabel;
+
+  /// No description provided for @payrollDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{month} {year} Payroll Details'**
+  String payrollDetailsTitle(String month, String year);
+
+  /// No description provided for @advanceRegisteredForEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance registered for employee: {employeeName} with amount: {amount}'**
+  String advanceRegisteredForEmployee(String employeeName, String amount);
+
+  /// Authentication Success Message
+  ///
+  /// In en, this message translates to:
+  /// **'Archived \"{name}\" Successful'**
+  String archivedSuccess(String name);
 }
 
 class _AppLocalizationsDelegate

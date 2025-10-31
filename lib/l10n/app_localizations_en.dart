@@ -120,10 +120,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEditCustomer => 'Add/Edit Customer';
 
   @override
+  String get nopurchasesyetrecorded => 'No purchases have been recorded yet.';
+
+  @override
+  String get nopaymentsyetrecorded => 'No payments have been recorded yet';
+
+  @override
   String get customerName => 'Customer Name';
 
   @override
+  String get startfirstcustomer => 'Start with your first customer';
+
+  @override
+  String get loadingcustomers => 'Loading customers ...';
+
+  @override
   String get addressOptional => 'Address (Optional)';
+
+  @override
+  String get searchcustomer => 'search for a customer';
 
   @override
   String get phoneOptional => 'Phone (Optional)';
@@ -338,7 +353,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String paidOn(Object date) {
+  String paidOn(String date) {
     return 'Paid on: $date';
   }
 
@@ -997,9 +1012,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEmployeesToDisplay => 'No employees to display.';
 
   @override
-  String salaryLabel(Object salary) {
-    return 'Salary: $salary';
-  }
+  String get salaryLabel => 'Salary';
 
   @override
   String get totalNetProfit => 'Total Net Profit';
@@ -2093,5 +2106,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String payrollRegisteredForEmployee(String month, String employeeName) {
     return 'Payroll registered for $month for employee: $employeeName';
+  }
+
+  @override
+  String get advancesLabel => 'Advances';
+
+  @override
+  String get loadingMessage => 'Loading...';
+
+  @override
+  String get noPayrollsMessage => 'No salaries have been paid yet';
+
+  @override
+  String get addPayrollAction => 'Add Payroll';
+
+  @override
+  String get paymentAction => 'Pay Salary';
+
+  @override
+  String get addNewPayrollTooltip => 'Add new payroll';
+
+  @override
+  String get noAdvancesMessage => 'No advances recorded';
+
+  @override
+  String get addAdvanceAction => 'Add Advance';
+
+  @override
+  String get addAdvanceButton => 'Add Advance';
+
+  @override
+  String get addNewAdvanceTooltip => 'Add new advance';
+
+  @override
+  String get netLabel => 'Net';
+
+  @override
+  String payrollDetailsTitle(String month, String year) {
+    return '$month $year Payroll Details';
+  }
+
+  @override
+  String advanceRegisteredForEmployee(String employeeName, String amount) {
+    return 'Advance registered for employee: $employeeName with amount: $amount';
+  }
+
+  @override
+  String archivedSuccess(String name) {
+    return 'Archived \"$name\" Successful';
   }
 }

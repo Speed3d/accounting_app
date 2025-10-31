@@ -38,12 +38,6 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   late Future<List<PayrollEntry>> _payrollFuture;
   late Future<List<EmployeeAdvance>> _advancesFuture;
 
-  // أسماء الأشهر بالعربية
-  final List<String> _months = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-  ];
-
   // ============= دورة الحياة =============
   @override
   void initState() {
@@ -76,6 +70,40 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         setState(() => _currentEmployee = employee);
       }
     });
+  }
+
+  // ============================================================
+  // 📅 الحصول على اسم الشهر المترجم
+  // ============================================================
+  String _getMonthName(int month, AppLocalizations l10n) {
+    switch (month) {
+      case 1:
+        return l10n.january;
+      case 2:
+        return l10n.february;
+      case 3:
+        return l10n.march;
+      case 4:
+        return l10n.april;
+      case 5:
+        return l10n.may;
+      case 6:
+        return l10n.june;
+      case 7:
+        return l10n.july;
+      case 8:
+        return l10n.august;
+      case 9:
+        return l10n.september;
+      case 10:
+        return l10n.october;
+      case 11:
+        return l10n.november;
+      case 12:
+        return l10n.december;
+      default:
+        return '';
+    }
   }
 
   // ============= بناء الواجهة =============
@@ -275,7 +303,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                       Expanded(
                         child: _buildInfoItem(
                           icon: Icons.paid_outlined,
-                          label: 'الراتب',
+                          label: l10n.salaryLabel,
                           value: formatCurrency(_currentEmployee.baseSalary),
                           color: AppColors.success,
                         ),
@@ -287,7 +315,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                       Expanded(
                         child: _buildInfoItem(
                           icon: Icons.account_balance_wallet_outlined,
-                          label: 'السلف',
+                          label: l10n.advancesLabel,
                           value: formatCurrency(_currentEmployee.balance),
                           color: _currentEmployee.balance > 0
                               ? AppColors.error
@@ -364,7 +392,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري التحميل...');
+            return LoadingState(message: l10n.loadingMessage);
           }
 
           // حالة الخطأ
@@ -380,8 +408,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             return EmptyState(
               icon: Icons.payments_outlined,
               title: l10n.noPayrolls,
-              message: 'لم يتم صرف أي راتب بعد',
-              actionText: 'إضافة راتب',
+              message: l10n.noPayrollsMessage,
+              actionText: l10n.addPayrollAction,
               onAction: _navigateToAddPayroll,
             );
           }
@@ -403,8 +431,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddPayroll,
         icon: const Icon(Icons.add),
-        label: const Text('صرف راتب'),
-        tooltip: 'إضافة راتب جديد',
+        label: Text(l10n.paymentAction),
+        tooltip: l10n.addNewPayrollTooltip,
       ),
     );
   }
@@ -412,7 +440,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   /// بناء بطاقة راتب
   Widget _buildPayrollCard(PayrollEntry entry, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final monthName = _months[entry.payrollMonth - 1];
+    final monthName = _getMonthName(entry.payrollMonth, l10n);
 
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
@@ -464,7 +492,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'دُفع في: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(entry.paymentDate))}',
+                        l10n.paidOn(DateFormat('yyyy-MM-dd').format(DateTime.parse(entry.paymentDate))),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -487,7 +515,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'صافي',
+                  l10n.netLabel,
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.success,
@@ -513,7 +541,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري التحميل...');
+            return LoadingState(message: l10n.loadingMessage);
           }
 
           // حالة الخطأ
@@ -529,8 +557,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             return EmptyState(
               icon: Icons.request_quote_outlined,
               title: l10n.noAdvances,
-              message: 'لا توجد سلف مسجلة',
-              actionText: 'إضافة سلفة',
+              message: l10n.noAdvancesMessage,
+              actionText: l10n.addAdvanceAction,
               onAction: _navigateToAddAdvance,
             );
           }
@@ -552,8 +580,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddAdvance,
         icon: const Icon(Icons.add),
-        label: const Text('إضافة سلفة'),
-        tooltip: 'إضافة سلفة جديدة',
+        label: Text(l10n.addAdvanceButton),
+        tooltip: l10n.addNewAdvanceTooltip,
       ),
     );
   }
@@ -639,7 +667,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   // 📋 مربع حوار تفاصيل الراتب
   // ============================================================
   void _showPayrollDetailsDialog(PayrollEntry entry, AppLocalizations l10n) {
-    final monthName = _months[entry.payrollMonth - 1];
+    final monthName = _getMonthName(entry.payrollMonth, l10n);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
@@ -654,7 +682,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             const SizedBox(width: AppConstants.spacingSm),
             Expanded(
               child: Text(
-                'تفاصيل راتب $monthName ${entry.payrollYear}',
+                l10n.payrollDetailsTitle(monthName, entry.payrollYear.toString()),
                 style: const TextStyle(fontSize: 18),
               ),
             ),

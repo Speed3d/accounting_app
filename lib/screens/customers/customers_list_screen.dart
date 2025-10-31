@@ -7,7 +7,6 @@ import '../../data/models.dart';
 import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
-import '../../layouts/main_layout.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -183,7 +182,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         
         // Hint: تسجيل الإجراء في سجل النشاطات
         await _dbHelper.logActivity(
-          'أرشفة الزبون: ${customer.customerName}',
+          // 'أرشفة الزبون: ${customer.customerName}',
+          l10n.archiveConfirmContent(customer.customerName),
           userId: _authService.currentUser?.id,
           userName: _authService.currentUser?.fullName,
         );
@@ -194,7 +194,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تم أرشفة ${customer.customerName} بنجاح'),
+              // content: Text('تم أرشفة ${customer.customerName} بنجاح'),
+              content: Text(l10n.archivedSuccess(customer.customerName)),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -204,7 +205,10 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('خطأ في الأرشفة: $e'),
+              content: Text(
+                // 'خطأ في الأرشفة: $e'),
+               l10n.productArchivedError(e.toString()),
+              ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -247,7 +251,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   Widget _buildBody(AppLocalizations l10n) {
     // === حالة التحميل ===
     if (_isLoading) {
-      return const LoadingState(message: 'جاري تحميل الزبائن...');
+      return  LoadingState(message: l10n.startfirstcustomer);
     }
     
     // === حالة الخطأ ===
@@ -263,7 +267,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
       return EmptyState(
         icon: Icons.people_outline,
         title: l10n.noActiveCustomers,
-        message: 'ابدأ بإضافة أول زبون لك',
+        message: l10n.startfirstcustomer,
         actionText: (_authService.canEditCustomers || _authService.isAdmin) 
             ? l10n.addCustomer 
             : null,
@@ -297,8 +301,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         controller: _searchController,
         onChanged: _filterCustomers,
         decoration: InputDecoration(
-          hintText: l10n.searchForProduct, // TODO: إضافة نص مخصص للزبائن في الترجمة
-          prefixIcon: const Icon(Icons.search),
+          hintText: l10n.searchcustomer, 
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear),
@@ -318,7 +321,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
     return EmptyState(
       icon: Icons.search_off,
       title: l10n.noMatchingResults,
-      message: 'جرب البحث بكلمة أخرى',
+      message: l10n.tryAnotherSearch,
     );
   }
   
@@ -433,6 +436,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   
   /// Hint: بناء أزرار الإجراءات (تعديل/أرشفة)
   Widget _buildActionButtons(Customer customer) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -441,7 +445,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
           icon: const Icon(Icons.edit_outlined, size: 20),
           color: AppColors.info,
           onPressed: () => _navigateToEditCustomer(customer),
-          tooltip: 'تعديل',
+          tooltip: l10n.edit,
         ),
         
         // زر الأرشفة
@@ -450,7 +454,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
             icon: const Icon(Icons.archive_outlined, size: 20),
             color: AppColors.error,
             onPressed: () => _handleArchiveCustomer(customer),
-            tooltip: 'أرشفة',
+            tooltip: l10n.archive,
           ),
       ],
     );

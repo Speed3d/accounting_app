@@ -120,10 +120,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addEditCustomer => 'إضافة/تعديل زبون';
 
   @override
+  String get nopurchasesyetrecorded => 'لم يتم تسجيل أي مشتريات بعد';
+
+  @override
+  String get nopaymentsyetrecorded => 'لم يتم تسجيل أي دفعات بعد';
+
+  @override
   String get customerName => 'اسم الزبون';
 
   @override
+  String get startfirstcustomer => 'ابدأ بإضافة أول زبون لك';
+
+  @override
+  String get loadingcustomers => 'جاري تحميل الزبائن ...';
+
+  @override
   String get addressOptional => 'العنوان (اختياري)';
+
+  @override
+  String get searchcustomer => 'بحث عن عميل';
 
   @override
   String get phoneOptional => 'الهاتف (اختياري)';
@@ -336,8 +351,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String paidOn(Object date) {
-    return 'تاريخ الدفع: $date';
+  String paidOn(String date) {
+    return 'دُفع في: $date';
   }
 
   @override
@@ -988,9 +1003,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noEmployeesToDisplay => 'لا يوجد موظفون لعرضهم.';
 
   @override
-  String salaryLabel(Object salary) {
-    return 'الراتب: $salary';
-  }
+  String get salaryLabel => 'الراتب';
 
   @override
   String get totalNetProfit => 'إجمالي صافي الربح';
@@ -2080,5 +2093,53 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String payrollRegisteredForEmployee(String month, String employeeName) {
     return 'تسجيل راتب شهر $month للموظف: $employeeName';
+  }
+
+  @override
+  String get advancesLabel => 'السلف';
+
+  @override
+  String get loadingMessage => 'جاري التحميل...';
+
+  @override
+  String get noPayrollsMessage => 'لم يتم صرف أي راتب بعد';
+
+  @override
+  String get addPayrollAction => 'إضافة راتب';
+
+  @override
+  String get paymentAction => 'صرف راتب';
+
+  @override
+  String get addNewPayrollTooltip => 'إضافة راتب جديد';
+
+  @override
+  String get noAdvancesMessage => 'لا توجد سلف مسجلة';
+
+  @override
+  String get addAdvanceAction => 'إضافة سلفة';
+
+  @override
+  String get addAdvanceButton => 'إضافة سلفة';
+
+  @override
+  String get addNewAdvanceTooltip => 'إضافة سلفة جديدة';
+
+  @override
+  String get netLabel => 'صافي';
+
+  @override
+  String payrollDetailsTitle(String month, String year) {
+    return 'تفاصيل راتب $month $year';
+  }
+
+  @override
+  String advanceRegisteredForEmployee(String employeeName, String amount) {
+    return 'تسجيل سلفة للموظف: $employeeName بقيمة: $amount';
+  }
+
+  @override
+  String archivedSuccess(String name) {
+    return 'تم أرشفة \"$name\" بنجاح';
   }
 }

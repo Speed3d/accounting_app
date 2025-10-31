@@ -633,7 +633,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       return EmptyState(
         icon: Icons.shopping_cart_outlined,
         title: l10n.noPurchases,
-        message: 'لم يتم تسجيل أي مشتريات بعد',
+        message: l10n.nopurchasesyetrecorded,
       );
     }
     
@@ -773,7 +773,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       return EmptyState(
         icon: Icons.payment,
         title: l10n.noPayments,
-        message: 'لم يتم تسجيل أي دفعات بعد',
+        message: l10n.nopaymentsyetrecorded,
       );
     }
     

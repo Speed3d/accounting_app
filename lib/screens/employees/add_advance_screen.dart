@@ -69,7 +69,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
       final amount = double.parse(
         convertArabicNumbersToEnglish(_amountController.text),
       );
-
+      final l10n = AppLocalizations.of(context)!;
       final newAdvance = EmployeeAdvance(
         employeeID: widget.employee.employeeID!,
         advanceDate: _selectedDate.toIso8601String(),
@@ -81,9 +81,13 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
       await dbHelper.recordNewAdvance(newAdvance);
 
       // تسجيل النشاط
-      final action = 'تسجيل سلفة للموظف: ${widget.employee.fullName} بقيمة: ${formatCurrency(amount)}';
+      // final action = 'تسجيل سلفة للموظف: ${widget.employee.fullName} بقيمة: ${formatCurrency(amount)}';
+      final action = l10n.advanceRegisteredForEmployee(
+      widget.employee.fullName,
+      formatCurrency(amount),
+      );
       await dbHelper.logActivity(
-        action,
+      action,
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
       );
@@ -125,14 +129,15 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   // 📅 اختيار التاريخ
   // ============================================================
   Future<void> _pickDate() async {
+    final l10n = AppLocalizations.of(context)!;
     final pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'اختر تاريخ السلفة',
-      cancelText: 'إلغاء',
-      confirmText: 'تأكيد',
+      helpText: l10n.selectAdvanceDate,
+      cancelText: l10n.cancel,
+      confirmText: l10n.ok,
     );
 
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -179,14 +184,14 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
             const SizedBox(height: AppConstants.spacingXl),
 
             // ============= قسم بيانات السلفة =============
-            _buildSectionHeader('بيانات السلفة', Icons.request_quote, isDark),
+            _buildSectionHeader(l10n.advanceData, Icons.request_quote, isDark),
             const SizedBox(height: AppConstants.spacingMd),
 
             // المبلغ
             CustomTextField(
               controller: _amountController,
               label: l10n.advanceAmount,
-              hint: 'أدخل مبلغ السلفة',
+              hint: l10n.enterAdvanceAmount,
               prefixIcon: Icons.attach_money,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
@@ -210,7 +215,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
             CustomTextField(
               controller: _dateController,
               label: l10n.advanceDate,
-              hint: 'اختر التاريخ',
+              hint: l10n.selectDate,
               prefixIcon: Icons.calendar_today,
               readOnly: true,
               onTap: _pickDate,
@@ -222,7 +227,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
             CustomTextField(
               controller: _notesController,
               label: l10n.notesOptional,
-              hint: 'أدخل أي ملاحظات إضافية',
+              hint: l10n.enterAdvanceNotes,
               prefixIcon: Icons.notes,
               maxLines: 3,
               textInputAction: TextInputAction.done,
@@ -261,6 +266,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   // 👤 بناء بطاقة معلومات الموظف
   // ============================================================
   Widget _buildEmployeeInfoCard(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return CustomCard(
       child: Container(
         padding: AppConstants.paddingMd,
@@ -299,7 +305,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'سلفة جديدة لـ:',
+                    l10n.addNewAdvanceTooltip,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: isDark
                               ? AppColors.textSecondaryDark
@@ -341,7 +347,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'الرصيد الحالي',
+                  l10n.currentBalance,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
@@ -400,6 +406,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   // 📊 بناء بطاقة الملخص
   // ============================================================
   Widget _buildSummaryCard(AppLocalizations l10n, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     // حساب الرصيد المتوقع بعد السلفة
     final currentAmount = double.tryParse(
       convertArabicNumbersToEnglish(_amountController.text.trim()),
@@ -432,7 +439,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
                 ),
                 const SizedBox(width: AppConstants.spacingSm),
                 Text(
-                  'الملخص المالي',
+                  l10n.financialSummary,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.warning,
@@ -445,7 +452,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
             // الرصيد الحالي
             _buildSummaryRow(
-              'الرصيد الحالي',
+              l10n.currentBalance,
               formatCurrency(currentBalance),
               AppColors.info,
               isDark,
@@ -455,7 +462,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
             // مبلغ السلفة
             _buildSummaryRow(
-              'مبلغ السلفة',
+              l10n.advanceAmount,
               currentAmount != null ? formatCurrency(currentAmount) : '---',
               AppColors.warning,
               isDark,
@@ -468,7 +475,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
             // الرصيد المتوقع
             _buildSummaryRow(
-              'الرصيد المتوقع',
+              l10n.expectedBalance,
               formatCurrency(expectedBalance),
               expectedBalance > 0 ? AppColors.error : AppColors.success,
               isDark,
@@ -513,6 +520,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   // ⚠️ بناء ملاحظة تحذيرية
   // ============================================================
   Widget _buildWarningNote(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: AppConstants.paddingMd,
       decoration: BoxDecoration(
@@ -534,7 +542,8 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
           const SizedBox(width: AppConstants.spacingSm),
           Expanded(
             child: Text(
-              'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل',
+              // 'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل',
+              l10n.autoDeductAdvance,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.info,
                     height: 1.5,

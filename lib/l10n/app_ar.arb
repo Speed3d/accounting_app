@@ -42,7 +42,12 @@
     "save": "حفظ",
 
     "addEditCustomer": "إضافة/تعديل زبون",
+    "nopurchasesyetrecorded": "لم يتم تسجيل أي مشتريات بعد",
+    "nopaymentsyetrecorded": "لم يتم تسجيل أي دفعات بعد",
+    "startfirstcustomer": "ابدأ بإضافة أول زبون لك",
+    "loadingcustomers": "جاري تحميل الزبائن ...",
     "customerName": "اسم الزبون",
+    "searchcustomer": "بحث عن عميل",
     "addressOptional": "العنوان (اختياري)",
     "phoneOptional": "الهاتف (اختياري)",
     "fieldRequired": "الحقل مطلوب",
@@ -1207,6 +1212,67 @@
   "september": "سبتمبر",
   "october": "أكتوبر",
   "november": "نوفمبر",
-  "december": "ديسمبر"
+  "december": "ديسمبر",
+
+  "salaryLabel": "الراتب",
+  "advancesLabel": "السلف",
+
+  "loadingMessage": "جاري التحميل...",
+  
+  "noPayrollsMessage": "لم يتم صرف أي راتب بعد",
+  "addPayrollAction": "إضافة راتب",
+  "paymentAction": "صرف راتب",
+  "addNewPayrollTooltip": "إضافة راتب جديد",
+  
+  "noAdvancesMessage": "لا توجد سلف مسجلة",
+  "addAdvanceAction": "إضافة سلفة",
+  "addAdvanceButton": "إضافة سلفة",
+  "addNewAdvanceTooltip": "إضافة سلفة جديدة",
+
+  "paidOn": "دُفع في: {date}",
+  "@paidOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "netLabel": "صافي",
+
+  "payrollDetailsTitle": "تفاصيل راتب {month} {year}",
+  "@payrollDetailsTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+
+    "advanceRegisteredForEmployee": "تسجيل سلفة للموظف: {employeeName} بقيمة: {amount}",
+  "@advanceRegisteredForEmployee": {
+    "placeholders": {
+      "employeeName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+   "archivedSuccess": "تم أرشفة \"{name}\" بنجاح",
+  "@archivedSuccess": {
+    "description": "رسالة نجاح عند أرشفة",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "زبون"
+      }
+    }
+  }
 
 }

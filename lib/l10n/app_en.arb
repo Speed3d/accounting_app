@@ -41,8 +41,13 @@
     "save": "Save",
 
     "addEditCustomer": "Add/Edit Customer",
+    "nopurchasesyetrecorded": "No purchases have been recorded yet.",
+    "nopaymentsyetrecorded": "No payments have been recorded yet",
     "customerName": "Customer Name",
+    "startfirstcustomer": "Start with your first customer",
+    "loadingcustomers": "Loading customers ...",
     "addressOptional": "Address (Optional)",
+    "searchcustomer": "search for a customer",
     "phoneOptional": "Phone (Optional)",
     "fieldRequired": "Field is required",
     "customerAddedSuccess": "Customer added successfully!",
@@ -1269,7 +1274,68 @@
   "september": "September",
   "october": "October",
   "november": "November",
-  "december": "December"
+  "december": "December",
+
+  "salaryLabel": "Salary",
+  "advancesLabel": "Advances",
+
+  "loadingMessage": "Loading...",
+  
+  "noPayrollsMessage": "No salaries have been paid yet",
+  "addPayrollAction": "Add Payroll",
+  "paymentAction": "Pay Salary",
+  "addNewPayrollTooltip": "Add new payroll",
+  
+  "noAdvancesMessage": "No advances recorded",
+  "addAdvanceAction": "Add Advance",
+  "addAdvanceButton": "Add Advance",
+  "addNewAdvanceTooltip": "Add new advance",
+
+  "paidOn": "Paid on: {date}",
+  "@paidOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "netLabel": "Net",
+
+  "payrollDetailsTitle": "{month} {year} Payroll Details",
+  "@payrollDetailsTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+
+    "advanceRegisteredForEmployee": "Advance registered for employee: {employeeName} with amount: {amount}",
+  "@advanceRegisteredForEmployee": {
+    "placeholders": {
+      "employeeName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+  "archivedSuccess": "Archived \"{name}\" Successful",
+  "@archivedSuccess": {
+    "description": "Authentication Success Message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "customer"
+      }
+    }
+  }
 
 
 }

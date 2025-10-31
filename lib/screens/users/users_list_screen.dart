@@ -101,7 +101,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 
                 // حالة التحميل
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return  LoadingState(message: l10n.loadingUsers);
+                  return LoadingState(message: l10n.loadingUsers);
                 }
 
                 // حالة الخطأ
@@ -152,7 +152,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddUser,
               icon: const Icon(Icons.person_add),
-              label:  Text(l10n.addUser),
+              label: Text(l10n.addUser),
             )
           : null,
     );
@@ -200,7 +200,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // إحصائيات سريعة
+          // إحصائيات سريعة (قابلة للنقر)
           FutureBuilder<List<User>>(
             future: _usersFuture,
             builder: (context, snapshot) {
@@ -218,6 +218,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       '${users.length}',
                       Icons.people,
                       AppColors.primaryLight,
+                      l10n.all, // ← الفلتر المرتبط
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingSm),
@@ -227,6 +228,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       '$adminsCount',
                       Icons.admin_panel_settings,
                       AppColors.error,
+                      l10n.admin, // ← الفلتر المرتبط
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingSm),
@@ -236,6 +238,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                       '$regularCount',
                       Icons.person,
                       AppColors.info,
+                      l10n.user, // ← الفلتر المرتبط
                     ),
                   ),
                 ],
@@ -308,39 +311,69 @@ class _UsersListScreenState extends State<UsersListScreen> {
     );
   }
 
-  /// بناء إحصائية سريعة
-  Widget _buildQuickStat(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.spacingXs,
-        vertical: AppConstants.spacingMd,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: AppConstants.borderRadiusMd,
-        border: Border.all(
-          color: color.withOpacity(0.3),
+  /// بناء إحصائية سريعة (قابلة للنقر)
+  Widget _buildQuickStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    String filterRole, // ← معامل جديد للفلتر
+  ) {
+    final isSelected = _filterRole == filterRole;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _filterRole = filterRole;
+          _filterUsers(_searchController.text);
+        });
+      },
+      borderRadius: AppConstants.borderRadiusMd,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spacingXs,
+          vertical: AppConstants.spacingMd,
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: AppConstants.spacingXs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(0.2)
+              : color.withOpacity(0.1),
+          borderRadius: AppConstants.borderRadiusMd,
+          border: Border.all(
+            color: isSelected
+                ? color.withOpacity(0.5)
+                : color.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
               color: color,
+              size: isSelected ? 28 : 26,
             ),
-          ),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 14),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: AppConstants.spacingXs),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: isSelected ? 22 : 20,
+              ),
+            ),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -353,7 +386,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
     
     final hasImage = imageFile != null && imageFile.existsSync();
     final isCurrentUser = user.id == _authService.currentUser?.id;
-    final l10n = AppLocalizations.of(context)!;
     
     // حساب عدد الصلاحيات الممنوحة
     final permissionsCount = _countActivePermissions(user);
@@ -489,27 +521,38 @@ class _UsersListScreenState extends State<UsersListScreen> {
                     
                     const SizedBox(height: AppConstants.spacingXs),
                     
-                    // الصلاحية
+                    // الصلاحية - مع إصلاح Overflow
                     Row(
                       children: [
-                        StatusBadge(
-                          text: user.isAdmin ? l10n.admin : l10n.customPermissionsUser,
-                          type: user.isAdmin ? StatusType.error : StatusType.info,
-                          small: true,
+                        Flexible(
+                          child: StatusBadge(
+                            text: user.isAdmin ? l10n.admin : l10n.customPermissionsUser,
+                            type: user.isAdmin ? StatusType.error : StatusType.info,
+                            small: true,
+                          ),
                         ),
                         if (!user.isAdmin) ...[
                           const SizedBox(width: AppConstants.spacingSm),
-                          Icon(
-                            Icons.shield,
-                            size: 16,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                          ),
-                          const SizedBox(width: AppConstants.spacingXs),
-                          
-                          Text(
-                            // '$permissionsCount صلاحية',
-                            '$permissionsCount ${l10n.permission}',
-                            style: Theme.of(context).textTheme.bodySmall,
+                          // ✅ إضافة Flexible لحل مشكلة Overflow
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.shield,
+                                  size: 16,
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    '$permissionsCount ${l10n.permission}',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ],
@@ -603,7 +646,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
             Icon(Icons.warning_amber, size: 16, color: AppColors.warning),
             const SizedBox(width: AppConstants.spacingSm),
             Text(
-              //لا توجد صلاحيات ممنوحة
               l10n.noPermissions,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.warning,
@@ -681,17 +723,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
   /// معالجة تعديل المستخدم
   Future<void> _handleEditUser(User user, bool isCurrentUser, AppLocalizations l10n) async {
-    // if (isCurrentUser) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text(l10n.cannotEditOwnAccount),
-    //       backgroundColor: AppColors.warning,
-    //       behavior: SnackBarBehavior.floating,
-    //     ),
-    //   );
-    //   return;
-    // }
-    
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AddEditUserScreen(user: user),
@@ -773,7 +804,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
                   child: Text(
-                    // 'هذا الإجراء لا يمكن التراجع عنه'
                     l10n.noUndo,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.error,
@@ -812,7 +842,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          // content: Text('تم حذف المستخدم "${user.fullName}" بنجاح'),
           content: Text(l10n.deleteUserSuccess(user.fullName)),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
@@ -825,7 +854,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          // content: Text('حدث خطأ أثناء الحذف: $e'),
           content: Text(l10n.deleteUserError(e.toString())),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
