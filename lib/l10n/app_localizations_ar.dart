@@ -742,7 +742,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profitReportDesc => 'عرض صافي الربح من جميع المبيعات';
 
   @override
-  String get supplierProfitReport => 'تقرير أرباح الموردين والشركاء';
+  String get supplierProfitReport => 'تقرير أرباح الموردين';
 
   @override
   String get supplierProfitReportDesc => 'عرض الأرباح مجمعة حسب كل مورد';
@@ -1015,7 +1015,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loadingDetails => 'جاري تحميل التفاصيل...';
 
   @override
-  String get noSalesRecorded => 'لا توجد مبيعات مسجلة لعرضها.';
+  String get noSalesRecorded => 'لم يتم تسجيل أي عمليات بيع حتى الآن';
 
   @override
   String customerLabel(String name) {
@@ -1055,7 +1055,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cashSalesHistorySubtitle => 'عرض وإدارة فواتير البيع المباشر';
 
   @override
-  String get cashFlowReport => 'تقرير المقبوضات النقدية';
+  String get cashFlowReport => 'تقرير التدفق النقدي';
 
   @override
   String get cashFlowReportSubtitle => 'عرض المبيعات النقدية وتسديدات الزبائن';
@@ -1119,7 +1119,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String recordWithdrawalFor(String name) {
-    return 'تسجيل سحب لـ: $name';
+    return 'سحب أرباح: $name';
   }
 
   @override
@@ -1137,13 +1137,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get withdrawalSuccess => 'تم تسجيل السحب بنجاح';
 
   @override
-  String get totalProfitFromSupplier => 'إجمالي الربح من المورد:';
+  String get totalProfitFromSupplier => 'إجمالي الأرباح من المورد';
 
   @override
   String get totalWithdrawals => 'إجمالي المسحوبات:';
 
   @override
-  String get remainingNetProfit => 'الربح الصافي المتبقي:';
+  String get remainingNetProfit => 'صافي الربح المتبقي';
 
   @override
   String get partnersProfitDistribution => 'توزيع أرباح الشركاء';
@@ -1182,7 +1182,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noDataToShow => 'لا توجد بيانات لعرضها.';
 
   @override
-  String get showSalesDetails => 'إظهار تفاصيل المبيعات';
+  String get showSalesDetails => 'عرض تفاصيل المبيعات';
 
   @override
   String get hideSalesDetails => 'إخفاء تفاصيل المبيعات';
@@ -1191,13 +1191,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get grossProfitFromSales => 'إجمالي الربح من المبيعات';
 
   @override
-  String get totalGeneralExpenses => '(-) إجمالي المصاريف العامة';
+  String get totalGeneralExpenses => 'إجمالي المصاريف العامة';
 
   @override
-  String get totalProfitWithdrawals => '(-) إجمالي مسحوبات الأرباح';
+  String get totalProfitWithdrawals => 'إجمالي مسحوبات الأرباح';
 
   @override
-  String get netProfit => 'صافي الربح النهائي';
+  String get netProfit => 'صافي الربح';
 
   @override
   String get totalProfitFromThisSupplier => 'إجمالي الربح من هذا المورد';
@@ -1748,6 +1748,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addNewProduct => 'إضافة منتج جديد';
 
   @override
+  String get addtonewstores => 'قم بإضافة منتجات للمخزن أولاً';
+
+  @override
   String get totalQuantity => 'إجمالي الكمية';
 
   @override
@@ -2154,8 +2157,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String returnActivityLog(String productDetails, String customerName) {
-    return 'إرجاع منتج: $productDetails للزبون: $customerName';
+  String returnActivityLog(String invoiceId, String productName) {
+    return 'إرجاع منتج من فاتورة نقدية #$invoiceId: $productName';
   }
 
   @override
@@ -2176,4 +2179,141 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get newSale => 'بيع جديد';
+
+  @override
+  String get generalProfitReport_desc => 'عرض إجمالي الأرباح وتفاصيل المبيعات';
+
+  @override
+  String get supplierProfitReport_desc => 'توزيع الأرباح حسب المورد أو الشريك';
+
+  @override
+  String get cashSalesRecord => 'سجل المبيعات النقدية';
+
+  @override
+  String get cashSalesRecord_desc => 'الفواتير والمبيعات النقدية المباشرة';
+
+  @override
+  String get cashFlowReport_desc => 'المقبوضات النقدية والتسديدات';
+
+  @override
+  String get expenseRecord => 'سجل المصاريف';
+
+  @override
+  String get expenseRecord_desc => 'جميع المصاريف والنفقات المسجلة';
+
+  @override
+  String get employeePayrollReport => 'تقرير الموظفين والرواتب';
+
+  @override
+  String get employeePayrollReport_desc => 'كشف الموظفين والرواتب والسلف';
+
+  @override
+  String get reportingCenter => 'مركز التقارير';
+
+  @override
+  String get noreportsavailable => 'لا يوجد تقارير متاحة';
+
+  @override
+  String get donotpermissionreports => 'ليس لديك صلاحية للوصول إلى أي تقرير';
+
+  @override
+  String get calculatingProfits => 'جاري حساب الأرباح...';
+
+  @override
+  String get noData => 'لا توجد بيانات';
+
+  @override
+  String get noOperationsRecorded => 'لم يتم تسجيل أي عمليات حتى الآن';
+
+  @override
+  String get totalProfitsFromSales => 'إجمالي الأرباح من المبيعات';
+
+  @override
+  String get beforeExpenses => 'قبل المصاريف';
+
+  @override
+  String get billsAndExpenses => 'فواتير ونفقات';
+
+  @override
+  String get forSuppliersAndPartners => 'للموردين والشركاء';
+
+  @override
+  String salesDetailsCount(String count) {
+    return 'تفاصيل المبيعات ($count)';
+  }
+
+  @override
+  String get notRegistered => 'غير مسجل';
+
+  @override
+  String fromAmount(String amount) {
+    return 'من $amount';
+  }
+
+  @override
+  String get returnWarningMessage =>
+      'سيتم إرجاع المنتج للمخزن وتحديث حالة الفاتورة';
+
+  @override
+  String get loadingInvoiceDetails => 'جاري تحميل تفاصيل الفاتورة...';
+
+  @override
+  String get noItemsInInvoice => 'لا توجد بنود في هذه الفاتورة';
+
+  @override
+  String get invoiceEmptyOrCancelled => 'الفاتورة فارغة أو تم إلغاؤها';
+
+  @override
+  String get invoiceStatusModified => 'معدلة';
+
+  @override
+  String get invoiceTotalAmount => 'إجمالي الفاتورة:';
+
+  @override
+  String get returnedAmount => 'المبلغ المرجع:';
+
+  @override
+  String get netAmount => 'الصافي:';
+
+  @override
+  String itemsCount2(int count) {
+    return 'عدد البنود: $count';
+  }
+
+  @override
+  String get returnedStatus => 'مُرجع';
+
+  @override
+  String get longPressToReturn => 'اضغط مطولاً للإرجاع';
+
+  @override
+  String get noProfitsRecordedForSuppliers =>
+      'لا توجد أرباح مسجلة للموردين بعد';
+
+  @override
+  String get totalProfits => 'إجمالي الأرباح';
+
+  @override
+  String get withdrawals => 'المسحوبات';
+
+  @override
+  String get trysearchinvoice => 'جرب البحث برقم فاتورة آخر';
+
+  @override
+  String get nocashrecordedyet => 'لم يتم تسجيل أي فاتورة بيع نقدي حتى الآن';
+
+  @override
+  String get invoicesloaded => 'جاري تحميل الفواتير...';
+
+  @override
+  String get beforeWithdrawals => 'قبل المسحوبات';
+
+  @override
+  String get withdrawnAmounts => 'المبالغ المسحوبة';
+
+  @override
+  String get recordWithdrawal => 'تسجيل سحب';
+
+  @override
+  String get noWithdrawalsRecorded => 'لم يتم تسجيل أي عملية سحب حتى الآن';
 }

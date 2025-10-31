@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @supplierProfitReport.
   ///
   /// In en, this message translates to:
-  /// **'Supplier & Partner Profit Report'**
+  /// **'Supplier Profit Report'**
   String get supplierProfitReport;
 
   /// No description provided for @supplierProfitReportDesc.
@@ -1925,7 +1925,7 @@ abstract class AppLocalizations {
   /// No description provided for @noSalesRecorded.
   ///
   /// In en, this message translates to:
-  /// **'No sales recorded to display.'**
+  /// **'No sales have been recorded yet'**
   String get noSalesRecorded;
 
   /// No description provided for @customerLabel.
@@ -1985,7 +1985,7 @@ abstract class AppLocalizations {
   /// No description provided for @cashFlowReport.
   ///
   /// In en, this message translates to:
-  /// **'Cash Receipts Report'**
+  /// **'Cash Flow Report'**
   String get cashFlowReport;
 
   /// No description provided for @cashFlowReportSubtitle.
@@ -2090,10 +2090,10 @@ abstract class AppLocalizations {
   /// **'Payment from customer: {name}'**
   String debtPaymentDescription(String name);
 
-  /// No description provided for @recordWithdrawalFor.
+  /// Dialog title for recording withdrawal
   ///
   /// In en, this message translates to:
-  /// **'Record Withdrawal for: {name}'**
+  /// **'Withdraw Profits for: {name}'**
   String recordWithdrawalFor(String name);
 
   /// No description provided for @availableNetProfit.
@@ -2120,10 +2120,10 @@ abstract class AppLocalizations {
   /// **'Withdrawal recorded successfully'**
   String get withdrawalSuccess;
 
-  /// No description provided for @totalProfitFromSupplier.
+  /// Label for total profit from supplier
   ///
   /// In en, this message translates to:
-  /// **'Total Profit from Supplier:'**
+  /// **'Total Profit from Supplier'**
   String get totalProfitFromSupplier;
 
   /// No description provided for @totalWithdrawals.
@@ -2132,10 +2132,10 @@ abstract class AppLocalizations {
   /// **'Total Withdrawals:'**
   String get totalWithdrawals;
 
-  /// No description provided for @remainingNetProfit.
+  /// Label for remaining net profit after withdrawals
   ///
   /// In en, this message translates to:
-  /// **'Remaining Net Profit:'**
+  /// **'Remaining Net Profit'**
   String get remainingNetProfit;
 
   /// No description provided for @partnersProfitDistribution.
@@ -2156,7 +2156,7 @@ abstract class AppLocalizations {
   /// **'Withdraw'**
   String get withdraw;
 
-  /// No description provided for @recordGeneralWithdrawal.
+  /// Tooltip for recording general withdrawal
   ///
   /// In en, this message translates to:
   /// **'Record General Withdrawal'**
@@ -2219,19 +2219,19 @@ abstract class AppLocalizations {
   /// No description provided for @totalGeneralExpenses.
   ///
   /// In en, this message translates to:
-  /// **'(-) Total General Expenses'**
+  /// **'Total General Expenses'**
   String get totalGeneralExpenses;
 
   /// No description provided for @totalProfitWithdrawals.
   ///
   /// In en, this message translates to:
-  /// **'(-) Total Profit Withdrawals'**
+  /// **'Total Profit Withdrawals'**
   String get totalProfitWithdrawals;
 
   /// No description provided for @netProfit.
   ///
   /// In en, this message translates to:
-  /// **'Final Net Profit'**
+  /// **'Net Profit'**
   String get netProfit;
 
   /// No description provided for @totalProfitFromThisSupplier.
@@ -2645,7 +2645,7 @@ abstract class AppLocalizations {
   /// No description provided for @noSales.
   ///
   /// In en, this message translates to:
-  /// **'No sales'**
+  /// **'No Sales'**
   String get noSales;
 
   /// No description provided for @noCustomers.
@@ -3289,6 +3289,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add new product'**
   String get addNewProduct;
+
+  /// No description provided for @addtonewstores.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to new stores'**
+  String get addtonewstores;
 
   /// No description provided for @totalQuantity.
   ///
@@ -4019,8 +4025,8 @@ abstract class AppLocalizations {
   /// No description provided for @returnActivityLog.
   ///
   /// In en, this message translates to:
-  /// **'Product returned: {productDetails} for customer: {customerName}'**
-  String returnActivityLog(String productDetails, String customerName);
+  /// **'Product returned from cash invoice #{invoiceId}: {productName}'**
+  String returnActivityLog(String invoiceId, String productName);
 
   /// No description provided for @saleRecordError.
   ///
@@ -4051,6 +4057,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Sale'**
   String get newSale;
+
+  /// No description provided for @generalProfitReport_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Displays total profits and sales details'**
+  String get generalProfitReport_desc;
+
+  /// No description provided for @supplierProfitReport_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribution of profits by supplier or partner'**
+  String get supplierProfitReport_desc;
+
+  /// No description provided for @cashSalesRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Sales Record'**
+  String get cashSalesRecord;
+
+  /// No description provided for @cashSalesRecord_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoices and direct cash sales'**
+  String get cashSalesRecord_desc;
+
+  /// No description provided for @cashFlowReport_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash receipts and payments'**
+  String get cashFlowReport_desc;
+
+  /// No description provided for @expenseRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Record'**
+  String get expenseRecord;
+
+  /// No description provided for @expenseRecord_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'All recorded expenses and expenditures'**
+  String get expenseRecord_desc;
+
+  /// No description provided for @employeePayrollReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee and Payroll Report'**
+  String get employeePayrollReport;
+
+  /// No description provided for @employeePayrollReport_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee statement, salaries, and advances'**
+  String get employeePayrollReport_desc;
+
+  /// No description provided for @reportingCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting Center'**
+  String get reportingCenter;
+
+  /// No description provided for @noreportsavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports are available'**
+  String get noreportsavailable;
+
+  /// No description provided for @donotpermissionreports.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to access any reports'**
+  String get donotpermissionreports;
+
+  /// No description provided for @calculatingProfits.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating profits...'**
+  String get calculatingProfits;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No Data'**
+  String get noData;
+
+  /// No description provided for @noOperationsRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No operations have been recorded yet'**
+  String get noOperationsRecorded;
+
+  /// No description provided for @totalProfitsFromSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Profits from Sales'**
+  String get totalProfitsFromSales;
+
+  /// No description provided for @beforeExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Before expenses'**
+  String get beforeExpenses;
+
+  /// No description provided for @billsAndExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills and expenses'**
+  String get billsAndExpenses;
+
+  /// No description provided for @forSuppliersAndPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'For suppliers and partners'**
+  String get forSuppliersAndPartners;
+
+  /// No description provided for @salesDetailsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Details ({count})'**
+  String salesDetailsCount(String count);
+
+  /// No description provided for @notRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not registered'**
+  String get notRegistered;
+
+  /// No description provided for @fromAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'From {amount}'**
+  String fromAmount(String amount);
+
+  /// No description provided for @returnWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Product will be returned to stock and invoice status will be updated'**
+  String get returnWarningMessage;
+
+  /// No description provided for @loadingInvoiceDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading invoice details...'**
+  String get loadingInvoiceDetails;
+
+  /// No description provided for @noItemsInInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in this invoice'**
+  String get noItemsInInvoice;
+
+  /// No description provided for @invoiceEmptyOrCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice is empty or cancelled'**
+  String get invoiceEmptyOrCancelled;
+
+  /// No description provided for @invoiceStatusModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get invoiceStatusModified;
+
+  /// No description provided for @invoiceTotalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice Total:'**
+  String get invoiceTotalAmount;
+
+  /// No description provided for @returnedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned Amount:'**
+  String get returnedAmount;
+
+  /// No description provided for @netAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Net:'**
+  String get netAmount;
+
+  /// No description provided for @itemsCount2.
+  ///
+  /// In en, this message translates to:
+  /// **'Items Count: {count}'**
+  String itemsCount2(int count);
+
+  /// No description provided for @returnedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get returnedStatus;
+
+  /// No description provided for @longPressToReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press to return'**
+  String get longPressToReturn;
+
+  /// Message shown when no supplier profits are available
+  ///
+  /// In en, this message translates to:
+  /// **'No profits recorded for suppliers yet'**
+  String get noProfitsRecordedForSuppliers;
+
+  /// Label for total profits amount
+  ///
+  /// In en, this message translates to:
+  /// **'Total Profits'**
+  String get totalProfits;
+
+  /// Label for withdrawals amount
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawals'**
+  String get withdrawals;
+
+  /// No description provided for @trysearchinvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching with a different invoice number'**
+  String get trysearchinvoice;
+
+  /// No description provided for @nocashrecordedyet.
+  ///
+  /// In en, this message translates to:
+  /// **'No cash sales invoice has been recorded yet'**
+  String get nocashrecordedyet;
+
+  /// No description provided for @invoicesloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoices are being loaded...'**
+  String get invoicesloaded;
+
+  /// Subtitle indicating amount is before withdrawals
+  ///
+  /// In en, this message translates to:
+  /// **'Before Withdrawals'**
+  String get beforeWithdrawals;
+
+  /// Subtitle for withdrawn amounts
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn Amounts'**
+  String get withdrawnAmounts;
+
+  /// Button text to record a new withdrawal
+  ///
+  /// In en, this message translates to:
+  /// **'Record Withdrawal'**
+  String get recordWithdrawal;
+
+  /// Message when no withdrawals exist
+  ///
+  /// In en, this message translates to:
+  /// **'No withdrawal operations have been recorded yet'**
+  String get noWithdrawalsRecorded;
 }
 
 class _AppLocalizationsDelegate

@@ -160,7 +160,7 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                 builder: (context, snapshot) {
                   // --- حالة التحميل ---
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const LoadingState(message: 'جاري تحميل الفواتير...');
+                    return  LoadingState(message: l10n.invoicesloaded);
                   }
 
                   // --- حالة الخطأ ---
@@ -176,7 +176,7 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                     return EmptyState(
                       icon: Icons.receipt_long,
                       title: l10n.noCashInvoices,
-                      message: 'لم يتم تسجيل أي فاتورة بيع نقدي حتى الآن',
+                      message: l10n.nocashrecordedyet,
                     );
                   }
 
@@ -192,7 +192,7 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                     return EmptyState(
                       icon: Icons.search_off,
                       title: l10n.noMatchingResults,
-                      message: 'جرب البحث برقم فاتورة آخر',
+                      message: l10n.trysearchinvoice,
                     );
                   }
 
@@ -290,10 +290,10 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                         ),
                         
                         // --- شارة الحالة ---
-                        if (status == 'معدلة' && !isVoid) ...[
+                        if (status == l10n.edit && !isVoid) ...[
                           const SizedBox(width: AppConstants.spacingSm),
-                          const StatusBadge(
-                            text: 'معدلة',
+                           StatusBadge(
+                            text: l10n.edit,
                             type: StatusType.warning,
                             small: true,
                           ),
@@ -301,8 +301,8 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                         
                         if (isVoid) ...[
                           const SizedBox(width: AppConstants.spacingSm),
-                          const StatusBadge(
-                            text: 'ملغاة',
+                           StatusBadge(
+                            text: l10n.cancel,
                             type: StatusType.error,
                             small: true,
                           ),
@@ -346,7 +346,7 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
                         size: 20,
                       ),
                       onPressed: () => _handleVoidInvoice(invoiceId, l10n),
-                      tooltip: 'إلغاء الفاتورة',
+                      tooltip: l10n.cancel,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),

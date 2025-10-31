@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../utils/helpers.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -63,16 +64,18 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
   // ============= البناء الرئيسي =============
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       // --- AppBar مع زر التحديث ---
       appBar: AppBar(
-        title: const Text('تقرير الأرباح العام'),
+        title: Text(l10n.generalProfitReport),
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadFinancialSummary,
-            tooltip: 'تحديث',
+            tooltip: l10n.refresh,
           ),
         ],
       ),
@@ -83,25 +86,25 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
         builder: (context, snapshot) {
           // --- حالة التحميل ---
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(
-              message: 'جاري حساب الأرباح...',
+            return LoadingState(
+              message: l10n.calculatingProfits,
             );
           }
 
           // --- حالة الخطأ ---
           if (snapshot.hasError) {
             return ErrorState(
-              message: 'حدث خطأ: ${snapshot.error}',
+              message: l10n.errorOccurred(snapshot.error.toString()),
               onRetry: _loadFinancialSummary,
             );
           }
 
           // --- حالة عدم وجود بيانات ---
           if (!snapshot.hasData) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.trending_up,
-              title: 'لا توجد بيانات',
-              message: 'لم يتم تسجيل أي عمليات حتى الآن',
+              title: l10n.noData,
+              message: l10n.noOperationsRecorded,
             );
           }
 
@@ -117,17 +120,17 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 💰 قسم الملخص المالي
-                _buildFinancialSummarySection(summary, netProfit),
+                _buildFinancialSummarySection(summary, netProfit, l10n),
 
                 const SizedBox(height: AppConstants.spacingXl),
 
                 // 🔍 زر إظهار/إخفاء التفاصيل
-                _buildToggleDetailsButton(),
+                _buildToggleDetailsButton(l10n),
 
                 // 📋 قائمة تفاصيل المبيعات
                 if (_isDetailsVisible) ...[
                   const SizedBox(height: AppConstants.spacingMd),
-                  _buildSalesList(summary.sales),
+                  _buildSalesList(summary.sales, l10n),
                 ],
               ],
             ),
@@ -146,42 +149,40 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
   Widget _buildFinancialSummarySection(
     FinancialSummary summary,
     double netProfit,
+    AppLocalizations l10n,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // --- بطاقة إجمالي الأرباح ---
         StatCard(
-          label: 'إجمالي الأرباح من المبيعات',
+          label: l10n.totalProfitsFromSales,
           value: formatCurrency(summary.grossProfit),
           icon: Icons.trending_up,
           color: AppColors.info,
-          subtitle: 'قبل المصاريف',
-          // iconSize: 22,
+          subtitle: l10n.beforeExpenses,
         ),
 
         const SizedBox(height: AppConstants.spacingMd),
 
         // --- بطاقة المصاريف ---
         StatCard(
-          label: 'إجمالي المصاريف العامة',
+          label: l10n.totalGeneralExpenses,
           value: formatCurrency(summary.totalExpenses),
           icon: Icons.receipt_long,
           color: AppColors.error,
-          subtitle: 'فواتير ونفقات',
-          // iconSize: 22,
+          subtitle: l10n.billsAndExpenses,
         ),
 
         const SizedBox(height: AppConstants.spacingMd),
 
         // --- بطاقة المسحوبات ---
         StatCard(
-          label: 'إجمالي مسحوبات الأرباح',
+          label: l10n.totalProfitWithdrawals,
           value: formatCurrency(summary.totalWithdrawals),
           icon: Icons.account_balance_wallet,
           color: AppColors.warning,
-          subtitle: 'للموردين والشركاء',
-          // iconSize: 22,
+          subtitle: l10n.forSuppliersAndPartners,
         ),
 
         const Divider(height: 32),
@@ -224,7 +225,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'صافي الربح',
+                        l10n.netProfit,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       const SizedBox(height: AppConstants.spacingXs),
@@ -251,7 +252,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 
   // ============= زر إظهار/إخفاء التفاصيل =============
   /// زر لتبديل عرض قائمة تفاصيل المبيعات
-  Widget _buildToggleDetailsButton() {
+  Widget _buildToggleDetailsButton(AppLocalizations l10n) {
     return OutlinedButton.icon(
       onPressed: () {
         setState(() {
@@ -265,21 +266,21 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
       ),
       label: Text(
         _isDetailsVisible
-            ? 'إخفاء تفاصيل المبيعات'
-            : 'عرض تفاصيل المبيعات',
+            ? l10n.hideSalesDetails
+            : l10n.showSalesDetails,
       ),
     );
   }
 
   // ============= قائمة تفاصيل المبيعات =============
   /// يعرض جدول بجميع عمليات البيع مع الربح لكل عملية
-  Widget _buildSalesList(List<CustomerDebt> sales) {
+  Widget _buildSalesList(List<CustomerDebt> sales, AppLocalizations l10n) {
     // --- حالة عدم وجود مبيعات ---
     if (sales.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.shopping_cart_outlined,
-        title: 'لا توجد مبيعات',
-        message: 'لم يتم تسجيل أي عمليات بيع حتى الآن',
+        title: l10n.noSales,
+        message: l10n.noSalesRecorded,
       );
     }
 
@@ -289,7 +290,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
       children: [
         // عنوان القائمة
         Text(
-          'تفاصيل المبيعات (${sales.length})',
+          l10n.salesDetailsCount(sales.length.toString()),
           style: Theme.of(context).textTheme.headlineSmall,
         ),
 
@@ -302,7 +303,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
           itemCount: sales.length,
           itemBuilder: (context, index) {
             final sale = sales[index];
-            return _buildSaleCard(sale);
+            return _buildSaleCard(sale, l10n);
           },
         ),
       ],
@@ -311,7 +312,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 
   // ============= بطاقة المبيعة الواحدة =============
   /// يعرض تفاصيل عملية بيع واحدة
-  Widget _buildSaleCard(CustomerDebt sale) {
+  Widget _buildSaleCard(CustomerDebt sale, AppLocalizations l10n) {
     final saleDate = DateTime.parse(sale.dateT);
 
     return CustomCard(
@@ -357,7 +358,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 
                   // اسم الزبون والتاريخ
                   Text(
-                    '${sale.customerName ?? "غير مسجل"} • '
+                    '${sale.customerName ?? l10n.notRegistered} • '
                     '${DateFormat('yyyy-MM-dd').format(saleDate)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -385,7 +386,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 
                 // مبلغ البيع
                 Text(
-                  'من ${formatCurrency(sale.debt)}',
+                  l10n.fromAmount(formatCurrency(sale.debt)),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

@@ -10,18 +10,13 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
+import 'package:accounting_app/l10n/app_localizations.dart';
 
 /// 📊 شاشة تفاصيل تقرير المورد
-/// ---------------------------
-/// صفحة فرعية تعرض:
-/// 1. ملخص مالي للمورد (الأرباح، المسحوبات، الصافي)
-/// 2. توزيع الأرباح على الشركاء (للشراكات)
-/// 3. سجل جميع المسحوبات
-/// 4. إمكانية تسجيل سحب جديد
 class SupplierDetailsReportScreen extends StatefulWidget {
   final int supplierId;
   final String supplierName;
-  final String supplierType; // "فردي" أو "شراكة"
+  final String supplierType;
   final double totalProfit;
   final double totalWithdrawn;
 
@@ -41,13 +36,14 @@ class SupplierDetailsReportScreen extends StatefulWidget {
 
 class _SupplierDetailsReportScreenState
     extends State<SupplierDetailsReportScreen> {
-  // ============= المتغيرات =============
+  // المتغيرات
   final dbHelper = DatabaseHelper.instance;
-  late Future<List<Partner>> _partnersFuture;
+  
+  // ✅ التعديل 1: تغيير من late إلى nullable لتجنب crash
+  Future<List<Partner>>? _partnersFuture;
   late Future<List<Map<String, dynamic>>> _withdrawalsFuture;
-  late double _currentTotalWithdrawn; // المبلغ المسحوب الحالي
+  late double _currentTotalWithdrawn;
 
-  // ============= التهيئة =============
   @override
   void initState() {
     super.initState();
@@ -57,88 +53,77 @@ class _SupplierDetailsReportScreenState
 
   /// تحميل بيانات الشركاء والمسحوبات
   void _loadData() {
-    // جلب الشركاء فقط إذا كان النوع "شراكة"
-    if (widget.supplierType == 'شراكة') {
+    // ✅ التعديل 2: استبدال المقارنة المباشرة بدالة isPartnership()
+    if (isPartnership(widget.supplierType)) {
       _partnersFuture = dbHelper.getPartnersForSupplier(widget.supplierId);
     }
-    // جلب سجل المسحوبات
     _withdrawalsFuture = dbHelper.getWithdrawalsForSupplier(widget.supplierId);
   }
 
-  // ============= البناء الرئيسي =============
   @override
   Widget build(BuildContext context) {
-    // حساب صافي الربح المتبقي
+    final l10n = AppLocalizations.of(context)!;
     final netProfit = widget.totalProfit - _currentTotalWithdrawn;
 
     return Scaffold(
-      // --- AppBar مع اسم المورد ---
       appBar: AppBar(
         title: Text(widget.supplierName),
         elevation: 0,
       ),
 
-      // --- الجسم: الملخص + الشركاء + السجل ---
       body: ListView(
         padding: AppConstants.screenPadding,
         children: [
-          // 💰 بطاقة الملخص المالي
-          _buildFinancialSummarySection(netProfit),
+          // بطاقة الملخص المالي
+          _buildFinancialSummarySection(netProfit, l10n),
 
           const SizedBox(height: AppConstants.spacingXl),
 
-          // 👥 قسم توزيع الأرباح على الشركاء (للشراكات فقط)
-          if (widget.supplierType == 'شراكة')
-            _buildPartnersProfitSection(netProfit),
+          // ✅ التعديل 3: استبدال المقارنة المباشرة بدالة isPartnership()
+          if (isPartnership(widget.supplierType))
+            _buildPartnersProfitSection(netProfit, l10n),
 
-          // 📋 قسم سجل المسحوبات
-          _buildWithdrawalsHistorySection(),
+          // قسم سجل المسحوبات
+          _buildWithdrawalsHistorySection(l10n),
         ],
       ),
 
-      // --- زر تسجيل سحب جديد ---
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showRecordWithdrawalDialog(),
+        onPressed: () => _showRecordWithdrawalDialog(l10n),
         icon: const Icon(Icons.arrow_downward),
-        label: const Text('تسجيل سحب'),
-        tooltip: 'تسجيل سحب عام',
+        label: Text(l10n.recordWithdrawal), // ✅ تم التدوين
+        tooltip: l10n.recordGeneralWithdrawal, // ✅ تم التدوين
       ),
     );
   }
 
-  // ============= قسم الملخص المالي =============
-  /// يعرض 3 معلومات مالية:
-  /// 1. إجمالي الأرباح من المورد
-  /// 2. إجمالي المسحوبات
-  /// 3. صافي الربح المتبقي
-  Widget _buildFinancialSummarySection(double netProfit) {
+  /// قسم الملخص المالي
+  Widget _buildFinancialSummarySection(double netProfit, AppLocalizations l10n) {
     return Column(
       children: [
-        // --- بطاقة إجمالي الأرباح ---
+        // بطاقة إجمالي الأرباح
         StatCard(
-          label: 'إجمالي الأرباح من المورد',
+          label: l10n.totalProfitFromSupplier, // ✅ تم التدوين
           value: formatCurrency(widget.totalProfit),
           icon: Icons.trending_up,
           color: AppColors.info,
-          subtitle: 'قبل المسحوبات',
-          // iconSize: 22,
+          subtitle: l10n.beforeWithdrawals, // ✅ تم التدوين
         ),
 
         const SizedBox(height: AppConstants.spacingMd),
 
-        // --- بطاقة المسحوبات ---
+        // بطاقة المسحوبات
         StatCard(
-          label: 'إجمالي المسحوبات',
+          label: l10n.totalWithdrawals, // ✅ تم التدوين
           value: formatCurrency(_currentTotalWithdrawn),
           icon: Icons.arrow_downward,
           color: AppColors.error,
-          subtitle: 'المبالغ المسحوبة',
-          // iconSize: 22,
+          subtitle: l10n.withdrawnAmounts, // ✅ تم التدوين
         ),
 
         const Divider(height: 32),
 
-        // --- بطاقة صافي الربح المتبقي ---
+        // بطاقة صافي الربح المتبقي
         CustomCard(
           color: netProfit >= 0
               ? AppColors.success.withOpacity(0.1)
@@ -174,7 +159,7 @@ class _SupplierDetailsReportScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'صافي الربح المتبقي',
+                        l10n.remainingNetProfit, // ✅ تم التدوين
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       const SizedBox(height: AppConstants.spacingXs),
@@ -199,15 +184,18 @@ class _SupplierDetailsReportScreenState
     );
   }
 
-  // ============= قسم توزيع الأرباح على الشركاء =============
-  /// يعرض قائمة الشركاء مع نصيب كل شريك من الأرباح
-  /// مع زر لتسجيل سحب لكل شريك
-  Widget _buildPartnersProfitSection(double netProfit) {
+  /// قسم توزيع الأرباح على الشركاء
+  Widget _buildPartnersProfitSection(double netProfit, AppLocalizations l10n) {
+    // ✅ التعديل 4: إضافة تحقق من null لتجنب crash
+    if (_partnersFuture == null) return const SizedBox.shrink();
+    
     return FutureBuilder<List<Partner>>(
       future: _partnersFuture,
       builder: (context, snapshot) {
         // إخفاء القسم إذا لم توجد بيانات
-        if (!snapshot.hasData) return const SizedBox.shrink();
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         final partners = snapshot.data!;
 
@@ -216,7 +204,7 @@ class _SupplierDetailsReportScreenState
           children: [
             // عنوان القسم
             Text(
-              'توزيع الأرباح على الشركاء',
+              l10n.partnersProfitDistribution, // ✅ تم التدوين
               style: Theme.of(context).textTheme.headlineSmall,
             ),
 
@@ -224,7 +212,6 @@ class _SupplierDetailsReportScreenState
 
             // قائمة الشركاء
             ...partners.map((partner) {
-              // حساب نصيب الشريك
               final partnerShare = netProfit * (partner.sharePercentage / 100);
 
               return CustomCard(
@@ -247,13 +234,15 @@ class _SupplierDetailsReportScreenState
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    'النسبة: ${partner.sharePercentage}% • '
-                    'النصيب: ${formatCurrency(partnerShare)}',
+                    // ✅ تم التدوين بشكل منفصل
+                    '${l10n.sharePercentage}: ${partner.sharePercentage}% • '
+                    '${l10n.partnerShare(formatCurrency(partnerShare))}',
                   ),
 
                   // زر السحب
                   trailing: ElevatedButton(
                     onPressed: () => _showRecordWithdrawalDialog(
+                      l10n,
                       partnerName: partner.partnerName,
                     ),
                     style: ElevatedButton.styleFrom(
@@ -264,7 +253,7 @@ class _SupplierDetailsReportScreenState
                         vertical: 8,
                       ),
                     ),
-                    child: const Text('سحب'),
+                    child: Text(l10n.withdraw), // ✅ تم التدوين
                   ),
                 ),
               );
@@ -277,15 +266,14 @@ class _SupplierDetailsReportScreenState
     );
   }
 
-  // ============= قسم سجل المسحوبات =============
-  /// يعرض جميع عمليات السحب السابقة
-  Widget _buildWithdrawalsHistorySection() {
+  /// قسم سجل المسحوبات
+  Widget _buildWithdrawalsHistorySection(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // عنوان القسم
         Text(
-          'سجل المسحوبات',
+          l10n.withdrawalsHistory, // ✅ تم التدوين
           style: Theme.of(context).textTheme.headlineSmall,
         ),
 
@@ -295,21 +283,21 @@ class _SupplierDetailsReportScreenState
         FutureBuilder<List<Map<String, dynamic>>>(
           future: _withdrawalsFuture,
           builder: (context, snapshot) {
-            // --- حالة التحميل ---
+            // حالة التحميل
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const LoadingState(message: 'جاري تحميل السجل...');
+              return LoadingState(message: l10n.loadingData); // ✅ تم التدوين
             }
 
-            // --- حالة عدم وجود مسحوبات ---
+            // حالة عدم وجود مسحوبات
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const EmptyState(
+              return EmptyState(
                 icon: Icons.history,
-                title: 'لا توجد مسحوبات',
-                message: 'لم يتم تسجيل أي عملية سحب حتى الآن',
+                title: l10n.noWithdrawals, // ✅ تم التدوين
+                message: l10n.noWithdrawalsRecorded, // ✅ تم التدوين
               );
             }
 
-            // --- عرض قائمة المسحوبات ---
+            // عرض قائمة المسحوبات
             final withdrawals = snapshot.data!;
 
             return ListView.builder(
@@ -317,8 +305,7 @@ class _SupplierDetailsReportScreenState
               physics: const NeverScrollableScrollPhysics(),
               itemCount: withdrawals.length,
               itemBuilder: (context, index) {
-                final withdrawal = withdrawals[index];
-                return _buildWithdrawalCard(withdrawal);
+                return _buildWithdrawalCard(withdrawals[index], l10n);
               },
             );
           },
@@ -327,9 +314,11 @@ class _SupplierDetailsReportScreenState
     );
   }
 
-  // ============= بطاقة السحب الواحد =============
-  /// يعرض تفاصيل عملية سحب واحدة
-  Widget _buildWithdrawalCard(Map<String, dynamic> withdrawal) {
+  /// بطاقة السحب الواحد
+  Widget _buildWithdrawalCard(
+    Map<String, dynamic> withdrawal,
+    AppLocalizations l10n,
+  ) {
     final amount = withdrawal['WithdrawalAmount'] as double;
     final date = DateTime.parse(withdrawal['WithdrawalDate'] as String);
     final partnerName = withdrawal['PartnerName'] as String?;
@@ -341,7 +330,7 @@ class _SupplierDetailsReportScreenState
         padding: AppConstants.paddingMd,
         child: Row(
           children: [
-            // --- أيقونة السحب ---
+            // أيقونة السحب
             Container(
               width: 48,
               height: 48,
@@ -358,7 +347,7 @@ class _SupplierDetailsReportScreenState
 
             const SizedBox(width: AppConstants.spacingMd),
 
-            // --- تفاصيل السحب ---
+            // تفاصيل السحب
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,7 +387,7 @@ class _SupplierDetailsReportScreenState
 
             const SizedBox(width: AppConstants.spacingMd),
 
-            // --- المبلغ ---
+            // المبلغ
             Text(
               formatCurrency(amount),
               style: const TextStyle(
@@ -413,34 +402,33 @@ class _SupplierDetailsReportScreenState
     );
   }
 
-  // ============= نافذة تسجيل سحب جديد =============
-  /// نافذة حوار لتسجيل عملية سحب جديدة
-  void _showRecordWithdrawalDialog({String? partnerName}) {
+  /// نافذة تسجيل سحب جديد
+  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName}) {
     final formKey = GlobalKey<FormState>();
     final amountController = TextEditingController();
     final notesController = TextEditingController();
     
-    // حساب صافي الربح المتاح
     final netProfit = widget.totalProfit - _currentTotalWithdrawn;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        // --- عنوان النافذة ---
+        // عنوان النافذة
         title: Row(
           children: [
             const Icon(Icons.arrow_downward, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'سحب أرباح ${partnerName ?? widget.supplierName}',
+                // ✅ تم التدوين
+                l10n.recordWithdrawalFor(partnerName ?? widget.supplierName),
                 style: const TextStyle(fontSize: 18),
               ),
             ),
           ],
         ),
 
-        // --- محتوى النموذج ---
+        // محتوى النموذج
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -448,7 +436,7 @@ class _SupplierDetailsReportScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- عرض صافي الربح المتاح ---
+                // عرض صافي الربح المتاح
                 Container(
                   padding: AppConstants.paddingMd,
                   decoration: BoxDecoration(
@@ -471,7 +459,8 @@ class _SupplierDetailsReportScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'الربح الصافي المتاح:',
+                              // ✅ تم التدوين
+                              l10n.availableNetProfit(formatCurrency(netProfit)),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             Text(
@@ -493,10 +482,10 @@ class _SupplierDetailsReportScreenState
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // --- حقل المبلغ المسحوب ---
+                // حقل المبلغ المسحوب
                 CustomTextField(
                   controller: amountController,
-                  label: 'المبلغ المسحوب',
+                  label: l10n.withdrawnAmount, // ✅ تم التدوين
                   hint: '0.00',
                   prefixIcon: Icons.attach_money,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -504,18 +493,18 @@ class _SupplierDetailsReportScreenState
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'المبلغ مطلوب';
+                      return l10n.amountRequired; // ✅ تم التدوين
                     }
 
                     final convertedValue = convertArabicNumbersToEnglish(value);
                     final amount = double.tryParse(convertedValue);
 
                     if (amount == null || amount <= 0) {
-                      return 'أدخل مبلغاً صحيحاً';
+                      return l10n.enterValidAmount; // ✅ تم التدوين
                     }
 
                     if (amount > netProfit) {
-                      return 'المبلغ يتجاوز الربح المتاح';
+                      return l10n.amountExceedsProfit; // ✅ تم التدوين
                     }
 
                     return null;
@@ -524,11 +513,11 @@ class _SupplierDetailsReportScreenState
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // --- حقل الملاحظات (اختياري) ---
+                // حقل الملاحظات
                 CustomTextField(
                   controller: notesController,
-                  label: 'ملاحظات (اختياري)',
-                  hint: 'أضف ملاحظة...',
+                  label: l10n.notesOptional, // ✅ تم التدوين
+                  hint: l10n.enterNotes, // ✅ تم التدوين
                   prefixIcon: Icons.note_outlined,
                   maxLines: 3,
                 ),
@@ -537,22 +526,21 @@ class _SupplierDetailsReportScreenState
           ),
         ),
 
-        // --- أزرار الإجراءات ---
+        // أزرار الإجراءات
         actions: [
           // زر الإلغاء
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancel), // ✅ تم التدوين
           ),
 
           // زر الحفظ
           ElevatedButton.icon(
             onPressed: () async {
-              // --- التحقق من صحة البيانات ---
               if (!formKey.currentState!.validate()) return;
 
               try {
-                // --- تحضير البيانات ---
+                // تحضير البيانات
                 final withdrawalData = {
                   'SupplierID': widget.supplierId,
                   'PartnerName': partnerName,
@@ -563,18 +551,17 @@ class _SupplierDetailsReportScreenState
                   'Notes': notesController.text.trim(),
                 };
 
-                // --- حفظ السحب ---
+                // حفظ السحب
                 await dbHelper.recordProfitWithdrawal(withdrawalData);
 
                 if (!ctx.mounted) return;
 
-                // إغلاق النافذة
                 Navigator.pop(ctx);
 
                 // رسالة نجاح
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('تم تسجيل السحب بنجاح'),
+                  SnackBar(
+                    content: Text(l10n.withdrawalSuccess), // ✅ تم التدوين
                     backgroundColor: AppColors.success,
                   ),
                 );
@@ -585,21 +572,20 @@ class _SupplierDetailsReportScreenState
                   _loadData();
                 });
               } catch (e) {
-                // --- معالجة الخطأ ---
                 if (!ctx.mounted) return;
 
                 Navigator.pop(ctx);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('حدث خطأ: $e'),
+                    content: Text(l10n.errorOccurred(e.toString())), // ✅ تم التدوين
                     backgroundColor: AppColors.error,
                   ),
                 );
               }
             },
             icon: const Icon(Icons.save),
-            label: const Text('حفظ'),
+            label: Text(l10n.save), // ✅ تم التدوين
           ),
         ],
       ),

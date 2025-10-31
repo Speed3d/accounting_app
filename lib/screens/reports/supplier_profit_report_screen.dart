@@ -44,7 +44,8 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
       final totalWithdrawn = await dbHelper.getTotalWithdrawnForSupplier(supplierId);
       
       List<Partner> partners = [];
-      if (supplierType == 'شراكة') {
+      // ✅ التعديل 1: استبدال المقارنة المباشرة بدالة isPartnership()
+      if (isPartnership(supplierType)) {
         partners = await dbHelper.getPartnersForSupplier(supplierId);
       }
       
@@ -67,7 +68,6 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // ============= AppBar =============
       appBar: AppBar(
         title: Text(l10n.supplierProfitReport),
         actions: [
@@ -75,18 +75,17 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
-            tooltip: 'تحديث',
+            tooltip: l10n.refresh, // ✅ تم التدوين
           ),
         ],
       ),
       
-      // ============= Body =============
       body: FutureBuilder<List<SupplierProfitData>>(
         future: _reportDataFuture,
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري تحميل البيانات...');
+            return LoadingState(message: l10n.loadingData); // ✅ تم التدوين
           }
           
           // حالة الخطأ
@@ -102,7 +101,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
             return EmptyState(
               icon: Icons.trending_up,
               title: l10n.noProfitsRecorded,
-              message: 'لا توجد أرباح مسجلة للموردين بعد',
+              message: l10n.noProfitsRecordedForSuppliers, // ✅ تم التدوين
             );
           }
 
@@ -133,8 +132,8 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
   ) {
     final netProfit = data.totalProfit - data.totalWithdrawn;
     
-    // تحديد لون المورد حسب النوع
-    final supplierColor = data.supplierType == 'شراكة' 
+    // ✅ التعديل 2: استبدال المقارنة المباشرة بدالة isPartnership()
+    final supplierColor = isPartnership(data.supplierType)
         ? AppColors.secondaryLight 
         : AppColors.info;
 
@@ -152,11 +151,11 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
             ),
           ),
         );
-        _loadData(); // تحديث البيانات عند العودة
+        _loadData();
       },
       child: Column(
         children: [
-          // ============= الصف الأول: المعلومات الأساسية =============
+          // الصف الأول: المعلومات الأساسية
           Row(
             children: [
               // أيقونة المورد
@@ -168,7 +167,8 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                   borderRadius: AppConstants.borderRadiusMd,
                 ),
                 child: Icon(
-                  data.supplierType == 'شراكة' 
+                  // ✅ التعديل 3: استبدال المقارنة المباشرة بدالة isPartnership()
+                  isPartnership(data.supplierType)
                       ? Icons.people 
                       : Icons.business,
                   color: supplierColor,
@@ -183,17 +183,13 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // اسم المورد
                     Text(
                       data.supplierName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    
                     const SizedBox(height: AppConstants.spacingXs),
-                    
-                    // نوع المورد أو الشركاء
                     _buildSupplierSubtitle(data, isDark, l10n),
                   ],
                 ),
@@ -212,7 +208,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // ============= الصف الثاني: الأرقام المالية =============
+          // الصف الثاني: الأرقام المالية
           Container(
             padding: const EdgeInsets.all(AppConstants.spacingMd),
             decoration: BoxDecoration(
@@ -227,7 +223,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: 'إجمالي الأرباح',
+                    label: l10n.totalProfits, // ✅ تم التدوين
                     value: formatCurrency(data.totalProfit),
                     color: AppColors.info,
                     icon: Icons.trending_up,
@@ -250,7 +246,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: 'المسحوبات',
+                    label: l10n.withdrawals, // ✅ تم التدوين
                     value: formatCurrency(data.totalWithdrawn),
                     color: AppColors.warning,
                     icon: Icons.arrow_downward,
@@ -273,7 +269,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: 'صافي الربح',
+                    label: l10n.netProfit, // ✅ تم التدوين
                     value: formatCurrency(netProfit),
                     color: netProfit >= 0 ? AppColors.success : AppColors.error,
                     icon: netProfit >= 0 
@@ -295,7 +291,8 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     bool isDark,
     AppLocalizations l10n,
   ) {
-    if (data.supplierType == 'شراكة' && data.partners.isNotEmpty) {
+    // ✅ التعديل 4: استبدال المقارنة المباشرة بدالة isPartnership()
+    if (isPartnership(data.supplierType) && data.partners.isNotEmpty) {
       final partnerNames = data.partners.map((p) => p.partnerName).join('، ');
       return Text(
         l10n.partnersLabel(partnerNames),
@@ -331,25 +328,14 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
   }) {
     return Column(
       children: [
-        // الأيقونة
-        Icon(
-          icon,
-          color: color,
-          size: 20,
-        ),
-        
+        Icon(icon, color: color, size: 20),
         const SizedBox(height: AppConstants.spacingXs),
-        
-        // العنوان
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
-        
         const SizedBox(height: AppConstants.spacingXs),
-        
-        // القيمة
         Text(
           value,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(

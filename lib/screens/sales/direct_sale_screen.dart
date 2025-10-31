@@ -11,9 +11,6 @@ import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
-import '../products/add_edit_product_screen.dart';
-
-// ✅ استيراد النظام الجديد (بدون MainLayout)
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
@@ -641,7 +638,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري تحميل المنتجات...');
+            return  LoadingState(message: l10n.loadingProducts);
           }
 
           if (snapshot.hasError) {
@@ -659,8 +656,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             return EmptyState(
               icon: Icons.inventory_2_outlined,
               title: l10n.noProductsInStock,
-              message: 'قم بإضافة منتجات للمخزن أولاً',
-              actionText: 'إضافة منتج',
+              message: l10n.addtonewstores,
+              actionText: l10n.addProduct,
               onAction: () {
                 // TODO: التنقل لصفحة إضافة منتج
               },

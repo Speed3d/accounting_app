@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_authService.canViewCustomers) {
       items.add({
-        'title': 'بيع مباشر',
+        'title': l10n.directselling,
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
         'page': const DirectSaleScreen(), // ✅ أضف const

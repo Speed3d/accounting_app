@@ -8,10 +8,9 @@ import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/loading_state.dart';
 
-/// 📊 شاشة تقرير التدفق النقدي
+/// شاشة تقرير التدفق النقدي
 class CashFlowReportScreen extends StatefulWidget {
   const CashFlowReportScreen({super.key});
 
@@ -20,7 +19,7 @@ class CashFlowReportScreen extends StatefulWidget {
 }
 
 class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
-  // ============= المتغيرات =============
+  // المتغيرات الأساسية
   final dbHelper = DatabaseHelper.instance;
   late Future<List<Map<String, dynamic>>> _transactionsFuture;
   
@@ -38,7 +37,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     _loadData();
   }
 
-  // ============= تحميل البيانات =============
+  /// تحميل البيانات من قاعدة البيانات
   void _loadData() {
     setState(() {
       _transactionsFuture = dbHelper.getCashFlowTransactions(
@@ -48,7 +47,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     });
   }
 
-  // ============= اختيار نطاق التاريخ =============
+  /// فتح نافذة اختيار نطاق التاريخ
   Future<void> _pickDateRange() async {
     final newDateRange = await showDateRangePicker(
       context: context,
@@ -84,32 +83,36 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
       appBar: AppBar(
         title: Text(l10n.cashFlowReport),
         actions: [
+          // زر اختيار نطاق التاريخ
           IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: _pickDateRange,
             tooltip: l10n.selectDateRange,
           ),
+          // زر التحديث
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
-            tooltip: l10n.refresh ?? 'تحديث',
+            tooltip: l10n.refresh, // ✅ إزالة ??
           ),
         ],
       ),
       body: Column(
         children: [
-          // ============= معلومات الفترة =============
+          // معلومات الفترة الزمنية المحددة
           _buildDateRangeInfo(l10n),
           
-          // ============= بطاقات الملخص =============
+          // محتوى التقرير
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: _transactionsFuture,
               builder: (context, snapshot) {
+                // حالة التحميل
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingState(message: 'جاري تحميل البيانات...');
+                  return LoadingState(message: l10n.loadingData); // ✅ تم التدوين
                 }
 
+                // حالة الخطأ
                 if (snapshot.hasError) {
                   return ErrorState(
                     message: l10n.errorOccurred(snapshot.error.toString()),
@@ -117,12 +120,12 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                   );
                 }
 
+                // حالة عدم وجود بيانات
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return EmptyState(
                     icon: Icons.account_balance_wallet,
                     title: l10n.noTransactions,
-                    message: l10n.noTransactionsInPeriod ?? 
-                        'لا توجد معاملات في هذه الفترة',
+                    message: l10n.noTransactionsInPeriod, // ✅ إزالة ??
                   );
                 }
 
@@ -143,7 +146,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                 return ListView(
                   padding: AppConstants.screenPadding,
                   children: [
-                    // بطاقات الملخص
+                    // بطاقة إجمالي المبيعات النقدية
                     _buildSummaryCard(
                       l10n.totalCashSales,
                       totalCashSales,
@@ -153,6 +156,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                     
                     const SizedBox(height: AppConstants.spacingSm),
                     
+                    // بطاقة إجمالي تسديدات الديون
                     _buildSummaryCard(
                       l10n.totalDebtPayments,
                       totalDebtPayments,
@@ -162,6 +166,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                     
                     const SizedBox(height: AppConstants.spacingSm),
                     
+                    // بطاقة الإجمالي الكلي للتدفق النقدي
                     _buildSummaryCard(
                       l10n.totalCashInflow,
                       totalCashIn,
@@ -177,7 +182,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                     // زر إظهار/إخفاء التفاصيل
                     _buildToggleDetailsButton(l10n),
                     
-                    // قائمة التفاصيل
+                    // قائمة التفاصيل (إن كانت ظاهرة)
                     if (_isDetailsVisible) ...[
                       const SizedBox(height: AppConstants.spacingMd),
                       _buildTransactionsList(snapshot.data!, l10n),
@@ -192,7 +197,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     );
   }
 
-  // ============= معلومات الفترة =============
+  /// بناء عرض معلومات الفترة الزمنية
   Widget _buildDateRangeInfo(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
@@ -227,7 +232,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     );
   }
 
-  // ============= بطاقة الملخص =============
+  /// بناء بطاقة ملخص
   Widget _buildSummaryCard(
     String title,
     double amount,
@@ -241,7 +246,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
           : null,
       child: Row(
         children: [
-          // الأيقونة
+          // أيقونة البطاقة
           Container(
             padding: const EdgeInsets.all(AppConstants.spacingMd),
             decoration: BoxDecoration(
@@ -292,7 +297,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     );
   }
 
-  // ============= زر إظهار/إخفاء التفاصيل =============
+  /// زر إظهار/إخفاء التفاصيل
   Widget _buildToggleDetailsButton(AppLocalizations l10n) {
     return InkWell(
       onTap: () {
@@ -327,7 +332,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     );
   }
 
-  // ============= قائمة المعاملات =============
+  /// بناء قائمة المعاملات التفصيلية
   Widget _buildTransactionsList(
     List<Map<String, dynamic>> transactions,
     AppLocalizations l10n,
@@ -335,6 +340,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // رأس القائمة
         Padding(
           padding: const EdgeInsets.only(bottom: AppConstants.spacingMd),
           child: Row(
@@ -346,7 +352,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                l10n.transactionDetails ?? 'تفاصيل المعاملات',
+                l10n.transactionDetails, // ✅ إزالة ??
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -373,12 +379,16 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
           ),
         ),
         
+        // قائمة البطاقات
         ...transactions.map((trans) {
           final isCashSale = trans['type'] == 'CASH_SALE';
+          
+          // ✅ إصلاح استخراج اسم الزبون
           final description = isCashSale
               ? l10n.cashSaleDescription(trans['id'].toString())
               : l10n.debtPaymentDescription(
-                  trans['description'].toString().replaceFirst('تسديد من الزبون: ', ''),
+                  // استخدام split للحصول على اسم الزبون فقط
+                  trans['description'].toString().split(': ').last,
                 );
 
           return Padding(
@@ -387,7 +397,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
               padding: const EdgeInsets.all(AppConstants.spacingMd),
               child: Row(
                 children: [
-                  // الأيقونة
+                  // أيقونة نوع المعاملة
                   Container(
                     padding: const EdgeInsets.all(AppConstants.spacingSm),
                     decoration: BoxDecoration(
@@ -405,7 +415,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                   
                   const SizedBox(width: AppConstants.spacingMd),
                   
-                  // التفاصيل
+                  // تفاصيل المعاملة
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,7 +449,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                     ),
                   ),
                   
-                  // المبلغ
+                  // المبلغ والشارة
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -470,7 +480,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                             ),
                             const SizedBox(width: 2),
                             Text(
-                              l10n.cashIn ?? 'وارد',
+                              l10n.cashIn, // ✅ إزالة ??
                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                 color: AppColors.success,
                                 fontWeight: FontWeight.bold,

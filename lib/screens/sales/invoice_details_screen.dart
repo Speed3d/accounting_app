@@ -7,28 +7,13 @@ import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
-
-// ✅ استيراد النظام الجديد
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/status_badge.dart';
-import 'package:provider/provider.dart';
-import '../../providers/theme_provider.dart';
 
-/// =================================================================================================
-/// 📋 شاشة تفاصيل الفاتورة - Invoice Details Screen
-/// =================================================================================================
-/// الوظيفة: عرض تفاصيل فاتورة نقدية مع إمكانية إرجاع المنتجات
-/// 
-/// المميزات:
-/// - ✅ عرض جميع بنود الفاتورة
-/// - ✅ تمييز البنود المرجعة
-/// - ✅ إمكانية إرجاع بند (Long Press)
-/// - ✅ تحديث حالة الفاتورة تلقائياً
-/// - ✅ دعم الثيم الداكن
-/// =================================================================================================
+/// شاشة تفاصيل الفاتورة النقدية
 class InvoiceDetailsScreen extends StatefulWidget {
   final int invoiceId;
   
@@ -42,10 +27,6 @@ class InvoiceDetailsScreen extends StatefulWidget {
 }
 
 class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
-  // =================================================================================================
-  // 📦 المتغيرات الأساسية
-  // =================================================================================================
-  
   final dbHelper = DatabaseHelper.instance;
   final AuthService _authService = AuthService();
   late Future<List<CustomerDebt>> _salesFuture;
@@ -57,15 +38,11 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     _salesFuture = dbHelper.getSalesForInvoice(widget.invoiceId);
   }
 
-  // =================================================================================================
-  // 🔄 معالجة الإرجاع - Return Handling
-  // =================================================================================================
-  
-  /// Hint: دالة للتعامل مع طلب إرجاع بند من الفاتورة
+  /// دالة معالجة إرجاع المنتج
   Future<void> _handleReturnSale(CustomerDebt sale) async {
     final l10n = AppLocalizations.of(context)!;
     
-    // === عرض مربع حوار التأكيد ===
+    // عرض مربع حوار التأكيد
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -86,6 +63,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           children: [
             Text(l10n.returnConfirmContent(sale.details)),
             const SizedBox(height: AppConstants.spacingMd),
+            // صندوق التحذير
             Container(
               padding: AppConstants.paddingMd,
               decoration: BoxDecoration(
@@ -105,7 +83,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: Text(
-                      'سيتم إرجاع المنتج للمخزن وتحديث حالة الفاتورة',
+                      l10n.returnWarningMessage,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.warning,
                           ),
@@ -142,12 +120,12 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     
     if (confirm != true) return;
     
-    // === تنفيذ الإرجاع ===
+    // تنفيذ عملية الإرجاع
     try {
       await dbHelper.returnSaleItem(sale);
-      await dbHelper.updateInvoiceStatus(widget.invoiceId, 'معدلة');
+      await dbHelper.updateInvoiceStatus(widget.invoiceId, l10n.invoiceStatusModified);
       await dbHelper.logActivity(
-        'إرجاع منتج من فاتورة نقدية #${widget.invoiceId}: ${sale.details}',
+        l10n.returnActivityLog(widget.invoiceId.toString(), sale.details),
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
       );
@@ -191,43 +169,38 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     }
   }
 
-  // =================================================================================================
-  // 🎨 بناء واجهة المستخدم - UI Building
-  // =================================================================================================
-  
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    // ✅ استخدام PopScope بدلاً من WillPopScope (deprecated)
+    // استخدام PopScope لمعالجة زر الرجوع
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
         if (didPop && _hasChanged) {
-          // يمكن إضافة منطق إضافي هنا إذا لزم الأمر
+          // يمكن إضافة منطق إضافي مستقبلاً
         }
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.detailsForInvoice(widget.invoiceId.toString())),
-          // ✅ زر الرجوع يظهر تلقائياً
         ),
         body: _buildBody(l10n),
       ),
     );
   }
   
-  /// Hint: بناء جسم الصفحة
+  /// بناء محتوى الصفحة
   Widget _buildBody(AppLocalizations l10n) {
     return FutureBuilder<List<CustomerDebt>>(
       future: _salesFuture,
       builder: (context, snapshot) {
-        // === حالة التحميل ===
+        // حالة التحميل
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingState(message: 'جاري تحميل تفاصيل الفاتورة...');
+          return LoadingState(message: l10n.loadingInvoiceDetails);
         }
         
-        // === حالة الخطأ ===
+        // حالة الخطأ
         if (snapshot.hasError) {
           return ErrorState(
             message: l10n.errorOccurred(snapshot.error.toString()),
@@ -239,26 +212,21 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           );
         }
         
-        // === حالة عدم وجود بيانات ===
+        // حالة عدم وجود بيانات
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return EmptyState(
             icon: Icons.receipt_long_outlined,
-            title: 'لا توجد بنود في هذه الفاتورة',
-            message: 'الفاتورة فارغة أو تم إلغاؤها',
+            title: l10n.noItemsInInvoice,
+            message: l10n.invoiceEmptyOrCancelled,
           );
         }
         
         final sales = snapshot.data!;
         
-        // === عرض القائمة ===
         return Column(
           children: [
-            // معلومات الفاتورة
             _buildInvoiceSummary(sales, l10n),
-            
             const Divider(height: 1),
-            
-            // قائمة البنود
             Expanded(
               child: ListView.builder(
                 padding: AppConstants.screenPadding,
@@ -274,16 +242,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     );
   }
   
-  // =================================================================================================
-  // 🃏 بطاقات العرض - Display Cards
-  // =================================================================================================
-  
-  /// Hint: بناء ملخص الفاتورة في الأعلى
+  /// بناء ملخص الفاتورة
   Widget _buildInvoiceSummary(List<CustomerDebt> sales, AppLocalizations l10n) {
+    // حساب المبلغ الإجمالي (بدون المرتجعات)
     final totalAmount = sales
         .where((sale) => sale.isReturned == 0)
         .fold(0.0, (sum, sale) => sum + sale.debt);
     
+    // حساب المبلغ المرجع
     final returnedAmount = sales
         .where((sale) => sale.isReturned == 1)
         .fold(0.0, (sum, sale) => sum + sale.debt);
@@ -300,7 +266,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'إجمالي الفاتورة:',
+                l10n.invoiceTotalAmount,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Text(
@@ -328,7 +294,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
                     ),
                     const SizedBox(width: AppConstants.spacingXs),
                     Text(
-                      'المبلغ المرجع:',
+                      l10n.returnedAmount,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.error,
                           ),
@@ -349,7 +315,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'الصافي:',
+                  l10n.netAmount,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -368,7 +334,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
           // عدد البنود
           const SizedBox(height: AppConstants.spacingMd),
           StatusBadge(
-            text: 'عدد البنود: ${sales.length}',
+            text: l10n.itemsCount2(sales.length),
             type: StatusType.info,
             small: true,
           ),
@@ -377,14 +343,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     );
   }
   
-  /// Hint: بناء بطاقة بند من بنود الفاتورة
+  /// بناء بطاقة البند
   Widget _buildSaleItemCard(CustomerDebt sale, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isReturned = sale.isReturned == 1;
     
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
-      onTap: isReturned ? null : () => _handleReturnSale(sale),
+      // ✅ تم إزالة onTap من هنا لحل التعارض
       color: isReturned
           ? (isDark ? AppColors.borderDark : AppColors.borderLight).withOpacity(0.3)
           : null,
@@ -463,7 +429,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
                     if (isReturned) ...[
                       const SizedBox(height: AppConstants.spacingSm),
                       StatusBadge(
-                        text: 'مُرجع',
+                        text: l10n.returnedStatus,
                         type: StatusType.error,
                         small: true,
                       ),
@@ -491,7 +457,7 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
                   if (!isReturned) ...[
                     const SizedBox(height: AppConstants.spacingXs),
                     Text(
-                      'اضغط مطولاً للإرجاع',
+                      l10n.longPressToReturn,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 10,
                             fontStyle: FontStyle.italic,

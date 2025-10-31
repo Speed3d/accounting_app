@@ -749,7 +749,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profitReportDesc => 'View net profit from all sales';
 
   @override
-  String get supplierProfitReport => 'Supplier & Partner Profit Report';
+  String get supplierProfitReport => 'Supplier Profit Report';
 
   @override
   String get supplierProfitReportDesc =>
@@ -1024,7 +1024,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadingDetails => 'Loading details...';
 
   @override
-  String get noSalesRecorded => 'No sales recorded to display.';
+  String get noSalesRecorded => 'No sales have been recorded yet';
 
   @override
   String customerLabel(String name) {
@@ -1064,7 +1064,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashSalesHistorySubtitle => 'View and manage direct sale invoices';
 
   @override
-  String get cashFlowReport => 'Cash Receipts Report';
+  String get cashFlowReport => 'Cash Flow Report';
 
   @override
   String get cashFlowReportSubtitle =>
@@ -1129,7 +1129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recordWithdrawalFor(String name) {
-    return 'Record Withdrawal for: $name';
+    return 'Withdraw Profits for: $name';
   }
 
   @override
@@ -1147,13 +1147,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get withdrawalSuccess => 'Withdrawal recorded successfully';
 
   @override
-  String get totalProfitFromSupplier => 'Total Profit from Supplier:';
+  String get totalProfitFromSupplier => 'Total Profit from Supplier';
 
   @override
   String get totalWithdrawals => 'Total Withdrawals:';
 
   @override
-  String get remainingNetProfit => 'Remaining Net Profit:';
+  String get remainingNetProfit => 'Remaining Net Profit';
 
   @override
   String get partnersProfitDistribution => 'Partners\' Profit Distribution';
@@ -1201,13 +1201,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grossProfitFromSales => 'Gross Profit from Sales';
 
   @override
-  String get totalGeneralExpenses => '(-) Total General Expenses';
+  String get totalGeneralExpenses => 'Total General Expenses';
 
   @override
-  String get totalProfitWithdrawals => '(-) Total Profit Withdrawals';
+  String get totalProfitWithdrawals => 'Total Profit Withdrawals';
 
   @override
-  String get netProfit => 'Final Net Profit';
+  String get netProfit => 'Net Profit';
 
   @override
   String get totalProfitFromThisSupplier => 'Total profit from this supplier';
@@ -1423,7 +1423,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseTryAgain => 'Please try again';
 
   @override
-  String get noSales => 'No sales';
+  String get noSales => 'No Sales';
 
   @override
   String get noCustomers => 'No customers';
@@ -1758,6 +1758,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addNewProduct => 'Add new product';
+
+  @override
+  String get addtonewstores => 'Add to new stores';
 
   @override
   String get totalQuantity => 'Total quantity';
@@ -2167,8 +2170,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String returnActivityLog(String productDetails, String customerName) {
-    return 'Product returned: $productDetails for customer: $customerName';
+  String returnActivityLog(String invoiceId, String productName) {
+    return 'Product returned from cash invoice #$invoiceId: $productName';
   }
 
   @override
@@ -2189,4 +2192,147 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newSale => 'New Sale';
+
+  @override
+  String get generalProfitReport_desc =>
+      'Displays total profits and sales details';
+
+  @override
+  String get supplierProfitReport_desc =>
+      'Distribution of profits by supplier or partner';
+
+  @override
+  String get cashSalesRecord => 'Cash Sales Record';
+
+  @override
+  String get cashSalesRecord_desc => 'Invoices and direct cash sales';
+
+  @override
+  String get cashFlowReport_desc => 'Cash receipts and payments';
+
+  @override
+  String get expenseRecord => 'Expense Record';
+
+  @override
+  String get expenseRecord_desc => 'All recorded expenses and expenditures';
+
+  @override
+  String get employeePayrollReport => 'Employee and Payroll Report';
+
+  @override
+  String get employeePayrollReport_desc =>
+      'Employee statement, salaries, and advances';
+
+  @override
+  String get reportingCenter => 'Reporting Center';
+
+  @override
+  String get noreportsavailable => 'No reports are available';
+
+  @override
+  String get donotpermissionreports =>
+      'You do not have permission to access any reports';
+
+  @override
+  String get calculatingProfits => 'Calculating profits...';
+
+  @override
+  String get noData => 'No Data';
+
+  @override
+  String get noOperationsRecorded => 'No operations have been recorded yet';
+
+  @override
+  String get totalProfitsFromSales => 'Total Profits from Sales';
+
+  @override
+  String get beforeExpenses => 'Before expenses';
+
+  @override
+  String get billsAndExpenses => 'Bills and expenses';
+
+  @override
+  String get forSuppliersAndPartners => 'For suppliers and partners';
+
+  @override
+  String salesDetailsCount(String count) {
+    return 'Sales Details ($count)';
+  }
+
+  @override
+  String get notRegistered => 'Not registered';
+
+  @override
+  String fromAmount(String amount) {
+    return 'From $amount';
+  }
+
+  @override
+  String get returnWarningMessage =>
+      'Product will be returned to stock and invoice status will be updated';
+
+  @override
+  String get loadingInvoiceDetails => 'Loading invoice details...';
+
+  @override
+  String get noItemsInInvoice => 'No items in this invoice';
+
+  @override
+  String get invoiceEmptyOrCancelled => 'Invoice is empty or cancelled';
+
+  @override
+  String get invoiceStatusModified => 'Modified';
+
+  @override
+  String get invoiceTotalAmount => 'Invoice Total:';
+
+  @override
+  String get returnedAmount => 'Returned Amount:';
+
+  @override
+  String get netAmount => 'Net:';
+
+  @override
+  String itemsCount2(int count) {
+    return 'Items Count: $count';
+  }
+
+  @override
+  String get returnedStatus => 'Returned';
+
+  @override
+  String get longPressToReturn => 'Long press to return';
+
+  @override
+  String get noProfitsRecordedForSuppliers =>
+      'No profits recorded for suppliers yet';
+
+  @override
+  String get totalProfits => 'Total Profits';
+
+  @override
+  String get withdrawals => 'Withdrawals';
+
+  @override
+  String get trysearchinvoice =>
+      'Try searching with a different invoice number';
+
+  @override
+  String get nocashrecordedyet => 'No cash sales invoice has been recorded yet';
+
+  @override
+  String get invoicesloaded => 'Invoices are being loaded...';
+
+  @override
+  String get beforeWithdrawals => 'Before Withdrawals';
+
+  @override
+  String get withdrawnAmounts => 'Withdrawn Amounts';
+
+  @override
+  String get recordWithdrawal => 'Record Withdrawal';
+
+  @override
+  String get noWithdrawalsRecorded =>
+      'No withdrawal operations have been recorded yet';
 }

@@ -1,6 +1,7 @@
 // lib/screens/reports/reports_hub_screen.dart
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -36,6 +37,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   // ============= البناء الرئيسي =============
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // --- جمع التقارير المتاحة حسب الصلاحيات ---
     final availableReports = _getAvailableReports();
     
@@ -46,7 +48,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (widget.useScaffold) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('مركز التقارير'),
+          title:  Text(l10n.reportingCenter),
           centerTitle: false,
         ),
         body: content,
@@ -59,6 +61,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   
   // ============= بناء المحتوى =============
   Widget _buildContent(List<ReportItem> availableReports) {
+     final l10n = AppLocalizations.of(context)!;
     // --- حالة عدم وجود تقارير متاحة ---
     if (availableReports.isEmpty) {
       return Center(
@@ -74,13 +77,13 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
               ),
               const SizedBox(height: AppConstants.spacingLg),
               Text(
-                'لا يوجد تقارير متاحة',
+                l10n.noreportsavailable,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppConstants.spacingSm),
               Text(
-                'ليس لديك صلاحية للوصول إلى أي تقرير',
+                l10n.donotpermissionreports,
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -104,14 +107,15 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   // ============= جمع التقارير المتاحة =============
   /// يُرجع قائمة بالتقارير المتاحة حسب صلاحيات المستخدم
   List<ReportItem> _getAvailableReports() {
+    final l10n = AppLocalizations.of(context)!;
     final reports = <ReportItem>[];
 
     // --- تقرير الأرباح العام ---
     if (_authService.canViewReports || _authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'تقرير الأرباح العام',
-          subtitle: 'عرض إجمالي الأرباح وتفاصيل المبيعات',
+          title: l10n.generalProfitReport,
+          subtitle: l10n.generalProfitReport_desc,
           icon: Icons.trending_up,
           color: AppColors.success,
           screen: const ProfitReportScreen(),
@@ -123,8 +127,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (_authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'تقرير أرباح الموردين',
-          subtitle: 'توزيع الأرباح حسب المورد والشريك',
+          title: l10n.supplierProfitReport,
+          subtitle: l10n.supplierProfitReport_desc,
           icon: Icons.pie_chart,
           color: AppColors.info,
           screen: const SupplierProfitReportScreen(),
@@ -136,8 +140,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (_authService.canViewCashSales || _authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'سجل المبيعات النقدية',
-          subtitle: 'الفواتير والمبيعات النقدية المباشرة',
+          title: l10n.cashSalesRecord,
+          subtitle: l10n.cashSalesRecord_desc,
           icon: Icons.point_of_sale,
           color: AppColors.primaryLight,
           screen: const CashSalesHistoryScreen(),
@@ -149,8 +153,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (_authService.canViewCashSales || _authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'تقرير التدفق النقدي',
-          subtitle: 'المقبوضات النقدية والتسديدات',
+          title: l10n.cashFlowReport,
+          subtitle: l10n.cashFlowReport_desc,
           icon: Icons.account_balance_wallet,
           color: AppColors.secondaryLight,
           screen: const CashFlowReportScreen(),
@@ -162,8 +166,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (_authService.canManageExpenses || _authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'سجل المصاريف',
-          subtitle: 'جميع المصاريف والنفقات المسجلة',
+          title: l10n.expenseRecord,
+          subtitle: l10n.expenseRecord_desc,
           icon: Icons.receipt_long,
           color: AppColors.error,
           screen: const ExpensesScreen(),
@@ -175,8 +179,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     if (_authService.canViewEmployeesReport || _authService.isAdmin) {
       reports.add(
         ReportItem(
-          title: 'تقرير الموظفين والرواتب',
-          subtitle: 'كشف الموظفين والرواتب والسلف',
+          title: l10n.employeePayrollReport,
+          subtitle: l10n.employeePayrollReport_desc,
           icon: Icons.people_outline,
           color: AppColors.warning,
           screen: const EmployeesReportScreen(),

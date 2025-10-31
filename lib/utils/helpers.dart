@@ -27,6 +27,14 @@ String formatCurrency(double amount) {
   // . - يعني ضع الفاصلة العشرية.
   final formatter = NumberFormat('###,##0.##', 'en_US');
   return formatter.format(amount);
+
 }
+
+// في lib/utils/helpers.dart
+bool isPartnership(String supplierType) => 
+    supplierType == 'شراكة' || supplierType.toLowerCase() == 'partnership';
+
+bool isIndividual(String supplierType) => 
+    supplierType == 'فردي' || supplierType.toLowerCase() == 'individual';
 
 

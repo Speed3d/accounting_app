@@ -922,6 +922,7 @@
   "startByAddingProduct": "Start by adding your first product in inventory",
   "addProduct": "Add product",
   "addNewProduct": "Add new product",
+  "addtonewstores": "Add to new stores",
 
   "totalQuantity": "Total quantity",
   "low": "Low",
@@ -1400,7 +1401,168 @@
   "newPayment": "New Payment",
 
   "nopurchasesyetrecorded": "No purchases have been recorded yet",
-  "nopaymentsyetrecorded": "No payments have been recorded yet"
+  "nopaymentsyetrecorded": "No payments have been recorded yet",
 
+    "generalProfitReport": "General Profit Report",
+  "generalProfitReport_desc": "Displays total profits and sales details",
+
+  "supplierProfitReport": "Supplier Profit Report",
+  "supplierProfitReport_desc": "Distribution of profits by supplier or partner",
+
+  "cashSalesRecord": "Cash Sales Record",
+  "cashSalesRecord_desc": "Invoices and direct cash sales",
+
+  "cashFlowReport": "Cash Flow Report",
+  "cashFlowReport_desc": "Cash receipts and payments",
+
+  "expenseRecord": "Expense Record",
+  "expenseRecord_desc": "All recorded expenses and expenditures",
+
+  "employeePayrollReport": "Employee and Payroll Report",
+  "employeePayrollReport_desc": "Employee statement, salaries, and advances",
+
+  "reportingCenter": "Reporting Center",
+  "noreportsavailable": "No reports are available",
+  "donotpermissionreports": "You do not have permission to access any reports",
+
+  "generalProfitReport": "General Profit Report",
+  
+  "refresh": "Refresh",
+  
+  "calculatingProfits": "Calculating profits...",
+  "noData": "No Data",
+  "noOperationsRecorded": "No operations have been recorded yet",
+  
+  "totalProfitsFromSales": "Total Profits from Sales",
+  "beforeExpenses": "Before expenses",
+  
+  "totalGeneralExpenses": "Total General Expenses",
+  "billsAndExpenses": "Bills and expenses",
+  
+  "totalProfitWithdrawals": "Total Profit Withdrawals",
+  "forSuppliersAndPartners": "For suppliers and partners",
+  
+  "netProfit": "Net Profit",
+  
+  "hideSalesDetails": "Hide Sales Details",
+  "showSalesDetails": "Show Sales Details",
+  
+  "noSales": "No Sales",
+  "noSalesRecorded": "No sales have been recorded yet",
+  
+  "salesDetailsCount": "Sales Details ({count})",
+  "@salesDetailsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "notRegistered": "Not registered",
+  
+  "fromAmount": "From {amount}",
+  "@fromAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+   "returnWarningMessage": "Product will be returned to stock and invoice status will be updated",
+  "loadingInvoiceDetails": "Loading invoice details...",
+  "noItemsInInvoice": "No items in this invoice",
+  "invoiceEmptyOrCancelled": "Invoice is empty or cancelled",
+  "invoiceStatusModified": "Modified",
+  "returnActivityLog": "Product returned from cash invoice #{invoiceId}: {productName}",
+  "@returnActivityLog": {
+    "placeholders": {
+      "invoiceId": {
+        "type": "String"
+      },
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceTotalAmount": "Invoice Total:",
+  "returnedAmount": "Returned Amount:",
+  "netAmount": "Net:",
+  "itemsCount2": "Items Count: {count}",
+  "@itemsCount2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "returnedStatus": "Returned",
+  "longPressToReturn": "Long press to return",
+
+    "noProfitsRecordedForSuppliers": "No profits recorded for suppliers yet",
+  "@noProfitsRecordedForSuppliers": {
+    "description": "Message shown when no supplier profits are available"
+  },
+  
+  "totalProfits": "Total Profits",
+  "@totalProfits": {
+    "description": "Label for total profits amount"
+  },
+  
+  "withdrawals": "Withdrawals",
+  "@withdrawals": {
+    "description": "Label for withdrawals amount"
+  },
+
+  "trysearchinvoice": "Try searching with a different invoice number",
+
+  "nocashrecordedyet": "No cash sales invoice has been recorded yet",
+  "invoicesloaded": "Invoices are being loaded...",
+
+    "totalProfitFromSupplier": "Total Profit from Supplier",
+  "@totalProfitFromSupplier": {
+    "description": "Label for total profit from supplier"
+  },
+  
+  "beforeWithdrawals": "Before Withdrawals",
+  "@beforeWithdrawals": {
+    "description": "Subtitle indicating amount is before withdrawals"
+  },
+  
+  "withdrawnAmounts": "Withdrawn Amounts",
+  "@withdrawnAmounts": {
+    "description": "Subtitle for withdrawn amounts"
+  },
+  
+  "remainingNetProfit": "Remaining Net Profit",
+  "@remainingNetProfit": {
+    "description": "Label for remaining net profit after withdrawals"
+  },
+  
+  "recordWithdrawal": "Record Withdrawal",
+  "@recordWithdrawal": {
+    "description": "Button text to record a new withdrawal"
+  },
+  
+  "recordGeneralWithdrawal": "Record General Withdrawal",
+  "@recordGeneralWithdrawal": {
+    "description": "Tooltip for recording general withdrawal"
+  },
+  
+  "noWithdrawalsRecorded": "No withdrawal operations have been recorded yet",
+  "@noWithdrawalsRecorded": {
+    "description": "Message when no withdrawals exist"
+  },
+  
+  "recordWithdrawalFor": "Withdraw Profits for: {name}",
+  "@recordWithdrawalFor": {
+    "description": "Dialog title for recording withdrawal",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 
 }

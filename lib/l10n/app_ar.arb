@@ -922,6 +922,7 @@
   "startByAddingProduct": "ابدأ بإضافة أول منتج في المخزون",
   "addProduct": "إضافة منتج",
   "addNewProduct": "إضافة منتج جديد",
+  "addtonewstores": "قم بإضافة منتجات للمخزن أولاً",
 
   "totalQuantity": "إجمالي الكمية",
   "low": "منخفضة",
@@ -1338,6 +1339,171 @@
   "newPayment": "دفعة جديدة",
 
   "nopurchasesyetrecorded": "لم يتم تسجيل أي مشتريات بعد",
-  "nopaymentsyetrecorded": "لم يتم تسجيل أي دفعات بعد"
+  "nopaymentsyetrecorded": "لم يتم تسجيل أي دفعات بعد",
+
+    "generalProfitReport": "تقرير الأرباح العام",
+  "generalProfitReport_desc": "عرض إجمالي الأرباح وتفاصيل المبيعات",
+
+  "supplierProfitReport": "تقرير أرباح الموردين",
+  "supplierProfitReport_desc": "توزيع الأرباح حسب المورد أو الشريك",
+
+  "cashSalesRecord": "سجل المبيعات النقدية",
+  "cashSalesRecord_desc": "الفواتير والمبيعات النقدية المباشرة",
+
+  "cashFlowReport": "تقرير التدفق النقدي",
+  "cashFlowReport_desc": "المقبوضات النقدية والتسديدات",
+
+  "expenseRecord": "سجل المصاريف",
+  "expenseRecord_desc": "جميع المصاريف والنفقات المسجلة",
+
+  "employeePayrollReport": "تقرير الموظفين والرواتب",
+  "employeePayrollReport_desc": "كشف الموظفين والرواتب والسلف",
+
+  "reportingCenter": "مركز التقارير",
+  "noreportsavailable": "لا يوجد تقارير متاحة",
+  "donotpermissionreports": "ليس لديك صلاحية للوصول إلى أي تقرير",
+
+  "generalProfitReport": "تقرير الأرباح العام",
+  
+  "refresh": "تحديث",
+  
+  "calculatingProfits": "جاري حساب الأرباح...",
+  "noData": "لا توجد بيانات",
+  "noOperationsRecorded": "لم يتم تسجيل أي عمليات حتى الآن",
+  
+  "totalProfitsFromSales": "إجمالي الأرباح من المبيعات",
+  "beforeExpenses": "قبل المصاريف",
+  
+  "totalGeneralExpenses": "إجمالي المصاريف العامة",
+  "billsAndExpenses": "فواتير ونفقات",
+  
+  "totalProfitWithdrawals": "إجمالي مسحوبات الأرباح",
+  "forSuppliersAndPartners": "للموردين والشركاء",
+  
+  "netProfit": "صافي الربح",
+  
+  "hideSalesDetails": "إخفاء تفاصيل المبيعات",
+  "showSalesDetails": "عرض تفاصيل المبيعات",
+  
+  "noSales": "لا توجد مبيعات",
+  "noSalesRecorded": "لم يتم تسجيل أي عمليات بيع حتى الآن",
+  
+  "salesDetailsCount": "تفاصيل المبيعات ({count})",
+  "@salesDetailsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "notRegistered": "غير مسجل",
+  
+  "fromAmount": "من {amount}",
+  "@fromAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+
+    "returnWarningMessage": "سيتم إرجاع المنتج للمخزن وتحديث حالة الفاتورة",
+  "loadingInvoiceDetails": "جاري تحميل تفاصيل الفاتورة...",
+  "noItemsInInvoice": "لا توجد بنود في هذه الفاتورة",
+  "invoiceEmptyOrCancelled": "الفاتورة فارغة أو تم إلغاؤها",
+  "invoiceStatusModified": "معدلة",
+  "returnActivityLog": "إرجاع منتج من فاتورة نقدية #{invoiceId}: {productName}",
+  "@returnActivityLog": {
+    "placeholders": {
+      "invoiceId": {
+        "type": "String"
+      },
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceTotalAmount": "إجمالي الفاتورة:",
+  "returnedAmount": "المبلغ المرجع:",
+  "netAmount": "الصافي:",
+  "itemsCount2": "عدد البنود: {count}",
+  "@itemsCount2": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "returnedStatus": "مُرجع",
+  "longPressToReturn": "اضغط مطولاً للإرجاع",
+
+    "noProfitsRecordedForSuppliers": "لا توجد أرباح مسجلة للموردين بعد",
+  "@noProfitsRecordedForSuppliers": {
+    "description": "رسالة تظهر عند عدم وجود أرباح للموردين"
+  },
+  
+  "totalProfits": "إجمالي الأرباح",
+  "@totalProfits": {
+    "description": "تسمية لإجمالي الأرباح"
+  },
+  
+  "withdrawals": "المسحوبات",
+  "@withdrawals": {
+    "description": "تسمية للمسحوبات"
+  },
+
+  "trysearchinvoice": "جرب البحث برقم فاتورة آخر",
+
+  "nocashrecordedyet": "لم يتم تسجيل أي فاتورة بيع نقدي حتى الآن",
+  "invoicesloaded": "جاري تحميل الفواتير...",
+
+    "totalProfitFromSupplier": "إجمالي الأرباح من المورد",
+  "@totalProfitFromSupplier": {
+    "description": "تسمية لإجمالي الأرباح من المورد"
+  },
+  
+  "beforeWithdrawals": "قبل المسحوبات",
+  "@beforeWithdrawals": {
+    "description": "نص فرعي يشير إلى أن المبلغ قبل المسحوبات"
+  },
+  
+  "withdrawnAmounts": "المبالغ المسحوبة",
+  "@withdrawnAmounts": {
+    "description": "نص فرعي للمبالغ المسحوبة"
+  },
+  
+  "remainingNetProfit": "صافي الربح المتبقي",
+  "@remainingNetProfit": {
+    "description": "تسمية لصافي الربح المتبقي بعد المسحوبات"
+  },
+  
+  "recordWithdrawal": "تسجيل سحب",
+  "@recordWithdrawal": {
+    "description": "نص الزر لتسجيل سحب جديد"
+  },
+  
+  "recordGeneralWithdrawal": "تسجيل سحب عام",
+  "@recordGeneralWithdrawal": {
+    "description": "تلميح لتسجيل سحب عام"
+  },
+  
+  "noWithdrawalsRecorded": "لم يتم تسجيل أي عملية سحب حتى الآن",
+  "@noWithdrawalsRecorded": {
+    "description": "رسالة عند عدم وجود مسحوبات"
+  },
+  
+  "recordWithdrawalFor": "سحب أرباح: {name}",
+  "@recordWithdrawalFor": {
+    "description": "عنوان نافذة تسجيل السحب",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
+
+
+
 
 }
