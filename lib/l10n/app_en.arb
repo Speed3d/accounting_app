@@ -733,6 +733,9 @@
     "notesOptional": "Notes (Optional)",
     "expenseAddedSuccess": "Expense recorded successfully.",
     "unclassified": "Unclassified",
+    "expensesarebeingloaded": "Expenses are being loaded",
+    "noexpensesrecorded": "No expenses have been recorded so far",
+    "addexpensecategories": "Please add expense categories first",
 
       "dashboard": "Dashboard",
   "today": "Today",

@@ -733,6 +733,9 @@
     "notesOptional": "ملاحظات (اختياري)",
     "expenseAddedSuccess": "تم تسجيل المصروف بنجاح.",
     "unclassified": "غير مصنف",
+    "expensesarebeingloaded": "جاري تحميل المصاريف",
+    "noexpensesrecorded": "لم يتم تسجيل أي مصروف حتى الآن",
+    "addexpensecategories": "يرجى إضافة فئات المصاريف أولاً",
 
   "dashboard": "لوحة التحكم",
   "today": "اليوم",

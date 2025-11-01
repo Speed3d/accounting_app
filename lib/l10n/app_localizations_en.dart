@@ -1366,6 +1366,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unclassified => 'Unclassified';
 
   @override
+  String get expensesarebeingloaded => 'Expenses are being loaded';
+
+  @override
+  String get noexpensesrecorded => 'No expenses have been recorded so far';
+
+  @override
+  String get addexpensecategories => 'Please add expense categories first';
+
+  @override
   String get dashboard => 'Dashboard';
 
   @override

@@ -30,11 +30,25 @@ String formatCurrency(double amount) {
 
 }
 
-// في lib/utils/helpers.dart
-bool isPartnership(String supplierType) => 
-    supplierType == 'شراكة' || supplierType.toLowerCase() == 'partnership';
+// ✅ نسخة محسّنة تدعم حالات أكثر
+bool isPartnership(String? supplierType) {
+  if (supplierType == null || supplierType.isEmpty) return false;
+  
+  final normalized = supplierType.trim().toLowerCase();
+  return normalized == 'شراكة' || 
+         normalized == 'partnership' ||
+         normalized.contains('شراك') ||
+         normalized.contains('partner');
+}
 
-bool isIndividual(String supplierType) => 
-    supplierType == 'فردي' || supplierType.toLowerCase() == 'individual';
+bool isIndividual(String? supplierType) {
+  if (supplierType == null || supplierType.isEmpty) return false;
+  
+  final normalized = supplierType.trim().toLowerCase();
+  return normalized == 'فردي' || 
+         normalized == 'individual' ||
+         normalized.contains('فرد') ||
+         normalized.contains('individ');
+}
 
 

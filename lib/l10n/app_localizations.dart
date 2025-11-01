@@ -2528,6 +2528,24 @@ abstract class AppLocalizations {
   /// **'Unclassified'**
   String get unclassified;
 
+  /// No description provided for @expensesarebeingloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses are being loaded'**
+  String get expensesarebeingloaded;
+
+  /// No description provided for @noexpensesrecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses have been recorded so far'**
+  String get noexpensesrecorded;
+
+  /// No description provided for @addexpensecategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add expense categories first'**
+  String get addexpensecategories;
+
   /// No description provided for @dashboard.
   ///
   /// In en, this message translates to:

@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_text_field.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/loading_state.dart';
 import 'manage_categories_screen.dart';
 
@@ -47,10 +47,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   // ============= البناء الرئيسي =============
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       // --- AppBar مع زر إدارة الفئات ---
       appBar: AppBar(
-        title: const Text('سجل المصاريف'),
+        title:  Text(l10n.expenseRecord),
         elevation: 0,
         actions: [
           // زر إدارة فئات المصاريف
@@ -66,7 +67,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               // تحديث القائمة عند الرجوع
               _loadExpenses();
             },
-            tooltip: 'إدارة الفئات',
+            tooltip: l10n.manageCategories,
           ),
         ],
       ),
@@ -83,7 +84,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           // --- حالة الخطأ ---
           if (snapshot.hasError) {
             return ErrorState(
-              message: 'حدث خطأ أثناء تحميل البيانات',
+              message: l10n.loadError,
               onRetry: _loadExpenses,
             );
           }
@@ -92,9 +93,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return EmptyState(
               icon: Icons.receipt_long_outlined,
-              title: 'لا توجد مصاريف',
+              title: l10n.noExpenses,
               message: 'لم يتم تسجيل أي مصروف حتى الآن',
-              actionText: 'إضافة مصروف',
+              actionText: l10n.addExpense,
               onAction: _showAddExpenseDialog,
             );
           }
@@ -117,8 +118,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddExpenseDialog,
         icon: const Icon(Icons.add),
-        label: const Text('إضافة مصروف'),
-        tooltip: 'إضافة مصروف جديد',
+        label:  Text(l10n.addExpense),
+        tooltip: l10n.newExpense,
       ),
     );
   }
@@ -126,6 +127,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   // ============= بناء بطاقة المصروف =============
   /// يعرض كل مصروف في بطاقة منفصلة
   Widget _buildExpenseCard(Map<String, dynamic> expense) {
+    final l10n = AppLocalizations.of(context)!;
     final amount = expense['Amount'] as double;
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
@@ -178,7 +180,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                     // الفئة
                     Text(
-                      category ?? 'غير مصنف',
+                      category ?? l10n.unclassified,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
 
@@ -233,6 +235,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   // ============= نافذة إضافة مصروف =============
   /// نافذة حوار لإضافة مصروف جديد
   void _showAddExpenseDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     // --- جلب قائمة الفئات ---
     final categories = await dbHelper.getExpenseCategories();
     final categoryNames = categories
@@ -263,11 +266,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         // --- عنوان النافذة ---
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.add_circle_outline, size: 28),
             SizedBox(width: 12),
-            Text('إضافة مصروف جديد'),
+            Text(l10n.addExpense),
           ],
         ),
 

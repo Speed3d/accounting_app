@@ -1355,6 +1355,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unclassified => 'غير مصنف';
 
   @override
+  String get expensesarebeingloaded => 'جاري تحميل المصاريف';
+
+  @override
+  String get noexpensesrecorded => 'لم يتم تسجيل أي مصروف حتى الآن';
+
+  @override
+  String get addexpensecategories => 'يرجى إضافة فئات المصاريف أولاً';
+
+  @override
   String get dashboard => 'لوحة التحكم';
 
   @override
