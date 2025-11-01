@@ -290,25 +290,25 @@ abstract class AppLocalizations {
   /// **'Confirm Archive'**
   String get confirmArchive;
 
-  /// No description provided for @cancel.
+  /// Text for cancel button in forms
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
 
-  /// No description provided for @edit.
+  /// Tooltip text for edit button
   ///
   /// In en, this message translates to:
   /// **'Edit'**
   String get edit;
 
-  /// No description provided for @delete.
+  /// Tooltip text for delete button
   ///
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
 
-  /// No description provided for @save.
+  /// Text for save button in forms
   ///
   /// In en, this message translates to:
   /// **'Save'**
@@ -452,7 +452,7 @@ abstract class AppLocalizations {
   /// **'Paid Amount'**
   String get paidAmount;
 
-  /// No description provided for @amountRequired.
+  /// Validation error message when amount field is empty
   ///
   /// In en, this message translates to:
   /// **'Amount is required'**
@@ -470,7 +470,7 @@ abstract class AppLocalizations {
   /// **'Amount is greater than the remaining debt'**
   String get amountExceedsDebt;
 
-  /// No description provided for @notesOptional.
+  /// Label for optional notes field
   ///
   /// In en, this message translates to:
   /// **'Notes (Optional)'**
@@ -602,7 +602,7 @@ abstract class AppLocalizations {
   /// **'Base salary is required'**
   String get baseSalaryRequired;
 
-  /// No description provided for @enterValidNumber.
+  /// Validation error message when non-numeric value is entered
   ///
   /// In en, this message translates to:
   /// **'Enter a valid number'**
@@ -1856,7 +1856,7 @@ abstract class AppLocalizations {
   /// **'Final Total'**
   String get finalTotal;
 
-  /// No description provided for @close.
+  /// Text for close button in dialogs
   ///
   /// In en, this message translates to:
   /// **'Close'**
@@ -2408,31 +2408,31 @@ abstract class AppLocalizations {
   /// **'Manage Expense Categories'**
   String get manageExpenseCategories;
 
-  /// No description provided for @noCategories.
+  /// Title for Empty State when there are no categories
   ///
   /// In en, this message translates to:
-  /// **'No categories found. Add your first one.'**
+  /// **'No Categories'**
   String get noCategories;
 
-  /// No description provided for @addCategory.
+  /// Text for add new category button
   ///
   /// In en, this message translates to:
-  /// **'Add New Category'**
+  /// **'Add Category'**
   String get addCategory;
 
-  /// No description provided for @editCategory.
+  /// Title for edit category dialog
   ///
   /// In en, this message translates to:
   /// **'Edit Category'**
   String get editCategory;
 
-  /// No description provided for @categoryName.
+  /// Label for category name field
   ///
   /// In en, this message translates to:
   /// **'Category Name'**
   String get categoryName;
 
-  /// No description provided for @categoryNameRequired.
+  /// Validation message when name field is empty
   ///
   /// In en, this message translates to:
   /// **'Category name is required'**
@@ -2456,73 +2456,73 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete the category \"{name}\"?'**
   String confirmDeleteCategory(String name);
 
-  /// No description provided for @manageCategories.
+  /// Text for manage expense categories button
   ///
   /// In en, this message translates to:
   /// **'Manage Categories'**
   String get manageCategories;
 
-  /// No description provided for @noExpenses.
+  /// Title for Empty State when there are no expenses
   ///
   /// In en, this message translates to:
-  /// **'No expenses recorded.'**
+  /// **'No Expenses'**
   String get noExpenses;
 
-  /// No description provided for @addExpense.
+  /// Text for add new expense button
   ///
   /// In en, this message translates to:
-  /// **'Add New Expense'**
+  /// **'Add Expense'**
   String get addExpense;
 
-  /// No description provided for @newExpense.
+  /// Tooltip for floating action button (FAB)
   ///
   /// In en, this message translates to:
-  /// **'Record New Expense'**
+  /// **'New Expense'**
   String get newExpense;
 
-  /// No description provided for @expenseDescription.
+  /// Label for expense description field
   ///
   /// In en, this message translates to:
   /// **'Expense Description'**
   String get expenseDescription;
 
-  /// No description provided for @descriptionRequired.
+  /// Validation error message when description field is empty
   ///
   /// In en, this message translates to:
   /// **'Description is required'**
   String get descriptionRequired;
 
-  /// No description provided for @amount.
+  /// Label for amount field
   ///
   /// In en, this message translates to:
-  /// **'Amount:'**
+  /// **'Amount'**
   String get amount;
 
-  /// No description provided for @category.
+  /// Label for category field
   ///
   /// In en, this message translates to:
   /// **'Category'**
   String get category;
 
-  /// No description provided for @selectCategory.
+  /// Validation error message when no category is selected
   ///
   /// In en, this message translates to:
-  /// **'Please select a category'**
+  /// **'Select category'**
   String get selectCategory;
 
-  /// No description provided for @addCategoriesFirst.
+  /// Warning message when trying to add expense without categories
   ///
   /// In en, this message translates to:
-  /// **'Please add expense categories first from the manage categories screen.'**
+  /// **'Please add expense categories first'**
   String get addCategoriesFirst;
 
-  /// No description provided for @expenseAddedSuccess.
+  /// Success message after adding new expense
   ///
   /// In en, this message translates to:
-  /// **'Expense recorded successfully.'**
+  /// **'Expense added successfully'**
   String get expenseAddedSuccess;
 
-  /// No description provided for @unclassified.
+  /// Text shown when expense has no category assigned
   ///
   /// In en, this message translates to:
   /// **'Unclassified'**
@@ -2533,18 +2533,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expenses are being loaded'**
   String get expensesarebeingloaded;
-
-  /// No description provided for @noexpensesrecorded.
-  ///
-  /// In en, this message translates to:
-  /// **'No expenses have been recorded so far'**
-  String get noexpensesrecorded;
-
-  /// No description provided for @addexpensecategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Please add expense categories first'**
-  String get addexpensecategories;
 
   /// No description provided for @dashboard.
   ///
@@ -2894,7 +2882,7 @@ abstract class AppLocalizations {
   /// **'Not specified'**
   String get notSpecified;
 
-  /// No description provided for @description.
+  /// General label for description in detail pages
   ///
   /// In en, this message translates to:
   /// **'Description'**
@@ -2966,10 +2954,10 @@ abstract class AppLocalizations {
   /// **'Loading users...'**
   String get loadingUsers;
 
-  /// No description provided for @loadError.
+  /// Generic error message when data loading fails
   ///
   /// In en, this message translates to:
-  /// **'An error occurred while loading data'**
+  /// **'Error loading data'**
   String get loadError;
 
   /// No description provided for @addNewUser.
@@ -4106,7 +4094,7 @@ abstract class AppLocalizations {
   /// **'Cash receipts and payments'**
   String get cashFlowReport_desc;
 
-  /// No description provided for @expenseRecord.
+  /// Title of the expenses screen in AppBar
   ///
   /// In en, this message translates to:
   /// **'Expense Record'**
@@ -4333,6 +4321,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No withdrawal operations have been recorded yet'**
   String get noWithdrawalsRecorded;
+
+  /// Message shown while loading expenses list
+  ///
+  /// In en, this message translates to:
+  /// **'Loading expenses...'**
+  String get loadingExpenses;
+
+  /// Descriptive message in Empty State
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses have been recorded yet'**
+  String get noExpensesMessage;
+
+  /// Placeholder for expense description field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Electricity bill'**
+  String get expenseDescriptionHint;
+
+  /// Placeholder for notes field
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note...'**
+  String get addNote;
+
+  /// General label for date
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// General label for notes
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notes;
+
+  /// Title for expense details dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Details'**
+  String get expenseDetails;
+
+  /// Generic error message
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred'**
+  String get errorOccurred2;
+
+  /// Title of manage categories screen in AppBar
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Expense Categories'**
+  String get manageCategoriesTitle;
+
+  /// Message shown while loading categories list
+  ///
+  /// In en, this message translates to:
+  /// **'Loading categories...'**
+  String get loadingCategories;
+
+  /// Descriptive message in Empty State
+  ///
+  /// In en, this message translates to:
+  /// **'No expense categories have been added yet'**
+  String get noCategoriesMessage;
+
+  /// Tooltip for floating action button
+  ///
+  /// In en, this message translates to:
+  /// **'New Category'**
+  String get newCategory;
+
+  /// Title for add new category dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Category'**
+  String get addNewCategory;
+
+  /// Placeholder for category name field
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Bills, Rent, Maintenance'**
+  String get categoryNameHint;
+
+  /// Text for update button in edit mode
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// Success message after updating category
+  ///
+  /// In en, this message translates to:
+  /// **'Category updated successfully'**
+  String get categoryUpdatedSuccess;
+
+  /// Success message after adding new category
+  ///
+  /// In en, this message translates to:
+  /// **'Category added successfully'**
+  String get categoryAddedSuccess;
+
+  /// Error message when trying to add duplicate category
+  ///
+  /// In en, this message translates to:
+  /// **'This category already exists'**
+  String get categoryAlreadyExists;
+
+  /// Title for delete confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delete'**
+  String get confirmDelete;
+
+  /// Confirmation question before deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this category?'**
+  String get deleteConfirmationQuestion;
+
+  /// Warning message in delete dialog
+  ///
+  /// In en, this message translates to:
+  /// **'The category will be permanently deleted and cannot be recovered'**
+  String get deleteWarning;
+
+  /// Success message after deleting category
+  ///
+  /// In en, this message translates to:
+  /// **'Category deleted successfully'**
+  String get categoryDeletedSuccess;
+
+  /// Title of the employees report page in the app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Employees Report'**
+  String get employees_report_title;
+
+  /// Title of the detailed employees list section
+  ///
+  /// In en, this message translates to:
+  /// **'Employees List'**
+  String get employees_list_title;
+
+  /// Title of the total paid salaries card
+  ///
+  /// In en, this message translates to:
+  /// **'Total Salaries'**
+  String get stat_total_salaries;
+
+  /// Subtitle for salaries card (clarifying they are paid salaries)
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get stat_salaries_paid;
+
+  /// Title of the advances balance card
+  ///
+  /// In en, this message translates to:
+  /// **'Advances Balance'**
+  String get stat_advances_balance;
+
+  /// Subtitle for advances card (clarifying they are due advances)
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get stat_advances_due;
+
+  /// Title of the active employees count card
+  ///
+  /// In en, this message translates to:
+  /// **'Active Employees'**
+  String get stat_active_employees;
+
+  /// Unit of measurement for employee count
+  ///
+  /// In en, this message translates to:
+  /// **'Employee'**
+  String get stat_employee_unit;
+
+  /// Message displayed while loading data
+  ///
+  /// In en, this message translates to:
+  /// **'Loading data...'**
+  String get loading_data;
+
+  /// Beginning of error message when data loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred'**
+  String get error_occurred;
+
+  /// Title of the message when there are no employees in the system
+  ///
+  /// In en, this message translates to:
+  /// **'No Employees'**
+  String get no_employees_title;
+
+  /// Descriptive message when there are no employees in the system
+  ///
+  /// In en, this message translates to:
+  /// **'No active employees have been registered yet'**
+  String get no_employees_message;
+
+  /// Label for the salary field in employee item
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get employee_salary_label;
+
+  /// Label for the advances field in employee item
+  ///
+  /// In en, this message translates to:
+  /// **'Advances'**
+  String get employee_advances_label;
 }
 
 class _AppLocalizationsDelegate

@@ -1292,10 +1292,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get manageExpenseCategories => 'إدارة فئات المصاريف';
 
   @override
-  String get noCategories => 'لا توجد فئات. قم بإضافة أول فئة.';
+  String get noCategories => 'لا توجد فئات';
 
   @override
-  String get addCategory => 'إضافة فئة جديدة';
+  String get addCategory => 'إضافة فئة';
 
   @override
   String get editCategory => 'تعديل الفئة';
@@ -1321,13 +1321,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get manageCategories => 'إدارة الفئات';
 
   @override
-  String get noExpenses => 'لا توجد مصاريف مسجلة.';
+  String get noExpenses => 'لا توجد مصاريف';
 
   @override
-  String get addExpense => 'إضافة مصروف جديد';
+  String get addExpense => 'إضافة مصروف';
 
   @override
-  String get newExpense => 'تسجيل مصروف جديد';
+  String get newExpense => 'مصروف جديد';
 
   @override
   String get expenseDescription => 'وصف المصروف';
@@ -1336,32 +1336,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get descriptionRequired => 'الوصف مطلوب';
 
   @override
-  String get amount => 'بقيمة:';
+  String get amount => 'المبلغ';
 
   @override
   String get category => 'الفئة';
 
   @override
-  String get selectCategory => 'الرجاء اختيار فئة';
+  String get selectCategory => 'اختر الفئة';
 
   @override
-  String get addCategoriesFirst =>
-      'الرجاء إضافة فئات المصاريف أولاً من شاشة إدارة الفئات.';
+  String get addCategoriesFirst => 'يرجى إضافة فئات المصاريف أولاً';
 
   @override
-  String get expenseAddedSuccess => 'تم تسجيل المصروف بنجاح.';
+  String get expenseAddedSuccess => 'تم إضافة المصروف بنجاح';
 
   @override
   String get unclassified => 'غير مصنف';
 
   @override
   String get expensesarebeingloaded => 'جاري تحميل المصاريف';
-
-  @override
-  String get noexpensesrecorded => 'لم يتم تسجيل أي مصروف حتى الآن';
-
-  @override
-  String get addexpensecategories => 'يرجى إضافة فئات المصاريف أولاً';
 
   @override
   String get dashboard => 'لوحة التحكم';
@@ -2325,4 +2318,112 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noWithdrawalsRecorded => 'لم يتم تسجيل أي عملية سحب حتى الآن';
+
+  @override
+  String get loadingExpenses => 'جاري تحميل المصاريف...';
+
+  @override
+  String get noExpensesMessage => 'لم يتم تسجيل أي مصروف حتى الآن';
+
+  @override
+  String get expenseDescriptionHint => 'مثال: فاتورة كهرباء';
+
+  @override
+  String get addNote => 'أضف ملاحظة...';
+
+  @override
+  String get date => 'التاريخ';
+
+  @override
+  String get notes => 'الملاحظات';
+
+  @override
+  String get expenseDetails => 'تفاصيل المصروف';
+
+  @override
+  String get errorOccurred2 => 'حدث خطأ';
+
+  @override
+  String get manageCategoriesTitle => 'إدارة فئات المصاريف';
+
+  @override
+  String get loadingCategories => 'جاري تحميل الفئات...';
+
+  @override
+  String get noCategoriesMessage => 'لم يتم إضافة أي فئة للمصاريف حتى الآن';
+
+  @override
+  String get newCategory => 'فئة جديدة';
+
+  @override
+  String get addNewCategory => 'إضافة فئة جديدة';
+
+  @override
+  String get categoryNameHint => 'مثال: فواتير، إيجار، صيانة';
+
+  @override
+  String get update => 'تحديث';
+
+  @override
+  String get categoryUpdatedSuccess => 'تم تعديل الفئة بنجاح';
+
+  @override
+  String get categoryAddedSuccess => 'تم إضافة الفئة بنجاح';
+
+  @override
+  String get categoryAlreadyExists => 'هذه الفئة موجودة بالفعل';
+
+  @override
+  String get confirmDelete => 'تأكيد الحذف';
+
+  @override
+  String get deleteConfirmationQuestion => 'هل أنت متأكد من حذف الفئة؟';
+
+  @override
+  String get deleteWarning => 'سيتم حذف الفئة نهائياً ولن يمكن استرجاعها';
+
+  @override
+  String get categoryDeletedSuccess => 'تم حذف الفئة بنجاح';
+
+  @override
+  String get employees_report_title => 'تقرير الموظفين';
+
+  @override
+  String get employees_list_title => 'كشف الموظفين';
+
+  @override
+  String get stat_total_salaries => 'إجمالي الرواتب';
+
+  @override
+  String get stat_salaries_paid => 'المدفوعة';
+
+  @override
+  String get stat_advances_balance => 'رصيد السلف';
+
+  @override
+  String get stat_advances_due => 'المستحقة';
+
+  @override
+  String get stat_active_employees => 'الموظفين النشطين';
+
+  @override
+  String get stat_employee_unit => 'موظف';
+
+  @override
+  String get loading_data => 'جاري تحميل البيانات...';
+
+  @override
+  String get error_occurred => 'حدث خطأ';
+
+  @override
+  String get no_employees_title => 'لا يوجد موظفين';
+
+  @override
+  String get no_employees_message => 'لم يتم تسجيل أي موظف نشط حتى الآن';
+
+  @override
+  String get employee_salary_label => 'الراتب';
+
+  @override
+  String get employee_advances_label => 'السلف';
 }

@@ -1303,10 +1303,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageExpenseCategories => 'Manage Expense Categories';
 
   @override
-  String get noCategories => 'No categories found. Add your first one.';
+  String get noCategories => 'No Categories';
 
   @override
-  String get addCategory => 'Add New Category';
+  String get addCategory => 'Add Category';
 
   @override
   String get editCategory => 'Edit Category';
@@ -1332,13 +1332,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageCategories => 'Manage Categories';
 
   @override
-  String get noExpenses => 'No expenses recorded.';
+  String get noExpenses => 'No Expenses';
 
   @override
-  String get addExpense => 'Add New Expense';
+  String get addExpense => 'Add Expense';
 
   @override
-  String get newExpense => 'Record New Expense';
+  String get newExpense => 'New Expense';
 
   @override
   String get expenseDescription => 'Expense Description';
@@ -1347,32 +1347,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get descriptionRequired => 'Description is required';
 
   @override
-  String get amount => 'Amount:';
+  String get amount => 'Amount';
 
   @override
   String get category => 'Category';
 
   @override
-  String get selectCategory => 'Please select a category';
+  String get selectCategory => 'Select category';
 
   @override
-  String get addCategoriesFirst =>
-      'Please add expense categories first from the manage categories screen.';
+  String get addCategoriesFirst => 'Please add expense categories first';
 
   @override
-  String get expenseAddedSuccess => 'Expense recorded successfully.';
+  String get expenseAddedSuccess => 'Expense added successfully';
 
   @override
   String get unclassified => 'Unclassified';
 
   @override
   String get expensesarebeingloaded => 'Expenses are being loaded';
-
-  @override
-  String get noexpensesrecorded => 'No expenses have been recorded so far';
-
-  @override
-  String get addexpensecategories => 'Please add expense categories first';
 
   @override
   String get dashboard => 'Dashboard';
@@ -1588,7 +1581,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadingUsers => 'Loading users...';
 
   @override
-  String get loadError => 'An error occurred while loading data';
+  String get loadError => 'Error loading data';
 
   @override
   String get addNewUser => 'Add new user';
@@ -2344,4 +2337,115 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noWithdrawalsRecorded =>
       'No withdrawal operations have been recorded yet';
+
+  @override
+  String get loadingExpenses => 'Loading expenses...';
+
+  @override
+  String get noExpensesMessage => 'No expenses have been recorded yet';
+
+  @override
+  String get expenseDescriptionHint => 'e.g., Electricity bill';
+
+  @override
+  String get addNote => 'Add a note...';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get expenseDetails => 'Expense Details';
+
+  @override
+  String get errorOccurred2 => 'An error occurred';
+
+  @override
+  String get manageCategoriesTitle => 'Manage Expense Categories';
+
+  @override
+  String get loadingCategories => 'Loading categories...';
+
+  @override
+  String get noCategoriesMessage => 'No expense categories have been added yet';
+
+  @override
+  String get newCategory => 'New Category';
+
+  @override
+  String get addNewCategory => 'Add New Category';
+
+  @override
+  String get categoryNameHint => 'e.g., Bills, Rent, Maintenance';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get categoryUpdatedSuccess => 'Category updated successfully';
+
+  @override
+  String get categoryAddedSuccess => 'Category added successfully';
+
+  @override
+  String get categoryAlreadyExists => 'This category already exists';
+
+  @override
+  String get confirmDelete => 'Confirm Delete';
+
+  @override
+  String get deleteConfirmationQuestion =>
+      'Are you sure you want to delete this category?';
+
+  @override
+  String get deleteWarning =>
+      'The category will be permanently deleted and cannot be recovered';
+
+  @override
+  String get categoryDeletedSuccess => 'Category deleted successfully';
+
+  @override
+  String get employees_report_title => 'Employees Report';
+
+  @override
+  String get employees_list_title => 'Employees List';
+
+  @override
+  String get stat_total_salaries => 'Total Salaries';
+
+  @override
+  String get stat_salaries_paid => 'Paid';
+
+  @override
+  String get stat_advances_balance => 'Advances Balance';
+
+  @override
+  String get stat_advances_due => 'Due';
+
+  @override
+  String get stat_active_employees => 'Active Employees';
+
+  @override
+  String get stat_employee_unit => 'Employee';
+
+  @override
+  String get loading_data => 'Loading data...';
+
+  @override
+  String get error_occurred => 'An error occurred';
+
+  @override
+  String get no_employees_title => 'No Employees';
+
+  @override
+  String get no_employees_message =>
+      'No active employees have been registered yet';
+
+  @override
+  String get employee_salary_label => 'Salary';
+
+  @override
+  String get employee_advances_label => 'Advances';
 }

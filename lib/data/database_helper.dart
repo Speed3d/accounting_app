@@ -390,9 +390,11 @@ class DatabaseHelper {
     //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canManageExpenses INTEGER NOT NULL DEFAULT 0');
     //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canViewCashSales INTEGER NOT NULL DEFAULT 0');
     // }
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE Supplier_Partners ADD COLUMN ImagePath TEXT');
-    }
+
+    
+    // if (oldVersion < 2) {
+    //   await db.execute('ALTER TABLE Supplier_Partners ADD COLUMN ImagePath TEXT');
+    // }
 
   }
 
@@ -401,7 +403,8 @@ class DatabaseHelper {
   /// ✅✅✅ دالة مساعدة لإضافة الفئات الافتراضية ✅✅✅
   /// الشرح: هذه الدالة تقوم بإضافة مجموعة من الفئات الأساسية إلى الجدول الجديد.
   Future<void> _insertDefaultCategories(Database db) async {
-    final defaultCategories = ['فواتير', 'إيجار', 'صيانة', 'نثرية', 'أخرى'];
+    // final defaultCategories = ['فواتير', 'إيجار', 'صيانة', 'نثرية', 'أخرى'];
+    final defaultCategories = ['rent-إيجار',];
     for (var category in defaultCategories) {
       await db.insert(
         'TB_Expense_Categories',

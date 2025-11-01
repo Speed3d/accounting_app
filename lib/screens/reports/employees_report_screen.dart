@@ -1,8 +1,10 @@
 // lib/screens/reports/employees_report_screen.dart
+// النسخة المعدلة لدعم الترجمة متعددة اللغات
 
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -15,6 +17,10 @@ import '../employees/employee_details_screen.dart';
 /// صفحة فرعية تعرض:
 /// 1. ملخص إحصائيات الموظفين (رواتب، سلف، عدد الموظفين)
 /// 2. قائمة تفصيلية بجميع الموظفين النشطين
+/// 
+/// 🌐 دعم متعدد اللغات:
+/// - تستخدم AppLocalizations للحصول على النصوص المترجمة
+/// - تدعم العربية والإنجليزية مع تبديل الاتجاه تلقائياً
 class EmployeesReportScreen extends StatefulWidget {
   const EmployeesReportScreen({super.key});
 
@@ -52,10 +58,13 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   // ============= البناء الرئيسي =============
   @override
   Widget build(BuildContext context) {
+    // 🌐 الحصول على الترجمات الحالية
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       // --- AppBar بسيط ---
       appBar: AppBar(
-        title: const Text('تقرير الموظفين'),
+        title: Text(l10n.employees_report_title), // ← نص مترجم
         elevation: 0,
       ),
       
@@ -72,7 +81,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
             
             // 📋 عنوان قائمة الموظفين
             Text(
-              'كشف الموظفين',
+              l10n.employees_list_title, // ← نص مترجم
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             
@@ -92,6 +101,9 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   /// 2. إجمالي السلف المستحقة
   /// 3. عدد الموظفين النشطين
   Widget _buildSummarySection() {
+    // 🌐 الحصول على الترجمات
+    final l10n = AppLocalizations.of(context)!;
+    
     return Column(
       children: [
         // --- الصف الأول: الرواتب والسلف ---
@@ -109,11 +121,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   
                   // عرض البيانات
                   return StatCard(
-                    label: 'إجمالي الرواتب',
+                    label: l10n.stat_total_salaries, // ← نص مترجم
                     value: formatCurrency(snapshot.data ?? 0),
                     icon: Icons.payments,
                     color: AppColors.success,
-                    subtitle: 'المدفوعة',
+                    subtitle: l10n.stat_salaries_paid, // ← نص مترجم
                   );
                 },
               ),
@@ -131,11 +143,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   }
                   
                   return StatCard(
-                    label: 'رصيد السلف',
+                    label: l10n.stat_advances_balance, // ← نص مترجم
                     value: formatCurrency(snapshot.data ?? 0),
-                    icon: Icons.account_balance_wallet_outlined, // ← أيقونة أنحف!
+                    icon: Icons.account_balance_wallet_outlined,
                     color: AppColors.warning,
-                    subtitle: 'المستحقة',
+                    subtitle: l10n.stat_advances_due, // ← نص مترجم
                   );
                 },
               ),
@@ -154,11 +166,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
             }
             
             return StatCard(
-              label: 'الموظفين النشطين',
+              label: l10n.stat_active_employees, // ← نص مترجم
               value: snapshot.data?.toString() ?? '0',
               icon: Icons.people,
               color: AppColors.info,
-              subtitle: 'موظف',
+              subtitle: l10n.stat_employee_unit, // ← نص مترجم
             );
           },
         ),
@@ -191,19 +203,24 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   /// تعرض جدول بأسماء الموظفين مع رواتبهم وسلفهم
   /// مع إمكانية النقر للانتقال لصفحة التفاصيل
   Widget _buildDetailedEmployeesList() {
+    // 🌐 الحصول على الترجمات
+    final l10n = AppLocalizations.of(context)!;
+    
     return FutureBuilder<List<Employee>>(
       future: _employeesListFuture,
       builder: (context, snapshot) {
         // --- حالة التحميل ---
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingState(message: 'جاري تحميل البيانات...');
+          return LoadingState(
+            message: l10n.loading_data, // ← نص مترجم
+          );
         }
         
         // --- حالة الخطأ ---
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'حدث خطأ: ${snapshot.error}',
+              '${l10n.error_occurred}: ${snapshot.error}', // ← نص مترجم
               style: TextStyle(color: AppColors.error),
             ),
           );
@@ -211,10 +228,10 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         
         // --- حالة عدم وجود موظفين ---
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const EmptyState(
+          return EmptyState(
             icon: Icons.people_outline,
-            title: 'لا يوجد موظفين',
-            message: 'لم يتم تسجيل أي موظف نشط حتى الآن',
+            title: l10n.no_employees_title, // ← نص مترجم
+            message: l10n.no_employees_message, // ← نص مترجم
           );
         }
         
@@ -264,8 +281,9 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                 
                 // الراتب ورصيد السلف
                 subtitle: Text(
-                  'الراتب: ${formatCurrency(employee.baseSalary)} | '
-                  'السلف: ${formatCurrency(employee.balance)}',
+                  // 🌐 استخدام النصوص المترجمة في النص المركب
+                  '${l10n.employee_salary_label}: ${formatCurrency(employee.baseSalary)} | '
+                  '${l10n.employee_advances_label}: ${formatCurrency(employee.balance)}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 

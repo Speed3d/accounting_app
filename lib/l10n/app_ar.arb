@@ -734,8 +734,7 @@
     "expenseAddedSuccess": "تم تسجيل المصروف بنجاح.",
     "unclassified": "غير مصنف",
     "expensesarebeingloaded": "جاري تحميل المصاريف",
-    "noexpensesrecorded": "لم يتم تسجيل أي مصروف حتى الآن",
-    "addexpensecategories": "يرجى إضافة فئات المصاريف أولاً",
+
 
   "dashboard": "لوحة التحكم",
   "today": "اليوم",
@@ -1504,9 +1503,328 @@
         "type": "String"
       }
     }
+  },
+
+    "expenseRecord": "سجل المصاريف",
+  "@expenseRecord": {
+    "description": "عنوان شاشة المصاريف في AppBar"
+  },
+  
+  "manageCategories": "إدارة الفئات",
+  "@manageCategories": {
+    "description": "نص زر إدارة فئات المصاريف"
+  },
+  
+  "loadingExpenses": "جاري تحميل المصاريف...",
+  "@loadingExpenses": {
+    "description": "رسالة تظهر أثناء تحميل قائمة المصاريف"
+  },
+  
+  "loadError": "حدث خطأ أثناء تحميل البيانات",
+  "@loadError": {
+    "description": "رسالة خطأ عامة عند فشل تحميل البيانات"
+  },
+  
+  "noExpenses": "لا توجد مصاريف",
+  "@noExpenses": {
+    "description": "عنوان حالة Empty State عندما لا توجد مصاريف"
+  },
+  
+  "noExpensesMessage": "لم يتم تسجيل أي مصروف حتى الآن",
+  "@noExpensesMessage": {
+    "description": "رسالة توضيحية في حالة Empty State"
+  },
+  
+  "addExpense": "إضافة مصروف",
+  "@addExpense": {
+    "description": "نص زر إضافة مصروف جديد"
+  },
+  
+  "newExpense": "مصروف جديد",
+  "@newExpense": {
+    "description": "Tooltip لزر الإضافة العائم (FAB)"
+  },
+  
+  "save": "حفظ",
+  "@save": {
+    "description": "نص زر الحفظ في النماذج"
+  },
+  
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "نص زر الإلغاء في النماذج"
+  },
+  
+  "close": "إغلاق",
+  "@close": {
+    "description": "نص زر إغلاق النوافذ"
+  },
+  
+  "expenseDescription": "وصف المصروف",
+  "@expenseDescription": {
+    "description": "Label لحقل وصف المصروف"
+  },
+  
+  "expenseDescriptionHint": "مثال: فاتورة كهرباء",
+  "@expenseDescriptionHint": {
+    "description": "Placeholder لحقل وصف المصروف"
+  },
+  
+  "amount": "المبلغ",
+  "@amount": {
+    "description": "Label لحقل المبلغ المالي"
+  },
+  
+  "category": "الفئة",
+  "@category": {
+    "description": "Label لحقل الفئة"
+  },
+  
+  "notesOptional": "ملاحظات (اختياري)",
+  "@notesOptional": {
+    "description": "Label لحقل الملاحظات الاختياري"
+  },
+  
+  "addNote": "أضف ملاحظة...",
+  "@addNote": {
+    "description": "Placeholder لحقل الملاحظات"
+  },
+  
+  "descriptionRequired": "الوصف مطلوب",
+  "@descriptionRequired": {
+    "description": "رسالة خطأ Validation عند ترك حقل الوصف فارغاً"
+  },
+  
+  "amountRequired": "المبلغ مطلوب",
+  "@amountRequired": {
+    "description": "رسالة خطأ Validation عند ترك حقل المبلغ فارغاً"
+  },
+  
+  "enterValidNumber": "أدخل رقماً صحيحاً",
+  "@enterValidNumber": {
+    "description": "رسالة خطأ Validation عند إدخال قيمة غير رقمية"
+  },
+  
+  "selectCategory": "اختر الفئة",
+  "@selectCategory": {
+    "description": "رسالة خطأ Validation عند عدم اختيار فئة"
+  },
+  
+  "description": "الوصف",
+  "@description": {
+    "description": "Label عام للوصف في صفحات التفاصيل"
+  },
+  
+  "date": "التاريخ",
+  "@date": {
+    "description": "Label عام للتاريخ"
+  },
+  
+  "notes": "الملاحظات",
+  "@notes": {
+    "description": "Label عام للملاحظات"
+  },
+  
+  "expenseDetails": "تفاصيل المصروف",
+  "@expenseDetails": {
+    "description": "عنوان نافذة تفاصيل المصروف"
+  },
+  
+  "addCategoriesFirst": "يرجى إضافة فئات المصاريف أولاً",
+  "@addCategoriesFirst": {
+    "description": "رسالة تحذيرية عند محاولة إضافة مصروف بدون وجود فئات"
+  },
+  
+  "expenseAddedSuccess": "تم إضافة المصروف بنجاح",
+  "@expenseAddedSuccess": {
+    "description": "رسالة نجاح بعد إضافة مصروف جديد"
+  },
+  
+  "errorOccurred2": "حدث خطأ",
+  "@errorOccurred2": {
+    "description": "رسالة خطأ عامة"
+  },
+  
+  "unclassified": "غير مصنف",
+  "@unclassified": {
+    "description": "نص يظهر عندما لا يكون للمصروف فئة محددة"
+  },
+
+  "manageCategoriesTitle": "إدارة فئات المصاريف",
+  "@manageCategoriesTitle": {
+    "description": "عنوان شاشة إدارة الفئات في AppBar"
+  },
+  
+  "loadingCategories": "جاري تحميل الفئات...",
+  "@loadingCategories": {
+    "description": "رسالة تظهر أثناء تحميل قائمة الفئات"
+  },
+  
+  "noCategories": "لا توجد فئات",
+  "@noCategories": {
+    "description": "عنوان Empty State عندما لا توجد فئات"
+  },
+  
+  "noCategoriesMessage": "لم يتم إضافة أي فئة للمصاريف حتى الآن",
+  "@noCategoriesMessage": {
+    "description": "رسالة توضيحية في Empty State"
+  },
+  
+  "addCategory": "إضافة فئة",
+  "@addCategory": {
+    "description": "نص زر إضافة فئة جديدة"
+  },
+  
+  "newCategory": "فئة جديدة",
+  "@newCategory": {
+    "description": "Tooltip لزر الإضافة العائم"
+  },
+  
+  "edit": "تعديل",
+  "@edit": {
+    "description": "نص Tooltip لزر التعديل"
+  },
+  
+  "delete": "حذف",
+  "@delete": {
+    "description": "نص Tooltip لزر الحذف"
+  },
+  
+  "editCategory": "تعديل الفئة",
+  "@editCategory": {
+    "description": "عنوان نافذة تعديل فئة موجودة"
+  },
+  
+  "addNewCategory": "إضافة فئة جديدة",
+  "@addNewCategory": {
+    "description": "عنوان نافذة إضافة فئة جديدة"
+  },
+  
+  "categoryName": "اسم الفئة",
+  "@categoryName": {
+    "description": "Label لحقل اسم الفئة"
+  },
+  
+  "categoryNameHint": "مثال: فواتير، إيجار، صيانة",
+  "@categoryNameHint": {
+    "description": "Placeholder لحقل اسم الفئة"
+  },
+  
+  "categoryNameRequired": "اسم الفئة مطلوب",
+  "@categoryNameRequired": {
+    "description": "رسالة Validation عند ترك حقل الاسم فارغاً"
+  },
+  
+  "update": "تحديث",
+  "@update": {
+    "description": "نص زر التحديث في وضع التعديل"
+  },
+  
+  "categoryUpdatedSuccess": "تم تعديل الفئة بنجاح",
+  "@categoryUpdatedSuccess": {
+    "description": "رسالة نجاح بعد تعديل فئة"
+  },
+  
+  "categoryAddedSuccess": "تم إضافة الفئة بنجاح",
+  "@categoryAddedSuccess": {
+    "description": "رسالة نجاح بعد إضافة فئة جديدة"
+  },
+  
+  "categoryAlreadyExists": "هذه الفئة موجودة بالفعل",
+  "@categoryAlreadyExists": {
+    "description": "رسالة خطأ عند محاولة إضافة فئة مكررة"
+  },
+  
+  "confirmDelete": "تأكيد الحذف",
+  "@confirmDelete": {
+    "description": "عنوان نافذة تأكيد الحذف"
+  },
+  
+  "deleteConfirmationQuestion": "هل أنت متأكد من حذف الفئة؟",
+  "@deleteConfirmationQuestion": {
+    "description": "السؤال التأكيدي قبل الحذف"
+  },
+  
+  "deleteWarning": "سيتم حذف الفئة نهائياً ولن يمكن استرجاعها",
+  "@deleteWarning": {
+    "description": "رسالة تحذيرية في نافذة الحذف"
+  },
+  
+  "categoryDeletedSuccess": "تم حذف الفئة بنجاح",
+  "@categoryDeletedSuccess": {
+    "description": "رسالة نجاح بعد حذف فئة"
+  },
+
+    "employees_report_title": "تقرير الموظفين",
+  "@employees_report_title": {
+    "description": "عنوان صفحة تقرير الموظفين في شريط العنوان"
+  },
+  
+  "employees_list_title": "كشف الموظفين",
+  "@employees_list_title": {
+    "description": "عنوان القائمة التفصيلية للموظفين"
+  },
+    
+  "stat_total_salaries": "إجمالي الرواتب",
+  "@stat_total_salaries": {
+    "description": "عنوان بطاقة إجمالي الرواتب المدفوعة"
+  },
+  
+  "stat_salaries_paid": "المدفوعة",
+  "@stat_salaries_paid": {
+    "description": "النص الفرعي لبطاقة الرواتب (توضيح أنها رواتب مدفوعة)"
+  },
+  
+  "stat_advances_balance": "رصيد السلف",
+  "@stat_advances_balance": {
+    "description": "عنوان بطاقة رصيد السلف المستحقة"
+  },
+  
+  "stat_advances_due": "المستحقة",
+  "@stat_advances_due": {
+    "description": "النص الفرعي لبطاقة السلف (توضيح أنها سلف مستحقة)"
+  },
+  
+  "stat_active_employees": "الموظفين النشطين",
+  "@stat_active_employees": {
+    "description": "عنوان بطاقة عدد الموظفين النشطين"
+  },
+  
+  "stat_employee_unit": "موظف",
+  "@stat_employee_unit": {
+    "description": "وحدة القياس لعدد الموظفين"
+  },
+    
+  "loading_data": "جاري تحميل البيانات...",
+  "@loading_data": {
+    "description": "رسالة تظهر أثناء تحميل البيانات"
+  },
+  
+  "error_occurred": "حدث خطأ",
+  "@error_occurred": {
+    "description": "بداية رسالة الخطأ عند فشل تحميل البيانات"
+  },
+  
+  "no_employees_title": "لا يوجد موظفين",
+  "@no_employees_title": {
+    "description": "عنوان الرسالة عندما لا يوجد موظفين في النظام"
+  },
+  
+  "no_employees_message": "لم يتم تسجيل أي موظف نشط حتى الآن",
+  "@no_employees_message": {
+    "description": "رسالة توضيحية عندما لا يوجد موظفين في النظام"
+  },
+    
+  "employee_salary_label": "الراتب",
+  "@employee_salary_label": {
+    "description": "تسمية حقل الراتب في عنصر الموظف"
+  },
+  
+  "employee_advances_label": "السلف",
+  "@employee_advances_label": {
+    "description": "تسمية حقل السلف في عنصر الموظف"
   }
-
-
+  
 
 
 }

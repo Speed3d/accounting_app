@@ -409,7 +409,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               icon: Icons.payments_outlined,
               title: l10n.noPayrolls,
               message: l10n.noPayrollsMessage,
-              actionText: l10n.addPayrollAction,
+              actionText: l10n.paymentAction,
               onAction: _navigateToAddPayroll,
             );
           }

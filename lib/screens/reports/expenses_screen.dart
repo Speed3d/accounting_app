@@ -14,10 +14,30 @@ import 'manage_categories_screen.dart';
 
 /// 💰 شاشة سجل المصاريف
 /// ---------------------------
-/// صفحة فرعية تعرض:
-/// 1. قائمة جميع المصاريف المسجلة
-/// 2. إمكانية إضافة مصروف جديد
-/// 3. إدارة فئات المصاريف
+/// **الوظيفة الأساسية:**
+/// صفحة فرعية متخصصة في إدارة وعرض جميع المصاريف المالية للمشروع
+/// 
+/// **الأقسام الرئيسية:**
+/// 1. قائمة المصاريف: عرض جميع المصاريف المسجلة مرتبة زمنياً
+/// 2. إضافة مصروف: نموذج شامل لتسجيل مصروف جديد
+/// 3. إدارة الفئات: زر للانتقال لشاشة إدارة فئات المصاريف
+/// 
+/// **الميزات:**
+/// - ✅ عرض تفصيلي لكل مصروف (الوصف، المبلغ، الفئة، التاريخ، الملاحظات)
+/// - ✅ فلترة وبحث حسب الفئة
+/// - ✅ إضافة/تعديل المصاريف
+/// - ✅ دعم الأرقام العربية والإنجليزية
+/// - ✅ Validation كامل للبيانات المدخلة
+/// - ✅ Pull to Refresh
+/// - ✅ Empty State عند عدم وجود بيانات
+/// 
+/// **الاستخدام:**
+/// ```dart
+/// Navigator.push(
+///   context,
+///   MaterialPageRoute(builder: (context) => const ExpensesScreen()),
+/// );
+/// ```
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
 
@@ -26,108 +46,189 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  // ============= المتغيرات =============
+  // ============================================================================
+  // 📦 المتغيرات - Variables
+  // ============================================================================
+  
+  /// Hint: مثيل من DatabaseHelper للتعامل مع قاعدة البيانات
   final dbHelper = DatabaseHelper.instance;
+  
+  /// Hint: Future يحمل قائمة المصاريف من قاعدة البيانات
+  /// يتم تحديثه عند كل عملية إضافة/حذف/تعديل
   late Future<List<Map<String, dynamic>>> _expensesFuture;
 
-  // ============= التهيئة =============
+  // ============================================================================
+  // 🎬 دورة الحياة - Lifecycle
+  // ============================================================================
+  
   @override
   void initState() {
     super.initState();
+    // Hint: تحميل البيانات عند بداية الصفحة
     _loadExpenses();
   }
 
-  /// تحميل قائمة المصاريف من قاعدة البيانات
+  // ============================================================================
+  // 🔄 دوال التحميل - Loading Functions
+  // ============================================================================
+  
+  /// دالة لتحميل قائمة المصاريف من قاعدة البيانات
+  /// 
+  /// **الوظيفة:**
+  /// - تستدعي دالة getExpenses() من DatabaseHelper
+  /// - تحفظ النتيجة في _expensesFuture
+  /// - تستدعي setState() لإعادة بناء الواجهة
+  /// 
+  /// **متى تُستدعى:**
+  /// - عند فتح الشاشة (في initState)
+  /// - بعد إضافة مصروف جديد
+  /// - عند Pull to Refresh
+  /// - بعد العودة من شاشة إدارة الفئات
   void _loadExpenses() {
     setState(() {
+      // Hint: جلب البيانات من قاعدة البيانات وحفظها في Future
       _expensesFuture = dbHelper.getExpenses();
     });
   }
 
-  // ============= البناء الرئيسي =============
+  // ============================================================================
+  // 🎨 البناء الرئيسي - Main Build
+  // ============================================================================
+  
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // Hint: جلب نصوص الترجمة من ملف l10n
+    // إذا كان null (في حالة عدم وجود ترجمة)، نستخدم نصوص افتراضية
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
-      // --- AppBar مع زر إدارة الفئات ---
+      // ============================================================================
+      // 📱 AppBar - الشريط العلوي
+      // ============================================================================
       appBar: AppBar(
-        title:  Text(l10n.expenseRecord),
+        // Hint: العنوان يأتي من ملف الترجمة، أو نص افتراضي
+        title: Text(l10n?.expenseRecord ?? 'سجل المصاريف'),
         elevation: 0,
         actions: [
-          // زر إدارة فئات المصاريف
+          // ============================================================================
+          // 🗂️ زر إدارة فئات المصاريف
+          // ============================================================================
+          // Hint: هذا الزر ينقل المستخدم لشاشة منفصلة لإدارة الفئات
           IconButton(
             icon: const Icon(Icons.category_outlined),
             onPressed: () async {
+              // Hint: الانتقال لشاشة إدارة الفئات
               await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ManageCategoriesScreen(),
                 ),
               );
-              // تحديث القائمة عند الرجوع
+              // Hint: عند الرجوع، نُحدث قائمة المصاريف (لأن الفئات قد تكون تغيرت)
               _loadExpenses();
             },
-            tooltip: l10n.manageCategories,
+            tooltip: l10n?.manageCategories ?? 'إدارة الفئات',
           ),
         ],
       ),
 
-      // --- الجسم: قائمة المصاريف ---
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _expensesFuture,
-        builder: (context, snapshot) {
-          // --- حالة التحميل ---
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingState(message: 'جاري تحميل المصاريف...');
-          }
+      // ============================================================================
+      // 📋 الجسم الرئيسي - Body
+      // ============================================================================
+      body: RefreshIndicator(
+        // Hint: Pull to Refresh - السحب للأسفل لإعادة التحميل
+        onRefresh: () async => _loadExpenses(),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _expensesFuture,
+          builder: (context, snapshot) {
+            // ============================================================================
+            // ⏳ حالة التحميل - Loading State
+            // ============================================================================
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Hint: عرض مؤشر التحميل أثناء جلب البيانات
+              return LoadingState(
+                message: l10n?.loadingExpenses ?? 'جاري تحميل المصاريف...',
+              );
+            }
 
-          // --- حالة الخطأ ---
-          if (snapshot.hasError) {
-            return ErrorState(
-              message: l10n.loadError,
-              onRetry: _loadExpenses,
+            // ============================================================================
+            // ❌ حالة الخطأ - Error State
+            // ============================================================================
+            if (snapshot.hasError) {
+              // Hint: عرض رسالة خطأ إذا فشل جلب البيانات
+              return ErrorState(
+                message: l10n?.loadError ?? 'حدث خطأ أثناء تحميل البيانات',
+                onRetry: _loadExpenses,
+              );
+            }
+
+            // ============================================================================
+            // 📭 حالة عدم وجود بيانات - Empty State
+            // ============================================================================
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              // Hint: عرض رسالة وأيقونة عند عدم وجود مصاريف
+              return EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: l10n?.noExpenses ?? 'لا توجد مصاريف',
+                message: l10n?.noExpensesMessage ?? 'لم يتم تسجيل أي مصروف حتى الآن',
+                actionText: l10n?.addExpense ?? 'إضافة مصروف',
+                onAction: _showAddExpenseDialog,
+              );
+            }
+
+            // ============================================================================
+            // ✅ حالة عرض البيانات - Data Display
+            // ============================================================================
+            final expenses = snapshot.data!;
+
+            return ListView.builder(
+              padding: AppConstants.screenPadding,
+              itemCount: expenses.length,
+              itemBuilder: (context, index) {
+                final expense = expenses[index];
+                // Hint: بناء بطاقة لكل مصروف
+                return _buildExpenseCard(expense);
+              },
             );
-          }
-
-          // --- حالة عدم وجود مصاريف ---
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return EmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: l10n.noExpenses,
-              message: 'لم يتم تسجيل أي مصروف حتى الآن',
-              actionText: l10n.addExpense,
-              onAction: _showAddExpenseDialog,
-            );
-          }
-
-          // --- عرض قائمة المصاريف ---
-          final expenses = snapshot.data!;
-
-          return ListView.builder(
-            padding: AppConstants.screenPadding,
-            itemCount: expenses.length,
-            itemBuilder: (context, index) {
-              final expense = expenses[index];
-              return _buildExpenseCard(expense);
-            },
-          );
-        },
+          },
+        ),
       ),
 
-      // --- زر الإضافة العائم ---
+      // ============================================================================
+      // ➕ زر الإضافة العائم - FAB
+      // ============================================================================
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddExpenseDialog,
         icon: const Icon(Icons.add),
-        label:  Text(l10n.addExpense),
-        tooltip: l10n.newExpense,
+        label: Text(l10n?.addExpense ?? 'إضافة مصروف'),
+        tooltip: l10n?.newExpense ?? 'مصروف جديد',
       ),
     );
   }
 
-  // ============= بناء بطاقة المصروف =============
-  /// يعرض كل مصروف في بطاقة منفصلة
+  // ============================================================================
+  // 🎴 بناء بطاقة المصروف - Expense Card Builder
+  // ============================================================================
+  
+  /// دالة لبناء بطاقة عرض مصروف واحد
+  /// 
+  /// **المعاملات:**
+  /// - expense: Map يحتوي على بيانات المصروف من قاعدة البيانات
+  /// 
+  /// **البيانات المعروضة:**
+  /// - أيقونة السهم للأعلى (ترمز للصرف)
+  /// - الوصف (Description)
+  /// - الفئة (Category)
+  /// - الملاحظات (Notes) - اختيارية
+  /// - المبلغ (Amount) - باللون الأحمر
+  /// - التاريخ (ExpenseDate)
+  /// 
+  /// **التفاعل:**
+  /// - عند النقر: فتح نافذة تفاصيل المصروف
   Widget _buildExpenseCard(Map<String, dynamic> expense) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    
+    // Hint: استخراج البيانات من Map
     final amount = expense['Amount'] as double;
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
@@ -137,13 +238,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
       child: InkWell(
+        // Hint: عند النقر على البطاقة، نعرض تفاصيل المصروف كاملة
         onTap: () => _showExpenseDetails(expense),
         borderRadius: AppConstants.cardBorderRadius,
         child: Padding(
           padding: AppConstants.paddingMd,
           child: Row(
             children: [
-              // --- أيقونة المصروف ---
+              // ============================================================================
+              // 🔴 أيقونة المصروف
+              // ============================================================================
+              // Hint: حاوية دائرية بخلفية حمراء فاتحة وأيقونة سهم للأعلى
               Container(
                 width: 48,
                 height: 48,
@@ -160,12 +265,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
               const SizedBox(width: AppConstants.spacingMd),
 
-              // --- تفاصيل المصروف ---
+              // ============================================================================
+              // 📄 تفاصيل المصروف (الوصف، الفئة، الملاحظات)
+              // ============================================================================
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // الوصف
+                    // --- الوصف ---
+                    // Hint: نص غامق يظهر وصف المصروف
                     Text(
                       description,
                       style: const TextStyle(
@@ -178,13 +286,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                     const SizedBox(height: AppConstants.spacingXs),
 
-                    // الفئة
+                    // --- الفئة ---
+                    // Hint: نص صغير يظهر اسم الفئة أو "غير مصنف" إذا كانت null
                     Text(
-                      category ?? l10n.unclassified,
+                      category ?? (l10n?.unclassified ?? 'غير مصنف'),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
 
-                    // الملاحظات (إن وجدت)
+                    // --- الملاحظات (اختيارية) ---
+                    // Hint: تظهر فقط إذا كانت موجودة وليست فارغة
                     if (notes != null && notes.isNotEmpty) ...[
                       const SizedBox(height: AppConstants.spacingXs),
                       Text(
@@ -202,11 +312,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
               const SizedBox(width: AppConstants.spacingMd),
 
-              // --- المبلغ والتاريخ ---
+              // ============================================================================
+              // 💵 المبلغ والتاريخ
+              // ============================================================================
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // المبلغ
+                  // --- المبلغ ---
+                  // Hint: نعرض المبلغ باللون الأحمر مع إشارة ناقص (-)
                   Text(
                     '- ${formatCurrency(amount)}',
                     style: const TextStyle(
@@ -218,7 +331,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                   const SizedBox(height: AppConstants.spacingXs),
 
-                  // التاريخ
+                  // --- التاريخ ---
+                  // Hint: نعرض التاريخ بصيغة yyyy-MM-dd
                   Text(
                     DateFormat('yyyy-MM-dd').format(date),
                     style: Theme.of(context).textTheme.bodySmall,
@@ -232,11 +346,30 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
-  // ============= نافذة إضافة مصروف =============
-  /// نافذة حوار لإضافة مصروف جديد
+  // ============================================================================
+  // ➕ نافذة إضافة مصروف - Add Expense Dialog
+  // ============================================================================
+  
+  /// دالة لعرض نافذة حوار لإضافة مصروف جديد
+  /// 
+  /// **الخطوات:**
+  /// 1. جلب قائمة الفئات من قاعدة البيانات
+  /// 2. التحقق من وجود فئات (إلزامي)
+  /// 3. عرض نموذج بالحقول التالية:
+  ///    - الوصف (مطلوب)
+  ///    - المبلغ (مطلوب، رقمي)
+  ///    - الفئة (مطلوب، من قائمة منسدلة)
+  ///    - الملاحظات (اختياري)
+  /// 4. Validation شامل
+  /// 5. حفظ المصروف في قاعدة البيانات
+  /// 6. تحديث القائمة
   void _showAddExpenseDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    // --- جلب قائمة الفئات ---
+    final l10n = AppLocalizations.of(context);
+    
+    // ============================================================================
+    // 📂 الخطوة 1: جلب قائمة الفئات
+    // ============================================================================
+    // Hint: نحتاج لعرض الفئات في قائمة منسدلة (Dropdown)
     final categories = await dbHelper.getExpenseCategories();
     final categoryNames = categories
         .map((cat) => cat['CategoryName'] as String)
@@ -244,33 +377,41 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     if (!mounted) return;
 
-    // --- التحقق من وجود فئات ---
+    // ============================================================================
+    // ⚠️ الخطوة 2: التحقق من وجود فئات
+    // ============================================================================
+    // Hint: إذا لم تكن هناك فئات، نطلب من المستخدم إضافتها أولاً
     if (categoryNames.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى إضافة فئات المصاريف أولاً'),
+        SnackBar(
+          content: Text(l10n?.addCategoriesFirst ?? 'يرجى إضافة فئات المصاريف أولاً'),
           backgroundColor: AppColors.warning,
         ),
       );
       return;
     }
 
-    // --- متغيرات النموذج ---
+    // ============================================================================
+    // 📝 الخطوة 3: تعريف متغيرات النموذج
+    // ============================================================================
     final formKey = GlobalKey<FormState>();
     final descriptionController = TextEditingController();
     final amountController = TextEditingController();
     final notesController = TextEditingController();
     String? selectedCategory = categoryNames.first;
 
+    // ============================================================================
+    // 🪟 الخطوة 4: عرض نافذة الحوار
+    // ============================================================================
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         // --- عنوان النافذة ---
         title: Row(
           children: [
-            Icon(Icons.add_circle_outline, size: 28),
-            SizedBox(width: 12),
-            Text(l10n.addExpense),
+            const Icon(Icons.add_circle_outline, size: 28),
+            const SizedBox(width: 12),
+            Text(l10n?.addExpense ?? 'إضافة مصروف'),
           ],
         ),
 
@@ -282,15 +423,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- حقل الوصف ---
+                // ============================================================================
+                // 📄 حقل الوصف
+                // ============================================================================
+                // Hint: حقل نصي إلزامي لوصف المصروف
                 CustomTextField(
                   controller: descriptionController,
-                  label: 'وصف المصروف',
-                  hint: 'مثال: فاتورة كهرباء',
+                  label: l10n?.expenseDescription ?? 'وصف المصروف',
+                  hint: l10n?.expenseDescriptionHint ?? 'مثال: فاتورة كهرباء',
                   prefixIcon: Icons.description_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'الوصف مطلوب';
+                      return l10n?.descriptionRequired ?? 'الوصف مطلوب';
                     }
                     return null;
                   },
@@ -298,10 +442,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // --- حقل المبلغ ---
+                // ============================================================================
+                // 💵 حقل المبلغ
+                // ============================================================================
+                // Hint: حقل رقمي إلزامي، يدعم الأرقام العربية والإنجليزية
                 CustomTextField(
                   controller: amountController,
-                  label: 'المبلغ',
+                  label: l10n?.amount ?? 'المبلغ',
                   hint: '0.00',
                   prefixIcon: Icons.attach_money,
                   keyboardType: const TextInputType.numberWithOptions(
@@ -309,11 +456,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'المبلغ مطلوب';
+                      return l10n?.amountRequired ?? 'المبلغ مطلوب';
                     }
+                    // Hint: تحويل الأرقام العربية إلى إنجليزية قبل التحقق
                     final convertedValue = convertArabicNumbersToEnglish(value);
                     if (double.tryParse(convertedValue) == null) {
-                      return 'أدخل رقماً صحيحاً';
+                      return l10n?.enterValidNumber ?? 'أدخل رقماً صحيحاً';
                     }
                     return null;
                   },
@@ -321,11 +469,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // --- قائمة الفئات ---
+                // ============================================================================
+                // 🗂️ قائمة الفئات المنسدلة
+                // ============================================================================
+                // Hint: Dropdown لاختيار فئة المصروف
                 DropdownButtonFormField<String>(
                   value: selectedCategory,
                   decoration: InputDecoration(
-                    labelText: 'الفئة',
+                    labelText: l10n?.category ?? 'الفئة',
                     prefixIcon: const Icon(Icons.category_outlined),
                     border: OutlineInputBorder(
                       borderRadius: AppConstants.inputBorderRadius,
@@ -342,7 +493,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   },
                   validator: (value) {
                     if (value == null) {
-                      return 'اختر الفئة';
+                      return l10n?.selectCategory ?? 'اختر الفئة';
                     }
                     return null;
                   },
@@ -350,11 +501,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // --- حقل الملاحظات (اختياري) ---
+                // ============================================================================
+                // 📝 حقل الملاحظات (اختياري)
+                // ============================================================================
+                // Hint: حقل نصي متعدد الأسطر للملاحظات الإضافية
                 CustomTextField(
                   controller: notesController,
-                  label: 'ملاحظات (اختياري)',
-                  hint: 'أضف ملاحظة...',
+                  label: l10n?.notesOptional ?? 'ملاحظات (اختياري)',
+                  hint: l10n?.addNote ?? 'أضف ملاحظة...',
                   prefixIcon: Icons.note_outlined,
                   maxLines: 3,
                 ),
@@ -363,21 +517,27 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
         ),
 
-        // --- أزرار الإجراءات ---
+        // ============================================================================
+        // 🔘 أزرار الإجراءات
+        // ============================================================================
         actions: [
-          // زر الإلغاء
+          // --- زر الإلغاء ---
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
+            child: Text(l10n?.cancel ?? 'إلغاء'),
           ),
 
-          // زر الحفظ
+          // --- زر الحفظ ---
           ElevatedButton.icon(
             onPressed: () async {
-              // --- التحقق من صحة البيانات ---
+              // ============================================================================
+              // ✅ التحقق من صحة البيانات
+              // ============================================================================
               if (!formKey.currentState!.validate()) return;
 
-              // --- تحضير البيانات ---
+              // ============================================================================
+              // 📦 تحضير البيانات للحفظ
+              // ============================================================================
               final expenseData = {
                 'Description': descriptionController.text.trim(),
                 'Amount': double.parse(
@@ -389,7 +549,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               };
 
               try {
-                // --- حفظ المصروف ---
+                // ============================================================================
+                // 💾 حفظ المصروف في قاعدة البيانات
+                // ============================================================================
                 await dbHelper.recordExpense(expenseData);
 
                 if (!ctx.mounted) return;
@@ -399,8 +561,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                 // رسالة نجاح
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('تم إضافة المصروف بنجاح'),
+                  SnackBar(
+                    content: Text(l10n?.expenseAddedSuccess ?? 'تم إضافة المصروف بنجاح'),
                     backgroundColor: AppColors.success,
                   ),
                 );
@@ -412,23 +574,39 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('حدث خطأ: $e'),
+                    content: Text('${l10n?.errorOccurred ?? "حدث خطأ"}: $e'),
                     backgroundColor: AppColors.error,
                   ),
                 );
               }
             },
             icon: const Icon(Icons.save),
-            label: const Text('حفظ'),
+            label: Text(l10n?.save ?? 'حفظ'),
           ),
         ],
       ),
     );
   }
 
-  // ============= نافذة تفاصيل المصروف =============
-  /// عرض تفاصيل المصروف عند النقر عليه
+  // ============================================================================
+  // 📋 نافذة تفاصيل المصروف - Expense Details Dialog
+  // ============================================================================
+  
+  /// دالة لعرض نافذة حوار بتفاصيل المصروف الكاملة
+  /// 
+  /// **المعاملات:**
+  /// - expense: Map يحتوي على بيانات المصروف
+  /// 
+  /// **البيانات المعروضة:**
+  /// - الوصف
+  /// - المبلغ (باللون الأحمر)
+  /// - الفئة
+  /// - التاريخ
+  /// - الملاحظات (إن وجدت)
   void _showExpenseDetails(Map<String, dynamic> expense) {
+    final l10n = AppLocalizations.of(context);
+    
+    // Hint: استخراج البيانات من Map
     final amount = expense['Amount'] as double;
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
@@ -438,13 +616,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        // --- عنوان النافذة ---
+        title: Row(
           children: [
-            Icon(Icons.receipt_long, size: 28),
-            SizedBox(width: 12),
-            Text('تفاصيل المصروف'),
+            const Icon(Icons.receipt_long, size: 28),
+            const SizedBox(width: 12),
+            Text(l10n?.expenseDetails ?? 'تفاصيل المصروف'),
           ],
         ),
+        
+        // --- محتوى التفاصيل ---
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,7 +633,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             // الوصف
             _buildDetailRow(
               icon: Icons.description_outlined,
-              label: 'الوصف',
+              label: l10n?.description ?? 'الوصف',
               value: description,
             ),
 
@@ -461,7 +642,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             // المبلغ
             _buildDetailRow(
               icon: Icons.attach_money,
-              label: 'المبلغ',
+              label: l10n?.amount ?? 'المبلغ',
               value: formatCurrency(amount),
               valueColor: AppColors.error,
             ),
@@ -471,8 +652,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             // الفئة
             _buildDetailRow(
               icon: Icons.category_outlined,
-              label: 'الفئة',
-              value: category ?? 'غير مصنف',
+              label: l10n?.category ?? 'الفئة',
+              value: category ?? (l10n?.unclassified ?? 'غير مصنف'),
             ),
 
             const Divider(height: 24),
@@ -480,32 +661,41 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             // التاريخ
             _buildDetailRow(
               icon: Icons.calendar_today_outlined,
-              label: 'التاريخ',
+              label: l10n?.date ?? 'التاريخ',
               value: DateFormat('yyyy-MM-dd').format(date),
             ),
 
-            // الملاحظات
+            // الملاحظات (إن وجدت)
             if (notes != null && notes.isNotEmpty) ...[
               const Divider(height: 24),
               _buildDetailRow(
                 icon: Icons.note_outlined,
-                label: 'الملاحظات',
+                label: l10n?.notes ?? 'الملاحظات',
                 value: notes,
               ),
             ],
           ],
         ),
+        
+        // --- زر الإغلاق ---
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إغلاق'),
+            child: Text(l10n?.close ?? 'إغلاق'),
           ),
         ],
       ),
     );
   }
 
-  /// صف تفصيلي موحد
+  // ============================================================================
+  // 🧩 صف تفصيلي موحد - Detail Row Widget
+  // ============================================================================
+  
+  /// Widget مساعد لعرض صف تفصيلي (Label + Value + Icon)
+  /// 
+  /// **الاستخدام:**
+  /// يُستخدم في نافذة تفاصيل المصروف لعرض كل حقل بشكل موحد
   Widget _buildDetailRow({
     required IconData icon,
     required String label,
@@ -515,17 +705,23 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // --- الأيقونة ---
         Icon(icon, size: 20, color: Colors.grey),
         const SizedBox(width: 12),
+        
+        // --- Label والقيمة ---
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Label (عنوان الحقل)
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 4),
+              
+              // Value (القيمة الفعلية)
               Text(
                 value,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(

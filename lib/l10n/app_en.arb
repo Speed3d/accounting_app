@@ -734,8 +734,7 @@
     "expenseAddedSuccess": "Expense recorded successfully.",
     "unclassified": "Unclassified",
     "expensesarebeingloaded": "Expenses are being loaded",
-    "noexpensesrecorded": "No expenses have been recorded so far",
-    "addexpensecategories": "Please add expense categories first",
+
 
       "dashboard": "Dashboard",
   "today": "Today",
@@ -1566,6 +1565,326 @@
         "type": "String"
       }
     }
+  },
+
+  "expenseRecord": "Expense Record",
+  "@expenseRecord": {
+    "description": "Title of the expenses screen in AppBar"
+  },
+  
+  "manageCategories": "Manage Categories",
+  "@manageCategories": {
+    "description": "Text for manage expense categories button"
+  },
+  
+  "loadingExpenses": "Loading expenses...",
+  "@loadingExpenses": {
+    "description": "Message shown while loading expenses list"
+  },
+  
+  "loadError": "Error loading data",
+  "@loadError": {
+    "description": "Generic error message when data loading fails"
+  },
+  
+  "noExpenses": "No Expenses",
+  "@noExpenses": {
+    "description": "Title for Empty State when there are no expenses"
+  },
+  
+  "noExpensesMessage": "No expenses have been recorded yet",
+  "@noExpensesMessage": {
+    "description": "Descriptive message in Empty State"
+  },
+  
+  "addExpense": "Add Expense",
+  "@addExpense": {
+    "description": "Text for add new expense button"
+  },
+  
+  "newExpense": "New Expense",
+  "@newExpense": {
+    "description": "Tooltip for floating action button (FAB)"
+  },
+  
+  "save": "Save",
+  "@save": {
+    "description": "Text for save button in forms"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Text for cancel button in forms"
+  },
+  
+  "close": "Close",
+  "@close": {
+    "description": "Text for close button in dialogs"
+  },
+  
+  "expenseDescription": "Expense Description",
+  "@expenseDescription": {
+    "description": "Label for expense description field"
+  },
+  
+  "expenseDescriptionHint": "e.g., Electricity bill",
+  "@expenseDescriptionHint": {
+    "description": "Placeholder for expense description field"
+  },
+  
+  "amount": "Amount",
+  "@amount": {
+    "description": "Label for amount field"
+  },
+  
+  "category": "Category",
+  "@category": {
+    "description": "Label for category field"
+  },
+  
+  "notesOptional": "Notes (Optional)",
+  "@notesOptional": {
+    "description": "Label for optional notes field"
+  },
+  
+  "addNote": "Add a note...",
+  "@addNote": {
+    "description": "Placeholder for notes field"
+  },
+  
+  "descriptionRequired": "Description is required",
+  "@descriptionRequired": {
+    "description": "Validation error message when description field is empty"
+  },
+  
+  "amountRequired": "Amount is required",
+  "@amountRequired": {
+    "description": "Validation error message when amount field is empty"
+  },
+  
+  "enterValidNumber": "Enter a valid number",
+  "@enterValidNumber": {
+    "description": "Validation error message when non-numeric value is entered"
+  },
+  
+  "selectCategory": "Select category",
+  "@selectCategory": {
+    "description": "Validation error message when no category is selected"
+  },
+  
+  "description": "Description",
+  "@description": {
+    "description": "General label for description in detail pages"
+  },
+  
+  "date": "Date",
+  "@date": {
+    "description": "General label for date"
+  },
+  
+  "notes": "Notes",
+  "@notes": {
+    "description": "General label for notes"
+  },
+  
+  "expenseDetails": "Expense Details",
+  "@expenseDetails": {
+    "description": "Title for expense details dialog"
+  },
+  
+  "addCategoriesFirst": "Please add expense categories first",
+  "@addCategoriesFirst": {
+    "description": "Warning message when trying to add expense without categories"
+  },
+  
+  "expenseAddedSuccess": "Expense added successfully",
+  "@expenseAddedSuccess": {
+    "description": "Success message after adding new expense"
+  },
+  
+  "errorOccurred2": "An error occurred",
+  "@errorOccurred2": {
+    "description": "Generic error message"
+  },
+  
+  "unclassified": "Unclassified",
+  "@unclassified": {
+    "description": "Text shown when expense has no category assigned"
+  },
+
+  "manageCategoriesTitle": "Manage Expense Categories",
+  "@manageCategoriesTitle": {
+    "description": "Title of manage categories screen in AppBar"
+  },
+  
+  "loadingCategories": "Loading categories...",
+  "@loadingCategories": {
+    "description": "Message shown while loading categories list"
+  },
+  
+  "noCategories": "No Categories",
+  "@noCategories": {
+    "description": "Title for Empty State when there are no categories"
+  },
+  
+  "noCategoriesMessage": "No expense categories have been added yet",
+  "@noCategoriesMessage": {
+    "description": "Descriptive message in Empty State"
+  },
+  
+  "addCategory": "Add Category",
+  "@addCategory": {
+    "description": "Text for add new category button"
+  },
+  
+  "newCategory": "New Category",
+  "@newCategory": {
+    "description": "Tooltip for floating action button"
+  },
+  
+  "edit": "Edit",
+  "@edit": {
+    "description": "Tooltip text for edit button"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Tooltip text for delete button"
+  },
+  
+  "editCategory": "Edit Category",
+  "@editCategory": {
+    "description": "Title for edit category dialog"
+  },
+  
+  "addNewCategory": "Add New Category",
+  "@addNewCategory": {
+    "description": "Title for add new category dialog"
+  },
+  
+  "categoryName": "Category Name",
+  "@categoryName": {
+    "description": "Label for category name field"
+  },
+  
+  "categoryNameHint": "e.g., Bills, Rent, Maintenance",
+  "@categoryNameHint": {
+    "description": "Placeholder for category name field"
+  },
+  
+  "categoryNameRequired": "Category name is required",
+  "@categoryNameRequired": {
+    "description": "Validation message when name field is empty"
+  },
+  
+  "update": "Update",
+  "@update": {
+    "description": "Text for update button in edit mode"
+  },
+  
+  "categoryUpdatedSuccess": "Category updated successfully",
+  "@categoryUpdatedSuccess": {
+    "description": "Success message after updating category"
+  },
+  
+  "categoryAddedSuccess": "Category added successfully",
+  "@categoryAddedSuccess": {
+    "description": "Success message after adding new category"
+  },
+  
+  "categoryAlreadyExists": "This category already exists",
+  "@categoryAlreadyExists": {
+    "description": "Error message when trying to add duplicate category"
+  },
+  
+  "confirmDelete": "Confirm Delete",
+  "@confirmDelete": {
+    "description": "Title for delete confirmation dialog"
+  },
+  
+  "deleteConfirmationQuestion": "Are you sure you want to delete this category?",
+  "@deleteConfirmationQuestion": {
+    "description": "Confirmation question before deletion"
+  },
+  
+  "deleteWarning": "The category will be permanently deleted and cannot be recovered",
+  "@deleteWarning": {
+    "description": "Warning message in delete dialog"
+  },
+  
+  "categoryDeletedSuccess": "Category deleted successfully",
+  "@categoryDeletedSuccess": {
+    "description": "Success message after deleting category"
+  },
+
+    "employees_report_title": "Employees Report",
+  "@employees_report_title": {
+    "description": "Title of the employees report page in the app bar"
+  },
+  
+  "employees_list_title": "Employees List",
+  "@employees_list_title": {
+    "description": "Title of the detailed employees list section"
+  },
+    
+  "stat_total_salaries": "Total Salaries",
+  "@stat_total_salaries": {
+    "description": "Title of the total paid salaries card"
+  },
+  
+  "stat_salaries_paid": "Paid",
+  "@stat_salaries_paid": {
+    "description": "Subtitle for salaries card (clarifying they are paid salaries)"
+  },
+  
+  "stat_advances_balance": "Advances Balance",
+  "@stat_advances_balance": {
+    "description": "Title of the advances balance card"
+  },
+  
+  "stat_advances_due": "Due",
+  "@stat_advances_due": {
+    "description": "Subtitle for advances card (clarifying they are due advances)"
+  },
+  
+  "stat_active_employees": "Active Employees",
+  "@stat_active_employees": {
+    "description": "Title of the active employees count card"
+  },
+  
+  "stat_employee_unit": "Employee",
+  "@stat_employee_unit": {
+    "description": "Unit of measurement for employee count"
+  },
+    
+  "loading_data": "Loading data...",
+  "@loading_data": {
+    "description": "Message displayed while loading data"
+  },
+  
+  "error_occurred": "An error occurred",
+  "@error_occurred": {
+    "description": "Beginning of error message when data loading fails"
+  },
+  
+  "no_employees_title": "No Employees",
+  "@no_employees_title": {
+    "description": "Title of the message when there are no employees in the system"
+  },
+  
+  "no_employees_message": "No active employees have been registered yet",
+  "@no_employees_message": {
+    "description": "Descriptive message when there are no employees in the system"
+  },
+    
+  "employee_salary_label": "Salary",
+  "@employee_salary_label": {
+    "description": "Label for the salary field in employee item"
+  },
+  
+  "employee_advances_label": "Advances",
+  "@employee_advances_label": {
+    "description": "Label for the advances field in employee item"
   }
 
 }
