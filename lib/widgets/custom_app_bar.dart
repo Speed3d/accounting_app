@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/theme_provider.dart';
 import '../services/auth_service.dart'; // ← أضف هذا
 import '../theme/app_colors.dart';
@@ -29,6 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
+    final l10n = AppLocalizations.of(context)!;
 
     return AppBar(
       elevation: 0,
@@ -40,7 +42,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: onMenuTap ?? () {
           Scaffold.of(context).openDrawer();
         },
-        tooltip: 'القائمة',
+        // tooltip: 'القائمة',
+        tooltip: l10n.menu,
       ),
       
       // ============= Title =============
@@ -88,7 +91,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () {
             themeProvider.toggleTheme();
           },
-          tooltip: isDark ? 'الوضع النهاري' : 'الوضع الليلي',
+          // الوضع النهاري والليلي - تدوين كلمات
+          tooltip: isDark ? l10n.daytimemode : l10n.nighttimemode,
         ),
         
         // معلومات المستخدم (اختياري)
@@ -108,6 +112,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildUserInfo(BuildContext context, bool isDark) {
     final authService = AuthService(); // ← جلب بيانات المستخدم
     final user = authService.currentUser;
+    final l10n = AppLocalizations.of(context)!;
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
@@ -119,7 +124,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                user?.fullName ?? 'مستخدم', // ← الاسم الحقيقي!
+                // user?.fullName ?? 'مستخدم', // ← الاسم الحقيقي!
+                user?.fullName ?? l10n.user, // ← الاسم الحقيقي!
+
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -127,7 +134,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               Text(
-                user?.isAdmin == true ? 'مدير النظام' : 'مستخدم', // ← الصلاحية!
+                // user?.isAdmin == true ? 'مدير النظام' : 'مستخدم', // ← الصلاحية!
+                user?.isAdmin == true ? l10n.systemAdmin : l10n.user, // ← الصلاحية!
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark 

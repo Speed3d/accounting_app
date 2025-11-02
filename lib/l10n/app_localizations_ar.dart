@@ -33,6 +33,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reports => 'التقارير';
 
   @override
+  String get more => 'المزيد';
+
+  @override
   String get customization => 'التخصيص';
 
   @override
@@ -2426,4 +2429,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get employee_advances_label => 'السلف';
+
+  @override
+  String get directSales => 'مبيعات مباشرة';
+
+  @override
+  String get invoices => 'الفواتير';
+
+  @override
+  String get customersAndSuppliers => 'العملاء والموردين';
+
+  @override
+  String get inventory => 'المخزون';
+
+  @override
+  String get employeeManagement => 'إدارة الموظفين';
+
+  @override
+  String get reportsCenter => 'مركز التقارير';
+
+  @override
+  String get system => 'النظام';
+
+  @override
+  String get systemAdmin => 'مدير النظام';
+
+  @override
+  String get logout => 'تسجيل الخروج';
+
+  @override
+  String get logoutConfirmation => 'هل أنت متأكد من تسجيل الخروج؟';
+
+  @override
+  String get errorOpeningReports => 'خطأ في فتح صفحة التقارير';
+
+  @override
+  String get menu => 'القائمة';
+
+  @override
+  String get daytimemode => 'الوضع النهاري';
+
+  @override
+  String get nighttimemode => 'الوضع الليلي';
 }

@@ -9,6 +9,7 @@
     "employees": "Employees",
     "customers": "Customers",
     "reports": "Reports",
+    "more": "More",
 
     "customization": "Customization",
     "companyInformation": "Company Information",
@@ -1885,6 +1886,22 @@
   "employee_advances_label": "Advances",
   "@employee_advances_label": {
     "description": "Label for the advances field in employee item"
-  }
+  },
+
+  "directSales": "Direct Sales",
+  "invoices": "Invoices",
+  "customersAndSuppliers": "Customers & Suppliers",
+  "inventory": "Inventory",
+  "employeeManagement": "Employee Management",
+  "reportsCenter": "Reports Center",
+  "system": "System",
+  "systemAdmin": "System Admin",
+  "logout": "Logout",
+  "logoutConfirmation": "Are you sure you want to logout?",
+  "errorOpeningReports": "Error opening reports page",
+  "menu": "Menu",
+  "daytimemode": "Daytime mode",
+  "nighttimemode": "Nighttime mode"
+
 
 }

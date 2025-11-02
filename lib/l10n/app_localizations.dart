@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'Reports'**
   String get reports;
 
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
   /// No description provided for @customization.
   ///
   /// In en, this message translates to:
@@ -4537,6 +4543,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advances'**
   String get employee_advances_label;
+
+  /// No description provided for @directSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Sales'**
+  String get directSales;
+
+  /// No description provided for @invoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoices'**
+  String get invoices;
+
+  /// No description provided for @customersAndSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers & Suppliers'**
+  String get customersAndSuppliers;
+
+  /// No description provided for @inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get inventory;
+
+  /// No description provided for @employeeManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Management'**
+  String get employeeManagement;
+
+  /// No description provided for @reportsCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports Center'**
+  String get reportsCenter;
+
+  /// No description provided for @system.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
+
+  /// No description provided for @systemAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'System Admin'**
+  String get systemAdmin;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
+
+  /// No description provided for @logoutConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirmation;
+
+  /// No description provided for @errorOpeningReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening reports page'**
+  String get errorOpeningReports;
+
+  /// No description provided for @menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get menu;
+
+  /// No description provided for @daytimemode.
+  ///
+  /// In en, this message translates to:
+  /// **'Daytime mode'**
+  String get daytimemode;
+
+  /// No description provided for @nighttimemode.
+  ///
+  /// In en, this message translates to:
+  /// **'Nighttime mode'**
+  String get nighttimemode;
 }
 
 class _AppLocalizationsDelegate

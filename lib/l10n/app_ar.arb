@@ -9,6 +9,7 @@
     "employees": "الموظفين",
     "customers": "الزبائن",
     "reports": "التقارير",
+    "more": "المزيد",
 
     "customization": "التخصيص",
     "companyInformation": "معلومات الشركة",
@@ -1823,8 +1824,22 @@
   "employee_advances_label": "السلف",
   "@employee_advances_label": {
     "description": "تسمية حقل السلف في عنصر الموظف"
-  }
-  
+  },
+
+  "directSales": "مبيعات مباشرة",
+  "invoices": "الفواتير",
+  "customersAndSuppliers": "العملاء والموردين",
+  "inventory": "المخزون",
+  "employeeManagement": "إدارة الموظفين",
+  "reportsCenter": "مركز التقارير",
+  "system": "النظام",
+  "systemAdmin": "مدير النظام",
+  "logout": "تسجيل الخروج",
+  "logoutConfirmation": "هل أنت متأكد من تسجيل الخروج؟",
+  "errorOpeningReports": "خطأ في فتح صفحة التقارير",
+  "menu": "القائمة",
+  "daytimemode": "الوضع النهاري",
+  "nighttimemode": "الوضع الليلي"
 
 
 }

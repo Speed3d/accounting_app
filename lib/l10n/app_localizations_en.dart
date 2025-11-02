@@ -33,6 +33,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reports => 'Reports';
 
   @override
+  String get more => 'More';
+
+  @override
   String get customization => 'Customization';
 
   @override
@@ -2448,4 +2451,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get employee_advances_label => 'Advances';
+
+  @override
+  String get directSales => 'Direct Sales';
+
+  @override
+  String get invoices => 'Invoices';
+
+  @override
+  String get customersAndSuppliers => 'Customers & Suppliers';
+
+  @override
+  String get inventory => 'Inventory';
+
+  @override
+  String get employeeManagement => 'Employee Management';
+
+  @override
+  String get reportsCenter => 'Reports Center';
+
+  @override
+  String get system => 'System';
+
+  @override
+  String get systemAdmin => 'System Admin';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get logoutConfirmation => 'Are you sure you want to logout?';
+
+  @override
+  String get errorOpeningReports => 'Error opening reports page';
+
+  @override
+  String get menu => 'Menu';
+
+  @override
+  String get daytimemode => 'Daytime mode';
+
+  @override
+  String get nighttimemode => 'Nighttime mode';
 }

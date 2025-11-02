@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/custom_app_bar.dart';
@@ -76,6 +77,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   /// بناء الشريط السفلي
   Widget _buildBottomNavigationBar(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -94,28 +96,28 @@ class _MainLayoutState extends State<MainLayout> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_outlined),
             activeIcon: const Icon(Icons.home),
-            label: 'الرئيسية',
+            label: l10n.homePage,
           ),
           
           // المبيعات
           BottomNavigationBarItem(
             icon: const Icon(Icons.point_of_sale_outlined),
             activeIcon: const Icon(Icons.point_of_sale),
-            label: 'المبيعات',
+            label: l10n.directselling,
           ),
           
           // التقارير
           BottomNavigationBarItem(
             icon: const Icon(Icons.assessment_outlined),
             activeIcon: const Icon(Icons.assessment),
-            label: 'التقارير',
+            label: l10n.reports,
           ),
           
           // المزيد
           BottomNavigationBarItem(
             icon: const Icon(Icons.menu),
             activeIcon: const Icon(Icons.menu_open),
-            label: 'المزيد',
+            label: l10n.more,
           ),
         ],
       ),
