@@ -4627,6 +4627,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nighttime mode'**
   String get nighttimemode;
+
+  /// No description provided for @selectCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Currency'**
+  String get selectCurrency;
+
+  /// No description provided for @currencyChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency changed successfully'**
+  String get currencyChanged;
+
+  /// No description provided for @security.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// No description provided for @biometricLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric Login'**
+  String get biometricLogin;
+
+  /// No description provided for @biometricEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric Enabled'**
+  String get biometricEnabled;
+
+  /// No description provided for @biometricDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric Disabled'**
+  String get biometricDisabled;
+
+  /// No description provided for @disableBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Biometric'**
+  String get disableBiometric;
+
+  /// No description provided for @disableBiometricConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to disable biometric?'**
+  String get disableBiometricConfirmation;
+
+  /// No description provided for @disable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get disable;
+
+  /// No description provided for @biometricDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric disabled successfully'**
+  String get biometricDisabledSuccess;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get or;
+
+  /// No description provided for @loginWithBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Login with Biometric'**
+  String get loginWithBiometric;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get noUsersFound;
+
+  /// No description provided for @tryOnRealDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'You can try this feature on a real device'**
+  String get tryOnRealDevice;
 }
 
 class _AppLocalizationsDelegate

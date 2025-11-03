@@ -24,6 +24,12 @@ dependencies:
   bcrypt: ^1.1.3
   flutter_secure_storage: ^9.0.0
   provider: ^6.1.1
+
+  # ✅ حزمة للتعامل مع البصمة والتعرف البيومتري
+  local_auth: ^2.1.8
+
+  # ✅ Hint: حزمة للرسوم البيانية الاحترافية
+  fl_chart: ^0.66.0
   
   #الحزمة لإنشاء سلايدر المنتجات الجذاب
   carousel_slider: ^5.1.1 

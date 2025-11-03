@@ -2493,4 +2493,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nighttimemode => 'Nighttime mode';
+
+  @override
+  String get selectCurrency => 'Select Currency';
+
+  @override
+  String get currencyChanged => 'Currency changed successfully';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get biometricLogin => 'Biometric Login';
+
+  @override
+  String get biometricEnabled => 'Biometric Enabled';
+
+  @override
+  String get biometricDisabled => 'Biometric Disabled';
+
+  @override
+  String get disableBiometric => 'Disable Biometric';
+
+  @override
+  String get disableBiometricConfirmation =>
+      'Are you sure you want to disable biometric?';
+
+  @override
+  String get disable => 'Disable';
+
+  @override
+  String get biometricDisabledSuccess => 'Biometric disabled successfully';
+
+  @override
+  String get or => 'OR';
+
+  @override
+  String get loginWithBiometric => 'Login with Biometric';
+
+  @override
+  String get noUsersFound => 'No users found';
+
+  @override
+  String get tryOnRealDevice => 'You can try this feature on a real device';
 }

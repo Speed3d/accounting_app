@@ -1839,7 +1839,23 @@
   "errorOpeningReports": "خطأ في فتح صفحة التقارير",
   "menu": "القائمة",
   "daytimemode": "الوضع النهاري",
-  "nighttimemode": "الوضع الليلي"
+  "nighttimemode": "الوضع الليلي",
+
+  "selectCurrency": "اختر العملة",
+  "currencyChanged": "تم تغيير العملة بنجاح",
+  "security": "الأمان",
+  "biometricLogin": "تسجيل الدخول بالبصمة",
+  "biometricEnabled": "البصمة مُفعّلة",
+  "biometricDisabled": "البصمة غير مُفعّلة",
+  "disableBiometric": "إلغاء البصمة",
+  "disableBiometricConfirmation": "هل أنت متأكد من إلغاء تفعيل البصمة؟",
+  "disable": "إلغاء",
+  "biometricDisabledSuccess": "تم إلغاء تفعيل البصمة بنجاح",
+
+  "or": "أو",
+  "loginWithBiometric": "تسجيل الدخول بالبصمة",
+  "noUsersFound": "لم يتم العثور على مستخدمين",
+  "tryOnRealDevice": "يمكنك تجربة الميزة على جهاز حقيقي"
 
 
 }

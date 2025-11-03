@@ -1901,7 +1901,23 @@
   "errorOpeningReports": "Error opening reports page",
   "menu": "Menu",
   "daytimemode": "Daytime mode",
-  "nighttimemode": "Nighttime mode"
+  "nighttimemode": "Nighttime mode",
+
+  "selectCurrency": "Select Currency",
+  "currencyChanged": "Currency changed successfully",
+  "security": "Security",
+  "biometricLogin": "Biometric Login",
+  "biometricEnabled": "Biometric Enabled",
+  "biometricDisabled": "Biometric Disabled",
+  "disableBiometric": "Disable Biometric",
+  "disableBiometricConfirmation": "Are you sure you want to disable biometric?",
+  "disable": "Disable",
+  "biometricDisabledSuccess": "Biometric disabled successfully",
+
+  "or": "OR",
+  "loginWithBiometric": "Login with Biometric",
+  "noUsersFound": "No users found",
+  "tryOnRealDevice": "You can try this feature on a real device"
 
 
 }

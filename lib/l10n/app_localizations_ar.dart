@@ -2471,4 +2471,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nighttimemode => 'الوضع الليلي';
+
+  @override
+  String get selectCurrency => 'اختر العملة';
+
+  @override
+  String get currencyChanged => 'تم تغيير العملة بنجاح';
+
+  @override
+  String get security => 'الأمان';
+
+  @override
+  String get biometricLogin => 'تسجيل الدخول بالبصمة';
+
+  @override
+  String get biometricEnabled => 'البصمة مُفعّلة';
+
+  @override
+  String get biometricDisabled => 'البصمة غير مُفعّلة';
+
+  @override
+  String get disableBiometric => 'إلغاء البصمة';
+
+  @override
+  String get disableBiometricConfirmation =>
+      'هل أنت متأكد من إلغاء تفعيل البصمة؟';
+
+  @override
+  String get disable => 'إلغاء';
+
+  @override
+  String get biometricDisabledSuccess => 'تم إلغاء تفعيل البصمة بنجاح';
+
+  @override
+  String get or => 'أو';
+
+  @override
+  String get loginWithBiometric => 'تسجيل الدخول بالبصمة';
+
+  @override
+  String get noUsersFound => 'لم يتم العثور على مستخدمين';
+
+  @override
+  String get tryOnRealDevice => 'يمكنك تجربة الميزة على جهاز حقيقي';
 }
