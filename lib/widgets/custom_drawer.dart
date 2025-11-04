@@ -11,7 +11,7 @@ import 'package:accounting_app/screens/suppliers/suppliers_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../screens/auth/splash_screen.dart'; // ✅ Hint: استيراد SplashScreen
+import '../screens/auth/splash_screen.dart'; 
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
 import '../services/auth_service.dart';
@@ -39,12 +39,12 @@ return Drawer(
           padding: EdgeInsets.zero,
           children: [
             // ============= قسم المبيعات =============
-            _buildSection(context, l10n.sales, isDark), // ✅ Hint: استخدام الترجمة
+            _buildSection(context, l10n.sales, isDark), 
             
             _buildMenuItem(
               context,
               icon: Icons.point_of_sale,
-              title: l10n.directSales, // ✅ Hint: استخدام الترجمة
+              title: l10n.directSales, 
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -60,7 +60,7 @@ return Drawer(
               _buildMenuItem(
                 context,
                 icon: Icons.receipt_long,
-                title: l10n.invoices, // ✅ Hint: استخدام الترجمة
+                title: l10n.invoices, 
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -97,13 +97,13 @@ return Drawer(
             if (authService.canViewCustomers || 
                 authService.canViewSuppliers || 
                 authService.isAdmin) ...[
-              _buildSection(context, l10n.customersAndSuppliers, isDark), // ✅ Hint: استخدام الترجمة
+              _buildSection(context, l10n.customersAndSuppliers, isDark), 
               
               if (authService.canViewCustomers || authService.isAdmin)
                 _buildMenuItem(
                   context,
                   icon: Icons.people,
-                  title: l10n.customers, // ✅ Hint: استخدام الترجمة
+                  title: l10n.customers, 
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -119,7 +119,7 @@ return Drawer(
                 _buildMenuItem(
                   context,
                   icon: Icons.local_shipping,
-                  title: l10n.suppliers, // ✅ Hint: استخدام الترجمة
+                  title: l10n.suppliers, 
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -136,12 +136,12 @@ return Drawer(
             
             // ============= قسم المخزون =============
             if (authService.canViewProducts || authService.isAdmin) ...[
-              _buildSection(context, l10n.inventory, isDark), // ✅ Hint: استخدام الترجمة
+              _buildSection(context, l10n.inventory, isDark), 
               
               _buildMenuItem(
                 context,
                 icon: Icons.inventory_2,
-                title: l10n.products, // ✅ Hint: استخدام الترجمة
+                title: l10n.products, 
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -160,13 +160,13 @@ return Drawer(
             if (authService.canManageEmployees || 
                 authService.canViewEmployeesReport || 
                 authService.isAdmin) ...[
-              _buildSection(context, l10n.employees, isDark), // ✅ Hint: استخدام الترجمة
+              _buildSection(context, l10n.employees, isDark), 
               
               if (authService.canManageEmployees || authService.isAdmin)
                 _buildMenuItem(
                   context,
                   icon: Icons.badge,
-                  title: l10n.employeeManagement, // ✅ Hint: استخدام الترجمة
+                  title: l10n.employeeManagement, 
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -185,13 +185,13 @@ return Drawer(
             if (authService.canViewReports || 
                 authService.canManageExpenses || 
                 authService.isAdmin) ...[
-              _buildSection(context, l10n.reports, isDark), // ✅ Hint: استخدام الترجمة
+              _buildSection(context, l10n.reports, isDark), 
               
               if (authService.canViewReports || authService.isAdmin)
                 _buildMenuItem(
                   context,
                   icon: Icons.assessment,
-                  title: l10n.reportsCenter, // ✅ Hint: استخدام الترجمة
+                  title: l10n.reportsCenter, 
                   onTap: () {
                     Navigator.pop(context);
                     
@@ -207,7 +207,7 @@ return Drawer(
                       debugPrint('❌ خطأ في فتح التقارير: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(l10n.errorOpeningReports), // ✅ Hint: استخدام الترجمة
+                          content: Text(l10n.errorOpeningReports), 
                           backgroundColor: AppColors.error,
                         ),
                       );
@@ -220,13 +220,13 @@ return Drawer(
             
             // ============= قسم النظام =============
             if (authService.canViewSettings || authService.isAdmin) ...[
-              _buildSection(context, l10n.system, isDark), // ✅ Hint: استخدام الترجمة
+              _buildSection(context, l10n.system, isDark), 
               
               if (authService.canViewSettings || authService.isAdmin)
                 _buildMenuItem(
                   context,
                   icon: Icons.settings,
-                  title: l10n.settings, // ✅ Hint: استخدام الترجمة
+                  title: l10n.settings, 
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
@@ -253,7 +253,7 @@ Widget _buildDrawerHeader(
 BuildContext context,
 bool isDark,
 AuthService authService,
-AppLocalizations l10n, // ✅ Hint: إضافة معامل الترجمة
+AppLocalizations l10n, 
 ) {
 final currentUser = authService.currentUser;
 return Container(
@@ -294,10 +294,10 @@ return Container(
           
           // اسم المستخدم
           Text(
-            currentUser?.fullName ?? l10n.user, // ✅ Hint: استخدام الترجمة
+            currentUser?.fullName ?? l10n.user, 
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -316,8 +316,8 @@ return Container(
             ),
             child: Text(
               currentUser?.isAdmin == true 
-                ? l10n.systemAdmin  // ✅ Hint: استخدام الترجمة
-                : l10n.user,        // ✅ Hint: استخدام الترجمة
+                ? l10n.systemAdmin  
+                : l10n.user, 
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 12,
@@ -342,7 +342,7 @@ AppConstants.spacingSm,
 child: Text(
 title,
 style: TextStyle(
-fontSize: 12,
+fontSize: 14,
 fontWeight: FontWeight.bold,
 color: isDark
 ? AppColors.textSecondaryDark
@@ -397,7 +397,7 @@ vertical: AppConstants.spacingXs,
 Widget _buildDrawerFooter(
 BuildContext context,
 bool isDark,
-AppLocalizations l10n, // ✅ Hint: إضافة معامل الترجمة
+AppLocalizations l10n, 
 ) {
 return Container(
 decoration: BoxDecoration(
@@ -411,7 +411,7 @@ child: Column(
 children: [
 ListTile(
 leading: const Icon(Icons.info_outline),
-title: Text(l10n.aboutTheApp), // ✅ Hint: استخدام الترجمة
+title: Text(l10n.aboutTheApp), 
 onTap: () {
 Navigator.pop(context);
 Navigator.push(
@@ -425,7 +425,7 @@ builder: (context) => const AboutScreen(),
 ListTile(
 leading: const Icon(Icons.logout, color: AppColors.error),
 title: Text(
-l10n.logout, // ✅ Hint: استخدام الترجمة
+l10n.logout, 
 style: const TextStyle(color: AppColors.error),
 ),
 onTap: () {
@@ -442,12 +442,12 @@ void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
 showDialog(
 context: context,
 builder: (context) => AlertDialog(
-title: Text(l10n.logout), // ✅ Hint: استخدام الترجمة
-content: Text(l10n.logoutConfirmation), // ✅ Hint: استخدام الترجمة
+title: Text(l10n.logout), 
+content: Text(l10n.logoutConfirmation), 
 actions: [
 TextButton(
 onPressed: () => Navigator.pop(context),
-child: Text(l10n.cancel), // ✅ Hint: استخدام الترجمة
+child: Text(l10n.cancel), 
 ),
 ElevatedButton(
 onPressed: () {
@@ -463,7 +463,7 @@ AuthService().logout();
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.error,
         ),
-        child: Text(l10n.logout), // ✅ Hint: استخدام الترجمة
+        child: Text(l10n.logout), 
       ),
     ],
   ),

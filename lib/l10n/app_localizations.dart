@@ -4849,6 +4849,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Overdue Customers'**
   String get overdueCustomers;
+
+  /// No description provided for @productOutOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Product out of stock'**
+  String get productOutOfStock;
+
+  /// No description provided for @selectSaleDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select sale date'**
+  String get selectSaleDate;
+
+  /// No description provided for @saleDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale Date'**
+  String get saleDate;
 }
 
 class _AppLocalizationsDelegate

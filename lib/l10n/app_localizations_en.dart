@@ -2611,4 +2611,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get overdueCustomers => 'Overdue Customers';
+
+  @override
+  String get productOutOfStock => 'Product out of stock';
+
+  @override
+  String get selectSaleDate => 'Select sale date';
+
+  @override
+  String get saleDate => 'Sale Date';
 }

@@ -2589,4 +2589,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get overdueCustomers => 'عملاء متأخرون';
+
+  @override
+  String get productOutOfStock => 'المنتج غير متوفر في المخزن';
+
+  @override
+  String get selectSaleDate => 'اختر تاريخ البيع';
+
+  @override
+  String get saleDate => 'تاريخ البيع';
 }

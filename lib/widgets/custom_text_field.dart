@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_constants.dart';
 
 /// حقل إدخال مخصص موحد
 class CustomTextField extends StatelessWidget {

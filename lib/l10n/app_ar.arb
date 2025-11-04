@@ -1895,7 +1895,12 @@
   "monthlySalesChart": "المبيعات الشهرية",
   "profitBySupplier": "الأرباح حسب المورد",
   "lowStockProducts": "منتجات منخفضة المخزون",
-  "overdueCustomers": "عملاء متأخرون"
+  "overdueCustomers": "عملاء متأخرون",
+
+  "productOutOfStock": "المنتج غير متوفر في المخزن",
+  "selectSaleDate": "اختر تاريخ البيع",
+  "saleDate": "تاريخ البيع",
+  "today": "اليوم"
 
 
 }

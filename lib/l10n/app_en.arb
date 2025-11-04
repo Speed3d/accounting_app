@@ -1957,7 +1957,12 @@
   "monthlySalesChart": "Monthly Sales Chart",
   "profitBySupplier": "Profit by Supplier",
   "lowStockProducts": "Low Stock Products",
-  "overdueCustomers": "Overdue Customers"
+  "overdueCustomers": "Overdue Customers",
+
+  "productOutOfStock": "Product out of stock",
+  "selectSaleDate": "Select sale date",
+  "saleDate": "Sale Date",
+  "today": "Today"
 
 
 }
