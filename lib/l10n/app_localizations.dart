@@ -4867,6 +4867,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sale Date'**
   String get saleDate;
+
+  /// No description provided for @filterByDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Days'**
+  String get filterByDays;
+
+  /// No description provided for @customDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Selection'**
+  String get customDays;
+
+  /// No description provided for @customize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get customize;
+
+  /// No description provided for @daysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Days'**
+  String daysCount(String count);
+
+  /// No description provided for @selectCustomDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Custom Days'**
+  String get selectCustomDays;
+
+  /// No description provided for @numberOfDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of Days'**
+  String get numberOfDays;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @statisticsinformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics and information'**
+  String get statisticsinformation;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @erroefirger.
+  ///
+  /// In en, this message translates to:
+  /// **'The device does not support fingerprinting'**
+  String get erroefirger;
+
+  /// No description provided for @thedatabasefile.
+  ///
+  /// In en, this message translates to:
+  /// **'The database file does not exist'**
+  String get thedatabasefile;
+
+  /// No description provided for @accountingbackupfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting app backup file 📦'**
+  String get accountingbackupfile;
+
+  /// No description provided for @sharecancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Share cancelled'**
+  String get sharecancelled;
 }
 
 class _AppLocalizationsDelegate

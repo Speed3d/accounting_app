@@ -1,5 +1,4 @@
 
-import 'package:intl/intl.dart';
 import '../services/currency_service.dart'; // ✅ Hint: استيراد CurrencyService
 // هذا الملف سيحتوي على دوال مساعدة عامة يمكن استخدامها في أي مكان بالتطبيق
 String convertArabicNumbersToEnglish(String input) {

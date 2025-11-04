@@ -2,7 +2,6 @@
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
@@ -33,6 +32,9 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   // ✅ Hint: متغيرات حالة التحميل
   bool _isLoading = true;
 
+  // ✅ Hint: متغير جديد - عدد الأيام للعملاء المتأخرين
+  int _overdueDaysThreshold = 30; // افتراضياً 30 يوم
+
   // ✅ Hint: متغيرات الإحصائيات السريعة
   double _totalSales = 0.0;
   double _totalProfit = 0.0;
@@ -59,57 +61,56 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
     _loadDashboardData();
   }
 
-  // ✅ Hint: تحميل جميع البيانات
-  Future<void> _loadDashboardData() async {
-    setState(() => _isLoading = true);
+// ✅ Hint: تحميل جميع البيانات (مع دعم فلتر الأيام)
+Future<void> _loadDashboardData() async {
+  setState(() => _isLoading = true);
 
-    try {
-      // ✅ Hint: تحميل البيانات بالتوازي لتحسين الأداء
-      final results = await Future.wait([
-        dbHelper.getTotalSales(),
-        dbHelper.getTotalProfit(),
-        dbHelper.getActiveCustomersCount(),
-        dbHelper.getActiveProductsCount(),
-        dbHelper.getTotalDebts(),
-        dbHelper.getTotalPaymentsCollected(),
-        dbHelper.getCollectionRate(),
-        dbHelper.getTopCustomers(limit: 5),
-        dbHelper.getOverdueCustomers(daysThreshold: 30),
-        dbHelper.getTopSellingProducts(limit: 5),
-        dbHelper.getLowStockProducts(threshold: 5),
-        dbHelper.getMonthlySales(months: 6),
-        dbHelper.getTopSuppliersByProfit(limit: 5),
-      ]);
+  try {
+    final results = await Future.wait([
+      dbHelper.getTotalSales(),
+      dbHelper.getTotalProfit(),
+      dbHelper.getActiveCustomersCount(),
+      dbHelper.getActiveProductsCount(),
+      dbHelper.getTotalDebts(),
+      dbHelper.getTotalPaymentsCollected(),
+      dbHelper.getCollectionRate(),
+      dbHelper.getTopCustomers(limit: 5),
+      dbHelper.getOverdueCustomers(daysThreshold: _overdueDaysThreshold), // ✅ Hint: استخدام المتغير
+      dbHelper.getTopSellingProducts(limit: 5),
+      dbHelper.getLowStockProducts(threshold: 5),
+      dbHelper.getMonthlySales(months: 6),
+      dbHelper.getTopSuppliersByProfit(limit: 5),
+    ]);
 
-      if (mounted) {
-        setState(() {
-          _totalSales = results[0] as double;
-          _totalProfit = results[1] as double;
-          _activeCustomersCount = results[2] as int;
-          _activeProductsCount = results[3] as int;
-          _totalDebts = results[4] as double;
-          _totalPayments = results[5] as double;
-          _collectionRate = results[6] as double;
-          _topBuyers = results[7] as List<Customer>;
-          _overdueCustomers = results[8] as List<Map<String, dynamic>>;
-          _topSellingProducts = results[9] as List<Product>;
-          _lowStockProducts = results[10] as List<Product>;
-          _monthlySales = results[11] as List<Map<String, dynamic>>;
-          _topSuppliers = results[12] as List<Map<String, dynamic>>;
+    if (mounted) {
+      setState(() {
+        _totalSales = results[0] as double;
+        _totalProfit = results[1] as double;
+        _activeCustomersCount = results[2] as int;
+        _activeProductsCount = results[3] as int;
+        _totalDebts = results[4] as double;
+        _totalPayments = results[5] as double;
+        _collectionRate = results[6] as double;
+        _topBuyers = results[7] as List<Customer>;
+        _overdueCustomers = results[8] as List<Map<String, dynamic>>;
+        _topSellingProducts = results[9] as List<Product>;
+        _lowStockProducts = results[10] as List<Product>;
+        _monthlySales = results[11] as List<Map<String, dynamic>>;
+        _topSuppliers = results[12] as List<Map<String, dynamic>>;
 
-          // ✅ Hint: حساب أكثر المدينين (نفس بيانات overdueCustomers لكن مرتبة)
-          _topDebtors = List.from(_overdueCustomers)..take(5);
+        // ✅ Hint: حساب أكثر المدينين 
+        _topDebtors = List.from(_overdueCustomers)..take(5);
 
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('❌ خطأ في تحميل بيانات Dashboard: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+        _isLoading = false;
+      });
+    }
+  } catch (e) {
+    debugPrint('❌ خطأ في تحميل بيانات Dashboard: $e');
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.dashboard),
+        title: Text(l10n.statisticsinformation),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -305,118 +306,299 @@ Widget _buildStatCard({
   );
 }
 
-  // ==========================================================================
-  // ⚠️ القسم 2: التنبيهات الذكية
-  // ==========================================================================
-  Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
-    final alertsCount = _lowStockProducts.length + _overdueCustomers.length;
 
-    if (alertsCount == 0) {
-      return const SizedBox.shrink();
-    }
+  //==========================================================================
+  // ✅ Hint: دالة جديدة - فلتر اختيار عدد الأيام للعملاء المتأخرين
+  //==========================================================================
 
-    return Column(
+Widget _buildOverdueDaysFilter(AppLocalizations l10n, bool isDark) {
+  return CustomCard(
+    color: AppColors.info.withOpacity(0.05),
+    padding: const EdgeInsets.all(AppConstants.spacingMd),
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.notifications_active, color: AppColors.error),
-            const SizedBox(width: AppConstants.spacingSm),
-            Text(
-              l10n.smartAlerts,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            Icon(
+              Icons.filter_list,
+              color: AppColors.info,
+              size: 20,
             ),
             const SizedBox(width: AppConstants.spacingSm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                borderRadius: AppConstants.borderRadiusFull,
-              ),
+            Text(
+              l10n.filterByDays, // ✅ Hint: سنضيفها في الترجمة
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.info,
+                  ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: AppConstants.spacingMd),
+        
+        // ✅ Hint: أزرار اختيار سريع
+        Wrap(
+          spacing: AppConstants.spacingSm,
+          runSpacing: AppConstants.spacingSm,
+          children: [
+            _buildDaysFilterChip(7, l10n, isDark),
+            _buildDaysFilterChip(15, l10n, isDark),
+            _buildDaysFilterChip(30, l10n, isDark),
+            _buildDaysFilterChip(60, l10n, isDark),
+            _buildDaysFilterChip(90, l10n, isDark),
+          ],
+        ),
+        
+        const SizedBox(height: AppConstants.spacingMd),
+        
+        // ✅ Hint: اختيار مخصص
+        Row(
+          children: [
+            Expanded(
               child: Text(
-                '$alertsCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
+                l10n.customDays, // ✅ Hint: سنضيفها
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _showCustomDaysDialog(l10n),
+              icon: const Icon(Icons.edit, size: 16),
+              label: Text(
+                l10n.customize, // ✅ Hint: سنضيفها
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppConstants.spacingMd),
-
-        if (_lowStockProducts.isNotEmpty)
-          _buildAlertCard(
-            title: l10n.lowStockAlert,
-            subtitle: l10n.lowStockAlertSubtitle(_lowStockProducts.length),
-            icon: Icons.inventory_2,
-            color: AppColors.error,
-            isDark: isDark,
-            onTap: () => _showLowStockDialog(l10n),
-          ),
-
-        if (_lowStockProducts.isNotEmpty && _overdueCustomers.isNotEmpty)
-          const SizedBox(height: AppConstants.spacingSm),
-
-        if (_overdueCustomers.isNotEmpty)
-          _buildAlertCard(
-            title: l10n.overdueCustomersAlert,
-            subtitle: l10n.overdueCustomersAlertSubtitle(_overdueCustomers.length),
-            icon: Icons.people_outline,
-            color: AppColors.warning,
-            isDark: isDark,
-            onTap: () => _showOverdueCustomersDialog(l10n),
-          ),
       ],
-    );
+    ),
+  );
+}
+
+// ✅ Hint: بناء زر فلتر الأيام
+Widget _buildDaysFilterChip(int days, AppLocalizations l10n, bool isDark) {
+  final isSelected = _overdueDaysThreshold == days;
+  
+  return FilterChip(
+    label: Text(
+      l10n.daysCount(days.toString()), // ✅ Hint: سنضيفها
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    ),
+    selected: isSelected,
+    onSelected: (selected) {
+      if (selected) {
+        setState(() {
+          _overdueDaysThreshold = days;
+        });
+        _loadDashboardData(); // ✅ Hint: إعادة تحميل البيانات
+      }
+    },
+    selectedColor: AppColors.info.withOpacity(0.3),
+    checkmarkColor: AppColors.info,
+    backgroundColor: isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight,
+    side: BorderSide(
+      color: isSelected ? AppColors.info : Colors.transparent,
+      width: 2,
+    ),
+  );
+}
+
+// ✅ Hint: حوار اختيار عدد أيام مخصص
+Future<void> _showCustomDaysDialog(AppLocalizations l10n) async {
+  final controller = TextEditingController(text: _overdueDaysThreshold.toString());
+  
+  final result = await showDialog<int>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.selectCustomDays), // ✅ Hint: سنضيفها
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          labelText: l10n.numberOfDays, // ✅ Hint: سنضيفها
+          hintText: '30',
+          suffixIcon: const Icon(Icons.calendar_today),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(l10n.cancel),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final days = int.tryParse(controller.text);
+            if (days != null && days > 0) {
+              Navigator.pop(ctx, days);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.enterValidNumber),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          },
+          child: Text(l10n.apply), // ✅ Hint: سنضيفها
+        ),
+      ],
+    ),
+  );
+  
+  if (result != null && result != _overdueDaysThreshold) {
+    setState(() {
+      _overdueDaysThreshold = result;
+    });
+    _loadDashboardData(); // ✅ Hint: إعادة تحميل البيانات
+  }
+}
+
+  // ==========================================================================
+  // ⚠️ القسم 2: التنبيهات الذكية
+  // ==========================================================================
+  // ==========================================================================
+// ⚠️ القسم 2: التنبيهات الذكية (مع فلتر الأيام)
+// ==========================================================================
+Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
+  final alertsCount = _lowStockProducts.length + _overdueCustomers.length;
+
+  if (alertsCount == 0) {
+    return const SizedBox.shrink();
   }
 
-  Widget _buildAlertCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return CustomCard(
-      onTap: onTap,
-      color: color.withOpacity(0.05),
-      child: Row(
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppConstants.spacingMd),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusMd,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: AppConstants.spacingMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
+          Icon(Icons.notifications_active, color: AppColors.error),
+          const SizedBox(width: AppConstants.spacingSm),
+          Text(
+            l10n.smartAlerts,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: AppConstants.spacingXs),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-              ],
+          ),
+          const SizedBox(width: AppConstants.spacingSm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.error,
+              borderRadius: AppConstants.borderRadiusFull,
+            ),
+            child: Text(
+              '$alertsCount',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 16, color: color),
         ],
       ),
-    );
-  }
+      const SizedBox(height: AppConstants.spacingMd),
+
+      // ✅ Hint: بطاقة المنتجات المنخفضة
+      if (_lowStockProducts.isNotEmpty)
+        _buildAlertCard(
+          title: l10n.lowStockAlert,
+          subtitle: l10n.lowStockAlertSubtitle(_lowStockProducts.length),
+          icon: Icons.inventory_2,
+          color: AppColors.error,
+          isDark: isDark,
+          onTap: () => _showLowStockDialog(l10n),
+        ),
+
+      if (_lowStockProducts.isNotEmpty && _overdueCustomers.isNotEmpty)
+        const SizedBox(height: AppConstants.spacingSm),
+
+      // ✅ Hint: بطاقة العملاء المتأخرين (مع فلتر الأيام)
+      if (_overdueCustomers.isNotEmpty)
+        Column(
+          children: [
+            _buildAlertCard(
+              title: l10n.overdueCustomersAlert,
+              subtitle: l10n.overdueCustomersAlertSubtitle(_overdueCustomers.length),
+              icon: Icons.people_outline,
+              color: AppColors.warning,
+              isDark: isDark,
+              onTap: () => _showOverdueCustomersDialog(l10n),
+            ),
+            
+            const SizedBox(height: AppConstants.spacingSm),
+            
+            // ✅ Hint: فلتر اختيار عدد الأيام (جديد)
+            _buildOverdueDaysFilter(l10n, isDark),
+          ],
+        ),
+    ],
+  );
+}
+
+// ==========================================================================
+// 🃏 بناء بطاقة تنبيه واحدة
+// ==========================================================================
+Widget _buildAlertCard({
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required Color color,
+  required bool isDark,
+  required VoidCallback onTap,
+}) {
+  return CustomCard(
+    onTap: onTap,
+    color: color.withOpacity(0.05),
+    child: Row(
+      children: [
+        // === الأيقونة ===
+        Container(
+          padding: const EdgeInsets.all(AppConstants.spacingMd),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: AppConstants.borderRadiusMd,
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        
+        const SizedBox(width: AppConstants.spacingMd),
+        
+        // === المحتوى ===
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+              ),
+              const SizedBox(height: AppConstants.spacingXs),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        
+        // === السهم ===
+        Icon(Icons.arrow_forward_ios, size: 16, color: color),
+      ],
+    ),
+  );
+}
 
   // ==========================================================================
   // 💰 القسم 3: الإحصائيات المالية
@@ -1075,6 +1257,7 @@ Widget _buildStatCard({
       ],
     );
   }
+
 
   // ==========================================================================
   // 🔔 حوارات التنبيهات

@@ -1962,7 +1962,26 @@
   "productOutOfStock": "Product out of stock",
   "selectSaleDate": "Select sale date",
   "saleDate": "Sale Date",
-  "today": "Today"
+  "today": "Today",
+
+    "filterByDays": "Filter by Days",
+  "customDays": "Custom Selection",
+  "customize": "Customize",
+  "daysCount": "{count} Days",
+  "@daysCount": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "selectCustomDays": "Select Custom Days",
+  "numberOfDays": "Number of Days",
+  "apply": "Apply",
+  "statisticsinformation": "Statistics and information",
+  "statistics": "Statistics",
+  "erroefirger": "The device does not support fingerprinting",
+  "thedatabasefile": "The database file does not exist",
+  "accountingbackupfile": "Accounting app backup file 📦",
+  "sharecancelled": "Share cancelled"
 
 
 }

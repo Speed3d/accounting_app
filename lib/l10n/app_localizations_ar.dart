@@ -2598,4 +2598,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get saleDate => 'تاريخ البيع';
+
+  @override
+  String get filterByDays => 'تصفية حسب الأيام';
+
+  @override
+  String get customDays => 'اختيار مخصص';
+
+  @override
+  String get customize => 'تخصيص';
+
+  @override
+  String daysCount(String count) {
+    return '$count يوم';
+  }
+
+  @override
+  String get selectCustomDays => 'اختر عدد الأيام المخصص';
+
+  @override
+  String get numberOfDays => 'عدد الأيام';
+
+  @override
+  String get apply => 'تطبيق';
+
+  @override
+  String get statisticsinformation => 'الاحصائيات والمعلومات';
+
+  @override
+  String get statistics => 'الاحصائيات';
+
+  @override
+  String get erroefirger => 'الجهاز لا يدعم البصمة';
+
+  @override
+  String get thedatabasefile => 'ملف قاعدة البيانات غير موجود';
+
+  @override
+  String get accountingbackupfile => 'ملف النسخة الاحتياطية لتطبيق المحاسبة 📦';
+
+  @override
+  String get sharecancelled => 'تم إلغاء المشاركة';
 }

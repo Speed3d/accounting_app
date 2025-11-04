@@ -2620,4 +2620,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saleDate => 'Sale Date';
+
+  @override
+  String get filterByDays => 'Filter by Days';
+
+  @override
+  String get customDays => 'Custom Selection';
+
+  @override
+  String get customize => 'Customize';
+
+  @override
+  String daysCount(String count) {
+    return '$count Days';
+  }
+
+  @override
+  String get selectCustomDays => 'Select Custom Days';
+
+  @override
+  String get numberOfDays => 'Number of Days';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get statisticsinformation => 'Statistics and information';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get erroefirger => 'The device does not support fingerprinting';
+
+  @override
+  String get thedatabasefile => 'The database file does not exist';
+
+  @override
+  String get accountingbackupfile => 'Accounting app backup file 📦';
+
+  @override
+  String get sharecancelled => 'Share cancelled';
 }

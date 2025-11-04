@@ -92,12 +92,21 @@ class _MainLayoutState extends State<MainLayout> {
         onTap: widget.onBottomNavTap,
         type: BottomNavigationBarType.fixed,
         items: [
+
           // الرئيسية
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_outlined),
             activeIcon: const Icon(Icons.home),
             label: l10n.homePage,
           ),
+
+          // لوحة الاحصائيات
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.dashboard),
+            activeIcon: const Icon(Icons.dashboard),
+            label: l10n.statistics,
+          ),
+
           
           // المبيعات
           BottomNavigationBarItem(
@@ -113,12 +122,12 @@ class _MainLayoutState extends State<MainLayout> {
             label: l10n.reports,
           ),
           
-          // المزيد
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.menu),
-            activeIcon: const Icon(Icons.menu_open),
-            label: l10n.more,
-          ),
+          // // المزيد
+          // BottomNavigationBarItem(
+          //   icon: const Icon(Icons.menu),
+          //   activeIcon: const Icon(Icons.menu_open),
+          //   label: l10n.more,
+          // ),
         ],
       ),
     );
