@@ -2639,4 +2639,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sharecancelled => 'تم إلغاء المشاركة';
+
+  @override
+  String get contactInformation => 'معلومات الاتصال';
+
+  @override
+  String get legalInformation => 'المعلومات القانونية';
+
+  @override
+  String get companyLogo => 'شعار الشركة';
+
+  @override
+  String get phoneNumber => 'رقم الهاتف';
+
+  @override
+  String get address => 'العنوان';
+
+  @override
+  String get commercialRegistrationNumber => 'رقم السجل التجاري';
 }

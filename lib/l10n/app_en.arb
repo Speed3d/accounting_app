@@ -1981,7 +1981,16 @@
   "erroefirger": "The device does not support fingerprinting",
   "thedatabasefile": "The database file does not exist",
   "accountingbackupfile": "Accounting app backup file 📦",
-  "sharecancelled": "Share cancelled"
+  "sharecancelled": "Share cancelled",
+
+  "basicInformation": "Basic Information",
+  "contactInformation": "Contact Information",
+  "legalInformation": "Legal Information",
+  "companyLogo": "Company Logo",
+  "phoneNumber": "Phone Number",
+  "email": "Email",
+  "address": "Address",
+  "commercialRegistrationNumber": "Commercial Registration Number"
 
 
 }

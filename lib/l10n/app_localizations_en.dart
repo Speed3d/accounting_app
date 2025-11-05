@@ -2661,4 +2661,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharecancelled => 'Share cancelled';
+
+  @override
+  String get contactInformation => 'Contact Information';
+
+  @override
+  String get legalInformation => 'Legal Information';
+
+  @override
+  String get companyLogo => 'Company Logo';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get commercialRegistrationNumber => 'Commercial Registration Number';
 }

@@ -8,17 +8,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'services/biometric_service.dart';
+import 'services/pdf_service.dart';
+
 Future<void> main() async {
 WidgetsFlutterBinding.ensureInitialized();
 // ============= تهيئة الـ Providers =============
 final themeProvider = ThemeProvider();
 final localeProvider = LocaleProvider();
+
+ // ✅ Hint: تحميل خطوط PDF
+await PdfService.instance.loadFonts();
+
 // تحميل اللغة المحفوظة
 await localeProvider.loadSavedLocale();
 // ✅ Hint: تحميل العملة المحفوظة
 await CurrencyService.instance.loadSavedCurrency();
 // ✅ Hint: تحميل حالة البصمة المحفوظة
 await BiometricService.instance.loadBiometricState();
+
 runApp(
 MultiProvider(
 providers: [

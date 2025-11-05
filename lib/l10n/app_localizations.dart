@@ -4945,6 +4945,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share cancelled'**
   String get sharecancelled;
+
+  /// No description provided for @contactInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get contactInformation;
+
+  /// No description provided for @legalInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal Information'**
+  String get legalInformation;
+
+  /// No description provided for @companyLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Logo'**
+  String get companyLogo;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get address;
+
+  /// No description provided for @commercialRegistrationNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Commercial Registration Number'**
+  String get commercialRegistrationNumber;
 }
 
 class _AppLocalizationsDelegate

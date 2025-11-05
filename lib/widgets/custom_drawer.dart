@@ -14,6 +14,7 @@ import '../providers/theme_provider.dart';
 import '../screens/auth/splash_screen.dart'; 
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
+import '../screens/test_pdf_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
@@ -93,6 +94,24 @@ class CustomDrawer extends StatelessWidget {
                 ),
                 
                 const Divider(),
+
+                //================================================
+                _buildMenuItem(
+                context,
+                icon: Icons.bug_report,
+                title: '🧪 اختبار PDF',
+                onTap: () {
+                 Navigator.pop(context);
+                 Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                 builder: (context) => const TestPdfScreen(),
+                ),
+               );
+             },
+            ),
+                const Divider(),
+
                 
                 // ============= قسم العملاء والموردين =============
                 if (authService.canViewCustomers || 

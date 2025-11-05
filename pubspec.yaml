@@ -43,8 +43,8 @@ dependencies:
   device_info_plus: ^12.1.0
   crypto: ^3.0.3
 
-  pdf: ^3.11.0
-  printing: ^5.12.0
+  pdf: ^3.11.1
+  printing: ^5.13.4
   
 
 dev_dependencies:
@@ -65,15 +65,17 @@ flutter:
     - assets/fonts/
     - assets/images/
 
-  # Hint: 'fonts' يجب أن تكون على نفس مستوى 'assets' (مسافتين بادئة تحت 'flutter').
   fonts:
-    # Hint: 'family' يجب أن تكون بمسافة بادئة (مسافتين) تحت 'fonts'.
     - family: Cairo
-      # Hint: 'fonts' (جمع) يجب أن تكون بمسافة بادئة (مسافتين) تحت 'family'.
       fonts:
-        # Hint: كل 'asset' يجب أن يكون بمسافة بادئة (مسافتين) تحت 'fonts' (جمع).
         - asset: assets/fonts/Cairo-Regular.ttf
         - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
           weight: 700
           
 flutter_intl:

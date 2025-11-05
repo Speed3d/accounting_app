@@ -1734,6 +1734,276 @@ Future<int> getActiveEmployeesCount() async {
   }
 
 
+  // =================================================================================================
+// ✅✅✅ دوال تقرير مبيعات الزبائن ✅✅✅
+// =================================================================================================
+
+/// دالة شاملة لجلب مبيعات الزبائن مع فلاتر متقدمة
+/// 
+/// المعاملات:
+/// - [customerId]: معرف الزبون (null = كل الزبائن)
+/// - [productId]: معرف المنتج (null = كل المنتجات)
+/// - [supplierId]: معرف المورد (null = كل الموردين)
+/// - [startDate]: تاريخ البداية (null = بلا حد)
+/// - [endDate]: تاريخ النهاية (null = بلا حد)
+/// - [excludeReturned]: استبعاد المرتجعات (افتراضي true)
+Future<List<Map<String, dynamic>>> getCustomerSalesReport({
+  int? customerId,
+  int? productId,
+  int? supplierId,
+  DateTime? startDate,
+  DateTime? endDate,
+  bool excludeReturned = true,
+}) async {
+  final db = await instance.database;
+  
+  // بناء الاستعلام الأساسي
+  String sql = '''
+    SELECT 
+      D.ID as saleId,
+      D.DateT as saleDate,
+      D.Qty_Coustomer as quantity,
+      D.Debt as amount,
+      D.ProfitAmount as profit,
+      D.CostPriceAtTimeOfSale as costPrice,
+      D.IsReturned as isReturned,
+      C.CustomerID as customerId,
+      C.CustomerName as customerName,
+      C.Phone as customerPhone,
+      P.ProductID as productId,
+      P.ProductName as productName,
+      P.Barcode as productBarcode,
+      S.SupplierID as supplierId,
+      S.SupplierName as supplierName
+    FROM Debt_Customer D
+    INNER JOIN TB_Customer C ON D.CustomerID = C.CustomerID
+    INNER JOIN Store_Products P ON D.ProductID = P.ProductID
+    INNER JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
+    WHERE 1=1
+  ''';
+  
+  // بناء الشروط
+  final List<dynamic> args = [];
+  
+  // فلتر الزبون
+  if (customerId != null) {
+    sql += ' AND D.CustomerID = ?';
+    args.add(customerId);
+  }
+  
+  // فلتر المنتج
+  if (productId != null) {
+    sql += ' AND D.ProductID = ?';
+    args.add(productId);
+  }
+  
+  // فلتر المورد
+  if (supplierId != null) {
+    sql += ' AND P.SupplierID = ?';
+    args.add(supplierId);
+  }
+  
+  // فلتر التاريخ - من
+  if (startDate != null) {
+    sql += ' AND D.DateT >= ?';
+    args.add(startDate.toIso8601String());
+  }
+  
+  // فلتر التاريخ - إلى
+  if (endDate != null) {
+    sql += ' AND D.DateT <= ?';
+    args.add(endDate.toIso8601String());
+  }
+  
+  // استبعاد المرتجعات
+  if (excludeReturned) {
+    sql += ' AND D.IsReturned = 0';
+  }
+  
+  // إخفاء الزبون النقدي الداخلي
+  sql += ' AND C.CustomerName != ?';
+  args.add(cashCustomerInternalName);
+  
+  // الترتيب
+  sql += ' ORDER BY D.DateT DESC';
+  
+  return await db.rawQuery(sql, args);
+}
+
+/// حساب إحصائيات تقرير المبيعات
+/// 
+/// المعاملات: نفس معاملات getCustomerSalesReport
+Future<Map<String, dynamic>> getCustomerSalesStatistics({
+  int? customerId,
+  int? productId,
+  int? supplierId,
+  DateTime? startDate,
+  DateTime? endDate,
+  bool excludeReturned = true,
+}) async {
+  final db = await instance.database;
+  
+  // بناء الاستعلام
+  String sql = '''
+    SELECT 
+      COUNT(D.ID) as totalTransactions,
+      SUM(D.Qty_Coustomer) as totalQuantity,
+      SUM(D.Debt) as totalSales,
+      SUM(D.ProfitAmount) as totalProfit,
+      AVG(D.Debt) as averageTransaction,
+      MIN(D.Debt) as minTransaction,
+      MAX(D.Debt) as maxTransaction
+    FROM Debt_Customer D
+    INNER JOIN TB_Customer C ON D.CustomerID = C.CustomerID
+    INNER JOIN Store_Products P ON D.ProductID = P.ProductID
+    WHERE 1=1
+  ''';
+  
+  final List<dynamic> args = [];
+  
+  // تطبيق نفس الفلاتر
+  if (customerId != null) {
+    sql += ' AND D.CustomerID = ?';
+    args.add(customerId);
+  }
+  
+  if (productId != null) {
+    sql += ' AND D.ProductID = ?';
+    args.add(productId);
+  }
+  
+  if (supplierId != null) {
+    sql += ' AND P.SupplierID = ?';
+    args.add(supplierId);
+  }
+  
+  if (startDate != null) {
+    sql += ' AND D.DateT >= ?';
+    args.add(startDate.toIso8601String());
+  }
+  
+  if (endDate != null) {
+    sql += ' AND D.DateT <= ?';
+    args.add(endDate.toIso8601String());
+  }
+  
+  if (excludeReturned) {
+    sql += ' AND D.IsReturned = 0';
+  }
+  
+  sql += ' AND C.CustomerName != ?';
+  args.add(cashCustomerInternalName);
+  
+  final result = await db.rawQuery(sql, args);
+  
+  if (result.isEmpty) {
+    return {
+      'totalTransactions': 0,
+      'totalQuantity': 0,
+      'totalSales': 0.0,
+      'totalProfit': 0.0,
+      'averageTransaction': 0.0,
+      'minTransaction': 0.0,
+      'maxTransaction': 0.0,
+    };
+  }
+  
+  return {
+    'totalTransactions': result.first['totalTransactions'] ?? 0,
+    'totalQuantity': result.first['totalQuantity'] ?? 0,
+    'totalSales': (result.first['totalSales'] as num?)?.toDouble() ?? 0.0,
+    'totalProfit': (result.first['totalProfit'] as num?)?.toDouble() ?? 0.0,
+    'averageTransaction': (result.first['averageTransaction'] as num?)?.toDouble() ?? 0.0,
+    'minTransaction': (result.first['minTransaction'] as num?)?.toDouble() ?? 0.0,
+    'maxTransaction': (result.first['maxTransaction'] as num?)?.toDouble() ?? 0.0,
+  };
+}
+
+/// جلب أكثر المنتجات مبيعاً في الفترة المحددة
+Future<List<Map<String, dynamic>>> getTopSellingProductsInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+  int limit = 5,
+}) async {
+  final db = await instance.database;
+  
+  String sql = '''
+    SELECT 
+      P.ProductID,
+      P.ProductName,
+      SUM(D.Qty_Coustomer) as totalQuantity,
+      SUM(D.Debt) as totalSales,
+      SUM(D.ProfitAmount) as totalProfit
+    FROM Debt_Customer D
+    INNER JOIN Store_Products P ON D.ProductID = P.ProductID
+    WHERE D.IsReturned = 0
+  ''';
+  
+  final List<dynamic> args = [];
+  
+  if (startDate != null) {
+    sql += ' AND D.DateT >= ?';
+    args.add(startDate.toIso8601String());
+  }
+  
+  if (endDate != null) {
+    sql += ' AND D.DateT <= ?';
+    args.add(endDate.toIso8601String());
+  }
+  
+  sql += '''
+    GROUP BY P.ProductID, P.ProductName
+    ORDER BY totalQuantity DESC
+    LIMIT ?
+  ''';
+  args.add(limit);
+  
+  return await db.rawQuery(sql, args);
+}
+
+/// جلب أكثر الزبائن شراءً في الفترة المحددة
+Future<List<Map<String, dynamic>>> getTopCustomersInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+  int limit = 5,
+}) async {
+  final db = await instance.database;
+  
+  String sql = '''
+    SELECT 
+      C.CustomerID,
+      C.CustomerName,
+      COUNT(D.ID) as transactionCount,
+      SUM(D.Debt) as totalPurchases
+    FROM Debt_Customer D
+    INNER JOIN TB_Customer C ON D.CustomerID = C.CustomerID
+    WHERE D.IsReturned = 0
+    AND C.CustomerName != ?
+  ''';
+  
+  final List<dynamic> args = [cashCustomerInternalName];
+  
+  if (startDate != null) {
+    sql += ' AND D.DateT >= ?';
+    args.add(startDate.toIso8601String());
+  }
+  
+  if (endDate != null) {
+    sql += ' AND D.DateT <= ?';
+    args.add(endDate.toIso8601String());
+  }
+  
+  sql += '''
+    GROUP BY C.CustomerID, C.CustomerName
+    ORDER BY totalPurchases DESC
+    LIMIT ?
+  ''';
+  args.add(limit);
+  
+  return await db.rawQuery(sql, args);
+}
+
+
 
 
 }

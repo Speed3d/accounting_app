@@ -8,6 +8,7 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../sales/cash_sales_history_screen.dart';
 import 'cash_flow_report_screen.dart';
+import 'customer_sales_report_screen.dart';
 import 'employees_report_screen.dart';
 import 'expenses_screen.dart';
 import 'profit_report_screen.dart';
@@ -135,6 +136,19 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
         ),
       );
     }
+
+      // ✅ Hint: إضافة تقرير مبيعات الزبائن (جديد)
+  if (_authService.canViewReports || _authService.isAdmin) {
+    reports.add(
+      ReportItem(
+        title: 'تقرير مبيعات الزبائن',
+        subtitle: 'تقرير تفصيلي بمبيعات الزبائن مع إحصائيات شاملة',
+        icon: Icons.people_outline,
+        color: AppColors.primaryLight,
+        screen: const CustomerSalesReportScreen(),
+      ),
+    );
+  }
 
     // --- سجل المبيعات النقدية ---
     if (_authService.canViewCashSales || _authService.isAdmin) {
