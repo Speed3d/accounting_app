@@ -1,10 +1,13 @@
 // lib/screens/reports/supplier_profit_report_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import 'package:accounting_app/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
+import '../../utils/pdf_helpers.dart';
+import '../../services/pdf_service.dart';
 import 'supplier_details_report_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -19,9 +22,16 @@ class SupplierProfitReportScreen extends StatefulWidget {
 }
 
 class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen> {
+  // ============================================================================
+  // المتغيرات
+  // ============================================================================
   final dbHelper = DatabaseHelper.instance;
   late Future<List<SupplierProfitData>> _reportDataFuture;
+  bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
+  // ============================================================================
+  // التهيئة
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -44,7 +54,6 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
       final totalWithdrawn = await dbHelper.getTotalWithdrawnForSupplier(supplierId);
       
       List<Partner> partners = [];
-      // ✅ التعديل 1: استبدال المقارنة المباشرة بدالة isPartnership()
       if (isPartnership(supplierType)) {
         partners = await dbHelper.getPartnersForSupplier(supplierId);
       }
@@ -62,12 +71,18 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     return reportData;
   }
 
+  // ============================================================================
+  // البناء الرئيسي
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      // ============================================================================
+      // AppBar
+      // ============================================================================
       appBar: AppBar(
         title: Text(l10n.supplierProfitReport),
         actions: [
@@ -75,17 +90,35 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
-            tooltip: l10n.refresh, // ✅ تم التدوين
+            tooltip: l10n.refresh,
+          ),
+          // ✅ زر PDF
+          IconButton(
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _isGeneratingPdf ? null : _generatePdf,
+            tooltip: 'تصدير PDF',
           ),
         ],
       ),
       
+      // ============================================================================
+      // المحتوى
+      // ============================================================================
       body: FutureBuilder<List<SupplierProfitData>>(
         future: _reportDataFuture,
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return LoadingState(message: l10n.loadingData); // ✅ تم التدوين
+            return LoadingState(message: l10n.loadingData);
           }
           
           // حالة الخطأ
@@ -101,7 +134,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
             return EmptyState(
               icon: Icons.trending_up,
               title: l10n.noProfitsRecorded,
-              message: l10n.noProfitsRecordedForSuppliers, // ✅ تم التدوين
+              message: l10n.noProfitsRecordedForSuppliers,
             );
           }
 
@@ -123,7 +156,9 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     );
   }
 
-  /// بناء بطاقة المورد
+  // ============================================================================
+  // بناء بطاقة المورد
+  // ============================================================================
   Widget _buildSupplierCard(
     BuildContext context,
     SupplierProfitData data,
@@ -132,7 +167,6 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
   ) {
     final netProfit = data.totalProfit - data.totalWithdrawn;
     
-    // ✅ التعديل 2: استبدال المقارنة المباشرة بدالة isPartnership()
     final supplierColor = isPartnership(data.supplierType)
         ? AppColors.secondaryLight 
         : AppColors.info;
@@ -167,7 +201,6 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                   borderRadius: AppConstants.borderRadiusMd,
                 ),
                 child: Icon(
-                  // ✅ التعديل 3: استبدال المقارنة المباشرة بدالة isPartnership()
                   isPartnership(data.supplierType)
                       ? Icons.people 
                       : Icons.business,
@@ -223,7 +256,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: l10n.totalProfits, // ✅ تم التدوين
+                    label: l10n.totalProfits,
                     value: formatCurrency(data.totalProfit),
                     color: AppColors.info,
                     icon: Icons.trending_up,
@@ -246,7 +279,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: l10n.withdrawals, // ✅ تم التدوين
+                    label: l10n.withdrawals,
                     value: formatCurrency(data.totalWithdrawn),
                     color: AppColors.warning,
                     icon: Icons.arrow_downward,
@@ -269,7 +302,7 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                 Expanded(
                   child: _buildFinancialItem(
                     context,
-                    label: l10n.netProfit, // ✅ تم التدوين
+                    label: l10n.netProfit,
                     value: formatCurrency(netProfit),
                     color: netProfit >= 0 ? AppColors.success : AppColors.error,
                     icon: netProfit >= 0 
@@ -291,7 +324,6 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     bool isDark,
     AppLocalizations l10n,
   ) {
-    // ✅ التعديل 4: استبدال المقارنة المباشرة بدالة isPartnership()
     if (isPartnership(data.supplierType) && data.partners.isNotEmpty) {
       final partnerNames = data.partners.map((p) => p.partnerName).join('، ');
       return Text(
@@ -347,9 +379,85 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
       ],
     );
   }
+
+  // ============================================================================
+  // 📄 دالة توليد PDF
+  // ============================================================================
+  Future<void> _generatePdf() async {
+    setState(() => _isGeneratingPdf = true);
+    
+    try {
+      // 1️⃣ جلب البيانات
+      final reportDataList = await _reportDataFuture;
+      
+      // 2️⃣ تحويل البيانات إلى Format مناسب للـ PDF
+      final suppliersData = reportDataList.map((data) => {
+        'supplierName': data.supplierName,
+        'supplierType': data.supplierType,
+        'totalProfit': data.totalProfit,
+        'totalWithdrawn': data.totalWithdrawn,
+        'partners': data.partners.map((p) => p.partnerName).join('، '),
+      }).toList();
+      
+      // 3️⃣ إنشاء PDF
+      final pdf = await PdfService.instance.buildSupplierProfitReport(
+        suppliersData: suppliersData,
+      );
+      
+      // 4️⃣ عرض خيارات PDF
+      if (!mounted) return;
+      
+      PdfHelpers.showPdfOptionsDialog(
+        context,
+        pdf,
+        onSuccess: () {
+          // يمكنك إضافة كود هنا عند نجاح العملية
+        },
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      );
+      
+    } catch (e) {
+      // في حالة حدوث خطأ
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('خطأ في إنشاء PDF: $e')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
+  }
 }
 
-/// كلاس مساعد لحمل بيانات المورد
+// ============================================================================
+// كلاس مساعد لحمل بيانات المورد
+// ============================================================================
 class SupplierProfitData {
   final int supplierId;
   final String supplierName;

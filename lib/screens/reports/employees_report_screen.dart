@@ -1,11 +1,13 @@
 // lib/screens/reports/employees_report_screen.dart
-// النسخة المعدلة لدعم الترجمة متعددة اللغات
+// النسخة المحدثة مع دعم PDF
 
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
+import '../../utils/pdf_helpers.dart';
+import '../../services/pdf_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -29,7 +31,9 @@ class EmployeesReportScreen extends StatefulWidget {
 }
 
 class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
-  // ============= المتغيرات =============
+  // ============================================================================
+  // المتغيرات
+  // ============================================================================
   final dbHelper = DatabaseHelper.instance;
   
   // Future للبيانات الإحصائية
@@ -37,8 +41,12 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   late Future<double> _totalAdvancesFuture;
   late Future<int> _employeesCountFuture;
   late Future<List<Employee>> _employeesListFuture;
+  
+  bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
-  // ============= التهيئة =============
+  // ============================================================================
+  // التهيئة
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -55,20 +63,49 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
     });
   }
 
-  // ============= البناء الرئيسي =============
+  // ============================================================================
+  // البناء الرئيسي
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     // 🌐 الحصول على الترجمات الحالية
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      // --- AppBar بسيط ---
+      // ============================================================================
+      // AppBar
+      // ============================================================================
       appBar: AppBar(
-        title: Text(l10n.employees_report_title), // ← نص مترجم
+        title: Text(l10n.employees_report_title),
         elevation: 0,
+        actions: [
+          // زر التحديث
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadReportData,
+            tooltip: l10n.refresh,
+          ),
+          // ✅ زر PDF
+          IconButton(
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _isGeneratingPdf ? null : _generatePdf,
+            tooltip: 'تصدير PDF',
+          ),
+        ],
       ),
       
-      // --- الجسم مع إمكانية السحب للتحديث ---
+      // ============================================================================
+      // الجسم مع إمكانية السحب للتحديث
+      // ============================================================================
       body: RefreshIndicator(
         onRefresh: () async => _loadReportData(),
         child: ListView(
@@ -81,7 +118,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
             
             // 📋 عنوان قائمة الموظفين
             Text(
-              l10n.employees_list_title, // ← نص مترجم
+              l10n.employees_list_title,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             
@@ -95,7 +132,9 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
     );
   }
 
-  // ============= قسم الإحصائيات الملخصة =============
+  // ============================================================================
+  // قسم الإحصائيات الملخصة
+  // ============================================================================
   /// يعرض 3 بطاقات إحصائية:
   /// 1. إجمالي الرواتب المدفوعة
   /// 2. إجمالي السلف المستحقة
@@ -121,11 +160,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   
                   // عرض البيانات
                   return StatCard(
-                    label: l10n.stat_total_salaries, // ← نص مترجم
+                    label: l10n.stat_total_salaries,
                     value: formatCurrency(snapshot.data ?? 0),
                     icon: Icons.payments,
                     color: AppColors.success,
-                    subtitle: l10n.stat_salaries_paid, // ← نص مترجم
+                    subtitle: l10n.stat_salaries_paid,
                   );
                 },
               ),
@@ -143,11 +182,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   }
                   
                   return StatCard(
-                    label: l10n.stat_advances_balance, // ← نص مترجم
+                    label: l10n.stat_advances_balance,
                     value: formatCurrency(snapshot.data ?? 0),
                     icon: Icons.account_balance_wallet_outlined,
                     color: AppColors.warning,
-                    subtitle: l10n.stat_advances_due, // ← نص مترجم
+                    subtitle: l10n.stat_advances_due,
                   );
                 },
               ),
@@ -166,11 +205,11 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
             }
             
             return StatCard(
-              label: l10n.stat_active_employees, // ← نص مترجم
+              label: l10n.stat_active_employees,
               value: snapshot.data?.toString() ?? '0',
               icon: Icons.people,
               color: AppColors.info,
-              subtitle: l10n.stat_employee_unit, // ← نص مترجم
+              subtitle: l10n.stat_employee_unit,
             );
           },
         ),
@@ -199,7 +238,9 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
     );
   }
 
-  // ============= قائمة الموظفين التفصيلية =============
+  // ============================================================================
+  // قائمة الموظفين التفصيلية
+  // ============================================================================
   /// تعرض جدول بأسماء الموظفين مع رواتبهم وسلفهم
   /// مع إمكانية النقر للانتقال لصفحة التفاصيل
   Widget _buildDetailedEmployeesList() {
@@ -212,7 +253,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         // --- حالة التحميل ---
         if (snapshot.connectionState == ConnectionState.waiting) {
           return LoadingState(
-            message: l10n.loading_data, // ← نص مترجم
+            message: l10n.loading_data,
           );
         }
         
@@ -220,7 +261,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              '${l10n.error_occurred}: ${snapshot.error}', // ← نص مترجم
+              '${l10n.error_occurred}: ${snapshot.error}',
               style: TextStyle(color: AppColors.error),
             ),
           );
@@ -230,8 +271,8 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return EmptyState(
             icon: Icons.people_outline,
-            title: l10n.no_employees_title, // ← نص مترجم
-            message: l10n.no_employees_message, // ← نص مترجم
+            title: l10n.no_employees_title,
+            message: l10n.no_employees_message,
           );
         }
         
@@ -241,8 +282,8 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         return CustomCard(
           padding: EdgeInsets.zero,
           child: ListView.separated(
-            shrinkWrap: true, // لعدم أخذ مساحة زائدة
-            physics: const NeverScrollableScrollPhysics(), // لتعطيل التمرير الداخلي
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: employees.length,
             
             // --- الفاصل بين العناصر ---
@@ -281,7 +322,6 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                 
                 // الراتب ورصيد السلف
                 subtitle: Text(
-                  // 🌐 استخدام النصوص المترجمة في النص المركب
                   '${l10n.employee_salary_label}: ${formatCurrency(employee.baseSalary)} | '
                   '${l10n.employee_advances_label}: ${formatCurrency(employee.balance)}',
                   style: Theme.of(context).textTheme.bodySmall,
@@ -311,5 +351,84 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         );
       },
     );
+  }
+
+  // ============================================================================
+  // 📄 دالة توليد PDF
+  // ============================================================================
+  Future<void> _generatePdf() async {
+    setState(() => _isGeneratingPdf = true);
+    
+    try {
+      // 1️⃣ جلب جميع البيانات
+      final totalSalaries = await _totalSalariesFuture;
+      final totalAdvances = await _totalAdvancesFuture;
+      final employeesCount = await _employeesCountFuture;
+      final employees = await _employeesListFuture;
+      
+      // 2️⃣ تحويل بيانات الموظفين إلى Map
+      final employeesData = employees.map((emp) => {
+        'fullName': emp.fullName,
+        'jobTitle': emp.jobTitle,
+        'baseSalary': emp.baseSalary,
+        'balance': emp.balance,
+      }).toList();
+      
+      // 3️⃣ إنشاء PDF
+      final pdf = await PdfService.instance.buildEmployeesReport(
+        totalSalaries: totalSalaries,
+        totalAdvances: totalAdvances,
+        employeesCount: employeesCount,
+        employeesData: employeesData,
+      );
+      
+      // 4️⃣ عرض خيارات PDF
+      if (!mounted) return;
+      
+      PdfHelpers.showPdfOptionsDialog(
+        context,
+        pdf,
+        onSuccess: () {
+          // يمكنك إضافة كود هنا عند نجاح العملية
+        },
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      );
+      
+    } catch (e) {
+      // في حالة حدوث خطأ
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('خطأ في إنشاء PDF: $e')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
   }
 }

@@ -645,6 +645,545 @@ pw.Widget _buildTableCell(String text) {
 }
 
 
+// lib/services/pdf_service.dart
+// أضف هذه الدوال في نهاية كلاس PdfService قبل القوس الأخير
+
+// ============================================================================
+// 💰 تقرير التدفق النقدي
+// ============================================================================
+Future<pw.Document> buildCashFlowReport({
+  required List<Map<String, dynamic>> transactions,
+  required double totalCashSales,
+  required double totalDebtPayments,
+  required double totalCashIn,
+  required DateTime startDate,
+  required DateTime endDate,
+}) async {
+  final content = <pw.Widget>[
+    // ============= قسم الفترة الزمنية =============
+    pw.Container(
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      decoration: pw.BoxDecoration(
+        color: PdfStyles.primaryColor.shade(0.05),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.center,
+        children: [
+          pw.Icon(
+            pw.IconData(0xe916), // calendar icon
+            size: 20,
+            color: PdfStyles.primaryColor,
+          ),
+          pw.SizedBox(width: PdfStyles.spacingSm),
+          pw.Text(
+            'الفترة: ${_formatDate(startDate)} - ${_formatDate(endDate)}',
+            style: PdfStyles.boldStyle(color: PdfStyles.primaryColor),
+          ),
+        ],
+      ),
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingXl),
+
+    // ============= قسم الإحصائيات =============
+    pw.Text('الإحصائيات العامة', style: PdfStyles.headingStyle()),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'المبيعات النقدية',
+            value: _formatCurrency(totalCashSales),
+            color: PdfStyles.secondaryColor,
+          ),
+        ),
+        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'تسديدات الديون',
+            value: _formatCurrency(totalDebtPayments),
+            color: PdfStyles.warningColor,
+          ),
+        ),
+      ],
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    _buildStatCard(
+      title: 'إجمالي التدفق النقدي',
+      value: _formatCurrency(totalCashIn),
+      color: PdfStyles.successColor,
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingXl),
+
+    // ============= قسم التفاصيل =============
+    pw.Text(
+      'تفاصيل المعاملات (${transactions.length} معاملة)',
+      style: PdfStyles.headingStyle(),
+    ),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    if (transactions.isEmpty)
+      pw.Container(
+        padding: const pw.EdgeInsets.all(PdfStyles.spacingXl),
+        child: pw.Center(
+          child: pw.Text(
+            'لا توجد معاملات في هذه الفترة',
+            style: PdfStyles.bodyStyle(color: PdfStyles.textSecondary),
+          ),
+        ),
+      )
+    else
+      _buildCashFlowTable(transactions),
+  ];
+
+  return await buildPdfDocument(
+    reportTitle: 'تقرير التدفق النقدي',
+    content: content,
+  );
+}
+
+/// بناء جدول التدفق النقدي
+pw.Widget _buildCashFlowTable(List<Map<String, dynamic>> transactions) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(30),
+      1: const pw.FlexColumnWidth(2),
+      2: const pw.FlexColumnWidth(3),
+      3: const pw.FixedColumnWidth(80),
+      4: const pw.FixedColumnWidth(70),
+    },
+    children: [
+      // رأس الجدول
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('النوع'),
+          _buildTableHeaderCell('الوصف'),
+          _buildTableHeaderCell('التاريخ'),
+          _buildTableHeaderCell('المبلغ'),
+        ],
+      ),
+
+      // صفوف البيانات
+      ...transactions.asMap().entries.map((entry) {
+        final index = entry.key;
+        final trans = entry.value;
+        final isEven = index % 2 == 0;
+        final isCashSale = trans['type'] == 'CASH_SALE';
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+              child: pw.Center(
+                child: pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: pw.BoxDecoration(
+                    color: isCashSale
+                        ? PdfStyles.secondaryColor.shade(0.2)
+                        : PdfStyles.warningColor.shade(0.2),
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Text(
+                    isCashSale ? 'نقدي' : 'تسديد',
+                    style: PdfStyles.smallStyle(
+                      color: isCashSale
+                          ? PdfStyles.secondaryColor
+                          : PdfStyles.warningColor,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            _buildTableCell(trans['description'] ?? ''),
+            _buildTableCell(
+              _formatDate(DateTime.parse(trans['date'])),
+            ),
+            _buildTableCell(_formatCurrency(trans['amount'])),
+          ],
+        );
+      }),
+    ],
+  );
+}
+
+// ============================================================================
+// 📊 تقرير الأرباح العام
+// ============================================================================
+Future<pw.Document> buildProfitReport({
+  required double totalProfit,
+  required double totalExpenses,
+  required double totalWithdrawals,
+  required double netProfit,
+  required List<Map<String, dynamic>> salesData,
+}) async {
+  final content = <pw.Widget>[
+    // ============= قسم الملخص المالي =============
+    pw.Text('الملخص المالي', style: PdfStyles.headingStyle()),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    _buildStatCard(
+      title: 'إجمالي الأرباح من المبيعات',
+      value: _formatCurrency(totalProfit),
+      color: PdfStyles.secondaryColor,
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'المصاريف العامة',
+            value: _formatCurrency(totalExpenses),
+            color: PdfStyles.errorColor,
+          ),
+        ),
+        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'مسحوبات الأرباح',
+            value: _formatCurrency(totalWithdrawals),
+            color: PdfStyles.warningColor,
+          ),
+        ),
+      ],
+    ),
+
+    pw.Divider(height: 32),
+
+    // النتيجة النهائية
+    pw.Container(
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingLg),
+      decoration: pw.BoxDecoration(
+        color: netProfit >= 0
+            ? PdfStyles.successColor.shade(0.1)
+            : PdfStyles.errorColor.shade(0.1),
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(
+          color: netProfit >= 0
+              ? PdfStyles.successColor.shade(0.3)
+              : PdfStyles.errorColor.shade(0.3),
+          width: 2,
+        ),
+      ),
+      child: pw.Row(
+        children: [
+          pw.Icon(
+            netProfit >= 0
+                ? pw.IconData(0xe5ca) // trending_up
+                : pw.IconData(0xe5c7), // trending_down
+            size: 40,
+            color: netProfit >= 0
+                ? PdfStyles.successColor
+                : PdfStyles.errorColor,
+          ),
+          pw.SizedBox(width: PdfStyles.spacingMd),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'صافي الربح',
+                  style: PdfStyles.bodyStyle(),
+                ),
+                pw.SizedBox(height: PdfStyles.spacingXs),
+                pw.Text(
+                  _formatCurrency(netProfit),
+                  style: PdfStyles.boldStyle(
+                    fontSize: 24,
+                    color: netProfit >= 0
+                        ? PdfStyles.successColor
+                        : PdfStyles.errorColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingXl),
+
+    // ============= تفاصيل المبيعات =============
+    if (salesData.isNotEmpty) ...[
+      pw.Text(
+        'تفاصيل المبيعات (${salesData.length} عملية)',
+        style: PdfStyles.headingStyle(),
+      ),
+      pw.SizedBox(height: PdfStyles.spacingMd),
+      _buildSalesDetailTable(salesData),
+    ],
+  ];
+
+  return await buildPdfDocument(
+    reportTitle: 'تقرير الأرباح العام',
+    content: content,
+  );
+}
+
+/// بناء جدول تفاصيل المبيعات للأرباح
+pw.Widget _buildSalesDetailTable(List<Map<String, dynamic>> salesData) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(30),
+      1: const pw.FlexColumnWidth(2),
+      2: const pw.FlexColumnWidth(2),
+      3: const pw.FixedColumnWidth(70),
+      4: const pw.FixedColumnWidth(70),
+      5: const pw.FixedColumnWidth(70),
+    },
+    children: [
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('المنتج'),
+          _buildTableHeaderCell('الزبون'),
+          _buildTableHeaderCell('التاريخ'),
+          _buildTableHeaderCell('المبلغ'),
+          _buildTableHeaderCell('الربح'),
+        ],
+      ),
+      ...salesData.asMap().entries.map((entry) {
+        final index = entry.key;
+        final sale = entry.value;
+        final isEven = index % 2 == 0;
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            _buildTableCell(sale['details'] ?? ''),
+            _buildTableCell(sale['customerName'] ?? ''),
+            _buildTableCell(
+              _formatDate(DateTime.parse(sale['dateT'])),
+            ),
+            _buildTableCell(_formatCurrency(sale['debt'])),
+            _buildTableCell(_formatCurrency(sale['profitAmount'])),
+          ],
+        );
+      }),
+    ],
+  );
+}
+
+// ============================================================================
+// 🏢 تقرير أرباح الموردين
+// ============================================================================
+Future<pw.Document> buildSupplierProfitReport({
+  required List<Map<String, dynamic>> suppliersData,
+}) async {
+  final content = <pw.Widget>[
+    pw.Text(
+      'ملخص أرباح الموردين (${suppliersData.length} مورد)',
+      style: PdfStyles.headingStyle(),
+    ),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    _buildSuppliersProfitTable(suppliersData),
+  ];
+
+  return await buildPdfDocument(
+    reportTitle: 'تقرير أرباح الموردين',
+    content: content,
+  );
+}
+
+/// بناء جدول أرباح الموردين
+pw.Widget _buildSuppliersProfitTable(List<Map<String, dynamic>> data) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(30),
+      1: const pw.FlexColumnWidth(3),
+      2: const pw.FlexColumnWidth(2),
+      3: const pw.FixedColumnWidth(80),
+      4: const pw.FixedColumnWidth(80),
+      5: const pw.FixedColumnWidth(80),
+    },
+    children: [
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('اسم المورد'),
+          _buildTableHeaderCell('النوع'),
+          _buildTableHeaderCell('إجمالي الربح'),
+          _buildTableHeaderCell('المسحوبات'),
+          _buildTableHeaderCell('صافي الربح'),
+        ],
+      ),
+      ...data.asMap().entries.map((entry) {
+        final index = entry.key;
+        final supplier = entry.value;
+        final isEven = index % 2 == 0;
+        final netProfit = supplier['totalProfit'] - supplier['totalWithdrawn'];
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            _buildTableCell(supplier['supplierName'] ?? ''),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+              child: pw.Center(
+                child: pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: pw.BoxDecoration(
+                    color: supplier['supplierType'] == 'شراكة'
+                        ? PdfStyles.secondaryColor.shade(0.2)
+                        : PdfStyles.primaryColor.shade(0.2),
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Text(
+                    supplier['supplierType'] ?? '',
+                    style: PdfStyles.smallStyle(),
+                  ),
+                ),
+              ),
+            ),
+            _buildTableCell(_formatCurrency(supplier['totalProfit'])),
+            _buildTableCell(_formatCurrency(supplier['totalWithdrawn'])),
+            _buildTableCell(_formatCurrency(netProfit)),
+          ],
+        );
+      }),
+    ],
+  );
+}
+
+// ============================================================================
+// 👥 تقرير الموظفين
+// ============================================================================
+Future<pw.Document> buildEmployeesReport({
+  required double totalSalaries,
+  required double totalAdvances,
+  required int employeesCount,
+  required List<Map<String, dynamic>> employeesData,
+}) async {
+  final content = <pw.Widget>[
+    // ============= الإحصائيات =============
+    pw.Text('الإحصائيات العامة', style: PdfStyles.headingStyle()),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'إجمالي الرواتب المدفوعة',
+            value: _formatCurrency(totalSalaries),
+            color: PdfStyles.successColor,
+          ),
+        ),
+        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'إجمالي السلف المستحقة',
+            value: _formatCurrency(totalAdvances),
+            color: PdfStyles.warningColor,
+          ),
+        ),
+      ],
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    _buildStatCard(
+      title: 'عدد الموظفين النشطين',
+      value: employeesCount.toString(),
+      color: PdfStyles.secondaryColor,
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingXl),
+
+    // ============= قائمة الموظفين =============
+    pw.Text(
+      'قائمة الموظفين (${employeesData.length} موظف)',
+      style: PdfStyles.headingStyle(),
+    ),
+    pw.SizedBox(height: PdfStyles.spacingMd),
+
+    _buildEmployeesTable(employeesData),
+  ];
+
+  return await buildPdfDocument(
+    reportTitle: 'تقرير الموظفين',
+    content: content,
+  );
+}
+
+/// بناء جدول الموظفين
+pw.Widget _buildEmployeesTable(List<Map<String, dynamic>> data) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(30),
+      1: const pw.FlexColumnWidth(3),
+      2: const pw.FlexColumnWidth(2),
+      3: const pw.FixedColumnWidth(80),
+      4: const pw.FixedColumnWidth(80),
+    },
+    children: [
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('الاسم'),
+          _buildTableHeaderCell('المنصب'),
+          _buildTableHeaderCell('الراتب الأساسي'),
+          _buildTableHeaderCell('رصيد السلف'),
+        ],
+      ),
+      ...data.asMap().entries.map((entry) {
+        final index = entry.key;
+        final employee = entry.value;
+        final isEven = index % 2 == 0;
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            _buildTableCell(employee['fullName'] ?? ''),
+            _buildTableCell(employee['jobTitle'] ?? ''),
+            _buildTableCell(_formatCurrency(employee['baseSalary'] ?? 0)),
+            _buildTableCell(_formatCurrency(employee['balance'] ?? 0)),
+          ],
+        );
+      }),
+    ],
+  );
+}
+
+// بحاجة الى تعديله لنستطيع طباعة تفاصيل سحب الشركاء و الموردين
+  Future buildSupplierDetailsReport({required String supplierName, required String supplierType, required double totalProfit, required double totalWithdrawn, required double netProfit, required List<Map<String, Object>> partnersData, required List<Map<String, dynamic>> withdrawalsData}) async {}
+
+
 
 
 }

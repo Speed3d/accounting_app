@@ -2,9 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
 import 'package:accounting_app/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
+import '../../utils/pdf_helpers.dart';
+import '../../services/pdf_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -19,7 +22,9 @@ class CashFlowReportScreen extends StatefulWidget {
 }
 
 class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
+  // ============================================================================
   // المتغيرات الأساسية
+  // ============================================================================
   final dbHelper = DatabaseHelper.instance;
   late Future<List<Map<String, dynamic>>> _transactionsFuture;
   
@@ -30,7 +35,11 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
   );
   DateTime _endDate = DateTime.now();
   bool _isDetailsVisible = false;
+  bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
+  // ============================================================================
+  // دورة الحياة
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -75,11 +84,17 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
     }
   }
 
+  // ============================================================================
+  // البناء الرئيسي
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      // ============================================================================
+      // AppBar
+      // ============================================================================
       appBar: AppBar(
         title: Text(l10n.cashFlowReport),
         actions: [
@@ -93,10 +108,29 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
-            tooltip: l10n.refresh, // ✅ إزالة ??
+            tooltip: l10n.refresh,
+          ),
+          // ✅ زر PDF
+          IconButton(
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _isGeneratingPdf ? null : _generatePdf,
+            tooltip: 'تصدير PDF',
           ),
         ],
       ),
+      
+      // ============================================================================
+      // المحتوى
+      // ============================================================================
       body: Column(
         children: [
           // معلومات الفترة الزمنية المحددة
@@ -109,7 +143,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
               builder: (context, snapshot) {
                 // حالة التحميل
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return LoadingState(message: l10n.loadingData); // ✅ تم التدوين
+                  return LoadingState(message: l10n.loadingData);
                 }
 
                 // حالة الخطأ
@@ -125,7 +159,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                   return EmptyState(
                     icon: Icons.account_balance_wallet,
                     title: l10n.noTransactions,
-                    message: l10n.noTransactionsInPeriod, // ✅ إزالة ??
+                    message: l10n.noTransactionsInPeriod,
                   );
                 }
 
@@ -196,6 +230,10 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
       ),
     );
   }
+
+  // ============================================================================
+  // Widgets مساعدة
+  // ============================================================================
 
   /// بناء عرض معلومات الفترة الزمنية
   Widget _buildDateRangeInfo(AppLocalizations l10n) {
@@ -352,7 +390,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
               ),
               const SizedBox(width: AppConstants.spacingSm),
               Text(
-                l10n.transactionDetails, // ✅ إزالة ??
+                l10n.transactionDetails,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -383,11 +421,10 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
         ...transactions.map((trans) {
           final isCashSale = trans['type'] == 'CASH_SALE';
           
-          // ✅ إصلاح استخراج اسم الزبون
+          // استخراج اسم الزبون
           final description = isCashSale
               ? l10n.cashSaleDescription(trans['id'].toString())
               : l10n.debtPaymentDescription(
-                  // استخدام split للحصول على اسم الزبون فقط
                   trans['description'].toString().split(': ').last,
                 );
 
@@ -480,7 +517,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                             ),
                             const SizedBox(width: 2),
                             Text(
-                              l10n.cashIn, // ✅ إزالة ??
+                              l10n.cashIn,
                               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                 color: AppColors.success,
                                 fontWeight: FontWeight.bold,
@@ -498,5 +535,89 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
         }).toList(),
       ],
     );
+  }
+
+  // ============================================================================
+  // 📄 دالة توليد PDF
+  // ============================================================================
+  Future<void> _generatePdf() async {
+    setState(() => _isGeneratingPdf = true);
+    
+    try {
+      // 1️⃣ جلب البيانات
+      final transactions = await _transactionsFuture;
+      
+      // 2️⃣ حساب الإجماليات
+      double totalCashSales = 0;
+      double totalDebtPayments = 0;
+      
+      for (var trans in transactions) {
+        if (trans['type'] == 'CASH_SALE') {
+          totalCashSales += trans['amount'];
+        } else if (trans['type'] == 'DEBT_PAYMENT') {
+          totalDebtPayments += trans['amount'];
+        }
+      }
+      
+      final totalCashIn = totalCashSales + totalDebtPayments;
+      
+      // 3️⃣ إنشاء PDF
+      final pdf = await PdfService.instance.buildCashFlowReport(
+        transactions: transactions,
+        totalCashSales: totalCashSales,
+        totalDebtPayments: totalDebtPayments,
+        totalCashIn: totalCashIn,
+        startDate: _startDate,
+        endDate: _endDate,
+      );
+      
+      // 4️⃣ عرض خيارات PDF
+      if (!mounted) return;
+      
+      PdfHelpers.showPdfOptionsDialog(
+        context,
+        pdf,
+        onSuccess: () {
+          // يمكنك إضافة كود هنا عند نجاح العملية
+        },
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      );
+      
+    } catch (e) {
+      // في حالة حدوث خطأ
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('خطأ في إنشاء PDF: $e')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
   }
 }

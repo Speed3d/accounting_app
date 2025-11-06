@@ -2,9 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../utils/helpers.dart';
+import '../../utils/pdf_helpers.dart';
+import '../../services/pdf_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -24,12 +27,17 @@ class ProfitReportScreen extends StatefulWidget {
 }
 
 class _ProfitReportScreenState extends State<ProfitReportScreen> {
-  // ============= المتغيرات =============
+  // ============================================================================
+  // المتغيرات
+  // ============================================================================
   final dbHelper = DatabaseHelper.instance;
   late Future<FinancialSummary> _summaryFuture;
   bool _isDetailsVisible = false; // للتحكم في إظهار/إخفاء التفاصيل
+  bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
-  // ============= التهيئة =============
+  // ============================================================================
+  // التهيئة
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -61,26 +69,48 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     );
   }
 
-  // ============= البناء الرئيسي =============
+  // ============================================================================
+  // البناء الرئيسي
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      // --- AppBar مع زر التحديث ---
+      // ============================================================================
+      // AppBar مع زر التحديث و PDF
+      // ============================================================================
       appBar: AppBar(
         title: Text(l10n.generalProfitReport),
         elevation: 0,
         actions: [
+          // زر التحديث
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadFinancialSummary,
             tooltip: l10n.refresh,
           ),
+          // ✅ زر PDF
+          IconButton(
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _isGeneratingPdf ? null : _generatePdf,
+            tooltip: 'تصدير PDF',
+          ),
         ],
       ),
 
-      // --- الجسم: الملخص المالي والتفاصيل ---
+      // ============================================================================
+      // الجسم: الملخص المالي والتفاصيل
+      // ============================================================================
       body: FutureBuilder<FinancialSummary>(
         future: _summaryFuture,
         builder: (context, snapshot) {
@@ -140,7 +170,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     );
   }
 
-  // ============= قسم الملخص المالي =============
+  // ============================================================================
+  // قسم الملخص المالي
+  // ============================================================================
   /// يعرض 4 بطاقات إحصائية:
   /// 1. إجمالي الأرباح من المبيعات
   /// 2. إجمالي المصاريف العامة
@@ -250,7 +282,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     );
   }
 
-  // ============= زر إظهار/إخفاء التفاصيل =============
+  // ============================================================================
+  // زر إظهار/إخفاء التفاصيل
+  // ============================================================================
   /// زر لتبديل عرض قائمة تفاصيل المبيعات
   Widget _buildToggleDetailsButton(AppLocalizations l10n) {
     return OutlinedButton.icon(
@@ -272,7 +306,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     );
   }
 
-  // ============= قائمة تفاصيل المبيعات =============
+  // ============================================================================
+  // قائمة تفاصيل المبيعات
+  // ============================================================================
   /// يعرض جدول بجميع عمليات البيع مع الربح لكل عملية
   Widget _buildSalesList(List<CustomerDebt> sales, AppLocalizations l10n) {
     // --- حالة عدم وجود مبيعات ---
@@ -310,7 +346,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     );
   }
 
-  // ============= بطاقة المبيعة الواحدة =============
+  // ============================================================================
+  // بطاقة المبيعة الواحدة
+  // ============================================================================
   /// يعرض تفاصيل عملية بيع واحدة
   Widget _buildSaleCard(CustomerDebt sale, AppLocalizations l10n) {
     final saleDate = DateTime.parse(sale.dateT);
@@ -396,9 +434,92 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
       ),
     );
   }
+
+  // ============================================================================
+  // 📄 دالة توليد PDF
+  // ============================================================================
+  Future<void> _generatePdf() async {
+    setState(() => _isGeneratingPdf = true);
+    
+    try {
+      // 1️⃣ جلب البيانات
+      final summary = await _summaryFuture;
+      final netProfit = summary.grossProfit - 
+          summary.totalExpenses - 
+          summary.totalWithdrawals;
+      
+      // 2️⃣ تحويل sales إلى Map
+      final salesData = summary.sales.map((sale) => {
+        'details': sale.details,
+        'customerName': sale.customerName,
+        'dateT': sale.dateT,
+        'debt': sale.debt,
+        'profitAmount': sale.profitAmount,
+      }).toList();
+      
+      // 3️⃣ إنشاء PDF
+      final pdf = await PdfService.instance.buildProfitReport(
+        totalProfit: summary.grossProfit,
+        totalExpenses: summary.totalExpenses,
+        totalWithdrawals: summary.totalWithdrawals,
+        netProfit: netProfit,
+        salesData: salesData,
+      );
+      
+      // 4️⃣ عرض خيارات PDF
+      if (!mounted) return;
+      
+      PdfHelpers.showPdfOptionsDialog(
+        context,
+        pdf,
+        onSuccess: () {
+          // يمكنك إضافة كود هنا عند نجاح العملية
+        },
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      );
+      
+    } catch (e) {
+      // في حالة حدوث خطأ
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('خطأ في إنشاء PDF: $e')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
+  }
 }
 
-// ============= نموذج بيانات الملخص المالي =============
+// ============================================================================
+// نموذج بيانات الملخص المالي
+// ============================================================================
 /// كلاس مساعد لتمثيل الملخص المالي الشامل
 class FinancialSummary {
   final double grossProfit; // إجمالي الأرباح قبل المصاريف

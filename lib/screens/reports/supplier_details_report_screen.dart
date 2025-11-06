@@ -1,9 +1,7 @@
 // lib/screens/reports/supplier_details_report_screen.dart
 
-// ============================================================================
-// 📦 الاستيرادات المطلوبة
-// ============================================================================
-import 'dart:io'; // ✅ مهم جداً لاستخدام File
+import 'dart:io';
+import 'package:accounting_app/services/pdf_service.dart' show PdfService;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -11,6 +9,7 @@ import '../../data/models.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
+import '../../utils/pdf_helpers.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
@@ -48,13 +47,12 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   final dbHelper = DatabaseHelper.instance;
   
-  // ✅ الحل الصحيح: استخدام nullable مع التهيئة في initState
   Future<List<Partner>>? _partnersFuture;
   Future<List<Map<String, dynamic>>>? _withdrawalsFuture;
   late double _currentTotalWithdrawn;
   
-  // متغير لحالة التحميل
   bool _isLoading = true;
+  bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
   // ============================================================================
   // 🔄 دورة حياة الصفحة
@@ -70,12 +68,10 @@ class _SupplierDetailsReportScreenState
   void _loadData() {
     setState(() {
       _isLoading = true;
-      // ✅ تهيئة الـ Futures هنا
       _partnersFuture = dbHelper.getPartnersForSupplier(widget.supplierId);
       _withdrawalsFuture = dbHelper.getWithdrawalsForSupplier(widget.supplierId);
     });
 
-    // الانتظار حتى تكتمل العمليات
     Future.wait([
       _partnersFuture!,
       _withdrawalsFuture!,
@@ -112,6 +108,21 @@ class _SupplierDetailsReportScreenState
             icon: const Icon(Icons.refresh),
             onPressed: _isLoading ? null : _loadData,
             tooltip: 'تحديث',
+          ),
+          // ✅ زر PDF
+          IconButton(
+            icon: _isGeneratingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _isGeneratingPdf ? null : _generatePdf,
+            tooltip: 'تصدير PDF',
           ),
         ],
       ),
@@ -240,7 +251,6 @@ class _SupplierDetailsReportScreenState
   // 👥 بناء قسم توزيع الأرباح على الشركاء
   // ============================================================================
   Widget _buildPartnersProfitSection(double netProfit, AppLocalizations l10n) {
-    // ✅ التحقق من أن الـ Future تم تهيئته
     if (_partnersFuture == null) {
       return const SizedBox.shrink();
     }
@@ -248,7 +258,6 @@ class _SupplierDetailsReportScreenState
     return FutureBuilder<List<Partner>>(
       future: _partnersFuture,
       builder: (context, snapshot) {
-        // ✅ حالة التحميل
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: Padding(
@@ -258,7 +267,6 @@ class _SupplierDetailsReportScreenState
           );
         }
 
-        // ✅ حالة الخطأ
         if (snapshot.hasError) {
           return CustomCard(
             color: AppColors.error.withOpacity(0.1),
@@ -287,7 +295,7 @@ class _SupplierDetailsReportScreenState
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          width: 120, // ✅ تحديد عرض للزر
+                          width: 120,
                           child: ElevatedButton.icon(
                             onPressed: _loadData,
                             icon: const Icon(Icons.refresh, size: 16),
@@ -307,7 +315,6 @@ class _SupplierDetailsReportScreenState
           );
         }
 
-        // ✅ حالة القائمة الفارغة
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -327,7 +334,6 @@ class _SupplierDetailsReportScreenState
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
-                // عداد الشركاء
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -359,7 +365,6 @@ class _SupplierDetailsReportScreenState
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
               final partnerShare = netProfit * (partner.sharePercentage / 100);
-
               return _buildPartnerCard(partner, partnerShare, l10n);
             }).toList(),
 
@@ -374,7 +379,6 @@ class _SupplierDetailsReportScreenState
   // 🧑 بناء بطاقة الشريك الواحد
   // ============================================================================
   Widget _buildPartnerCard(Partner partner, double partnerShare, AppLocalizations l10n) {
-    // ✅ التحقق الآمن من الصورة
     ImageProvider? avatarImage;
     try {
       if (partner.imagePath != null && partner.imagePath!.isNotEmpty) {
@@ -415,7 +419,6 @@ class _SupplierDetailsReportScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // الاسم
                   Text(
                     partner.partnerName,
                     style: const TextStyle(
@@ -424,7 +427,6 @@ class _SupplierDetailsReportScreenState
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // النسبة
                   Row(
                     children: [
                       Container(
@@ -462,7 +464,7 @@ class _SupplierDetailsReportScreenState
 
             // --- زر السحب ---
             SizedBox(
-              width: 95, // ✅ تحديد عرض ثابت للزر
+              width: 95,
               child: ElevatedButton.icon(
                 onPressed: () => _showRecordWithdrawalDialog(
                   l10n,
@@ -487,7 +489,6 @@ class _SupplierDetailsReportScreenState
   // 📋 بناء قسم سجل المسحوبات
   // ============================================================================
   Widget _buildWithdrawalsHistorySection(AppLocalizations l10n) {
-    // ✅ التحقق من أن الـ Future تم تهيئته
     if (_withdrawalsFuture == null) {
       return const SizedBox.shrink();
     }
@@ -795,5 +796,85 @@ class _SupplierDetailsReportScreenState
         ],
       ),
     );
+  }
+
+  // ============================================================================
+  // 📄 دالة توليد PDF
+  // ============================================================================
+  Future<void> _generatePdf() async {
+    setState(() => _isGeneratingPdf = true);
+    
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      
+      // 1️⃣ جلب البيانات
+      final partners = await _partnersFuture ?? [];
+      final withdrawals = await _withdrawalsFuture ?? [];
+      final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+      
+      // 2️⃣ تحويل بيانات الشركاء
+      final partnersData = partners.map((p) => {
+        'partnerName': p.partnerName,
+        'sharePercentage': p.sharePercentage,
+        'partnerShare': netProfit * (p.sharePercentage / 100),
+      }).toList();
+      
+      // 3️⃣ إنشاء PDF
+      // يجب ان يكون هناك كود خاص داخل pdf service لعرض تفاصيل السحب للشركاء و الموردين
+      final pdf = await PdfService.instance.buildSupplierDetailsReport(
+        supplierName: widget.supplierName,
+        supplierType: widget.supplierType,
+        totalProfit: widget.totalProfit,
+        totalWithdrawn: _currentTotalWithdrawn,
+        netProfit: netProfit,
+        partnersData: partnersData,
+        withdrawalsData: withdrawals,
+      );
+      
+      // 4️⃣ عرض خيارات PDF
+      if (!mounted) return;
+      
+      PdfHelpers.showPdfOptionsDialog(
+        context,
+        pdf,
+        onSuccess: () {},
+        onError: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(error)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      );
+      
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text('خطأ في إنشاء PDF: $e')),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
   }
 }
