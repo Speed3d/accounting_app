@@ -241,7 +241,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
             CustomTextField(
               controller: _fullNameController,
               label: l10n.fullName,
-              hint: 'مثال: أحمد محمد',
+              hint: 'مثال: سنان اياد',
               prefixIcon: Icons.person_outline,
               keyboardType: TextInputType.name,
               textInputAction: TextInputAction.next,

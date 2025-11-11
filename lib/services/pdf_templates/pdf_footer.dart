@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'pdf_styles.dart';
 
 /// 📄 بناء تذييل الصفحة (Footer) الموحد
+/// ✅ محدّث: أحجام مصغرة للطباعة
 class PdfFooter {
   /// بناء الـ Footer
   /// 
@@ -22,12 +23,12 @@ class PdfFooter {
     final totalPages = context.pagesCount;
 
     return pw.Container(
-      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),  // ✅ مصغر من spacingMd
       decoration: pw.BoxDecoration(
         border: pw.Border(
           top: pw.BorderSide(
             color: PdfStyles.borderColor,
-            width: 1,
+            width: 0.75,  // ✅ مصغر من 1
           ),
         ),
       ),
@@ -38,10 +39,11 @@ class PdfFooter {
           pw.Expanded(
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
+              mainAxisSize: pw.MainAxisSize.min,  // ✅ إضافة جديدة
               children: [
                 pw.Text(
                   companyName,
-                  style: PdfStyles.smallStyle(color: PdfStyles.textSecondary),
+                  style: PdfStyles.captionStyle(color: PdfStyles.textSecondary),  // ✅ مصغر
                 ),
                 if (additionalText != null) ...[
                   pw.SizedBox(height: PdfStyles.spacingXs),
@@ -70,16 +72,16 @@ class PdfFooter {
               alignment: pw.Alignment.centerLeft,
               child: pw.Container(
                 padding: const pw.EdgeInsets.symmetric(
-                  horizontal: PdfStyles.spacingSm,
+                  horizontal: PdfStyles.spacingXs,  // ✅ مصغر من spacingSm
                   vertical: PdfStyles.spacingXs,
                 ),
                 decoration: pw.BoxDecoration(
                   color: PdfStyles.backgroundLight,
-                  borderRadius: pw.BorderRadius.circular(4),
+                  borderRadius: pw.BorderRadius.circular(3),  // ✅ مصغر من 4
                 ),
                 child: pw.Text(
                   'صفحة $pageNumber من $totalPages',
-                  style: PdfStyles.smallStyle(),
+                  style: PdfStyles.captionStyle(),  // ✅ مصغر من smallStyle
                 ),
               ),
             ),

@@ -242,7 +242,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         onTap: () => _showExpenseDetails(expense),
         borderRadius: AppConstants.cardBorderRadius,
         child: Padding(
-          padding: AppConstants.paddingMd,
+          padding: AppConstants.paddingSm,
           child: Row(
             children: [
               // ============================================================================
@@ -259,7 +259,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 child: Icon(
                   Icons.arrow_upward,
                   color: AppColors.error,
-                  size: 24,
+                  size: 28,
                 ),
               ),
 
@@ -278,7 +278,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       description,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 18,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -325,7 +325,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 20,
                     ),
                   ),
 

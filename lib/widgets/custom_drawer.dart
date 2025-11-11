@@ -1,4 +1,5 @@
 // lib/widgets/custom_drawer.dart
+import 'dart:io';
 import 'package:accounting_app/l10n/app_localizations.dart';
 import 'package:accounting_app/screens/customers/customers_list_screen.dart';
 import 'package:accounting_app/screens/employees/employees_list_screen.dart';
@@ -95,22 +96,23 @@ class CustomDrawer extends StatelessWidget {
                 
                 const Divider(),
 
-                //================================================
-                _buildMenuItem(
-                context,
-                icon: Icons.bug_report,
-                title: '🧪 اختبار PDF',
-                onTap: () {
-                 Navigator.pop(context);
-                 Navigator.push(
-                 context,
-                 MaterialPageRoute(
-                 builder: (context) => const TestPdfScreen(),
-                ),
-               );
-             },
-            ),
-                const Divider(),
+            //     // زر تم عمله لاختبار وانشار ملف PDF
+            //     //================================================
+            //     _buildMenuItem(
+            //     context,
+            //     icon: Icons.bug_report,
+            //     title: '🧪 اختبار PDF',
+            //     onTap: () {
+            //      Navigator.pop(context);
+            //      Navigator.push(
+            //      context,
+            //      MaterialPageRoute(
+            //      builder: (context) => const TestPdfScreen(),
+            //     ),
+            //    );
+            //  },
+            // ),
+                // const Divider(),
 
                 
                 // ============= قسم العملاء والموردين =============
@@ -257,31 +259,41 @@ class CustomDrawer extends StatelessWidget {
                       },
                     ),
                 ],
+                
+                // ✅ مسافة إضافية قبل Footer لرفع الأزرار للأعلى
+                const SizedBox(height: AppConstants.spacingXl),
               ],
             ),
           ),
           
-          // ============= Footer =============
+          // ============= Footer (مرفوع للأعلى) =============
           _buildDrawerFooter(context, isDark, l10n),
+          const SizedBox(height: AppConstants.spacingSm),
         ],
       ),
     );
   }
 
   // ============================================================
-  // 📋 بناء رأس القائمة الجانبية (مُحسّن)
+  // ✅ 📋 بناء رأس القائمة الجانبية (مُحسّن ومصغّر)
   // ============================================================
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     final user = AuthService().currentUser;
+    
+    // ✅ التحقق من وجود صورة المستخدم
+    final hasUserImage = user?.imagePath != null && 
+                         user!.imagePath!.isNotEmpty && 
+                         File(user.imagePath!).existsSync();
 
     return Container(
       width: double.infinity,
+      // ✅ تصغير الـ padding لتقليل المساحة
       padding: const EdgeInsets.fromLTRB(
-        AppConstants.spacingLg,
-        AppConstants.spacingXl + 20,
-        AppConstants.spacingLg,
-        AppConstants.spacingLg,
+        AppConstants.spacingMd,
+        AppConstants.spacingXl + 2, // تقليل من 20 إلى 10
+        AppConstants.spacingMd,
+        AppConstants.spacingMd,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -295,16 +307,16 @@ class CustomDrawer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // === صورة المستخدم ===
+            // ✅ صورة المستخدم الحقيقية (مصغّرة)
             Container(
-              width: 70,
-              height: 70,
+              width: 60, // تقليل من 70 إلى 60
+              height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
                 border: Border.all(
                   color: Colors.white.withOpacity(0.3),
-                  width: 3,
+                  width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -315,36 +327,48 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
               child: ClipOval(
-                child: Icon(
-                  Icons.person,
-                  size: 35,
-                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                ),
+                child: hasUserImage
+                    ? Image.file(
+                        File(user!.imagePath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: 30,
+                            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                          );
+                        },
+                      )
+                    : Icon(
+                        Icons.person,
+                        size: 30,
+                        color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                      ),
               ),
             ),
 
-            const SizedBox(height: AppConstants.spacingMd),
+            const SizedBox(height: AppConstants.spacingMd), // تقليل المسافة
 
-            // === اسم المستخدم ===
+            // ✅ اسم المستخدم (حجم أصغر)
             Text(
               user?.fullName ?? l10n.user,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 16, // تقليل من 18 إلى 16
                 fontWeight: FontWeight.bold,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
 
-            const SizedBox(height: AppConstants.spacingXs),
+            const SizedBox(height: 2), // تقليل المسافة
 
-            // === اسم المستخدم (Username) ===
+            // ✅ اسم المستخدم (Username)
             Text(
               user?.userName ?? l10n.undefined,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
-                fontSize: 13,
+                fontSize: 12, // تقليل من 13 إلى 12
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -352,11 +376,11 @@ class CustomDrawer extends StatelessWidget {
 
             const SizedBox(height: AppConstants.spacingSm),
 
-            // === شارة الصلاحية ===
+            // ✅ شارة الصلاحية (مصغّرة)
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
+                horizontal: 8,
+                vertical: 3, // تقليل من 4 إلى 3
               ),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
@@ -372,14 +396,14 @@ class CustomDrawer extends StatelessWidget {
                   Icon(
                     user?.isAdmin == true ? Icons.admin_panel_settings : Icons.person,
                     color: Colors.white,
-                    size: 14,
+                    size: 12, // تقليل من 14 إلى 12
                   ),
                   const SizedBox(width: 6),
                   Text(
                     user?.isAdmin == true ? l10n.systemAdmin : l10n.user,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 11, // تقليل من 12 إلى 11
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -457,13 +481,15 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  /// بناء تذييل القائمة
+  /// ✅ بناء تذييل القائمة (مرفوع للأعلى)
   Widget _buildDrawerFooter(
     BuildContext context,
     bool isDark,
     AppLocalizations l10n, 
   ) {
     return Container(
+      // ✅ إضافة padding من الأسفل لرفع الأزرار
+      padding: const EdgeInsets.only(bottom: AppConstants.spacingXl),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -472,6 +498,7 @@ class CustomDrawer extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             leading: const Icon(Icons.info_outline),

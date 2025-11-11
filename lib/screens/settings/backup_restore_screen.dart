@@ -1,11 +1,13 @@
 // lib/screens/settings/backup_restore_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/backup_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
+import '../../widgets/custom_button.dart';
 
 /// 💾 شاشة النسخ الاحتياطي والاستعادة
 /// Hint: صفحة فرعية مهمة جداً - تتيح للمستخدم حفظ واستعادة بياناته
@@ -21,40 +23,227 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   bool _isBackingUp = false;
   bool _isRestoring = false;
   final BackupService _backupService = BackupService();
+  
+  // ← Hint: متغيرات لتخزين معلومات آخر نسخة احتياطية تم إنشاؤها
+  String? _lastBackupFilePath;
+  String? _lastBackupFileName;
 
   // ============= الدوال =============
 
-  /// إنشاء نسخة احتياطية ومشاركتها
-  /// Hint: هذه الدالة تأخذ وقتاً، لذا نعرض مؤشر تحميل
+  /// ← Hint: إنشاء نسخة احتياطية وحفظها في Downloads
   Future<void> _handleCreateBackup() async {
     final l10n = AppLocalizations.of(context)!;
     
     setState(() => _isBackingUp = true);
 
     try {
+      // ← Hint: استدعاء الدالة المحدثة التي تعيد Map بدلاً من String
       final result = await _backupService.createAndShareBackup();
 
       if (mounted) {
         setState(() => _isBackingUp = false);
         
+        if (result['status'] == 'success') {
+          // ← Hint: حفظ معلومات الملف المنشأ
+          setState(() {
+            _lastBackupFilePath = result['filePath'];
+            _lastBackupFileName = result['fileName'];
+          });
+          
+          // ← Hint: عرض رسالة نجاح مع موقع الملف
+          _showSuccessDialog(
+            l10n,
+            result['filePath'] as String,
+            result['fileName'] as String,
+          );
+        } else {
+          // ← Hint: عرض رسالة خطأ
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? l10n.backupFailed('خطأ غير معروف')),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isBackingUp = false);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              result == 'نجاح' 
-                  ? l10n.backupStarted 
-                  : l10n.backupFailed(result),
+            content: Text('خطأ: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// ← Hint: دالة جديدة لعرض نافذة النجاح مع خيار المشاركة
+  void _showSuccessDialog(AppLocalizations l10n, String filePath, String fileName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.success,
+              size: 32,
             ),
-            backgroundColor: result == 'نجاح' 
-                ? AppColors.success 
-                : AppColors.warning,
+            const SizedBox(width: AppConstants.spacingMd),
+            Expanded(
+              child: Text(
+                l10n.backupSuccessTitle,
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: رسالة النجاح
+            Text(
+              l10n.backupSuccessContent,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            
+            const SizedBox(height: AppConstants.spacingLg),
+            
+            // ← Hint: عرض موقع الملف
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.success.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.success.withOpacity(0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.folder_outlined,
+                        size: 18,
+                        color: AppColors.success,
+                      ),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Expanded(
+                        child: Text(
+                          l10n.backupFileLocation,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.success,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  
+                  // ← Hint: اسم الملف
+                  Text(
+                    fileName,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: AppConstants.spacingXs),
+                  
+                  // ← Hint: المسار الكامل مع زر النسخ
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          filePath,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondaryLight,
+                            fontSize: 11,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.copy_rounded,
+                          size: 18,
+                          color: AppColors.info,
+                        ),
+                        onPressed: () {
+                          // ← Hint: نسخ المسار إلى الحافظة
+                          Clipboard.setData(ClipboardData(text: filePath));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.pathCopied),
+                              duration: const Duration(seconds: 1),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        tooltip: l10n.copyPath,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // ← Hint: زر الإغلاق
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.close),
+          ),
+          
+          // ← Hint: زر المشاركة
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _handleShareBackup(filePath);
+            },
+            icon: const Icon(Icons.share_rounded),
+            label: Text(l10n.share),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.info,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ← Hint: دالة جديدة لمشاركة الملف المحفوظ
+  Future<void> _handleShareBackup(String filePath) async {
+    final l10n = AppLocalizations.of(context)!;
+    
+    try {
+      final success = await _backupService.shareBackupFile(filePath);
+      
+      if (mounted && !success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.shareFailed),
+            backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isBackingUp = false);
-        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('خطأ: ${e.toString()}'),
@@ -211,6 +400,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               enabled: !_isBackingUp && !_isRestoring,
               onTap: _handleCreateBackup,
             ),
+
+            // ← Hint: عرض زر المشاركة إذا كان هناك ملف محفوظ
+            if (_lastBackupFilePath != null) ...[
+              const SizedBox(height: AppConstants.spacingMd),
+              CustomButton(
+                text: l10n.shareLastBackup,
+                icon: Icons.share_rounded,
+                type: ButtonType.secondary,
+                onPressed: () => _handleShareBackup(_lastBackupFilePath!),
+              ),
+            ],
 
             const SizedBox(height: AppConstants.spacingLg),
 

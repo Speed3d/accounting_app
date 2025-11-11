@@ -39,8 +39,6 @@ class _HomeScreenState extends State<HomeScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: AppConstants.screenPadding,
-            // لعرض اسم المستخدم في صفحة الهوم في الاعلى 
-            // child: _buildWelcomeSection(l10n),
           ),
         ),
         SliverPadding(
@@ -94,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.users,
         'icon': Icons.people_alt,
         'color': AppColors.info,
-        'page': const UsersListScreen(), // ✅ أضف const
+        'page': const UsersListScreen(), 
       });
     }
 
@@ -103,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.suppliers,
         'icon': Icons.local_shipping,
         'color': AppColors.warning,
-        'page': const SuppliersListScreen(), // ✅ أضف const
+        'page': const SuppliersListScreen(), 
       });
     }
 
@@ -112,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.products,
         'icon': Icons.inventory_2,
         'color': AppColors.primaryLight,
-        'page': const ProductsListScreen(), // ✅ أضف const
+        'page': const ProductsListScreen(), 
       });
     }
 
@@ -121,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.employees,
         'icon': Icons.badge,
         'color': AppColors.secondaryLight,
-        'page': const EmployeesListScreen(), // ✅ أضف const
+        'page': const EmployeesListScreen(), 
       });
     }
 
@@ -139,17 +137,17 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.directselling,
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
-        'page': const DirectSaleScreen(), // ✅ أضف const
+        'page': const DirectSaleScreen(), 
       });
     }
 
-    // ✅✅✅ التعديل المهم - إضافة زر التقارير بشكل صحيح ✅✅✅
+    // إضافة زر التقارير بشكل صحيح 
     if (_authService.canViewReports || _authService.isAdmin) {
       items.add({
         'title': l10n.reports,
         'icon': Icons.assessment,
         'color': AppColors.income,
-        'page': const ReportsHubScreen(), // ✅ أضف const هنا
+        'page': const ReportsHubScreen(), 
       });
     }
 
@@ -158,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'title': l10n.settings,
         'icon': Icons.settings,
         'color': Colors.grey,
-        'page': const SettingsScreen(), // ✅ أضف const
+        'page': const SettingsScreen(), 
       });
     }
 

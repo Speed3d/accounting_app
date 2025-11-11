@@ -272,10 +272,10 @@ class PdfService {
       content: [
         // الملخص
         pw.Container(
-          padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+          padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
           decoration: pw.BoxDecoration(
             color: PdfStyles.primaryColor.shade(0.05),
-            borderRadius: pw.BorderRadius.circular(8),
+            borderRadius: pw.BorderRadius.circular(6),
           ),
           child: pw.Text(
             summary,
@@ -357,13 +357,13 @@ Future<pw.Document> buildCustomerSalesReport({
     // ============= قسم الفلاتر المطبقة =============
     if (filterSummary.isNotEmpty) ...[
       pw.Container(
-        padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+        padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
         decoration: pw.BoxDecoration(
           color: PdfStyles.primaryColor.shade(0.05),
-          borderRadius: pw.BorderRadius.circular(8),
+          borderRadius: pw.BorderRadius.circular(6),
           border: pw.Border.all(
             color: PdfStyles.primaryColor.shade(0.2),
-            width: 1,
+            width: 0.75,
           ),
         ),
         child: pw.Column(
@@ -375,7 +375,7 @@ Future<pw.Document> buildCustomerSalesReport({
                 fontSize: PdfStyles.fontSizeSubheading,
               ),
             ),
-            pw.SizedBox(height: PdfStyles.spacingSm),
+            pw.SizedBox(height: PdfStyles.spacingXs),
             ...filterSummary.map(
               (filter) => pw.Padding(
                 padding: const pw.EdgeInsets.only(
@@ -384,14 +384,14 @@ Future<pw.Document> buildCustomerSalesReport({
                 child: pw.Row(
                   children: [
                     pw.Container(
-                      width: 4,
-                      height: 4,
+                      width: 3,
+                      height: 3,
                       decoration: pw.BoxDecoration(
                         color: PdfStyles.primaryColor,
                         shape: pw.BoxShape.circle,
                       ),
                     ),
-                    pw.SizedBox(width: PdfStyles.spacingSm),
+                    pw.SizedBox(width: PdfStyles.spacingXs),
                     pw.Text(
                       filter,
                       style: PdfStyles.bodyStyle(),
@@ -403,7 +403,7 @@ Future<pw.Document> buildCustomerSalesReport({
           ],
         ),
       ),
-      pw.SizedBox(height: PdfStyles.spacingXl),
+      pw.SizedBox(height: PdfStyles.spacingLg),
     ],
     
     // ============= قسم الإحصائيات =============
@@ -411,7 +411,7 @@ Future<pw.Document> buildCustomerSalesReport({
       'الإحصائيات العامة',
       style: PdfStyles.headingStyle(),
     ),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
     
     pw.Row(
       children: [
@@ -423,7 +423,7 @@ Future<pw.Document> buildCustomerSalesReport({
             color: PdfStyles.successColor,
           ),
         ),
-        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.SizedBox(width: PdfStyles.spacingSm),
         
         // البطاقة الثانية
         pw.Expanded(
@@ -436,7 +436,7 @@ Future<pw.Document> buildCustomerSalesReport({
       ],
     ),
     
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
     
     pw.Row(
       children: [
@@ -448,7 +448,7 @@ Future<pw.Document> buildCustomerSalesReport({
             color: PdfStyles.secondaryColor,
           ),
         ),
-        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.SizedBox(width: PdfStyles.spacingSm),
         
         // البطاقة الرابعة
         pw.Expanded(
@@ -461,22 +461,22 @@ Future<pw.Document> buildCustomerSalesReport({
       ],
     ),
     
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
     
     // ============= قسم تفاصيل المبيعات =============
     pw.Text(
       'تفاصيل المبيعات (${salesData.length} معاملة)',
       style: PdfStyles.headingStyle(),
     ),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
     
     // جدول المبيعات
     if (salesData.isEmpty)
       pw.Container(
-        padding: const pw.EdgeInsets.all(PdfStyles.spacingXl),
+        padding: const pw.EdgeInsets.all(PdfStyles.spacingLg),
         decoration: pw.BoxDecoration(
           color: PdfStyles.backgroundLight,
-          borderRadius: pw.BorderRadius.circular(8),
+          borderRadius: pw.BorderRadius.circular(6),
         ),
         child: pw.Center(
           child: pw.Text(
@@ -488,27 +488,27 @@ Future<pw.Document> buildCustomerSalesReport({
     else
       _buildSalesTable(salesData),
     
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
     
     // ============= ملاحظات ختامية =============
     pw.Container(
-      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
       decoration: pw.BoxDecoration(
         color: PdfStyles.backgroundLight,
-        borderRadius: pw.BorderRadius.circular(8),
+        borderRadius: pw.BorderRadius.circular(6),
       ),
       child: pw.Row(
         children: [
           pw.Icon(
             pw.IconData(0xe88f), // info icon
-            size: 16,
+            size: 12,
             color: PdfStyles.textSecondary,
           ),
-          pw.SizedBox(width: PdfStyles.spacingSm),
+          pw.SizedBox(width: PdfStyles.spacingXs),
           pw.Expanded(
             child: pw.Text(
               'هذا التقرير تم إنشاؤه آلياً بواسطة نظام المحاسبة. جميع الأرقام محسوبة من قاعدة البيانات.',
-              style: PdfStyles.smallStyle(color: PdfStyles.textSecondary),
+              style: PdfStyles.captionStyle(color: PdfStyles.textSecondary),
             ),
           ),
         ],
@@ -522,34 +522,38 @@ Future<pw.Document> buildCustomerSalesReport({
   );
 }
 
-/// بناء بطاقة إحصائية ملونة
+/// بناء بطاقة إحصائية ملونة (محسّنة ومصغّرة)
 pw.Widget _buildStatCard({
   required String title,
   required String value,
   required PdfColor color,
 }) {
   return pw.Container(
-    padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+    padding: const pw.EdgeInsets.symmetric(
+      horizontal: PdfStyles.spacingSm,
+      vertical: PdfStyles.spacingXs,
+    ),
     decoration: pw.BoxDecoration(
       color: color.shade(0.1),
-      borderRadius: pw.BorderRadius.circular(8),
+      borderRadius: pw.BorderRadius.circular(6),
       border: pw.Border.all(
         color: color.shade(0.3),
-        width: 1,
+        width: 0.75,
       ),
     ),
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
+      mainAxisSize: pw.MainAxisSize.min,
       children: [
         pw.Text(
           title,
-          style: PdfStyles.smallStyle(color: color),
+          style: PdfStyles.captionStyle(color: color),
         ),
-        pw.SizedBox(height: PdfStyles.spacingSm),
+        pw.SizedBox(height: PdfStyles.spacingXs),
         pw.Text(
           value,
           style: PdfStyles.boldStyle(
-            fontSize: PdfStyles.fontSizeHeading,
+            fontSize: PdfStyles.fontSizeSubheading,
             color: color,
           ),
         ),
@@ -566,13 +570,13 @@ pw.Widget _buildSalesTable(List<Map<String, dynamic>> salesData) {
       width: 0.5,
     ),
     columnWidths: {
-      0: const pw.FixedColumnWidth(30),  // #
-      1: const pw.FixedColumnWidth(70),  // التاريخ
+      0: const pw.FixedColumnWidth(25),  // #
+      1: const pw.FixedColumnWidth(60),  // التاريخ
       2: const pw.FlexColumnWidth(2),    // الزبون
       3: const pw.FlexColumnWidth(2),    // المنتج
-      4: const pw.FixedColumnWidth(40),  // الكمية
-      5: const pw.FixedColumnWidth(70),  // المبلغ
-      6: const pw.FixedColumnWidth(70),  // الربح
+      4: const pw.FixedColumnWidth(35),  // الكمية
+      5: const pw.FixedColumnWidth(60),  // المبلغ
+      6: const pw.FixedColumnWidth(60),  // الربح
     },
     children: [
       // رأس الجدول
@@ -620,10 +624,13 @@ pw.Widget _buildSalesTable(List<Map<String, dynamic>> salesData) {
   );
 }
 
-/// بناء خلية رأس الجدول
+/// بناء خلية رأس الجدول (محسّنة)
 pw.Widget _buildTableHeaderCell(String text) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+    padding: const pw.EdgeInsets.symmetric(
+      horizontal: PdfStyles.spacingXs,
+      vertical: PdfStyles.spacingXs,
+    ),
     child: pw.Text(
       text,
       style: PdfStyles.tableHeaderStyle(),
@@ -632,10 +639,13 @@ pw.Widget _buildTableHeaderCell(String text) {
   );
 }
 
-/// بناء خلية الجدول العادية
+/// بناء خلية الجدول العادية (محسّنة)
 pw.Widget _buildTableCell(String text) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+    padding: const pw.EdgeInsets.symmetric(
+      horizontal: PdfStyles.spacingXs,
+      vertical: PdfStyles.spacingXs,
+    ),
     child: pw.Text(
       text,
       style: PdfStyles.tableCellStyle(),
@@ -644,9 +654,6 @@ pw.Widget _buildTableCell(String text) {
   );
 }
 
-
-// lib/services/pdf_service.dart
-// أضف هذه الدوال في نهاية كلاس PdfService قبل القوس الأخير
 
 // ============================================================================
 // 💰 تقرير التدفق النقدي
@@ -662,20 +669,20 @@ Future<pw.Document> buildCashFlowReport({
   final content = <pw.Widget>[
     // ============= قسم الفترة الزمنية =============
     pw.Container(
-      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
       decoration: pw.BoxDecoration(
         color: PdfStyles.primaryColor.shade(0.05),
-        borderRadius: pw.BorderRadius.circular(8),
+        borderRadius: pw.BorderRadius.circular(6),
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.center,
         children: [
           pw.Icon(
             pw.IconData(0xe916), // calendar icon
-            size: 20,
+            size: 16,
             color: PdfStyles.primaryColor,
           ),
-          pw.SizedBox(width: PdfStyles.spacingSm),
+          pw.SizedBox(width: PdfStyles.spacingXs),
           pw.Text(
             'الفترة: ${_formatDate(startDate)} - ${_formatDate(endDate)}',
             style: PdfStyles.boldStyle(color: PdfStyles.primaryColor),
@@ -684,11 +691,11 @@ Future<pw.Document> buildCashFlowReport({
       ),
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
 
     // ============= قسم الإحصائيات =============
     pw.Text('الإحصائيات العامة', style: PdfStyles.headingStyle()),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     pw.Row(
       children: [
@@ -699,7 +706,7 @@ Future<pw.Document> buildCashFlowReport({
             color: PdfStyles.secondaryColor,
           ),
         ),
-        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.SizedBox(width: PdfStyles.spacingSm),
         pw.Expanded(
           child: _buildStatCard(
             title: 'تسديدات الديون',
@@ -710,7 +717,7 @@ Future<pw.Document> buildCashFlowReport({
       ],
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     _buildStatCard(
       title: 'إجمالي التدفق النقدي',
@@ -718,18 +725,18 @@ Future<pw.Document> buildCashFlowReport({
       color: PdfStyles.successColor,
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
 
     // ============= قسم التفاصيل =============
     pw.Text(
       'تفاصيل المعاملات (${transactions.length} معاملة)',
       style: PdfStyles.headingStyle(),
     ),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     if (transactions.isEmpty)
       pw.Container(
-        padding: const pw.EdgeInsets.all(PdfStyles.spacingXl),
+        padding: const pw.EdgeInsets.all(PdfStyles.spacingLg),
         child: pw.Center(
           child: pw.Text(
             'لا توجد معاملات في هذه الفترة',
@@ -752,11 +759,11 @@ pw.Widget _buildCashFlowTable(List<Map<String, dynamic>> transactions) {
   return pw.Table(
     border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
     columnWidths: {
-      0: const pw.FixedColumnWidth(30),
+      0: const pw.FixedColumnWidth(25),
       1: const pw.FlexColumnWidth(2),
       2: const pw.FlexColumnWidth(3),
-      3: const pw.FixedColumnWidth(80),
-      4: const pw.FixedColumnWidth(70),
+      3: const pw.FixedColumnWidth(70),
+      4: const pw.FixedColumnWidth(60),
     },
     children: [
       // رأس الجدول
@@ -785,11 +792,11 @@ pw.Widget _buildCashFlowTable(List<Map<String, dynamic>> transactions) {
           children: [
             _buildTableCell((index + 1).toString()),
             pw.Container(
-              padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingXs),
               child: pw.Center(
                 child: pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 6,
+                    horizontal: 5,
                     vertical: 2,
                   ),
                   decoration: pw.BoxDecoration(
@@ -800,7 +807,7 @@ pw.Widget _buildCashFlowTable(List<Map<String, dynamic>> transactions) {
                   ),
                   child: pw.Text(
                     isCashSale ? 'نقدي' : 'تسديد',
-                    style: PdfStyles.smallStyle(
+                    style: PdfStyles.captionStyle(
                       color: isCashSale
                           ? PdfStyles.secondaryColor
                           : PdfStyles.warningColor,
@@ -834,7 +841,7 @@ Future<pw.Document> buildProfitReport({
   final content = <pw.Widget>[
     // ============= قسم الملخص المالي =============
     pw.Text('الملخص المالي', style: PdfStyles.headingStyle()),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     _buildStatCard(
       title: 'إجمالي الأرباح من المبيعات',
@@ -842,7 +849,7 @@ Future<pw.Document> buildProfitReport({
       color: PdfStyles.secondaryColor,
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     pw.Row(
       children: [
@@ -853,7 +860,7 @@ Future<pw.Document> buildProfitReport({
             color: PdfStyles.errorColor,
           ),
         ),
-        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.SizedBox(width: PdfStyles.spacingSm),
         pw.Expanded(
           child: _buildStatCard(
             title: 'مسحوبات الأرباح',
@@ -864,21 +871,21 @@ Future<pw.Document> buildProfitReport({
       ],
     ),
 
-    pw.Divider(height: 32),
+    pw.Divider(height: 24),
 
     // النتيجة النهائية
     pw.Container(
-      padding: const pw.EdgeInsets.all(PdfStyles.spacingLg),
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
       decoration: pw.BoxDecoration(
         color: netProfit >= 0
             ? PdfStyles.successColor.shade(0.1)
             : PdfStyles.errorColor.shade(0.1),
-        borderRadius: pw.BorderRadius.circular(8),
+        borderRadius: pw.BorderRadius.circular(6),
         border: pw.Border.all(
           color: netProfit >= 0
               ? PdfStyles.successColor.shade(0.3)
               : PdfStyles.errorColor.shade(0.3),
-          width: 2,
+          width: 1.5,
         ),
       ),
       child: pw.Row(
@@ -887,12 +894,12 @@ Future<pw.Document> buildProfitReport({
             netProfit >= 0
                 ? pw.IconData(0xe5ca) // trending_up
                 : pw.IconData(0xe5c7), // trending_down
-            size: 40,
+            size: 30,
             color: netProfit >= 0
                 ? PdfStyles.successColor
                 : PdfStyles.errorColor,
           ),
-          pw.SizedBox(width: PdfStyles.spacingMd),
+          pw.SizedBox(width: PdfStyles.spacingSm),
           pw.Expanded(
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -905,7 +912,7 @@ Future<pw.Document> buildProfitReport({
                 pw.Text(
                   _formatCurrency(netProfit),
                   style: PdfStyles.boldStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     color: netProfit >= 0
                         ? PdfStyles.successColor
                         : PdfStyles.errorColor,
@@ -918,7 +925,7 @@ Future<pw.Document> buildProfitReport({
       ),
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
 
     // ============= تفاصيل المبيعات =============
     if (salesData.isNotEmpty) ...[
@@ -926,7 +933,7 @@ Future<pw.Document> buildProfitReport({
         'تفاصيل المبيعات (${salesData.length} عملية)',
         style: PdfStyles.headingStyle(),
       ),
-      pw.SizedBox(height: PdfStyles.spacingMd),
+      pw.SizedBox(height: PdfStyles.spacingSm),
       _buildSalesDetailTable(salesData),
     ],
   ];
@@ -942,12 +949,12 @@ pw.Widget _buildSalesDetailTable(List<Map<String, dynamic>> salesData) {
   return pw.Table(
     border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
     columnWidths: {
-      0: const pw.FixedColumnWidth(30),
+      0: const pw.FixedColumnWidth(25),
       1: const pw.FlexColumnWidth(2),
       2: const pw.FlexColumnWidth(2),
-      3: const pw.FixedColumnWidth(70),
-      4: const pw.FixedColumnWidth(70),
-      5: const pw.FixedColumnWidth(70),
+      3: const pw.FixedColumnWidth(60),
+      4: const pw.FixedColumnWidth(60),
+      5: const pw.FixedColumnWidth(60),
     },
     children: [
       pw.TableRow(
@@ -997,7 +1004,7 @@ Future<pw.Document> buildSupplierProfitReport({
       'ملخص أرباح الموردين (${suppliersData.length} مورد)',
       style: PdfStyles.headingStyle(),
     ),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     _buildSuppliersProfitTable(suppliersData),
   ];
@@ -1013,12 +1020,12 @@ pw.Widget _buildSuppliersProfitTable(List<Map<String, dynamic>> data) {
   return pw.Table(
     border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
     columnWidths: {
-      0: const pw.FixedColumnWidth(30),
+      0: const pw.FixedColumnWidth(25),
       1: const pw.FlexColumnWidth(3),
       2: const pw.FlexColumnWidth(2),
-      3: const pw.FixedColumnWidth(80),
-      4: const pw.FixedColumnWidth(80),
-      5: const pw.FixedColumnWidth(80),
+      3: const pw.FixedColumnWidth(70),
+      4: const pw.FixedColumnWidth(70),
+      5: const pw.FixedColumnWidth(70),
     },
     children: [
       pw.TableRow(
@@ -1046,11 +1053,11 @@ pw.Widget _buildSuppliersProfitTable(List<Map<String, dynamic>> data) {
             _buildTableCell((index + 1).toString()),
             _buildTableCell(supplier['supplierName'] ?? ''),
             pw.Container(
-              padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingXs),
               child: pw.Center(
                 child: pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 6,
+                    horizontal: 5,
                     vertical: 2,
                   ),
                   decoration: pw.BoxDecoration(
@@ -1061,7 +1068,7 @@ pw.Widget _buildSuppliersProfitTable(List<Map<String, dynamic>> data) {
                   ),
                   child: pw.Text(
                     supplier['supplierType'] ?? '',
-                    style: PdfStyles.smallStyle(),
+                    style: PdfStyles.captionStyle(),
                   ),
                 ),
               ),
@@ -1088,7 +1095,7 @@ Future<pw.Document> buildEmployeesReport({
   final content = <pw.Widget>[
     // ============= الإحصائيات =============
     pw.Text('الإحصائيات العامة', style: PdfStyles.headingStyle()),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     pw.Row(
       children: [
@@ -1099,7 +1106,7 @@ Future<pw.Document> buildEmployeesReport({
             color: PdfStyles.successColor,
           ),
         ),
-        pw.SizedBox(width: PdfStyles.spacingMd),
+        pw.SizedBox(width: PdfStyles.spacingSm),
         pw.Expanded(
           child: _buildStatCard(
             title: 'إجمالي السلف المستحقة',
@@ -1110,7 +1117,7 @@ Future<pw.Document> buildEmployeesReport({
       ],
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     _buildStatCard(
       title: 'عدد الموظفين النشطين',
@@ -1118,14 +1125,14 @@ Future<pw.Document> buildEmployeesReport({
       color: PdfStyles.secondaryColor,
     ),
 
-    pw.SizedBox(height: PdfStyles.spacingXl),
+    pw.SizedBox(height: PdfStyles.spacingLg),
 
     // ============= قائمة الموظفين =============
     pw.Text(
       'قائمة الموظفين (${employeesData.length} موظف)',
       style: PdfStyles.headingStyle(),
     ),
-    pw.SizedBox(height: PdfStyles.spacingMd),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
     _buildEmployeesTable(employeesData),
   ];
@@ -1141,11 +1148,11 @@ pw.Widget _buildEmployeesTable(List<Map<String, dynamic>> data) {
   return pw.Table(
     border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
     columnWidths: {
-      0: const pw.FixedColumnWidth(30),
+      0: const pw.FixedColumnWidth(25),
       1: const pw.FlexColumnWidth(3),
       2: const pw.FlexColumnWidth(2),
-      3: const pw.FixedColumnWidth(80),
-      4: const pw.FixedColumnWidth(80),
+      3: const pw.FixedColumnWidth(70),
+      4: const pw.FixedColumnWidth(70),
     },
     children: [
       pw.TableRow(
@@ -1180,10 +1187,324 @@ pw.Widget _buildEmployeesTable(List<Map<String, dynamic>> data) {
   );
 }
 
-// بحاجة الى تعديله لنستطيع طباعة تفاصيل سحب الشركاء و الموردين
-  Future buildSupplierDetailsReport({required String supplierName, required String supplierType, required double totalProfit, required double totalWithdrawn, required double netProfit, required List<Map<String, Object>> partnersData, required List<Map<String, dynamic>> withdrawalsData}) async {}
+// ============================================================================
+// 🏢 تقرير تفاصيل المورد/الشراكة ✅ جديد
+// ============================================================================
+Future<pw.Document> buildSupplierDetailsReport({
+  required String supplierName,
+  required String supplierType,
+  required double totalProfit,
+  required double totalWithdrawn,
+  required double netProfit,
+  required List<Map<String, Object>> partnersData,
+  required List<Map<String, dynamic>> withdrawalsData,
+}) async {
+  // تحديد لون المورد
+  final isPartnership = supplierType.contains('شراكة') || supplierType.contains('partnership');
+  final supplierColor = isPartnership ? PdfStyles.secondaryColor : PdfStyles.primaryColor;
+  
+  final content = <pw.Widget>[
+    // ============= معلومات المورد =============
+    pw.Container(
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+      decoration: pw.BoxDecoration(
+        color: supplierColor.shade(0.05),
+        borderRadius: pw.BorderRadius.circular(6),
+        border: pw.Border.all(
+          color: supplierColor.shade(0.2),
+          width: 0.75,
+        ),
+      ),
+      child: pw.Row(
+        children: [
+          pw.Icon(
+            isPartnership ? pw.IconData(0xe7fb) : pw.IconData(0xe0af), // people / business
+            size: 24,
+            color: supplierColor,
+          ),
+          pw.SizedBox(width: PdfStyles.spacingSm),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  supplierName,
+                  style: PdfStyles.boldStyle(
+                    fontSize: PdfStyles.fontSizeHeading,
+                  ),
+                ),
+                pw.SizedBox(height: PdfStyles.spacingXs),
+                pw.Text(
+                  'النوع: $supplierType',
+                  style: PdfStyles.captionStyle(color: supplierColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
 
+    pw.SizedBox(height: PdfStyles.spacingLg),
 
+    // ============= الملخص المالي =============
+    pw.Text('الملخص المالي', style: PdfStyles.headingStyle()),
+    pw.SizedBox(height: PdfStyles.spacingSm),
 
+    pw.Row(
+      children: [
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'إجمالي الأرباح',
+            value: _formatCurrency(totalProfit),
+            color: PdfStyles.successColor,
+          ),
+        ),
+        pw.SizedBox(width: PdfStyles.spacingSm),
+        pw.Expanded(
+          child: _buildStatCard(
+            title: 'المسحوبات',
+            value: _formatCurrency(totalWithdrawn),
+            color: PdfStyles.errorColor,
+          ),
+        ),
+      ],
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingSm),
+
+    // صافي الربح (كبطاقة منفصلة)
+    pw.Container(
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      decoration: pw.BoxDecoration(
+        color: netProfit >= 0
+            ? PdfStyles.successColor.shade(0.1)
+            : PdfStyles.errorColor.shade(0.1),
+        borderRadius: pw.BorderRadius.circular(6),
+        border: pw.Border.all(
+          color: netProfit >= 0
+              ? PdfStyles.successColor.shade(0.3)
+              : PdfStyles.errorColor.shade(0.3),
+          width: 1.5,
+        ),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Row(
+            children: [
+              pw.Icon(
+                pw.IconData(0xe850), // account_balance_wallet
+                size: 24,
+                color: netProfit >= 0 ? PdfStyles.successColor : PdfStyles.errorColor,
+              ),
+              pw.SizedBox(width: PdfStyles.spacingSm),
+              pw.Text(
+                'صافي الربح المتبقي',
+                style: PdfStyles.boldStyle(),
+              ),
+            ],
+          ),
+          pw.Text(
+            _formatCurrency(netProfit),
+            style: PdfStyles.boldStyle(
+              fontSize: PdfStyles.fontSizeHeading,
+              color: netProfit >= 0 ? PdfStyles.successColor : PdfStyles.errorColor,
+            ),
+          ),
+        ],
+      ),
+    ),
+
+    pw.SizedBox(height: PdfStyles.spacingLg),
+
+    // ============= قسم الشركاء (للشراكات فقط) =============
+    if (isPartnership && partnersData.isNotEmpty) ...[
+      pw.Text(
+        'توزيع الأرباح على الشركاء (${partnersData.length} شريك)',
+        style: PdfStyles.headingStyle(),
+      ),
+      pw.SizedBox(height: PdfStyles.spacingSm),
+      _buildPartnersTable(partnersData),
+      pw.SizedBox(height: PdfStyles.spacingLg),
+    ],
+
+    // ============= سجل المسحوبات =============
+    pw.Text(
+      'سجل المسحوبات (${withdrawalsData.length} عملية)',
+      style: PdfStyles.headingStyle(),
+    ),
+    pw.SizedBox(height: PdfStyles.spacingSm),
+
+    if (withdrawalsData.isEmpty)
+      pw.Container(
+        padding: const pw.EdgeInsets.all(PdfStyles.spacingLg),
+        decoration: pw.BoxDecoration(
+          color: PdfStyles.backgroundLight,
+          borderRadius: pw.BorderRadius.circular(6),
+        ),
+        child: pw.Center(
+          child: pw.Text(
+            'لا توجد مسحوبات مسجلة',
+            style: PdfStyles.bodyStyle(color: PdfStyles.textSecondary),
+          ),
+        ),
+      )
+    else
+      _buildWithdrawalsTable(withdrawalsData, supplierName),
+
+    pw.SizedBox(height: PdfStyles.spacingLg),
+
+    // ============= ملاحظة ختامية =============
+    pw.Container(
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),
+      decoration: pw.BoxDecoration(
+        color: PdfStyles.backgroundLight,
+        borderRadius: pw.BorderRadius.circular(6),
+      ),
+      child: pw.Row(
+        children: [
+          pw.Icon(
+            pw.IconData(0xe88f), // info icon
+            size: 12,
+            color: PdfStyles.textSecondary,
+          ),
+          pw.SizedBox(width: PdfStyles.spacingXs),
+          pw.Expanded(
+            child: pw.Text(
+              'هذا التقرير يعرض تفاصيل الأرباح والمسحوبات للمورد/الشراكة. جميع الأرقام محدثة حتى تاريخ الطباعة.',
+              style: PdfStyles.captionStyle(color: PdfStyles.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ];
+
+  return await buildPdfDocument(
+    reportTitle: 'تقرير تفاصيل: $supplierName',
+    content: content,
+  );
+}
+
+/// بناء جدول الشركاء
+pw.Widget _buildPartnersTable(List<Map<String, Object>> partnersData) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(25),
+      1: const pw.FlexColumnWidth(3),
+      2: const pw.FixedColumnWidth(70),
+      3: const pw.FixedColumnWidth(80),
+    },
+    children: [
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('اسم الشريك'),
+          _buildTableHeaderCell('النسبة %'),
+          _buildTableHeaderCell('نصيب الربح'),
+        ],
+      ),
+      ...partnersData.asMap().entries.map((entry) {
+        final index = entry.key;
+        final partner = entry.value;
+        final isEven = index % 2 == 0;
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            _buildTableCell(partner['partnerName'].toString()),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingXs),
+              child: pw.Center(
+                child: pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
+                  decoration: pw.BoxDecoration(
+                    color: PdfStyles.successColor.shade(0.2),
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Text(
+                    '${partner['sharePercentage']}%',
+                    style: PdfStyles.captionStyle(color: PdfStyles.successColor),
+                  ),
+                ),
+              ),
+            ),
+            _buildTableCell(
+              _formatCurrency((partner['partnerShare'] as num).toDouble()),
+            ),
+          ],
+        );
+      }),
+    ],
+  );
+}
+
+/// بناء جدول المسحوبات
+pw.Widget _buildWithdrawalsTable(List<Map<String, dynamic>> withdrawalsData, String supplierName) {
+  return pw.Table(
+    border: pw.TableBorder.all(color: PdfStyles.borderColor, width: 0.5),
+    columnWidths: {
+      0: const pw.FixedColumnWidth(25),
+      1: const pw.FlexColumnWidth(3),
+      2: const pw.FixedColumnWidth(70),
+      3: const pw.FixedColumnWidth(70),
+      4: const pw.FlexColumnWidth(2),
+    },
+    children: [
+      pw.TableRow(
+        decoration: PdfStyles.tableHeaderDecoration(),
+        children: [
+          _buildTableHeaderCell('#'),
+          _buildTableHeaderCell('المستفيد'),
+          _buildTableHeaderCell('التاريخ'),
+          _buildTableHeaderCell('المبلغ'),
+          _buildTableHeaderCell('ملاحظات'),
+        ],
+      ),
+      ...withdrawalsData.asMap().entries.map((entry) {
+        final index = entry.key;
+        final withdrawal = entry.value;
+        final isEven = index % 2 == 0;
+        
+        final partnerName = withdrawal['PartnerName'] as String?;
+        final amount = (withdrawal['WithdrawalAmount'] as num).toDouble();
+        final date = DateTime.parse(withdrawal['WithdrawalDate'] as String);
+        final notes = withdrawal['Notes'] as String?;
+
+        return pw.TableRow(
+          decoration: isEven
+              ? PdfStyles.tableCellDecorationEven()
+              : PdfStyles.tableCellDecorationOdd(),
+          children: [
+            _buildTableCell((index + 1).toString()),
+            _buildTableCell(partnerName ?? supplierName),
+            _buildTableCell(_formatDate(date)),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(PdfStyles.spacingXs),
+              child: pw.Text(
+                _formatCurrency(amount),
+                style: PdfStyles.tableCellStyle().copyWith(
+                  color: PdfStyles.errorColor,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+                textAlign: pw.TextAlign.center,
+              ),
+            ),
+            _buildTableCell(notes ?? '-'),
+          ],
+        );
+      }),
+    ],
+  );
+}
 
 }

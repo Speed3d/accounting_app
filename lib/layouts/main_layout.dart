@@ -97,7 +97,7 @@ class _MainLayoutState extends State<MainLayout> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_outlined),
             activeIcon: const Icon(Icons.home),
-            label: l10n.homePage,
+            label: l10n.home,
           ),
 
           // لوحة الاحصائيات

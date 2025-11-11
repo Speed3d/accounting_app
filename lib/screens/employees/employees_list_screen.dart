@@ -193,6 +193,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               icon: Icons.badge_outlined,
               title: l10n.noEmployees,
               message: l10n.startByAddingEmployee,
+              // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
               actionText: _authService.canManageEmployees 
                   ? l10n.addEmployee 
                   : null,
@@ -222,7 +223,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
         },
       ),
 
-      // ============= زر الإضافة =============
+      // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
       floatingActionButton: _authService.canManageEmployees
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddEmployee,

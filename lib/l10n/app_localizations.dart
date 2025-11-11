@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'More'**
   String get more;
 
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
   /// No description provided for @customization.
   ///
   /// In en, this message translates to:
@@ -608,10 +614,10 @@ abstract class AppLocalizations {
   /// **'Base salary is required'**
   String get baseSalaryRequired;
 
-  /// Validation error message when non-numeric value is entered
+  /// Invalid number error message
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid number'**
+  /// **'Please enter a valid number'**
   String get enterValidNumber;
 
   /// No description provided for @hireDate.
@@ -4601,7 +4607,7 @@ abstract class AppLocalizations {
   /// No description provided for @logoutConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to logout?'**
+  /// **'Do you want to logout?'**
   String get logoutConfirmation;
 
   /// No description provided for @errorOpeningReports.
@@ -4874,10 +4880,10 @@ abstract class AppLocalizations {
   /// **'Filter by Days'**
   String get filterByDays;
 
-  /// No description provided for @customDays.
+  /// Custom period button
   ///
   /// In en, this message translates to:
-  /// **'Custom Selection'**
+  /// **'Custom Period'**
   String get customDays;
 
   /// No description provided for @customize.
@@ -4886,25 +4892,25 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get customize;
 
-  /// No description provided for @daysCount.
+  /// Days count display
   ///
   /// In en, this message translates to:
-  /// **'{count} Days'**
+  /// **'{count} days'**
   String daysCount(String count);
 
-  /// No description provided for @selectCustomDays.
+  /// Custom days dialog title
   ///
   /// In en, this message translates to:
-  /// **'Select Custom Days'**
+  /// **'Select Number of Days'**
   String get selectCustomDays;
 
-  /// No description provided for @numberOfDays.
+  /// Days input field label
   ///
   /// In en, this message translates to:
   /// **'Number of Days'**
   String get numberOfDays;
 
-  /// No description provided for @apply.
+  /// Apply changes button
   ///
   /// In en, this message translates to:
   /// **'Apply'**
@@ -4981,6 +4987,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Commercial Registration Number'**
   String get commercialRegistrationNumber;
+
+  /// Backup success dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Success! ✓'**
+  String get backupSuccessTitle;
+
+  /// Backup success message content
+  ///
+  /// In en, this message translates to:
+  /// **'Backup file saved to Downloads folder'**
+  String get backupSuccessContent;
+
+  /// Backup file location label
+  ///
+  /// In en, this message translates to:
+  /// **'File location:'**
+  String get backupFileLocation;
+
+  /// Path copied to clipboard message
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied'**
+  String get pathCopied;
+
+  /// Copy path button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy path'**
+  String get copyPath;
+
+  /// Share button
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// Button to share last created backup file
+  ///
+  /// In en, this message translates to:
+  /// **'Share last backup'**
+  String get shareLastBackup;
+
+  /// Share failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Share failed'**
+  String get shareFailed;
+
+  /// Filter button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Overdue Customers'**
+  String get filterOverdueCustomers;
+
+  /// Period selection section title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Period'**
+  String get selectPeriod;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No Overdue Customers! 🎉'**
+  String get noOverdueCustomers;
+
+  /// Empty state message
+  ///
+  /// In en, this message translates to:
+  /// **'All customers are active within the last {days} days'**
+  String noOverdueCustomersMessage(int days);
+
+  /// Debt label
+  ///
+  /// In en, this message translates to:
+  /// **'Debt'**
+  String get debt;
+
+  /// No description provided for @appLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'App Locked'**
+  String get appLocked;
+
+  /// No description provided for @appLockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked for security'**
+  String get appLockedDescription;
+
+  /// No description provided for @lastActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Last active'**
+  String get lastActive;
+
+  /// No description provided for @fewMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'few minutes ago'**
+  String get fewMinutesAgo;
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @unlockWithBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Biometric'**
+  String get unlockWithBiometric;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password'**
+  String get enterPassword;
+
+  /// No description provided for @wrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password'**
+  String get wrongPassword;
+
+  /// No description provided for @attemptsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'attempts remaining'**
+  String get attemptsRemaining;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Please try again after 30 seconds'**
+  String get tooManyAttempts;
+
+  /// No description provided for @lockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporarily locked. Wait'**
+  String get lockedOut;
+
+  /// No description provided for @seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'seconds'**
+  String get seconds;
+
+  /// No description provided for @appLockSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock Settings'**
+  String get appLockSettings;
+
+  /// No description provided for @appLockSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable lock when leaving the app'**
+  String get appLockSettingsDescription;
+
+  /// No description provided for @enableAppLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Auto Lock'**
+  String get enableAppLock;
+
+  /// No description provided for @appLockEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto lock enabled'**
+  String get appLockEnabled;
+
+  /// No description provided for @appLockDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto lock disabled'**
+  String get appLockDisabled;
+
+  /// No description provided for @appLockEnabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto lock enabled successfully'**
+  String get appLockEnabledSuccess;
+
+  /// No description provided for @appLockDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto lock disabled successfully'**
+  String get appLockDisabledSuccess;
+
+  /// No description provided for @lockDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Duration'**
+  String get lockDuration;
+
+  /// No description provided for @immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get immediately;
+
+  /// No description provided for @oneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute'**
+  String get oneMinute;
+
+  /// No description provided for @twoMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'2 minutes'**
+  String get twoMinutes;
+
+  /// No description provided for @fiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get fiveMinutes;
+
+  /// No description provided for @tenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'10 minutes'**
+  String get tenMinutes;
+
+  /// No description provided for @lockDurationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration changed to'**
+  String get lockDurationChanged;
+
+  /// No description provided for @appLockInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.'**
+  String get appLockInfo;
 }
 
 class _AppLocalizationsDelegate

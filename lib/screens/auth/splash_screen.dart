@@ -42,7 +42,8 @@ class _SplashScreenState extends State<SplashScreen>
   File? _companyLogo;                          // شعار الشركة من قاعدة البيانات
   
   // ============= الثوابت =============
-  static const int trialPeriodDays = 14;      // مدة الفترة التجريبية (14 يوم)
+  static const int trialPeriodDays = 17;      // مدة الفترة التجريبية (14 يوم)
+  // static const int trialPeriodDays = 14;      // مدة الفترة التجريبية (14 يوم)
   static const int splashDuration = 2500;     // مدة عرض الشاشة (2.5 ثانية)
 
   // ===========================================================================

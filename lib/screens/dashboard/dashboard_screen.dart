@@ -122,6 +122,15 @@ Future<void> _loadDashboardData() async {
       appBar: AppBar(
         title: Text(l10n.statisticsinformation),
         actions: [
+           IconButton(
+            icon: Badge(
+            label: Text('$_overdueDaysThreshold'),
+            isLabelVisible: _overdueCustomers.isNotEmpty,
+            child: const Icon(Icons.filter_list),
+           ),
+            onPressed: () => _showOverdueFilterSheet(l10n),
+            tooltip: l10n.filterOverdueCustomers,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDashboardData,
@@ -521,25 +530,26 @@ Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
       if (_lowStockProducts.isNotEmpty && _overdueCustomers.isNotEmpty)
         const SizedBox(height: AppConstants.spacingSm),
 
-      // ✅ Hint: بطاقة العملاء المتأخرين (مع فلتر الأيام)
-      if (_overdueCustomers.isNotEmpty)
-        Column(
-          children: [
-            _buildAlertCard(
-              title: l10n.overdueCustomersAlert,
-              subtitle: l10n.overdueCustomersAlertSubtitle(_overdueCustomers.length),
-              icon: Icons.people_outline,
-              color: AppColors.warning,
-              isDark: isDark,
-              onTap: () => _showOverdueCustomersDialog(l10n),
-            ),
+     // تم تعطيله واشتخدام الفلتر اعلى الصفحة
+      // // ✅ Hint: بطاقة العملاء المتأخرين (مع فلتر الأيام)
+      // if (_overdueCustomers.isNotEmpty)
+      //   Column(
+      //     children: [
+      //       _buildAlertCard(
+      //         title: l10n.overdueCustomersAlert,
+      //         subtitle: l10n.overdueCustomersAlertSubtitle(_overdueCustomers.length),
+      //         icon: Icons.people_outline,
+      //         color: AppColors.warning,
+      //         isDark: isDark,
+      //         onTap: () => _showOverdueCustomersDialog(l10n),
+      //       ),
             
-            const SizedBox(height: AppConstants.spacingSm),
+      //       const SizedBox(height: AppConstants.spacingSm),
             
-            // ✅ Hint: فلتر اختيار عدد الأيام (جديد)
-            _buildOverdueDaysFilter(l10n, isDark),
-          ],
-        ),
+      //       // ✅ Hint: فلتر اختيار عدد الأيام (جديد)
+      //       _buildOverdueDaysFilter(l10n, isDark),
+      //     ],
+      //   ),
     ],
   );
 }
@@ -1355,4 +1365,469 @@ Widget _buildAlertCard({
       ),
     );
   }
+
+  // ← Hint: هذه الدالة تُضاف في نهاية الكلاس قبل الإغلاق
+
+// ==========================================================================
+// 🔍 Bottom Sheet لفلتر العملاء المتأخرين
+// ==========================================================================
+/// ← Hint: دالة جديدة تعرض Bottom Sheet مع فلتر الأيام وقائمة العملاء
+void _showOverdueFilterSheet(AppLocalizations l10n) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => StatefulBuilder(
+      builder: (context, setSheetState) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                // ← Hint: Header مع Handle
+                Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingMd),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.textHintDark
+                              : AppColors.textHintLight,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: AppConstants.spacingMd),
+                      
+                      // العنوان
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.filter_list_rounded,
+                            color: AppColors.info,
+                            size: 28,
+                          ),
+                          const SizedBox(width: AppConstants.spacingSm),
+                          Expanded(
+                            child: Text(
+                              l10n.filterOverdueCustomers,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ← Hint: المحتوى
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(AppConstants.spacingMd),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ← Hint: فلتر اختيار الأيام
+                        _buildDaysFilterSection(l10n, isDark, setSheetState),
+
+                        const SizedBox(height: AppConstants.spacingXl),
+
+                        // ← Hint: قائمة العملاء المتأخرين
+                        _buildOverdueCustomersListInSheet(l10n, isDark),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ),
+  );
+}
+
+// ==========================================================================
+// ← Hint: بناء قسم فلتر الأيام في Bottom Sheet
+// ==========================================================================
+Widget _buildDaysFilterSection(
+  AppLocalizations l10n,
+  bool isDark,
+  StateSetter setSheetState,
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // العنوان
+      Row(
+        children: [
+          Icon(
+            Icons.date_range_rounded,
+            color: AppColors.info,
+            size: 20,
+          ),
+          const SizedBox(width: AppConstants.spacingSm),
+          Text(
+            l10n.selectPeriod,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: AppConstants.spacingMd),
+
+      // ← Hint: أزرار اختيار سريع
+      Wrap(
+        spacing: AppConstants.spacingSm,
+        runSpacing: AppConstants.spacingSm,
+        children: [
+          _buildDaysChip(7, l10n, isDark, setSheetState),
+          _buildDaysChip(15, l10n, isDark, setSheetState),
+          _buildDaysChip(30, l10n, isDark, setSheetState),
+          _buildDaysChip(60, l10n, isDark, setSheetState),
+          _buildDaysChip(90, l10n, isDark, setSheetState),
+        ],
+      ),
+
+      const SizedBox(height: AppConstants.spacingMd),
+
+      // ← Hint: زر الاختيار المخصص
+      OutlinedButton.icon(
+        onPressed: () => _showCustomDaysDialogInSheet(l10n, setSheetState),
+        icon: const Icon(Icons.edit_calendar, size: 18),
+        label: Text(l10n.customDays),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.info,
+          side: BorderSide(color: AppColors.info),
+        ),
+      ),
+    ],
+  );
+}
+
+// ==========================================================================
+// ← Hint: بناء Chip لاختيار الأيام في Bottom Sheet
+// ==========================================================================
+Widget _buildDaysChip(
+  int days,
+  AppLocalizations l10n,
+  bool isDark,
+  StateSetter setSheetState,
+) {
+  final isSelected = _overdueDaysThreshold == days;
+
+  return FilterChip(
+    label: Text(
+      l10n.daysCount(days.toString()),
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    ),
+    selected: isSelected,
+    onSelected: (selected) {
+      if (selected) {
+        // ← Hint: تحديث كل من الـ Sheet والصفحة الرئيسية
+        setSheetState(() {
+          _overdueDaysThreshold = days;
+        });
+        setState(() {
+          _overdueDaysThreshold = days;
+        });
+        _loadDashboardData();
+      }
+    },
+    selectedColor: AppColors.info.withOpacity(0.3),
+    checkmarkColor: AppColors.info,
+    backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+    side: BorderSide(
+      color: isSelected ? AppColors.info : Colors.transparent,
+      width: 2,
+    ),
+  );
+}
+
+// ==========================================================================
+// ← Hint: حوار اختيار أيام مخصص في Bottom Sheet
+// ==========================================================================
+Future<void> _showCustomDaysDialogInSheet(
+  AppLocalizations l10n,
+  StateSetter setSheetState,
+) async {
+  final controller = TextEditingController(
+    text: _overdueDaysThreshold.toString(),
+  );
+
+  final result = await showDialog<int>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.selectCustomDays),
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          labelText: l10n.numberOfDays,
+          hintText: '30',
+          suffixIcon: const Icon(Icons.calendar_today),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(l10n.cancel),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final days = int.tryParse(controller.text);
+            if (days != null && days > 0) {
+              Navigator.pop(ctx, days);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.enterValidNumber),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          },
+          child: Text(l10n.apply),
+        ),
+      ],
+    ),
+  );
+
+  if (result != null && result != _overdueDaysThreshold) {
+    // ← Hint: تحديث كل من الـ Sheet والصفحة الرئيسية
+    setSheetState(() {
+      _overdueDaysThreshold = result;
+    });
+    setState(() {
+      _overdueDaysThreshold = result;
+    });
+    _loadDashboardData();
+  }
+}
+
+// ==========================================================================
+// ← Hint: بناء قائمة العملاء المتأخرين في Bottom Sheet
+// ==========================================================================
+Widget _buildOverdueCustomersListInSheet(AppLocalizations l10n, bool isDark) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // العنوان مع العدد
+      Row(
+        children: [
+          Icon(
+            Icons.people_outline,
+            color: AppColors.warning,
+            size: 20,
+          ),
+          const SizedBox(width: AppConstants.spacingSm),
+          Text(
+            l10n.overdueCustomers,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: AppConstants.spacingSm),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: _overdueCustomers.isEmpty
+                  ? AppColors.success
+                  : AppColors.warning,
+              borderRadius: AppConstants.borderRadiusFull,
+            ),
+            child: Text(
+              '${_overdueCustomers.length}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: AppConstants.spacingMd),
+
+      // ← Hint: حالة الفراغ
+      if (_overdueCustomers.isEmpty)
+        Container(
+          padding: const EdgeInsets.all(AppConstants.spacingXl),
+          decoration: BoxDecoration(
+            color: AppColors.success.withOpacity(0.05),
+            borderRadius: AppConstants.borderRadiusMd,
+            border: Border.all(
+              color: AppColors.success.withOpacity(0.3),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: AppColors.success,
+              ),
+              const SizedBox(height: AppConstants.spacingMd),
+              Text(
+                l10n.noOverdueCustomers,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.success,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppConstants.spacingSm),
+              Text(
+                l10n.noOverdueCustomersMessage(_overdueDaysThreshold),
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        )
+      else
+        // ← Hint: قائمة العملاء
+        CustomCard(
+          padding: EdgeInsets.zero,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _overdueCustomers.length,
+            separatorBuilder: (context, index) => Divider(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              height: 1,
+              indent: 72,
+            ),
+            itemBuilder: (context, index) {
+              final customer = _overdueCustomers[index];
+              final customerName = customer['CustomerName'] as String;
+              final remaining = (customer['Remaining'] as num).toDouble();
+              final daysSince = (customer['DaysSinceLastTransaction'] as num?)
+                      ?.toInt() ??
+                  0;
+              final phone = customer['Phone'] as String?;
+
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppConstants.spacingMd,
+                  vertical: AppConstants.spacingSm,
+                ),
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.warning.withOpacity(0.1),
+                  child: Icon(
+                    Icons.person,
+                    color: AppColors.warning,
+                    size: 24,
+                  ),
+                ),
+                title: Text(
+                  customerName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.daysSinceLastTransaction(daysSince),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    if (phone != null && phone.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            size: 14,
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            phone,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      formatCurrency(remaining),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.debt,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.error,
+                            fontSize: 10,
+                          ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+    ],
+  );
+}
+
+
+
 }

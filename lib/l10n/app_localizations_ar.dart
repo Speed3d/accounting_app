@@ -36,6 +36,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get more => 'المزيد';
 
   @override
+  String get home => 'الرئيسية';
+
+  @override
   String get customization => 'التخصيص';
 
   @override
@@ -272,7 +275,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get baseSalaryRequired => 'الراتب الأساسي مطلوب';
 
   @override
-  String get enterValidNumber => 'أدخل رقماً صحيحاً';
+  String get enterValidNumber => 'الرجاء إدخال رقم صحيح';
 
   @override
   String get hireDate => 'تاريخ التعيين';
@@ -2458,7 +2461,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logout => 'تسجيل الخروج';
 
   @override
-  String get logoutConfirmation => 'هل أنت متأكد من تسجيل الخروج؟';
+  String get logoutConfirmation => 'هل تريد تسجيل الخروج؟';
 
   @override
   String get errorOpeningReports => 'خطأ في فتح صفحة التقارير';
@@ -2603,7 +2606,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterByDays => 'تصفية حسب الأيام';
 
   @override
-  String get customDays => 'اختيار مخصص';
+  String get customDays => 'فترة مخصصة';
 
   @override
   String get customize => 'تخصيص';
@@ -2614,7 +2617,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get selectCustomDays => 'اختر عدد الأيام المخصص';
+  String get selectCustomDays => 'اختر عدد الأيام';
 
   @override
   String get numberOfDays => 'عدد الأيام';
@@ -2657,4 +2660,129 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commercialRegistrationNumber => 'رقم السجل التجاري';
+
+  @override
+  String get backupSuccessTitle => 'تم بنجاح! ✓';
+
+  @override
+  String get backupSuccessContent =>
+      'تم حفظ النسخة الاحتياطية في مجلد التنزيلات';
+
+  @override
+  String get backupFileLocation => 'موقع الملف:';
+
+  @override
+  String get pathCopied => 'تم نسخ المسار';
+
+  @override
+  String get copyPath => 'نسخ المسار';
+
+  @override
+  String get share => 'مشاركة';
+
+  @override
+  String get shareLastBackup => 'مشاركة آخر نسخة احتياطية';
+
+  @override
+  String get shareFailed => 'فشلت عملية المشاركة';
+
+  @override
+  String get filterOverdueCustomers => 'تصفية العملاء المتأخرين';
+
+  @override
+  String get selectPeriod => 'اختر الفترة الزمنية';
+
+  @override
+  String get noOverdueCustomers => 'لا يوجد عملاء متأخرون! 🎉';
+
+  @override
+  String noOverdueCustomersMessage(int days) {
+    return 'جميع العملاء نشطون خلال الـ $days يوم الماضية';
+  }
+
+  @override
+  String get debt => 'دين';
+
+  @override
+  String get appLocked => 'التطبيق مقفول';
+
+  @override
+  String get appLockedDescription => 'تم قفل التطبيق للحماية';
+
+  @override
+  String get lastActive => 'آخر نشاط';
+
+  @override
+  String get fewMinutesAgo => 'منذ دقائق';
+
+  @override
+  String get unlock => 'فتح القفل';
+
+  @override
+  String get unlockWithBiometric => 'فتح بالبصمة';
+
+  @override
+  String get enterPassword => 'أدخل كلمة المرور';
+
+  @override
+  String get wrongPassword => 'كلمة المرور خاطئة';
+
+  @override
+  String get attemptsRemaining => 'محاولة متبقية';
+
+  @override
+  String get tooManyAttempts =>
+      'محاولات كثيرة فاشلة. الرجاء المحاولة بعد 30 ثانية';
+
+  @override
+  String get lockedOut => 'تم القفل مؤقتاً. انتظر';
+
+  @override
+  String get seconds => 'ثانية';
+
+  @override
+  String get appLockSettings => 'إعدادات القفل التلقائي';
+
+  @override
+  String get appLockSettingsDescription => 'تفعيل القفل عند الخروج من التطبيق';
+
+  @override
+  String get enableAppLock => 'تفعيل القفل التلقائي';
+
+  @override
+  String get appLockEnabled => 'القفل التلقائي مُفعّل';
+
+  @override
+  String get appLockDisabled => 'القفل التلقائي مُعطّل';
+
+  @override
+  String get appLockEnabledSuccess => 'تم تفعيل القفل التلقائي';
+
+  @override
+  String get appLockDisabledSuccess => 'تم إيقاف القفل التلقائي';
+
+  @override
+  String get lockDuration => 'المدة قبل القفل';
+
+  @override
+  String get immediately => 'فوراً';
+
+  @override
+  String get oneMinute => '1 دقيقة';
+
+  @override
+  String get twoMinutes => '2 دقيقة';
+
+  @override
+  String get fiveMinutes => '5 دقائق';
+
+  @override
+  String get tenMinutes => '10 دقائق';
+
+  @override
+  String get lockDurationChanged => 'تم تغيير المدة إلى';
+
+  @override
+  String get appLockInfo =>
+      'سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة.';
 }

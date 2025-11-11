@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// 🧠 كلاس مسؤول عن إنشاء النسخ الاحتياطي واستعادته بشكل آمن ومشفر
 class BackupService {
@@ -59,9 +60,31 @@ class BackupService {
   }
 
   // ==========================================================
-  // 🗂️ إنشاء ومشاركة نسخة احتياطية مشفرة
+  // ← Hint: دالة للحصول على مجلد Downloads مع طلب الأذونات
   // ==========================================================
-  Future<String> createAndShareBackup() async {
+  Future<Directory?> _getDownloadsDirectory() async {
+    // ← Hint: على Android 10+ لا نحتاج أذونات للكتابة في Downloads
+    if (Platform.isAndroid) {
+      // ← Hint: محاولة الحصول على مجلد Downloads
+      final directory = Directory('/storage/emulated/0/Download');
+      if (await directory.exists()) {
+        return directory;
+      }
+      
+      // ← Hint: إذا فشل، نستخدم External Storage Directory
+      return await getExternalStorageDirectory();
+    } else if (Platform.isIOS) {
+      // ← Hint: على iOS نستخدم Documents Directory
+      return await getApplicationDocumentsDirectory();
+    }
+    return null;
+  }
+
+  // ==========================================================
+  // 🗂️ إنشاء ومشاركة نسخة احتياطية مشفرة
+  // ← Hint: المنطق الجديد - حفظ في Downloads أولاً ثم المشاركة
+  // ==========================================================
+  Future<Map<String, dynamic>> createAndShareBackup() async {
     try {
       print("🔹 بدء إنشاء النسخة الاحتياطية...");
 
@@ -72,7 +95,10 @@ class BackupService {
       // تحقق من وجود قاعدة البيانات
       if (!await dbFile.exists()) {
         print("⚠️ ملف قاعدة البيانات غير موجود في: ${dbFile.path}");
-        return 'ملف قاعدة البيانات غير موجود.';
+        return {
+          'status': 'error',
+          'message': 'ملف قاعدة البيانات غير موجود.',
+        };
       }
 
       // قراءة محتوى قاعدة البيانات كـ Bytes
@@ -100,36 +126,74 @@ class BackupService {
       print("🔹 تشفير البيانات...");
       final encryptedData = encrypter.encryptBytes(dataToEncrypt, iv: iv);
 
-      // 🔸 تحديد مكان مؤقت لحفظ الملف قبل المشاركة
-      final tempDir = await getTemporaryDirectory();
-      final backupFileName =
-          'backup-${DateTime.now().toIso8601String().replaceAll(":", "-")}.$_backupFileExtension';
+      // ← Hint: إنشاء اسم ملف مع التاريخ والوقت
+      final timestamp = DateTime.now();
+      final backupFileName = 'backup-${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')}-${timestamp.hour.toString().padLeft(2, '0')}-${timestamp.minute.toString().padLeft(2, '0')}.$_backupFileExtension';
 
-      final backupFile = File(p.join(tempDir.path, backupFileName));
+      // ← Hint: الخطوة 1 - حفظ الملف في Downloads أولاً
+      final downloadsDir = await _getDownloadsDirectory();
+      
+      if (downloadsDir == null) {
+        return {
+          'status': 'error',
+          'message': 'لا يمكن الوصول إلى مجلد التنزيلات',
+        };
+      }
 
-      // كتابة البيانات المشفرة داخل الملف
+      final backupFile = File(p.join(downloadsDir.path, backupFileName));
+      
+      // ← Hint: كتابة البيانات المشفرة في ملف Downloads
       await backupFile.writeAsBytes(encryptedData.bytes);
 
-      print("✅ تم إنشاء الملف بنجاح في: ${backupFile.path}");
+      print("✅ تم حفظ الملف في: ${backupFile.path}");
 
-      // 🔸 مشاركة النسخة الاحتياطية مع المستخدم (WhatsApp, Email, Drive...)
-      final result = await Share.shareXFiles(
-        [XFile(backupFile.path)],
-        text: '📦 ملف النسخة الاحتياطية لتطبيق المحاسبة',
-      );
+      // ← Hint: الخطوة 2 - إرجاع معلومات الملف المحفوظ
+      return {
+        'status': 'success',
+        'message': 'تم حفظ النسخة الاحتياطية بنجاح',
+        'filePath': backupFile.path,
+        'fileName': backupFileName,
+      };
 
-      // 🔸 النتيجة النهائية
-      if (result.status == ShareResultStatus.success) {
-        print("✅ تم إنشاء ومشاركة النسخة الاحتياطية بنجاح!");
-        return 'نجاح';
-      } else {
-        print("ℹ️ تم إلغاء المشاركة من قبل المستخدم.");
-        return 'تم إلغاء المشاركة.';
-      }
     } catch (e) {
       // طباعة الخطأ في الـ Console لتتبع المشكلة
       print('❌ خطأ أثناء إنشاء النسخة الاحتياطية: $e');
-      return 'حدث خطأ غير متوقع أثناء إنشاء النسخة الاحتياطية.\nتفاصيل: $e';
+      return {
+        'status': 'error',
+        'message': 'حدث خطأ: ${e.toString()}',
+      };
+    }
+  }
+
+  // ==========================================================
+  // ← Hint: دالة جديدة لمشاركة ملف موجود
+  // ==========================================================
+  Future<bool> shareBackupFile(String filePath) async {
+    try {
+      print("🔹 مشاركة ملف النسخة الاحتياطية...");
+      
+      final file = File(filePath);
+      if (!await file.exists()) {
+        print("⚠️ الملف غير موجود: $filePath");
+        return false;
+      }
+
+      // ← Hint: مشاركة الملف باستخدام share_plus
+      final result = await Share.shareXFiles(
+        [XFile(filePath)],
+        text: '📦 ملف النسخة الاحتياطية لتطبيق المحاسبة',
+      );
+
+      if (result.status == ShareResultStatus.success) {
+        print("✅ تم مشاركة الملف بنجاح!");
+        return true;
+      } else {
+        print("ℹ️ تم إلغاء المشاركة من قبل المستخدم.");
+        return false;
+      }
+    } catch (e) {
+      print('❌ خطأ أثناء مشاركة الملف: $e');
+      return false;
     }
   }
 

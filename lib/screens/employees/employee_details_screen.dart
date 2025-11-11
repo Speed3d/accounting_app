@@ -111,14 +111,16 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // ← Hint: التحقق من صلاحية التعديل/الإدارة
+    final canManage = _authService.isAdmin || _authService.canManageEmployees;
 
     return Scaffold(
       // ============= AppBar مع TabBar =============
       appBar: AppBar(
         title: Text(_currentEmployee.fullName),
         actions: [
-          // زر التعديل
-          if (_authService.canManageEmployees)
+          // ← Hint: زر التعديل يظهر فقط لمن لديه صلاحية الإدارة
+          if (canManage)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: l10n.editEmployee,
@@ -171,8 +173,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildPayrollTab(l10n),
-                _buildAdvancesTab(l10n),
+                _buildPayrollTab(l10n, canManage),
+                _buildAdvancesTab(l10n, canManage),
               ],
             ),
           ),
@@ -384,7 +386,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   // ============================================================
   // 💰 تبويب سجل الرواتب
   // ============================================================
-  Widget _buildPayrollTab(AppLocalizations l10n) {
+  Widget _buildPayrollTab(AppLocalizations l10n, bool canManage) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: FutureBuilder<List<PayrollEntry>>(
@@ -409,8 +411,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               icon: Icons.payments_outlined,
               title: l10n.noPayrolls,
               message: l10n.noPayrollsMessage,
-              actionText: l10n.paymentAction,
-              onAction: _navigateToAddPayroll,
+              // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
+              actionText: canManage ? l10n.paymentAction : null,
+              onAction: canManage ? _navigateToAddPayroll : null,
             );
           }
 
@@ -427,13 +430,15 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         },
       ),
 
-      // زر الإضافة
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddPayroll,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.paymentAction),
-        tooltip: l10n.addNewPayrollTooltip,
-      ),
+      // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToAddPayroll,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.paymentAction),
+              tooltip: l10n.addNewPayrollTooltip,
+            )
+          : null,
     );
   }
 
@@ -533,7 +538,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   // ============================================================
   // 💳 تبويب سجل السلف
   // ============================================================
-  Widget _buildAdvancesTab(AppLocalizations l10n) {
+  Widget _buildAdvancesTab(AppLocalizations l10n, bool canManage) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: FutureBuilder<List<EmployeeAdvance>>(
@@ -558,8 +563,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               icon: Icons.request_quote_outlined,
               title: l10n.noAdvances,
               message: l10n.noAdvancesMessage,
-              actionText: l10n.addAdvanceAction,
-              onAction: _navigateToAddAdvance,
+              // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
+              actionText: canManage ? l10n.addAdvanceAction : null,
+              onAction: canManage ? _navigateToAddAdvance : null,
             );
           }
 
@@ -576,13 +582,15 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         },
       ),
 
-      // زر الإضافة
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddAdvance,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addAdvanceButton),
-        tooltip: l10n.addNewAdvanceTooltip,
-      ),
+      // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToAddAdvance,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addAdvanceButton),
+              tooltip: l10n.addNewAdvanceTooltip,
+            )
+          : null,
     );
   }
 

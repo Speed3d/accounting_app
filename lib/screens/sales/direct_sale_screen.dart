@@ -38,7 +38,14 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   @override
   void initState() {
     super.initState();
-    _productsFuture = dbHelper.getAllProductsWithSupplierName();
+    // ← Hint: تحميل المنتجات التي لديها كمية أكبر من 0 فقط
+    _productsFuture = _loadAvailableProducts();
+  }
+
+  // ← Hint: دالة لتحميل المنتجات المتوفرة فقط (الكمية > 0)
+  Future<List<Product>> _loadAvailableProducts() async {
+    final allProducts = await dbHelper.getAllProductsWithSupplierName();
+    return allProducts.where((product) => product.quantity > 0).toList();
   }
 
   // ============= دالة إتمام البيع =============
@@ -117,7 +124,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         );
         setState(() {
           _cartItems.clear();
-          _productsFuture = dbHelper.getAllProductsWithSupplierName();
+          // ← Hint: إعادة تحميل المنتجات المتوفرة بعد البيع
+          _productsFuture = _loadAvailableProducts();
         });
       }
     } catch (e) {
@@ -646,7 +654,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
               message: l10n.errorOccurred(snapshot.error.toString()),
               onRetry: () {
                 setState(() {
-                  _productsFuture = dbHelper.getAllProductsWithSupplierName();
+                  // ← Hint: إعادة تحميل المنتجات المتوفرة عند الخطأ
+                  _productsFuture = _loadAvailableProducts();
                 });
               },
             );

@@ -835,7 +835,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppColors.success,
-                          fontSize: 16,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -843,7 +843,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
                   Text(
                     formatCurrency(_netSalary),
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppColors.success,
                     ),
@@ -870,7 +870,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
         Row(
           children: [
             Icon(icon, size: 16, color: color),
-            const SizedBox(width: AppConstants.spacingSm),
+            const SizedBox(width: AppConstants.spacingMd),
             Text(label),
           ],
         ),

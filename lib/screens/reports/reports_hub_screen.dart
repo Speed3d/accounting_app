@@ -73,7 +73,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
             children: [
               Icon(
                 Icons.lock_outline,
-                size: 80,
+                size: 60,
                 color: Theme.of(context).iconTheme.color?.withOpacity(0.3),
               ),
               const SizedBox(height: AppConstants.spacingLg),
@@ -217,13 +217,14 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.all(AppConstants.spacingMd),
+        // تغيير حجم الكرات للجميع
+        padding: const EdgeInsets.all(AppConstants.spacingSm),
         child: Row(
           children: [
             // --- أيقونة التقرير ---
             Container(
-              width: 56,
-              height: 56,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: report.color.withOpacity(0.1),
                 borderRadius: AppConstants.borderRadiusLg,
@@ -231,11 +232,11 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
               child: Icon(
                 report.icon,
                 color: report.color,
-                size: 28,
+                size: 26,
               ),
             ),
 
-            const SizedBox(width: AppConstants.spacingMd),
+            const SizedBox(width: AppConstants.spacingLg),
 
             // --- تفاصيل التقرير ---
             Expanded(
@@ -247,7 +248,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                     report.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
 
@@ -265,7 +266,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
             // --- سهم للانتقال ---
             Icon(
               Icons.arrow_forward_ios,
-              size: 16,
+              size: 20,
               color: Theme.of(context).iconTheme.color?.withOpacity(0.5),
             ),
           ],

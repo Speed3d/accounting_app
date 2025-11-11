@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'pdf_styles.dart';
 
 /// 📄 بناء رأس الصفحة (Header) الموحد لجميع التقارير
+/// ✅ محدّث: أحجام مصغرة للطباعة
 class PdfHeader {
   /// بناء الـ Header
   /// 
@@ -23,12 +24,12 @@ class PdfHeader {
     Map<String, String>? additionalInfo,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(PdfStyles.spacingMd),
+      padding: const pw.EdgeInsets.all(PdfStyles.spacingSm),  // ✅ مصغر من spacingMd
       decoration: pw.BoxDecoration(
         border: pw.Border(
           bottom: pw.BorderSide(
             color: PdfStyles.primaryColor,
-            width: 3,
+            width: 2,  // ✅ مصغر من 3
           ),
         ),
       ),
@@ -44,25 +45,25 @@ class PdfHeader {
                 // الشعار (إذا كان موجوداً)
                 if (logoFile != null && logoFile.existsSync()) ...[
                   pw.Container(
-                    width: 60,
-                    height: 60,
+                    width: 45,   // ✅ مصغر من 60
+                    height: 45,  // ✅ مصغر من 60
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(
                         color: PdfStyles.borderColor,
-                        width: 1,
+                        width: 0.75,  // ✅ مصغر من 1
                       ),
-                      borderRadius: pw.BorderRadius.circular(8),
+                      borderRadius: pw.BorderRadius.circular(6),  // ✅ مصغر من 8
                     ),
                     child: pw.ClipRRect(
-                      horizontalRadius: 8,
-                      verticalRadius: 8,
+                      horizontalRadius: 6,  // ✅ مصغر من 8
+                      verticalRadius: 6,    // ✅ مصغر من 8
                       child: pw.Image(
                         pw.MemoryImage(logoFile.readAsBytesSync()),
                         fit: pw.BoxFit.cover,
                       ),
                     ),
                   ),
-                  pw.SizedBox(width: PdfStyles.spacingMd),
+                  pw.SizedBox(width: PdfStyles.spacingSm),  // ✅ مصغر من spacingMd
                 ],
 
                 // اسم الشركة
@@ -84,7 +85,7 @@ class PdfHeader {
                           ),
                           child: pw.Text(
                             '${entry.key}: ${entry.value}',
-                            style: PdfStyles.smallStyle(),
+                            style: PdfStyles.captionStyle(),  // ✅ مصغر من smallStyle
                           ),
                         ),
                       ),
@@ -104,12 +105,12 @@ class PdfHeader {
                 // عنوان التقرير
                 pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
-                    horizontal: PdfStyles.spacingMd,
-                    vertical: PdfStyles.spacingSm,
+                    horizontal: PdfStyles.spacingSm,  // ✅ مصغر من spacingMd
+                    vertical: PdfStyles.spacingXs,    // ✅ مصغر من spacingSm
                   ),
                   decoration: pw.BoxDecoration(
                     color: PdfStyles.primaryColor.shade(0.1),
-                    borderRadius: pw.BorderRadius.circular(8),
+                    borderRadius: pw.BorderRadius.circular(6),  // ✅ مصغر من 8
                   ),
                   child: pw.Text(
                     reportTitle,
@@ -118,21 +119,24 @@ class PdfHeader {
                   ),
                 ),
 
-                pw.SizedBox(height: PdfStyles.spacingMd),
+                pw.SizedBox(height: PdfStyles.spacingSm),  // ✅ مصغر من spacingMd
 
                 // التاريخ
                 pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
-                    horizontal: PdfStyles.spacingSm,
+                    horizontal: PdfStyles.spacingXs,  // ✅ مصغر من spacingSm
                     vertical: PdfStyles.spacingXs,
                   ),
                   decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfStyles.borderColor),
+                    border: pw.Border.all(
+                      color: PdfStyles.borderColor,
+                      width: 0.75,  // ✅ مصغر من 1
+                    ),
                     borderRadius: pw.BorderRadius.circular(4),
                   ),
                   child: pw.Text(
                     'التاريخ: $reportDate',
-                    style: PdfStyles.smallStyle(),
+                    style: PdfStyles.captionStyle(),  // ✅ مصغر من smallStyle
                   ),
                 ),
               ],

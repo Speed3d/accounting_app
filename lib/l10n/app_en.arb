@@ -10,6 +10,7 @@
     "customers": "Customers",
     "reports": "Reports",
     "more": "More",
+    "home": "Home",
 
     "customization": "Customization",
     "companyInformation": "Company Information",
@@ -1990,7 +1991,150 @@
   "phoneNumber": "Phone Number",
   "email": "Email",
   "address": "Address",
-  "commercialRegistrationNumber": "Commercial Registration Number"
+  "commercialRegistrationNumber": "Commercial Registration Number",
+
+  "@_BACKUP_ADDITIONS": "Backup additions",
+  
+  "backupSuccessTitle": "Success! ✓",
+  "@backupSuccessTitle": {
+    "description": "Backup success dialog title"
+  },
+  
+  "backupSuccessContent": "Backup file saved to Downloads folder",
+  "@backupSuccessContent": {
+    "description": "Backup success message content"
+  },
+  
+  "backupFileLocation": "File location:",
+  "@backupFileLocation": {
+    "description": "Backup file location label"
+  },
+  
+  "pathCopied": "Path copied",
+  "@pathCopied": {
+    "description": "Path copied to clipboard message"
+  },
+  
+  "copyPath": "Copy path",
+  "@copyPath": {
+    "description": "Copy path button tooltip"
+  },
+  
+  "share": "Share",
+  "@share": {
+    "description": "Share button"
+  },
+  
+  "shareLastBackup": "Share last backup",
+  "@shareLastBackup": {
+    "description": "Button to share last created backup file"
+  },
+  
+  "shareFailed": "Share failed",
+  "@shareFailed": {
+    "description": "Share failed message"
+  },
+
+  "@_DASHBOARD_FILTER": "Overdue customers filter additions",
+  
+  "filterOverdueCustomers": "Filter Overdue Customers",
+  "@filterOverdueCustomers": {
+    "description": "Filter button tooltip"
+  },
+  
+  "selectPeriod": "Select Period",
+  "@selectPeriod": {
+    "description": "Period selection section title"
+  },
+  
+  "daysCount": "{count} days",
+  "@daysCount": {
+    "description": "Days count display",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "customDays": "Custom Period",
+  "@customDays": {
+    "description": "Custom period button"
+  },
+  
+  "selectCustomDays": "Select Number of Days",
+  "@selectCustomDays": {
+    "description": "Custom days dialog title"
+  },
+  
+  "numberOfDays": "Number of Days",
+  "@numberOfDays": {
+    "description": "Days input field label"
+  },
+  
+  "enterValidNumber": "Please enter a valid number",
+  "@enterValidNumber": {
+    "description": "Invalid number error message"
+  },
+  
+  "apply": "Apply",
+  "@apply": {
+    "description": "Apply changes button"
+  },
+  
+  "noOverdueCustomers": "No Overdue Customers! 🎉",
+  "@noOverdueCustomers": {
+    "description": "Empty state title"
+  },
+  
+  "noOverdueCustomersMessage": "All customers are active within the last {days} days",
+  "@noOverdueCustomersMessage": {
+    "description": "Empty state message",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "debt": "Debt",
+  "@debt": {
+    "description": "Debt label"
+  },
+
+  "@_APP_LOCK": "App Lock",
+  
+  "appLocked": "App Locked",
+  "appLockedDescription": "App locked for security",
+  "lastActive": "Last active",
+  "fewMinutesAgo": "few minutes ago",
+  "unlock": "Unlock",
+  "unlockWithBiometric": "Unlock with Biometric",
+  "enterPassword": "Enter password",
+  "wrongPassword": "Wrong password",
+  "attemptsRemaining": "attempts remaining",
+  "tooManyAttempts": "Too many failed attempts. Please try again after 30 seconds",
+  "lockedOut": "Temporarily locked. Wait",
+  "seconds": "seconds",
+  "logoutConfirmation": "Do you want to logout?",
+  
+  "appLockSettings": "App Lock Settings",
+  "appLockSettingsDescription": "Enable lock when leaving the app",
+  "enableAppLock": "Enable Auto Lock",
+  "appLockEnabled": "Auto lock enabled",
+  "appLockDisabled": "Auto lock disabled",
+  "appLockEnabledSuccess": "Auto lock enabled successfully",
+  "appLockDisabledSuccess": "Auto lock disabled successfully",
+  
+  "lockDuration": "Lock Duration",
+  "immediately": "Immediately",
+  "oneMinute": "1 minute",
+  "twoMinutes": "2 minutes",
+  "fiveMinutes": "5 minutes",
+  "tenMinutes": "10 minutes",
+  "lockDurationChanged": "Duration changed to",
+  
+  "appLockInfo": "The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication."
 
 
 }

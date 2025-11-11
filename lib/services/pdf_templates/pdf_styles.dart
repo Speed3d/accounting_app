@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 /// 🎨 الألوان والأنماط الموحدة لـ PDF
 /// Hint: نستخدم نفس ألوان التطبيق للتناسق
+/// ✅ محدّث: أحجام خطوط ومسافات مصغرة للطباعة
 class PdfStyles {
   PdfStyles._(); // منع الإنشاء
 
@@ -40,22 +41,22 @@ class PdfStyles {
   /// لون الخلفية الخفيفة
   static const PdfColor backgroundLight = PdfColors.grey50;
 
-  // ============= أحجام الخطوط =============
+  // ============= أحجام الخطوط (محسّنة للطباعة) =============
   
-  static const double fontSizeTitle = 20.0;      // عنوان التقرير
-  static const double fontSizeHeading = 16.0;    // عناوين الأقسام
-  static const double fontSizeSubheading = 14.0; // عناوين فرعية
-  static const double fontSizeBody = 12.0;       // النص العادي
-  static const double fontSizeSmall = 10.0;      // النصوص الصغيرة
-  static const double fontSizeCaption = 8.0;     // التعليقات
+  static const double fontSizeTitle = 15.0;      // عنوان التقرير (كان 20)
+  static const double fontSizeHeading = 12.0;    // عناوين الأقسام (كان 16)
+  static const double fontSizeSubheading = 10.5; // عناوين فرعية (كان 14)
+  static const double fontSizeBody = 9.0;        // النص العادي (كان 12)
+  static const double fontSizeSmall = 8.0;       // النصوص الصغيرة (كان 10)
+  static const double fontSizeCaption = 7.0;     // التعليقات (كان 8)
 
-  // ============= المسافات =============
+  // ============= المسافات (محسّنة للطباعة) =============
   
-  static const double spacingXs = 4.0;
-  static const double spacingSm = 8.0;
-  static const double spacingMd = 16.0;
-  static const double spacingLg = 24.0;
-  static const double spacingXl = 32.0;
+  static const double spacingXs = 3.0;   // كان 4
+  static const double spacingSm = 5.0;   // كان 8
+  static const double spacingMd = 8.0;   // كان 16
+  static const double spacingLg = 12.0;  // كان 24
+  static const double spacingXl = 16.0;  // كان 32
 
   // ============= أنماط النصوص =============
   
@@ -110,14 +111,14 @@ class PdfStyles {
   
   /// نمط رأس الجدول
   static pw.TextStyle tableHeaderStyle() => pw.TextStyle(
-        fontSize: fontSizeBody,
+        fontSize: fontSizeSmall,  // مصغر من fontSizeBody
         fontWeight: pw.FontWeight.bold,
         color: PdfColors.white,
       );
 
   /// نمط خلايا الجدول
   static pw.TextStyle tableCellStyle() => pw.TextStyle(
-        fontSize: fontSizeSmall,
+        fontSize: fontSizeCaption,  // مصغر من fontSizeSmall
         color: textPrimary,
       );
 

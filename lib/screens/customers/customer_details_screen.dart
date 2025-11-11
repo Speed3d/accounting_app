@@ -579,25 +579,70 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
       // === AppBar مع التبويبات ===
       appBar: AppBar(
+
+        // الكود القديم تم ايقافه لحين التحقق من الكود الجديد مع الالوان والاسماء
+        //==============================================================
+      //   title: Text(_currentCustomer.customerName),
+      //   bottom: TabBar(
+      //     controller: _tabController,
+      //     labelColor: isDark ? AppColors.primaryDark : Colors.white,
+      //     tabs: [
+      //       Tab(
+      //         icon: const Icon(Icons.shopping_cart),
+      //         text: l10n.purchases,
+      //       ),
+      //       Tab(
+      //         icon: const Icon(Icons.payment),
+      //         text: l10n.payments,
+      //       ),
+      //     ],
+      //   ),
+      // ),
+
         title: Text(_currentCustomer.customerName),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.shopping_cart),
-              text: l10n.purchases,
+        actions: [
+          // ← Hint: زر التعديل يظهر فقط لمن لديه صلاحية الإدارة
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? AppColors.borderDark : Colors.white24,
+                  width: 1,
+                ),
+              ),
             ),
-            Tab(
-              icon: const Icon(Icons.payment),
-              text: l10n.payments,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: isDark ? AppColors.primaryDark : Colors.white,
+              unselectedLabelColor: isDark
+                  ? AppColors.textSecondaryDark
+                  : Colors.white70,
+              indicatorColor: isDark ? AppColors.primaryDark : Colors.white,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.tab,
+              tabs: [
+                Tab(
+                  icon: const Icon(Icons.shopping_cart),
+                  text: l10n.purchases
+                ),
+                Tab(
+                  icon: const Icon(Icons.payment),
+                  text: l10n.payments,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
+      
       
       // === جسم الصفحة ===
       body: Column(

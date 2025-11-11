@@ -16,15 +16,15 @@ class AppColors {
   static const Color secondaryLightVariant = Color(0xFF2563EB);
   static const Color secondaryContainer = Color(0xFFDBEAFE);
   
-  // Background Colors
-  static const Color backgroundLight = Color(0xFFFFFFFF);
-  static const Color surfaceLight = Color(0xFFF5F7FA);
-  static const Color cardLight = Color(0xFFFFFFFF);
+  // Background Colors - محسّن ✨
+  static const Color backgroundLight = Color(0xFFF8F9FA); // بدلاً من الأبيض الساطع
+  static const Color surfaceLight = Color(0xFFEFF1F3); // أغمق قليلاً
+  static const Color cardLight = Color(0xFFFFFFFF); // الكروت تبقى بيضاء نقية
   
-  // Text Colors
-  static const Color textPrimaryLight = Color(0xFF1F2937);
-  static const Color textSecondaryLight = Color(0xFF6B7280);
-  static const Color textHintLight = Color(0xFF9CA3AF);
+  // Text Colors - محسّن ✨
+  static const Color textPrimaryLight = Color(0xFF1A1D1F); // أغمق قليلاً
+  static const Color textSecondaryLight = Color(0xFF4B5563); // أغمق من الرمادي السابق
+  static const Color textHintLight = Color(0xFF6B7280); // أغمق من السابق
   
   // Status Colors (موحدة للوضعين)
   static const Color success = Color(0xFF10B981);
@@ -33,8 +33,8 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6);
   
   // Border & Divider
-  static const Color borderLight = Color(0xFFE5E7EB);
-  static const Color dividerLight = Color(0xFFE5E7EB);
+  static const Color borderLight = Color(0xFFD1D5DB); // أغمق قليلاً
+  static const Color dividerLight = Color(0xFFD1D5DB);
   
   // ============= Dark Mode Colors =============
   

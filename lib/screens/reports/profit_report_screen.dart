@@ -225,7 +225,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
               ? AppColors.success.withOpacity(0.1)
               : AppColors.error.withOpacity(0.1),
           child: Padding(
-            padding: AppConstants.paddingLg,
+            padding: AppConstants.paddingSm,
             child: Row(
               children: [
                 // أيقونة النتيجة
@@ -356,7 +356,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
       child: Padding(
-        padding: AppConstants.paddingMd,
+        padding: AppConstants.paddingSm,
         child: Row(
           children: [
             // --- أيقونة الفاتورة ---

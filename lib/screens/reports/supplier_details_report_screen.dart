@@ -188,7 +188,7 @@ class _SupplierDetailsReportScreenState
           subtitle: l10n.withdrawnAmounts,
         ),
 
-        const Divider(height: 32, thickness: 1),
+        const Divider(height: 20, thickness: 1),
 
         // --- بطاقة صافي الربح ---
         CustomCard(
@@ -201,8 +201,8 @@ class _SupplierDetailsReportScreenState
               children: [
                 // أيقونة
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: netProfit >= 0
                         ? AppColors.success.withOpacity(0.2)
@@ -212,7 +212,7 @@ class _SupplierDetailsReportScreenState
                   child: Icon(
                     Icons.account_balance_wallet,
                     color: netProfit >= 0 ? AppColors.success : AppColors.error,
-                    size: 28,
+                    size: 22,
                   ),
                 ),
 
@@ -335,7 +335,7 @@ class _SupplierDetailsReportScreenState
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.info.withOpacity(0.1),
                     borderRadius: AppConstants.borderRadiusFull,
@@ -351,7 +351,7 @@ class _SupplierDetailsReportScreenState
                         style: const TextStyle(
                           color: AppColors.info,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 10,
                         ),
                       ),
                     ],
@@ -400,14 +400,14 @@ class _SupplierDetailsReportScreenState
           children: [
             // --- صورة الشريك ---
             CircleAvatar(
-              radius: 24,
+              radius: 20,
               backgroundColor: AppColors.primaryLight.withOpacity(0.1),
               backgroundImage: avatarImage,
               child: avatarImage == null
                   ? Icon(
                       Icons.person,
                       color: AppColors.primaryLight,
-                      size: 24,
+                      size: 22,
                     )
                   : null,
             ),
@@ -423,7 +423,7 @@ class _SupplierDetailsReportScreenState
                     partner.partnerName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -438,7 +438,7 @@ class _SupplierDetailsReportScreenState
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.percent, size: 12, color: AppColors.success),
+                            Icon(Icons.percent, size: 10, color: AppColors.success),
                             const SizedBox(width: 2),
                             Text(
                               '${partner.sharePercentage}',
@@ -464,13 +464,13 @@ class _SupplierDetailsReportScreenState
 
             // --- زر السحب ---
             SizedBox(
-              width: 95,
+              width: 75,
               child: ElevatedButton.icon(
                 onPressed: () => _showRecordWithdrawalDialog(
                   l10n,
                   partnerName: partner.partnerName,
                 ),
-                icon: const Icon(Icons.arrow_downward, size: 14),
+                icon: const Icon(Icons.arrow_downward, size: 11),
                 label: Text(l10n.withdraw),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryLight,
@@ -820,7 +820,6 @@ class _SupplierDetailsReportScreenState
       }).toList();
       
       // 3️⃣ إنشاء PDF
-      // يجب ان يكون هناك كود خاص داخل pdf service لعرض تفاصيل السحب للشركاء و الموردين
       final pdf = await PdfService.instance.buildSupplierDetailsReport(
         supplierName: widget.supplierName,
         supplierType: widget.supplierType,

@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 class AppConstants {
   AppConstants._();
   
-  // ============= Spacing (المسافات) =============
-  static const double spacingXs = 4.0;
-  static const double spacingSm = 8.0;
-  static const double spacingMd = 16.0;
-  static const double spacingLg = 24.0;
-  static const double spacingXl = 32.0;
-  static const double spacing2Xl = 48.0;
+  // ============= Spacing (المسافات) - مُصغّرة =============
+  static const double spacingXs = 3.0;   // كانت 4
+  static const double spacingSm = 6.0;   // كانت 8
+  static const double spacingMd = 12.0;  // كانت 16
+  static const double spacingLg = 18.0;  // كانت 24
+  static const double spacingXl = 24.0;  // كانت 32
+  static const double spacing2Xl = 36.0; // كانت 48
   
-  // ============= Padding =============
+  // ============= Padding - مُصغّرة =============
   static const EdgeInsets paddingXs = EdgeInsets.all(spacingXs);
   static const EdgeInsets paddingSm = EdgeInsets.all(spacingSm);
   static const EdgeInsets paddingMd = EdgeInsets.all(spacingMd);
@@ -25,16 +25,16 @@ class AppConstants {
   static const EdgeInsets paddingVerticalMd = EdgeInsets.symmetric(vertical: spacingMd);
   static const EdgeInsets paddingVerticalLg = EdgeInsets.symmetric(vertical: spacingLg);
   
-  // Screen Padding (للصفحات)
-  static const EdgeInsets screenPadding = EdgeInsets.all(spacingMd);
-  static const EdgeInsets screenPaddingHorizontal = EdgeInsets.symmetric(horizontal: spacingMd);
+  // Screen Padding (للصفحات) - مُصغّرة
+  static const EdgeInsets screenPadding = EdgeInsets.all(12.0);  // كانت 16
+  static const EdgeInsets screenPaddingHorizontal = EdgeInsets.symmetric(horizontal: 12.0);
   
-  // ============= Border Radius =============
+  // ============= Border Radius - مُصغّرة قليلاً =============
   static const double radiusXs = 4.0;
-  static const double radiusSm = 8.0;
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
-  static const double radiusXl = 24.0;
+  static const double radiusSm = 6.0;   // كانت 8
+  static const double radiusMd = 10.0;  // كانت 12
+  static const double radiusLg = 14.0;  // كانت 16
+  static const double radiusXl = 20.0;  // كانت 24
   static const double radiusFull = 999.0;
   
   static const BorderRadius borderRadiusXs = BorderRadius.all(Radius.circular(radiusXs));
@@ -44,32 +44,32 @@ class AppConstants {
   static const BorderRadius borderRadiusXl = BorderRadius.all(Radius.circular(radiusXl));
   static const BorderRadius borderRadiusFull = BorderRadius.all(Radius.circular(radiusFull));
   
-  // ============= Icon Sizes =============
-  static const double iconSizeXs = 16.0;
-  static const double iconSizeSm = 20.0;
-  static const double iconSizeMd = 24.0;
-  static const double iconSizeLg = 32.0;
-  static const double iconSizeXl = 48.0;
-  static const double iconSize2Xl = 64.0;
+  // ============= Icon Sizes - مُصغّرة =============
+  static const double iconSizeXs = 14.0;  // كانت 16
+  static const double iconSizeSm = 18.0;  // كانت 20
+  static const double iconSizeMd = 22.0;  // كانت 24
+  static const double iconSizeLg = 28.0;  // كانت 32
+  static const double iconSizeXl = 40.0;  // كانت 48
+  static const double iconSize2Xl = 56.0; // كانت 64
   
-  // ============= Button Heights =============
-  static const double buttonHeightSm = 36.0;
-  static const double buttonHeightMd = 44.0;
-  static const double buttonHeightLg = 52.0;
+  // ============= Button Heights - مُصغّرة =============
+  static const double buttonHeightSm = 32.0;  // كانت 36
+  static const double buttonHeightMd = 40.0;  // كانت 44
+  static const double buttonHeightLg = 46.0;  // كانت 52
   
-  // ============= App Bar =============
-  static const double appBarHeight = 64.0;
-  static const double appBarElevation = 0.0; // Material 3 style
+  // ============= App Bar - مُصغّرة =============
+  static const double appBarHeight = 56.0;  // كانت 64
+  static const double appBarElevation = 0.0;
   
-  // ============= Bottom Navigation =============
-  static const double bottomNavHeight = 64.0;
-  static const double bottomNavIconSize = 24.0;
+  // ============= Bottom Navigation - مُصغّرة =============
+  static const double bottomNavHeight = 56.0;  // كانت 64
+  static const double bottomNavIconSize = 22.0; // كانت 24
   
   // ============= Drawer =============
   static const double drawerWidth = 280.0;
-  static const double drawerHeaderHeight = 180.0;
+  static const double drawerHeaderHeight = 160.0; // كانت 180
   
-  // ============= Cards =============
+  // ============= Cards - مُصغّرة =============
   static const double cardElevation = 0.5;
   static const BorderRadius cardBorderRadius = borderRadiusMd;
   
@@ -77,44 +77,44 @@ class AppConstants {
   static const double dividerThickness = 1.0;
   static const double dividerIndent = spacingMd;
   
-  // ============= Avatar =============
-  static const double avatarSizeSm = 32.0;
-  static const double avatarSizeMd = 48.0;
-  static const double avatarSizeLg = 64.0;
-  static const double avatarSizeXl = 96.0;
+  // ============= Avatar - مُصغّرة =============
+  static const double avatarSizeSm = 28.0;  // كانت 32
+  static const double avatarSizeMd = 40.0;  // كانت 48
+  static const double avatarSizeLg = 56.0;  // كانت 64
+  static const double avatarSizeXl = 80.0;  // كانت 96
   
-  // ============= Logo =============
-  static const double logoSizeSm = 40.0;
-  static const double logoSizeMd = 56.0;
-  static const double logoSizeLg = 80.0;
+  // ============= Logo - مُصغّرة =============
+  static const double logoSizeSm = 36.0;  // كانت 40
+  static const double logoSizeMd = 48.0;  // كانت 56
+  static const double logoSizeLg = 68.0;  // كانت 80
   
-  // ============= Input Fields =============
-  static const double inputHeight = 48.0;
+  // ============= Input Fields - مُصغّرة =============
+  static const double inputHeight = 42.0;  // كانت 48
   static const double inputBorderWidth = 1.5;
   static const BorderRadius inputBorderRadius = borderRadiusMd;
   
-  // ============= Shadows =============
+  // ============= Shadows - مُخففة =============
   static const List<BoxShadow> shadowSm = [
     BoxShadow(
-      color: Color(0x0A000000),
-      blurRadius: 4,
-      offset: Offset(0, 2),
+      color: Color(0x08000000),  // كانت 0A
+      blurRadius: 3,
+      offset: Offset(0, 1),
     ),
   ];
   
   static const List<BoxShadow> shadowMd = [
     BoxShadow(
-      color: Color(0x14000000),
-      blurRadius: 8,
-      offset: Offset(0, 4),
+      color: Color(0x10000000),  // كانت 14
+      blurRadius: 6,
+      offset: Offset(0, 3),
     ),
   ];
   
   static const List<BoxShadow> shadowLg = [
     BoxShadow(
-      color: Color(0x1F000000),
-      blurRadius: 16,
-      offset: Offset(0, 8),
+      color: Color(0x18000000),  // كانت 1F
+      blurRadius: 12,
+      offset: Offset(0, 6),
     ),
   ];
   
@@ -133,16 +133,16 @@ class AppConstants {
   static const double maxDialogWidth = 600;
   static const double maxCardWidth = 400;
   
-  // ============= List Tile =============
-  static const double listTileHeight = 64.0;
+  // ============= List Tile - مُصغّرة =============
+  static const double listTileHeight = 56.0;  // كانت 64
   static const EdgeInsets listTilePadding = EdgeInsets.symmetric(
     horizontal: spacingMd,
     vertical: spacingSm,
   );
   
-  // ============= Data Table =============
-  static const double tableRowHeight = 56.0;
-  static const double tableHeaderHeight = 64.0;
+  // ============= Data Table - مُصغّرة =============
+  static const double tableRowHeight = 48.0;  // كانت 56
+  static const double tableHeaderHeight = 56.0; // كانت 64
 }
 
 /// امتداد للتحقق من حجم الشاشة

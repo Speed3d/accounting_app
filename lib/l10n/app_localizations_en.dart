@@ -36,6 +36,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get more => 'More';
 
   @override
+  String get home => 'Home';
+
+  @override
   String get customization => 'Customization';
 
   @override
@@ -272,7 +275,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get baseSalaryRequired => 'Base salary is required';
 
   @override
-  String get enterValidNumber => 'Enter a valid number';
+  String get enterValidNumber => 'Please enter a valid number';
 
   @override
   String get hireDate => 'Hire Date';
@@ -2480,7 +2483,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Logout';
 
   @override
-  String get logoutConfirmation => 'Are you sure you want to logout?';
+  String get logoutConfirmation => 'Do you want to logout?';
 
   @override
   String get errorOpeningReports => 'Error opening reports page';
@@ -2625,18 +2628,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterByDays => 'Filter by Days';
 
   @override
-  String get customDays => 'Custom Selection';
+  String get customDays => 'Custom Period';
 
   @override
   String get customize => 'Customize';
 
   @override
   String daysCount(String count) {
-    return '$count Days';
+    return '$count days';
   }
 
   @override
-  String get selectCustomDays => 'Select Custom Days';
+  String get selectCustomDays => 'Select Number of Days';
 
   @override
   String get numberOfDays => 'Number of Days';
@@ -2679,4 +2682,128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commercialRegistrationNumber => 'Commercial Registration Number';
+
+  @override
+  String get backupSuccessTitle => 'Success! ✓';
+
+  @override
+  String get backupSuccessContent => 'Backup file saved to Downloads folder';
+
+  @override
+  String get backupFileLocation => 'File location:';
+
+  @override
+  String get pathCopied => 'Path copied';
+
+  @override
+  String get copyPath => 'Copy path';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get shareLastBackup => 'Share last backup';
+
+  @override
+  String get shareFailed => 'Share failed';
+
+  @override
+  String get filterOverdueCustomers => 'Filter Overdue Customers';
+
+  @override
+  String get selectPeriod => 'Select Period';
+
+  @override
+  String get noOverdueCustomers => 'No Overdue Customers! 🎉';
+
+  @override
+  String noOverdueCustomersMessage(int days) {
+    return 'All customers are active within the last $days days';
+  }
+
+  @override
+  String get debt => 'Debt';
+
+  @override
+  String get appLocked => 'App Locked';
+
+  @override
+  String get appLockedDescription => 'App locked for security';
+
+  @override
+  String get lastActive => 'Last active';
+
+  @override
+  String get fewMinutesAgo => 'few minutes ago';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get unlockWithBiometric => 'Unlock with Biometric';
+
+  @override
+  String get enterPassword => 'Enter password';
+
+  @override
+  String get wrongPassword => 'Wrong password';
+
+  @override
+  String get attemptsRemaining => 'attempts remaining';
+
+  @override
+  String get tooManyAttempts =>
+      'Too many failed attempts. Please try again after 30 seconds';
+
+  @override
+  String get lockedOut => 'Temporarily locked. Wait';
+
+  @override
+  String get seconds => 'seconds';
+
+  @override
+  String get appLockSettings => 'App Lock Settings';
+
+  @override
+  String get appLockSettingsDescription => 'Enable lock when leaving the app';
+
+  @override
+  String get enableAppLock => 'Enable Auto Lock';
+
+  @override
+  String get appLockEnabled => 'Auto lock enabled';
+
+  @override
+  String get appLockDisabled => 'Auto lock disabled';
+
+  @override
+  String get appLockEnabledSuccess => 'Auto lock enabled successfully';
+
+  @override
+  String get appLockDisabledSuccess => 'Auto lock disabled successfully';
+
+  @override
+  String get lockDuration => 'Lock Duration';
+
+  @override
+  String get immediately => 'Immediately';
+
+  @override
+  String get oneMinute => '1 minute';
+
+  @override
+  String get twoMinutes => '2 minutes';
+
+  @override
+  String get fiveMinutes => '5 minutes';
+
+  @override
+  String get tenMinutes => '10 minutes';
+
+  @override
+  String get lockDurationChanged => 'Duration changed to';
+
+  @override
+  String get appLockInfo =>
+      'The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.';
 }

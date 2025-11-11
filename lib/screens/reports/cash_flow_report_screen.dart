@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
 import 'package:accounting_app/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
@@ -241,10 +240,10 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
       width: double.infinity,
       padding: AppConstants.paddingMd,
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withOpacity(0.4),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
+            color: Theme.of(context).splashColor,
             width: 1,
           ),
         ),
@@ -255,13 +254,14 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
           Icon(
             Icons.calendar_today,
             size: 16,
-            color: Theme.of(context).primaryColor,
+            // color: Theme.of(context).primaryColor, يجب تعديل لون  هذا اللون
+            color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: AppConstants.spacingSm),
           Text(
             '${DateFormat('yyyy-MM-dd').format(_startDate)} - ${DateFormat('yyyy-MM-dd').format(_endDate)}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
