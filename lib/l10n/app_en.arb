@@ -2133,8 +2133,59 @@
   "fiveMinutes": "5 minutes",
   "tenMinutes": "10 minutes",
   "lockDurationChanged": "Duration changed to",
-  
-  "appLockInfo": "The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication."
 
+  "appLockInfo": "The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.",
+
+  "@_PASSWORD_BACKUP_ADDITIONS": "← Password-based backup encryption additions",
+
+  "createBackupPasswordTitle": "Protect Your Backup",
+  "@createBackupPasswordTitle": {
+    "description": "Title for password input dialog when creating a backup"
+  },
+
+  "createBackupPasswordSubtitle": "Choose a password to protect your backup. You'll need it to restore on any device.",
+  "@createBackupPasswordSubtitle": {
+    "description": "Subtitle explaining password input when creating backup"
+  },
+
+  "restoreBackupPasswordTitle": "Decrypt Backup",
+  "@restoreBackupPasswordTitle": {
+    "description": "Title for password input dialog when restoring a backup"
+  },
+
+  "restoreBackupPasswordSubtitle": "Enter the password you used when creating this backup.",
+  "@restoreBackupPasswordSubtitle": {
+    "description": "Subtitle explaining password input when restoring backup"
+  },
+
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Label for password confirmation field"
+  },
+
+  "reEnterPassword": "Re-enter password",
+  "@reEnterPassword": {
+    "description": "Placeholder text for password confirmation field"
+  },
+
+  "passwordCannotBeEmpty": "Password cannot be empty",
+  "@passwordCannotBeEmpty": {
+    "description": "Error message when password field is empty"
+  },
+
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Error message when passwords don't match"
+  },
+
+  "passwordTip": "⚠️ Remember your password carefully! Without it, you won't be able to restore your backup.",
+  "@passwordTip": {
+    "description": "Important warning about remembering the password"
+  },
+
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button text"
+  }
 
 }
