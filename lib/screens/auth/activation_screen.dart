@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 // ============= استيراد الملفات =============
 import '../../data/database_helper.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/time_validation_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
@@ -113,6 +114,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
         await DatabaseHelper.instance.activateApp(
           durationInDays: matchedDuration,
         );
+
+        // ← Hint: إعادة تعيين بيانات الوقت (جديد)
+        await TimeValidationService.instance.resetOnNewActivation();
 
         if (!mounted) return;
 

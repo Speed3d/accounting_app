@@ -5117,7 +5117,7 @@ abstract class AppLocalizations {
   /// No description provided for @attemptsRemaining.
   ///
   /// In en, this message translates to:
-  /// **'attempts remaining'**
+  /// **'Attempts remaining'**
   String get attemptsRemaining;
 
   /// No description provided for @tooManyAttempts.
@@ -5227,6 +5227,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.'**
   String get appLockInfo;
+
+  /// No description provided for @appBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'App Blocked'**
+  String get appBlocked;
+
+  /// No description provided for @appBlockedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'App blocked to protect your data'**
+  String get appBlockedDescription;
+
+  /// No description provided for @timeManipulationDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Time manipulation detected'**
+  String get timeManipulationDetected;
+
+  /// No description provided for @timeManipulationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: Manipulation attempt detected'**
+  String get timeManipulationWarning;
+
+  /// No description provided for @afterThatAppWillBeBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'After that, the app will be permanently blocked'**
+  String get afterThatAppWillBeBlocked;
+
+  /// No description provided for @internetRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Internet Required'**
+  String get internetRequired;
+
+  /// No description provided for @noInternetFor7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection for 7 days'**
+  String get noInternetFor7Days;
+
+  /// No description provided for @mustConnectToInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Must connect to internet to continue using the app'**
+  String get mustConnectToInternet;
+
+  /// No description provided for @tryConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Connect'**
+  String get tryConnect;
+
+  /// No description provided for @connectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed. Try again'**
+  String get connectionFailed;
+
+  /// No description provided for @technicalSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Support'**
+  String get technicalSupport;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get contactSupport;
+
+  /// No description provided for @contactViaWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact via WhatsApp'**
+  String get contactViaWhatsApp;
+
+  /// No description provided for @contactViaEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact via Email'**
+  String get contactViaEmail;
+
+  /// No description provided for @contactViaPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Call'**
+  String get contactViaPhone;
+
+  /// No description provided for @contactViaFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact via Facebook'**
+  String get contactViaFacebook;
+
+  /// No description provided for @possibleReasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible Reasons'**
+  String get possibleReasons;
+
+  /// No description provided for @deviceTimeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Device date and time changed'**
+  String get deviceTimeChanged;
+
+  /// No description provided for @repeatedManipulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeated manipulation attempts'**
+  String get repeatedManipulation;
+
+  /// No description provided for @fileManipulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempt to manipulate app files'**
+  String get fileManipulation;
+
+  /// No description provided for @solution.
+  ///
+  /// In en, this message translates to:
+  /// **'Solution'**
+  String get solution;
+
+  /// No description provided for @contactSupportForNewKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Please contact technical support to get a new activation code'**
+  String get contactSupportForNewKey;
+
+  /// No description provided for @deviceIdCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID copied to clipboard'**
+  String get deviceIdCopied;
+
+  /// No description provided for @copyDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Device ID'**
+  String get copyDeviceId;
+
+  /// No description provided for @sendThisToSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this ID and send it to technical support'**
+  String get sendThisToSupport;
+
+  /// No description provided for @syncingWithServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing with server...'**
+  String get syncingWithServer;
+
+  /// No description provided for @syncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync successful'**
+  String get syncSuccess;
+
+  /// No description provided for @syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get syncFailed;
+
+  /// No description provided for @workingOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Working Offline'**
+  String get workingOffline;
+
+  /// No description provided for @daysRemainingOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Days remaining before connection required'**
+  String get daysRemainingOffline;
+
+  /// No description provided for @connectTodayRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Must connect to internet today'**
+  String get connectTodayRequired;
+
+  /// No description provided for @toEnsureContinuedUse.
+  ///
+  /// In en, this message translates to:
+  /// **'To ensure continued use of the app'**
+  String get toEnsureContinuedUse;
 }
 
 class _AppLocalizationsDelegate

@@ -2134,7 +2134,49 @@
   "tenMinutes": "10 minutes",
   "lockDurationChanged": "Duration changed to",
   
-  "appLockInfo": "The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication."
+  "appLockInfo": "The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.",
+
+  "@_TIME_VALIDATION": "Time Validation & Anti-Manipulation",
+  
+  "appBlocked": "App Blocked",
+  "appBlockedDescription": "App blocked to protect your data",
+  "timeManipulationDetected": "Time manipulation detected",
+  "timeManipulationWarning": "Warning: Manipulation attempt detected",
+  "attemptsRemaining": "Attempts remaining",
+  "afterThatAppWillBeBlocked": "After that, the app will be permanently blocked",
+  
+  "internetRequired": "Internet Required",
+  "noInternetFor7Days": "No internet connection for 7 days",
+  "mustConnectToInternet": "Must connect to internet to continue using the app",
+  "tryConnect": "Try Connect",
+  "connectionFailed": "Connection failed. Try again",
+  
+  "technicalSupport": "Technical Support",
+  "contactSupport": "Contact Support",
+  "contactViaWhatsApp": "Contact via WhatsApp",
+  "contactViaEmail": "Contact via Email",
+  "contactViaPhone": "Phone Call",
+  "contactViaFacebook": "Contact via Facebook",
+  
+  "possibleReasons": "Possible Reasons",
+  "deviceTimeChanged": "Device date and time changed",
+  "repeatedManipulation": "Repeated manipulation attempts",
+  "fileManipulation": "Attempt to manipulate app files",
+  
+  "solution": "Solution",
+  "contactSupportForNewKey": "Please contact technical support to get a new activation code",
+  "deviceIdCopied": "Device ID copied to clipboard",
+  "copyDeviceId": "Copy Device ID",
+  "sendThisToSupport": "Copy this ID and send it to technical support",
+  
+  "syncingWithServer": "Syncing with server...",
+  "syncSuccess": "Sync successful",
+  "syncFailed": "Sync failed",
+  
+  "workingOffline": "Working Offline",
+  "daysRemainingOffline": "Days remaining before connection required",
+  "connectTodayRequired": "Must connect to internet today",
+  "toEnsureContinuedUse": "To ensure continued use of the app"
 
 
 }

@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         SliverPadding(
           padding: EdgeInsets.symmetric(
-            horizontal: AppConstants.spacingMd,
+            horizontal: AppConstants.spacingLg,
             vertical: AppConstants.spacingSm,
           ),
           sliver: _buildMenuGrid(l10n),
@@ -180,8 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
           color: isDark ? AppColors.cardDark : AppColors.cardLight,
           borderRadius: AppConstants.borderRadiusMd,
           border: Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
-            width: 1,
+            color: isDark ? AppColors.borderDark : const Color.fromARGB(255, 214, 221, 232),
+            width: 3,
           ),
           boxShadow: [
             BoxShadow(
@@ -195,23 +195,23 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 85,
+              height: 80,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 32, color: color),
+              child: Icon(icon, size: 44, color: color),
             ),
             const SizedBox(height: AppConstants.spacingMd),
             Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.spacingSm,
+                horizontal: AppConstants.spacingMd,
               ),
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,

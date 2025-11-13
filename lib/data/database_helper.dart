@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:accounting_app/data/models.dart';
@@ -13,7 +14,7 @@ class DatabaseHelper {
 
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
   // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -34,7 +35,11 @@ class DatabaseHelper {
   _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, _databaseName);
-    return await openDatabase(path, version: _databaseVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return await openDatabase(
+      path, 
+      version: _databaseVersion, 
+      onCreate: _onCreate, 
+      onUpgrade: _onUpgrade);
   }
 
 ///////////////////////////////////////////////////////////////
@@ -234,7 +239,10 @@ class DatabaseHelper {
       CREATE TABLE TB_App_State (
         ID INTEGER PRIMARY KEY, 
         first_run_date TEXT, 
-        activation_expiry_date TEXT 
+        activation_expiry_date TEXT,
+        last_time_check TEXT,
+        time_manipulation_detected INTEGER DEFAULT 0,
+        days_offline INTEGER DEFAULT 0
       )
     ''');
 
@@ -284,6 +292,7 @@ class DatabaseHelper {
   // Hint: هذا هو التصحيح الأهم. سيقوم بمعالجة كل حالة ترقية بشكل منفصل.
   // =================================================================================================
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    debugPrint('🔄 ترقية قاعدة البيانات من $oldVersion إلى $newVersion');
 
     // if (oldVersion < 1) {
     //   final oldData = await db.query('TB_App_State', limit: 1);
@@ -391,12 +400,10 @@ class DatabaseHelper {
     //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canViewCashSales INTEGER NOT NULL DEFAULT 0');
     // }
 
-    
-    // if (oldVersion < 2) {
-    //   await db.execute('ALTER TABLE Supplier_Partners ADD COLUMN ImagePath TEXT');
-    // }
+      }
 
-  }
+    
+  /// وصلت الى هنا
 
 
 

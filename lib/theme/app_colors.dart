@@ -33,7 +33,7 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6);
   
   // Border & Divider
-  static const Color borderLight = Color(0xFFD1D5DB); // أغمق قليلاً
+  static const Color borderLight = Color.fromARGB(255, 209, 219, 209); // أغمق قليلاً
   static const Color dividerLight = Color(0xFFD1D5DB);
   
   // ============= Dark Mode Colors =============

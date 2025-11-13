@@ -88,7 +88,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context)!;
 
     final titles = [
-      l10n.homePage,
+      l10n.home,
       l10n.statistics,
       l10n.sales,
       l10n.reports,

@@ -2728,7 +2728,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get wrongPassword => 'كلمة المرور خاطئة';
 
   @override
-  String get attemptsRemaining => 'محاولة متبقية';
+  String get attemptsRemaining => 'المحاولات المتبقية';
 
   @override
   String get tooManyAttempts =>
@@ -2785,4 +2785,102 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get appLockInfo =>
       'سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة.';
+
+  @override
+  String get appBlocked => 'التطبيق محظور';
+
+  @override
+  String get appBlockedDescription => 'تم حظر التطبيق لحماية بياناتك';
+
+  @override
+  String get timeManipulationDetected => 'تم رصد تلاعب بالتاريخ والوقت';
+
+  @override
+  String get timeManipulationWarning => 'تحذير: تم رصد محاولة تلاعب';
+
+  @override
+  String get afterThatAppWillBeBlocked => 'بعد ذلك سيتم حظر التطبيق نهائياً';
+
+  @override
+  String get internetRequired => 'يتطلب اتصال بالإنترنت';
+
+  @override
+  String get noInternetFor7Days => 'لم يتم الاتصال بالإنترنت منذ 7 أيام';
+
+  @override
+  String get mustConnectToInternet =>
+      'يجب الاتصال بالإنترنت لمتابعة استخدام التطبيق';
+
+  @override
+  String get tryConnect => 'حاول الاتصال';
+
+  @override
+  String get connectionFailed => 'فشل الاتصال بالإنترنت. حاول مرة أخرى';
+
+  @override
+  String get technicalSupport => 'الدعم الفني';
+
+  @override
+  String get contactSupport => 'اتصل بالدعم';
+
+  @override
+  String get contactViaWhatsApp => 'تواصل عبر واتساب';
+
+  @override
+  String get contactViaEmail => 'تواصل عبر البريد';
+
+  @override
+  String get contactViaPhone => 'اتصال هاتفي';
+
+  @override
+  String get contactViaFacebook => 'تواصل عبر فيسبوك';
+
+  @override
+  String get possibleReasons => 'الأسباب المحتملة';
+
+  @override
+  String get deviceTimeChanged => 'تم تغيير تاريخ ووقت الجهاز';
+
+  @override
+  String get repeatedManipulation => 'محاولات متكررة للتلاعب';
+
+  @override
+  String get fileManipulation => 'محاولة التلاعب بملفات التطبيق';
+
+  @override
+  String get solution => 'الحل';
+
+  @override
+  String get contactSupportForNewKey =>
+      'الرجاء التواصل مع الدعم الفني للحصول على كود تفعيل جديد';
+
+  @override
+  String get deviceIdCopied => 'تم نسخ بصمة الجهاز إلى الحافظة';
+
+  @override
+  String get copyDeviceId => 'نسخ بصمة الجهاز';
+
+  @override
+  String get sendThisToSupport => 'قم بنسخ هذه البصمة وإرسالها للدعم الفني';
+
+  @override
+  String get syncingWithServer => 'جاري المزامنة مع الخادم...';
+
+  @override
+  String get syncSuccess => 'تمت المزامنة بنجاح';
+
+  @override
+  String get syncFailed => 'فشلت المزامنة';
+
+  @override
+  String get workingOffline => 'العمل بدون إنترنت';
+
+  @override
+  String get daysRemainingOffline => 'الأيام المتبقية قبل الحاجة للاتصال';
+
+  @override
+  String get connectTodayRequired => 'يجب الاتصال بالإنترنت اليوم';
+
+  @override
+  String get toEnsureContinuedUse => 'لضمان استمرار عمل التطبيق';
 }

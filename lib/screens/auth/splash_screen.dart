@@ -4,23 +4,20 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-// ============= استيراد الملفات =============
 import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
+import '../../services/time_validation_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import 'create_admin_screen.dart';
 import 'login_screen.dart';
 import 'activation_screen.dart';
+import 'blocked_screen.dart';
 
 /// ===========================================================================
-/// شاشة البداية (Splash Screen)
-/// ===========================================================================
-/// الغرض:
-/// - عرض شعار الشركة واسمها أثناء تحميل التطبيق
-/// - التحقق من حالة التطبيق (مفعّل، تجريبي، منتهي)
-/// - التوجيه للشاشة المناسبة (إنشاء مستخدم، تسجيل دخول، تفعيل)
+/// شاشة البداية (Splash Screen) - محسّنة للأداء
+/// ← Hint: النسخة المصححة بدون أخطاء
 /// ===========================================================================
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,96 +29,80 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> 
     with SingleTickerProviderStateMixin {
   
-  // ============= متغيرات الأنيميشن =============
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;      // تأثير الظهور التدريجي
-  late Animation<double> _scaleAnimation;     // تأثير التكبير
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
   
-  // ============= متغيرات البيانات =============
-  String _companyName = '';                    // اسم الشركة من قاعدة البيانات
-  File? _companyLogo;                          // شعار الشركة من قاعدة البيانات
+  String _companyName = '';
+  File? _companyLogo;
   
-  // ============= الثوابت =============
-  static const int trialPeriodDays = 17;      // مدة الفترة التجريبية (14 يوم)
-  // static const int trialPeriodDays = 14;      // مدة الفترة التجريبية (14 يوم)
-  static const int splashDuration = 2500;     // مدة عرض الشاشة (2.5 ثانية)
+  // عدد ايام الافتراضية لتفعيل التطبيق
+  // static const int trialPeriodDays = 14;
+  static const int trialPeriodDays = 19;
 
-  // ===========================================================================
-  // التهيئة الأولية
-  // ===========================================================================
+  static const int splashDuration = 2500;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     
-    // تأجيل التنقل حتى يتم بناء الواجهة بالكامل
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAndNavigate();
     });
   }
 
-  // ===========================================================================
-  // إعداد الأنيميشن
-  // ===========================================================================
   void _setupAnimations() {
-    // إنشاء Controller للأنيميشن (مدة 1.5 ثانية)
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
 
-    // أنيميشن الظهور التدريجي (من 0 إلى 1)
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: Curves.easeIn, // منحنى سلس للظهور
+        curve: Curves.easeIn,
       ),
     );
 
-    // أنيميشن التكبير (من 0.5 إلى 1)
     _scaleAnimation = Tween<double>(
       begin: 0.5,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: Curves.easeInOut, // منحنى سلس للتكبير
+        curve: Curves.easeInOut,
       ),
     );
 
-    // بدء الأنيميشن
     _animationController.forward();
   }
 
-  // ===========================================================================
-  // التنظيف عند إغلاق الشاشة
-  // ===========================================================================
   @override
   void dispose() {
-    _animationController.dispose(); // تنظيف الأنيميشن لتجنب تسرب الذاكرة
+    _animationController.dispose();
     super.dispose();
   }
 
   // ===========================================================================
-  // تحميل البيانات والتنقل للشاشة المناسبة
+  // ← Hint: تحميل البيانات والتنقل (محسّن ومصحح!)
   // ===========================================================================
   Future<void> _loadAndNavigate() async {
     final l10n = AppLocalizations.of(context)!;
     final dbHelper = DatabaseHelper.instance;
     final deviceService = DeviceService.instance;
+    final timeService = TimeValidationService.instance;
 
     // ============= الخطوة 1: تحميل معلومات الشركة =============
     try {
       final settings = await dbHelper.getAppSettings();
       if (mounted) {
         setState(() {
-          // جلب اسم الشركة (أو استخدام الاسم الافتراضي)
           _companyName = settings['companyName'] ?? l10n.accountingProgram;
           
-          // جلب شعار الشركة (إذا كان موجوداً)
           final logoPath = settings['companyLogoPath'];
           if (logoPath != null && logoPath.isNotEmpty) {
             _companyLogo = File(logoPath);
@@ -134,9 +115,77 @@ class _SplashScreenState extends State<SplashScreen>
 
     // ============= الخطوة 2: الانتظار لإكمال الأنيميشن =============
     await Future.delayed(const Duration(milliseconds: splashDuration));
-    if (!mounted) return; // تحقق من أن الشاشة لا تزال مفتوحة
+    if (!mounted) return;
 
-    // ============= الخطوة 3: التحقق من حالة التطبيق =============
+    // ============= الخطوة 3: تهيئة خدمة التحقق من الوقت =============
+    debugPrint('🔄 بدء تهيئة TimeValidationService...');
+    await timeService.initialize();
+
+    // ============= الخطوة 4: كشف التلاعب (سريع - بدون NTP!) =============
+    debugPrint('🔍 فحص التلاعب...');
+    final manipulationResult = await timeService.detectManipulation();
+
+    if (manipulationResult['isManipulated'] == true) {
+      final attemptsRemaining = timeService.getAttemptsRemaining();
+      
+      // ← Hint: استخدام دالة getter بدلاً من المتغير الخاص
+      final currentAttempts = timeService.getSuspiciousAttempts();
+      debugPrint('⚠️ تحذير #$currentAttempts - المحاولات المتبقية: $attemptsRemaining');
+
+      if (attemptsRemaining <= 0) {
+        debugPrint('🚫 حظر نهائي - تجاوز الحد الأقصى');
+        _navigateToScreen(
+          BlockedScreen(
+            reason: manipulationResult['reason'] ?? 'unknown',
+            message: manipulationResult['message'],
+          ),
+        );
+        return;
+      } else {
+        debugPrint('⚠️ تحذير - المحاولات المتبقية: $attemptsRemaining');
+        _showManipulationWarning(
+          l10n,
+          manipulationResult['message'] ?? 'تم رصد تلاعب',
+          attemptsRemaining,
+        );
+      }
+    }
+
+    // ============= الخطوة 5: التحقق من الحاجة للإنترنت =============
+    if (timeService.shouldRequireInternet()) {
+      debugPrint('⚠️ يتطلب اتصال بالإنترنت - مر 7 أيام');
+      _showInternetRequiredDialog(l10n);
+      return;
+    }
+
+    // ============= الخطوة 6: الحصول على الوقت (سريع جداً!) =============
+    DateTime realTime;
+    try {
+      // ← Hint: timeout مع معالجة صحيحة
+      realTime = await timeService.getRealTime().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint('⏱️ انتهى وقت NTP - استخدام وقت الجهاز');
+          // ← Hint: في حالة timeout، نستخدم وقت الجهاز
+          // getRealTime نفسها ستستخدم drift داخلياً إذا فشلت
+          return DateTime.now();
+        },
+      );
+    } catch (e) {
+      debugPrint('⚠️ خطأ في الحصول على الوقت: $e');
+      realTime = DateTime.now();
+    }
+
+    debugPrint('⏰ الوقت المستخدم: $realTime');
+
+    // ← Hint: بدء مزامنة في الخلفية (لا تُوقف التطبيق!)
+    timeService.backgroundSync().then((_) {
+      debugPrint('✅ اكتملت المزامنة الخلفية');
+    }).catchError((e) {
+      debugPrint('⚠️ فشلت المزامنة الخلفية (لا مشكلة): $e');
+    });
+
+    // ============= الخطوة 7: التحقق من حالة التطبيق =============
     try {
       final appState = await dbHelper.getAppState();
       final userCount = await dbHelper.getUserCount();
@@ -147,22 +196,20 @@ class _SplashScreenState extends State<SplashScreen>
         await dbHelper.initializeAppState();
         _navigateToScreen(
           userCount == 0 
-            ? CreateAdminScreen(l10n: l10n)  // إنشاء مستخدم مدير
-            : LoginScreen(l10n: l10n),       // تسجيل دخول
+            ? CreateAdminScreen(l10n: l10n)
+            : LoginScreen(l10n: l10n),
         );
         return;
       }
 
-      // --- حالة 2: التطبيق مفعّل (لديه تاريخ انتهاء) ---
+      // --- حالة 2: التطبيق مفعّل ---
       final expiryDateString = appState['activation_expiry_date'];
       if (expiryDateString != null) {
         final expiryDate = DateTime.parse(expiryDateString);
         
-        if (DateTime.now().isBefore(expiryDate)) {
-          // التفعيل ساري المفعول ✅
+        if (realTime.isBefore(expiryDate)) {
           _navigateToScreen(LoginScreen(l10n: l10n));
         } else {
-          // التفعيل منتهي ❌
           _navigateToScreen(
             ActivationScreen(
               l10n: l10n,
@@ -179,8 +226,7 @@ class _SplashScreenState extends State<SplashScreen>
         const Duration(days: trialPeriodDays),
       );
 
-      if (DateTime.now().isAfter(trialEndsAt)) {
-        // الفترة التجريبية انتهت ❌
+      if (realTime.isAfter(trialEndsAt)) {
         _navigateToScreen(
           ActivationScreen(
             l10n: l10n,
@@ -188,14 +234,12 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         );
       } else {
-        // الفترة التجريبية لا تزال سارية ✅
         _navigateToScreen(LoginScreen(l10n: l10n));
       }
 
     } catch (e) {
       debugPrint('❌ خطأ أثناء التنقل من Splash Screen: $e');
       
-      // في حالة حدوث خطأ، انتقل لشاشة تسجيل الدخول
       if (mounted) {
         _navigateToScreen(LoginScreen(l10n: l10n));
       }
@@ -203,8 +247,134 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   // ===========================================================================
-  // دالة مساعدة للتنقل بين الشاشات
+  // ← Hint: عرض تحذير التلاعب
   // ===========================================================================
+  void _showManipulationWarning(
+    AppLocalizations l10n,
+    String message,
+    int attemptsRemaining,
+  ) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.warning,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('تحذير'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.error.withOpacity(0.3),
+                ),
+              ),
+              child: Text(
+                '⚠️ المحاولات المتبقية: $attemptsRemaining\n'
+                'بعد ذلك سيتم حظر التطبيق نهائياً',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // ← Hint: عرض رسالة الحاجة للإنترنت
+  // ===========================================================================
+  void _showInternetRequiredDialog(AppLocalizations l10n) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.wifi_off,
+              color: AppColors.error,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingSm),
+            Text(l10n.internetRequired),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'لم يتم الاتصال بالإنترنت منذ 7 أيام',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Text(
+              'يجب الاتصال بالإنترنت لمتابعة استخدام التطبيق',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              
+              final success = await TimeValidationService.instance.forceSync();
+              
+              if (success && mounted) {
+                _loadAndNavigate();
+              } else if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('فشل الاتصال بالإنترنت. حاول مرة أخرى'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('حاول الاتصال'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('إلغاء'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _navigateToScreen(Widget screen) {
     if (!mounted) return;
     
@@ -213,16 +383,11 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ===========================================================================
-  // بناء واجهة المستخدم
-  // ===========================================================================
   @override
   Widget build(BuildContext context) {
-    // الحصول على معلومات الثيم
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // ============= الخلفية المتدرجة =============
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -231,37 +396,30 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: isDark 
-              ? AppColors.gradientDark   // ألوان الوضع الليلي
-              : AppColors.gradientLight, // ألوان الوضع النهاري
+              ? AppColors.gradientDark
+              : AppColors.gradientLight,
           ),
         ),
         
-        // ============= المحتوى =============
         child: SafeArea(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ============= الأنيميشن الرئيسي =============
                 ScaleTransition(
                   scale: _scaleAnimation,
                   child: FadeTransition(
                     opacity: _fadeAnimation,
                     child: Column(
                       children: [
-                        // --- شعار الشركة ---
                         _buildCompanyLogo(),
-                        
                         const SizedBox(height: AppConstants.spacingLg),
-                        
-                        // --- اسم الشركة ---
                         _buildCompanyName(),
                       ],
                     ),
                   ),
                 ),
                 
-                // ============= مؤشر التحميل =============
                 const SizedBox(height: AppConstants.spacingXl),
                 _buildLoadingIndicator(),
               ],
@@ -272,9 +430,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ===========================================================================
-  // بناء شعار الشركة
-  // ===========================================================================
   Widget _buildCompanyLogo() {
     final bool hasLogo = _companyLogo != null && _companyLogo!.existsSync();
 
@@ -307,9 +462,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ===========================================================================
-  // بناء اسم الشركة
-  // ===========================================================================
   Widget _buildCompanyName() {
     if (_companyName.isEmpty) return const SizedBox.shrink();
 
@@ -335,9 +487,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ===========================================================================
-  // بناء مؤشر التحميل
-  // ===========================================================================
   Widget _buildLoadingIndicator() {
     return SizedBox(
       width: 30,

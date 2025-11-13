@@ -2072,9 +2072,49 @@
   "tenMinutes": "10 دقائق",
   "lockDurationChanged": "تم تغيير المدة إلى",
   
-  "appLockInfo": "سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة."
+  "appLockInfo": "سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة.",
 
-
+  "@_TIME_VALIDATION": "التحقق من الوقت والحماية من التلاعب",
+  
+  "appBlocked": "التطبيق محظور",
+  "appBlockedDescription": "تم حظر التطبيق لحماية بياناتك",
+  "timeManipulationDetected": "تم رصد تلاعب بالتاريخ والوقت",
+  "timeManipulationWarning": "تحذير: تم رصد محاولة تلاعب",
+  "attemptsRemaining": "المحاولات المتبقية",
+  "afterThatAppWillBeBlocked": "بعد ذلك سيتم حظر التطبيق نهائياً",
+  
+  "internetRequired": "يتطلب اتصال بالإنترنت",
+  "noInternetFor7Days": "لم يتم الاتصال بالإنترنت منذ 7 أيام",
+  "mustConnectToInternet": "يجب الاتصال بالإنترنت لمتابعة استخدام التطبيق",
+  "tryConnect": "حاول الاتصال",
+  "connectionFailed": "فشل الاتصال بالإنترنت. حاول مرة أخرى",
+  
+  "technicalSupport": "الدعم الفني",
+  "contactSupport": "اتصل بالدعم",
+  "contactViaWhatsApp": "تواصل عبر واتساب",
+  "contactViaEmail": "تواصل عبر البريد",
+  "contactViaPhone": "اتصال هاتفي",
+  "contactViaFacebook": "تواصل عبر فيسبوك",
+  
+  "possibleReasons": "الأسباب المحتملة",
+  "deviceTimeChanged": "تم تغيير تاريخ ووقت الجهاز",
+  "repeatedManipulation": "محاولات متكررة للتلاعب",
+  "fileManipulation": "محاولة التلاعب بملفات التطبيق",
+  
+  "solution": "الحل",
+  "contactSupportForNewKey": "الرجاء التواصل مع الدعم الفني للحصول على كود تفعيل جديد",
+  "deviceIdCopied": "تم نسخ بصمة الجهاز إلى الحافظة",
+  "copyDeviceId": "نسخ بصمة الجهاز",
+  "sendThisToSupport": "قم بنسخ هذه البصمة وإرسالها للدعم الفني",
+  
+  "syncingWithServer": "جاري المزامنة مع الخادم...",
+  "syncSuccess": "تمت المزامنة بنجاح",
+  "syncFailed": "فشلت المزامنة",
+  
+  "workingOffline": "العمل بدون إنترنت",
+  "daysRemainingOffline": "الأيام المتبقية قبل الحاجة للاتصال",
+  "connectTodayRequired": "يجب الاتصال بالإنترنت اليوم",
+  "toEnsureContinuedUse": "لضمان استمرار عمل التطبيق"
 
 
 }

@@ -2749,7 +2749,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wrongPassword => 'Wrong password';
 
   @override
-  String get attemptsRemaining => 'attempts remaining';
+  String get attemptsRemaining => 'Attempts remaining';
 
   @override
   String get tooManyAttempts =>
@@ -2806,4 +2806,106 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appLockInfo =>
       'The app will be automatically locked after leaving it for the specified duration. You can unlock using your password or biometric authentication.';
+
+  @override
+  String get appBlocked => 'App Blocked';
+
+  @override
+  String get appBlockedDescription => 'App blocked to protect your data';
+
+  @override
+  String get timeManipulationDetected => 'Time manipulation detected';
+
+  @override
+  String get timeManipulationWarning =>
+      'Warning: Manipulation attempt detected';
+
+  @override
+  String get afterThatAppWillBeBlocked =>
+      'After that, the app will be permanently blocked';
+
+  @override
+  String get internetRequired => 'Internet Required';
+
+  @override
+  String get noInternetFor7Days => 'No internet connection for 7 days';
+
+  @override
+  String get mustConnectToInternet =>
+      'Must connect to internet to continue using the app';
+
+  @override
+  String get tryConnect => 'Try Connect';
+
+  @override
+  String get connectionFailed => 'Connection failed. Try again';
+
+  @override
+  String get technicalSupport => 'Technical Support';
+
+  @override
+  String get contactSupport => 'Contact Support';
+
+  @override
+  String get contactViaWhatsApp => 'Contact via WhatsApp';
+
+  @override
+  String get contactViaEmail => 'Contact via Email';
+
+  @override
+  String get contactViaPhone => 'Phone Call';
+
+  @override
+  String get contactViaFacebook => 'Contact via Facebook';
+
+  @override
+  String get possibleReasons => 'Possible Reasons';
+
+  @override
+  String get deviceTimeChanged => 'Device date and time changed';
+
+  @override
+  String get repeatedManipulation => 'Repeated manipulation attempts';
+
+  @override
+  String get fileManipulation => 'Attempt to manipulate app files';
+
+  @override
+  String get solution => 'Solution';
+
+  @override
+  String get contactSupportForNewKey =>
+      'Please contact technical support to get a new activation code';
+
+  @override
+  String get deviceIdCopied => 'Device ID copied to clipboard';
+
+  @override
+  String get copyDeviceId => 'Copy Device ID';
+
+  @override
+  String get sendThisToSupport =>
+      'Copy this ID and send it to technical support';
+
+  @override
+  String get syncingWithServer => 'Syncing with server...';
+
+  @override
+  String get syncSuccess => 'Sync successful';
+
+  @override
+  String get syncFailed => 'Sync failed';
+
+  @override
+  String get workingOffline => 'Working Offline';
+
+  @override
+  String get daysRemainingOffline =>
+      'Days remaining before connection required';
+
+  @override
+  String get connectTodayRequired => 'Must connect to internet today';
+
+  @override
+  String get toEnsureContinuedUse => 'To ensure continued use of the app';
 }
