@@ -2071,10 +2071,59 @@
   "fiveMinutes": "5 دقائق",
   "tenMinutes": "10 دقائق",
   "lockDurationChanged": "تم تغيير المدة إلى",
-  
-  "appLockInfo": "سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة."
 
+  "appLockInfo": "سيتم قفل التطبيق تلقائياً بعد الخروج منه للمدة المحددة. يمكنك فتح القفل باستخدام كلمة المرور أو البصمة.",
 
+  "@_PASSWORD_BACKUP_ADDITIONS": "← إضافات كلمة المرور للنسخ الاحتياطي",
 
+  "createBackupPasswordTitle": "حماية النسخة الاحتياطية",
+  "@createBackupPasswordTitle": {
+    "description": "عنوان نافذة إدخال كلمة المرور عند إنشاء نسخة احتياطية"
+  },
+
+  "createBackupPasswordSubtitle": "اختر كلمة مرور لحماية نسختك الاحتياطية. ستحتاجها عند الاستعادة على أي جهاز.",
+  "@createBackupPasswordSubtitle": {
+    "description": "شرح توضيحي لنافذة إدخال كلمة المرور عند إنشاء النسخة"
+  },
+
+  "restoreBackupPasswordTitle": "فك تشفير النسخة الاحتياطية",
+  "@restoreBackupPasswordTitle": {
+    "description": "عنوان نافذة إدخال كلمة المرور عند الاستعادة"
+  },
+
+  "restoreBackupPasswordSubtitle": "أدخل كلمة المرور التي استخدمتها عند إنشاء هذه النسخة الاحتياطية.",
+  "@restoreBackupPasswordSubtitle": {
+    "description": "شرح توضيحي لنافذة إدخال كلمة المرور عند الاستعادة"
+  },
+
+  "confirmPassword": "تأكيد كلمة المرور",
+  "@confirmPassword": {
+    "description": "تسمية حقل تأكيد كلمة المرور"
+  },
+
+  "reEnterPassword": "أعد إدخال كلمة المرور",
+  "@reEnterPassword": {
+    "description": "نص placeholder لحقل تأكيد كلمة المرور"
+  },
+
+  "passwordCannotBeEmpty": "كلمة المرور لا يمكن أن تكون فارغة",
+  "@passwordCannotBeEmpty": {
+    "description": "رسالة خطأ عندما تكون كلمة المرور فارغة"
+  },
+
+  "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+  "@passwordsDoNotMatch": {
+    "description": "رسالة خطأ عندما لا تتطابق كلمتا المرور"
+  },
+
+  "passwordTip": "⚠️ تذكر كلمة المرور جيداً! بدونها لن تتمكن من استعادة نسختك الاحتياطية.",
+  "@passwordTip": {
+    "description": "تحذير مهم للمستخدم بشأن حفظ كلمة المرور"
+  },
+
+  "confirm": "تأكيد",
+  "@confirm": {
+    "description": "نص زر التأكيد"
+  }
 
 }

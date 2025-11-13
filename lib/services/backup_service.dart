@@ -2,61 +2,78 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:crypto/crypto.dart';
 
 /// 🧠 كلاس مسؤول عن إنشاء النسخ الاحتياطي واستعادته بشكل آمن ومشفر
+///
+/// ← Hint: يستخدم هذا الكلاس تشفير AES-256 مع كلمة مرور من المستخدم
+/// ← Hint: يتم اشتقاق مفتاح التشفير من كلمة المرور باستخدام PBKDF2 (10000 iteration)
+/// ← Hint: هيكل الملف المشفر: [Magic Number] + [Salt 16 bytes] + [Encrypted Data]
 class BackupService {
-  // 1️⃣ تخزين المفاتيح بشكل آمن داخل النظام (Keychain في iOS و Keystore في Android)
-  final _secureStorage = const FlutterSecureStorage();
-
-  // أسماء المفاتيح التي نخزن بها القيم في التخزين الآمن
-  static const _encryptionKeyStorageKey = 'backup_encryption_key';
-  static const _encryptionIvStorageKey = 'backup_encryption_iv';
-
-  // 2️⃣ اسم ملف قاعدة البيانات (كما هو في تطبيقك)
+  // 1️⃣ اسم ملف قاعدة البيانات (كما هو في تطبيقك)
   static const String _dbFileName = "accounting.db";
 
-  // 3️⃣ معرف خاص للتحقق من صحة ملف النسخة الاحتياطية
-  static const String _magicNumber = 'MY_ACCOUNTING_APP_BACKUP_V1';
+  // 2️⃣ معرف خاص للتحقق من صحة ملف النسخة الاحتياطية
+  /// ← Hint: Magic Number يضمن أن الملف من تطبيقنا وليس ملف عشوائي
+  static const String _magicNumber = 'MY_ACCOUNTING_APP_BACKUP_V2';
 
-  // 4️⃣ الامتداد الخاص بملف النسخ الاحتياطي
+  // 3️⃣ الامتداد الخاص بملف النسخ الاحتياطي
   static const String _backupFileExtension = 'accbak';
 
+  // 4️⃣ عدد مرات التكرار لـ PBKDF2 (كلما زاد كان أكثر أماناً ولكن أبطأ)
+  /// ← Hint: 10000 iteration تعطي توازن جيد بين الأمان والسرعة
+  static const int _pbkdf2Iterations = 10000;
+
+  // 5️⃣ طول Salt بالبايتات (16 بايت = 128 بت)
+  /// ← Hint: Salt عشوائي يمنع هجمات Rainbow Table
+  static const int _saltLength = 16;
+
   // ==========================================================
-  // دالة مساعدة: الحصول على Encrypter مشفر باستخدام AES-256
+  // ← Hint: دالة مساعدة لاشتقاق مفتاح تشفير قوي من كلمة المرور
   // ==========================================================
-  Future<enc.Encrypter> _getEncrypter() async {
-    // نحاول قراءة المفتاح و IV من التخزين الآمن
-    String? keyString = await _secureStorage.read(key: _encryptionKeyStorageKey);
-    String? ivString = await _secureStorage.read(key: _encryptionIvStorageKey);
+  /// تحول كلمة المرور إلى مفتاح AES-256 (32 بايت) باستخدام PBKDF2
+  ///
+  /// ← Hint: PBKDF2 = Password-Based Key Derivation Function 2
+  /// ← Hint: يطبق دالة Hash متكررة لجعل التخمين صعب جداً
+  ///
+  /// [password] كلمة المرور من المستخدم
+  /// [salt] قيمة عشوائية لجعل كل مفتاح فريد حتى لو تكررت كلمة المرور
+  enc.Key _deriveKeyFromPassword(String password, List<int> salt) {
+    // ← Hint: نستخدم HMAC-SHA256 كدالة Hash أساسية
+    final hmac = Hmac(sha256, utf8.encode(password));
 
-    // إذا لم تكن المفاتيح موجودة (أول مرة يتم فيها تشغيل التطبيق)
-    if (keyString == null || ivString == null) {
-      // إنشاء مفتاح جديد (32 بايت = AES-256)
-      final newKey = enc.Key.fromSecureRandom(32);
-      // إنشاء IV جديد (16 بايت)
-      final newIv = enc.IV.fromSecureRandom(16);
+    // ← Hint: تطبيق PBKDF2 يدوياً (مبسط لكن فعال)
+    var result = hmac.convert(salt + [0, 0, 0, 1]).bytes;
+    var previousBlock = result;
 
-      // حفظ القيم في التخزين الآمن
-      await _secureStorage.write(key: _encryptionKeyStorageKey, value: newKey.base64);
-      await _secureStorage.write(key: _encryptionIvStorageKey, value: newIv.base64);
-
-      keyString = newKey.base64;
-      ivString = newIv.base64;
+    for (var i = 1; i < _pbkdf2Iterations; i++) {
+      previousBlock = hmac.convert(previousBlock).bytes;
+      // ← Hint: XOR كل النتائج معاً
+      for (var j = 0; j < result.length; j++) {
+        result[j] ^= previousBlock[j];
+      }
     }
 
-    // إنشاء أداة التشفير باستخدام القيم المخزنة
-    final key = enc.Key.fromBase64(keyString);
-    final iv = enc.IV.fromBase64(ivString);
+    // ← Hint: نأخذ أول 32 بايت للحصول على مفتاح AES-256
+    return enc.Key(Uint8List.fromList(result.sublist(0, 32)));
+  }
 
-    // نستخدم AES بنمط CBC للتشفير القوي
-    return enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
+  // ==========================================================
+  // ← Hint: دالة لإنشاء IV من الـ Salt (مشتق ثانوي)
+  // ==========================================================
+  /// ← Hint: بدلاً من تخزين IV منفصل، نشتقه من Salt
+  /// ← Hint: هذا يقلل حجم الملف ويحافظ على الأمان
+  enc.IV _deriveIVFromSalt(List<int> salt) {
+    // ← Hint: نأخذ Hash من Salt ونستخدم أول 16 بايت كـ IV
+    final hash = sha256.convert(salt).bytes;
+    return enc.IV(Uint8List.fromList(hash.sublist(0, 16)));
   }
 
   // ==========================================================
@@ -81,12 +98,22 @@ class BackupService {
   }
 
   // ==========================================================
-  // 🗂️ إنشاء ومشاركة نسخة احتياطية مشفرة
-  // ← Hint: المنطق الجديد - حفظ في Downloads أولاً ثم المشاركة
+  // 🗂️ إنشاء ومشاركة نسخة احتياطية مشفرة بكلمة مرور
+  // ← Hint: المنطق المحدث - استخدام كلمة مرور من المستخدم للتشفير
+  // ← Hint: هيكل الملف: [Magic Number] + [Salt] + [Encrypted Database]
   // ==========================================================
-  Future<Map<String, dynamic>> createAndShareBackup() async {
+  /// [password] كلمة المرور التي سيستخدمها المستخدم لحماية النسخة
+  Future<Map<String, dynamic>> createAndShareBackup(String password) async {
     try {
       print("🔹 بدء إنشاء النسخة الاحتياطية...");
+
+      // ← Hint: التحقق من أن كلمة المرور ليست فارغة
+      if (password.trim().isEmpty) {
+        return {
+          'status': 'error',
+          'message': 'كلمة المرور لا يمكن أن تكون فارغة',
+        };
+      }
 
       // 🔸 الحصول على مجلد قاعدة البيانات
       final dbFolder = await getApplicationDocumentsDirectory();
@@ -104,27 +131,31 @@ class BackupService {
       // قراءة محتوى قاعدة البيانات كـ Bytes
       final dbBytes = await dbFile.readAsBytes();
 
-      // نضيف معرف مميز للملف لتمييزه كنسخة احتياطية لتطبيقنا
-      final dataToEncrypt = Uint8List.fromList(
-        _magicNumber.codeUnits + dbBytes,
-      );
+      // 🔸 توليد Salt عشوائي لهذه النسخة الاحتياطية
+      /// ← Hint: Salt عشوائي جديد لكل نسخة احتياطية يمنع هجمات Rainbow Table
+      /// ← Hint: حتى لو استخدمنا نفس كلمة المرور، كل نسخة ستكون مختلفة
+      final salt = enc.IV.fromSecureRandom(_saltLength).bytes;
 
-      // 🔸 إنشاء أداة التشفير
-      final encrypter = await _getEncrypter();
+      // 🔸 اشتقاق مفتاح التشفير من كلمة المرور والـ Salt
+      print("🔹 اشتقاق مفتاح التشفير من كلمة المرور...");
+      final encryptionKey = _deriveKeyFromPassword(password, salt);
+      final iv = _deriveIVFromSalt(salt);
 
-      // التأكد من وجود IV أو إنشاؤه إذا مفقود
-      String? ivBase64 = await _secureStorage.read(key: _encryptionIvStorageKey);
-      if (ivBase64 == null || ivBase64.isEmpty) {
-        final newIv = enc.IV.fromSecureRandom(16);
-        ivBase64 = newIv.base64;
-        await _secureStorage.write(key: _encryptionIvStorageKey, value: ivBase64);
-      }
+      // 🔸 إنشاء أداة التشفير باستخدام AES-256
+      /// ← Hint: نستخدم CBC mode للتشفير القوي
+      final encrypter = enc.Encrypter(enc.AES(encryptionKey, mode: enc.AESMode.cbc));
 
-      final iv = enc.IV.fromBase64(ivBase64);
-
-      // 🔸 تشفير البيانات
+      // 🔸 تشفير بيانات قاعدة البيانات
       print("🔹 تشفير البيانات...");
-      final encryptedData = encrypter.encryptBytes(dataToEncrypt, iv: iv);
+      final encryptedData = encrypter.encryptBytes(dbBytes, iv: iv);
+
+      // 🔸 بناء الملف النهائي: [Magic Number] + [Salt] + [Encrypted Data]
+      /// ← Hint: نحتاج Salt عند فك التشفير لاشتقاق نفس المفتاح
+      final finalFileBytes = Uint8List.fromList([
+        ..._magicNumber.codeUnits,  // ← Hint: للتحقق من صحة الملف
+        ...salt,                     // ← Hint: Salt للاشتقاق (16 بايت)
+        ...encryptedData.bytes,      // ← Hint: البيانات المشفرة
+      ]);
 
       // ← Hint: إنشاء اسم ملف مع التاريخ والوقت
       final timestamp = DateTime.now();
@@ -132,7 +163,7 @@ class BackupService {
 
       // ← Hint: الخطوة 1 - حفظ الملف في Downloads أولاً
       final downloadsDir = await _getDownloadsDirectory();
-      
+
       if (downloadsDir == null) {
         return {
           'status': 'error',
@@ -141,9 +172,9 @@ class BackupService {
       }
 
       final backupFile = File(p.join(downloadsDir.path, backupFileName));
-      
+
       // ← Hint: كتابة البيانات المشفرة في ملف Downloads
-      await backupFile.writeAsBytes(encryptedData.bytes);
+      await backupFile.writeAsBytes(finalFileBytes);
 
       print("✅ تم حفظ الملف في: ${backupFile.path}");
 
@@ -198,11 +229,19 @@ class BackupService {
   }
 
   // ==========================================================
-  // ♻️ استعادة البيانات من نسخة احتياطية مشفرة
+  // ♻️ استعادة البيانات من نسخة احتياطية مشفرة بكلمة مرور
+  // ← Hint: المنطق المحدث - استخدام كلمة مرور من المستخدم لفك التشفير
+  // ← Hint: نستخرج Salt من الملف ونستخدمه مع كلمة المرور لاشتقاق المفتاح
   // ==========================================================
-  Future<String> restoreBackup() async {
+  /// [password] كلمة المرور التي استخدمها المستخدم عند إنشاء النسخة
+  Future<String> restoreBackup(String password) async {
     try {
       print("🔹 بدء عملية استعادة النسخة الاحتياطية...");
+
+      // ← Hint: التحقق من أن كلمة المرور ليست فارغة
+      if (password.trim().isEmpty) {
+        return 'كلمة المرور لا يمكن أن تكون فارغة';
+      }
 
       // 🔸 اختيار ملف النسخة الاحتياطية من الجهاز
       final result = await FilePicker.platform.pickFiles(
@@ -217,47 +256,82 @@ class BackupService {
 
       final backupFile = File(result.files.single.path!);
 
-      // قراءة محتوى الملف المشفر
-      final encryptedBytes = await backupFile.readAsBytes();
-      final encryptedData = enc.Encrypted(encryptedBytes);
+      // قراءة محتوى الملف كاملاً
+      final fileBytes = await backupFile.readAsBytes();
 
-      // 🔸 إنشاء أداة التشفير
-      final encrypter = await _getEncrypter();
-
-      // قراءة IV من التخزين الآمن (أو إنشاؤه إذا مفقود)
-      String? ivBase64 = await _secureStorage.read(key: _encryptionIvStorageKey);
-      if (ivBase64 == null || ivBase64.isEmpty) {
-        throw Exception('مفتاح فك التشفير مفقود. لا يمكن استعادة النسخة.');
+      // 🔸 التحقق من الحد الأدنى لحجم الملف
+      /// ← Hint: الحد الأدنى = Magic Number + Salt (16 bytes) + بيانات مشفرة (16 bytes على الأقل)
+      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      if (fileBytes.length < minFileSize) {
+        throw Exception('حجم الملف صغير جداً. الملف قد يكون تالفاً.');
       }
 
-      final iv = enc.IV.fromBase64(ivBase64);
+      // 🔸 استخراج Magic Number من بداية الملف
+      final magicNumberSize = _magicNumber.codeUnits.length;
+      final fileMagicNumber = String.fromCharCodes(
+        fileBytes.sublist(0, magicNumberSize),
+      );
 
-      // 🔸 فك تشفير البيانات
-      print("🔹 فك تشفير البيانات...");
-      Uint8List decryptedBytes;
-      try {
-        final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);
-        decryptedBytes = Uint8List.fromList(decryptedData);
-      } catch (e) {
-        throw Exception(
-            'فشل فك التشفير. الملف قد يكون تالفًا أو لا يخص هذا التطبيق.');
-      }
-
-      // 🔸 التحقق من العلامة المميزة في بداية الملف
-      if (decryptedBytes.length < _magicNumber.codeUnits.length ||
-          String.fromCharCodes(
-                  decryptedBytes.sublist(0, _magicNumber.codeUnits.length)) !=
-              _magicNumber) {
+      // ← Hint: التحقق من Magic Number للتأكد أن الملف من تطبيقنا
+      if (fileMagicNumber != _magicNumber) {
         throw Exception('ملف النسخة الاحتياطية غير صالح أو لا يخص هذا التطبيق.');
       }
 
-      // 🔸 استخراج بيانات قاعدة البيانات الفعلية بعد إزالة المعرف
-      final dbData = decryptedBytes.sublist(_magicNumber.codeUnits.length);
+      // 🔸 استخراج Salt من الملف
+      /// ← Hint: Salt موجود مباشرة بعد Magic Number
+      final salt = fileBytes.sublist(
+        magicNumberSize,
+        magicNumberSize + _saltLength,
+      );
+
+      // 🔸 استخراج البيانات المشفرة
+      /// ← Hint: باقي الملف هو البيانات المشفرة
+      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
+      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+      // 🔸 اشتقاق مفتاح فك التشفير من كلمة المرور والـ Salt المستخرج
+      print("🔹 اشتقاق مفتاح فك التشفير من كلمة المرور...");
+      final decryptionKey = _deriveKeyFromPassword(password, salt);
+      final iv = _deriveIVFromSalt(salt);
+
+      // 🔸 إنشاء أداة فك التشفير
+      final encrypter = enc.Encrypter(enc.AES(decryptionKey, mode: enc.AESMode.cbc));
+
+      // 🔸 فك تشفير البيانات
+      print("🔹 فك تشفير البيانات...");
+      Uint8List dbBytes;
+      try {
+        final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);
+        dbBytes = Uint8List.fromList(decryptedData);
+      } catch (e) {
+        // ← Hint: إذا فشل فك التشفير، غالباً السبب هو كلمة مرور خاطئة
+        throw Exception(
+          'فشل فك التشفير. تأكد من صحة كلمة المرور أو أن الملف غير تالف.',
+        );
+      }
+
+      // 🔸 التحقق من أن البيانات المفكوكة منطقية (SQLite database)
+      /// ← Hint: قواعد بيانات SQLite تبدأ دائماً بـ "SQLite format 3"
+      if (dbBytes.length < 16 ||
+          String.fromCharCodes(dbBytes.sublist(0, 6)) != 'SQLite') {
+        throw Exception(
+          'كلمة المرور غير صحيحة أو الملف تالف.',
+        );
+      }
 
       // 🔸 تحديد مكان قاعدة البيانات الأصلية واستبدالها بالنسخة الجديدة
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbFolder.path, _dbFileName));
-      await dbFile.writeAsBytes(dbData);
+
+      // ← Hint: نسخ احتياطية من قاعدة البيانات الحالية قبل الاستبدال (للأمان)
+      if (await dbFile.exists()) {
+        final backupPath = '${dbFile.path}.old';
+        await dbFile.copy(backupPath);
+        print("🔸 تم إنشاء نسخة احتياطية من القاعدة الحالية: $backupPath");
+      }
+
+      // كتابة البيانات المستعادة
+      await dbFile.writeAsBytes(dbBytes);
 
       print("✅ تم استعادة النسخة الاحتياطية بنجاح!");
       return 'نجاح';
