@@ -3620,7 +3620,7 @@ abstract class AppLocalizations {
   /// **'Select Payment Date'**
   String get selectPaymentDate;
 
-  /// No description provided for @confirm.
+  /// Confirm button text
   ///
   /// In en, this message translates to:
   /// **'Confirm'**
@@ -5419,6 +5419,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To ensure continued use of the app'**
   String get toEnsureContinuedUse;
+
+  /// Title for password input dialog when creating a backup
+  ///
+  /// In en, this message translates to:
+  /// **'Protect Your Backup'**
+  String get createBackupPasswordTitle;
+
+  /// Subtitle explaining password input when creating backup
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password to protect your backup. You\'ll need it to restore on any device.'**
+  String get createBackupPasswordSubtitle;
+
+  /// Title for password input dialog when restoring a backup
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypt Backup'**
+  String get restoreBackupPasswordTitle;
+
+  /// Subtitle explaining password input when restoring backup
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the password you used when creating this backup.'**
+  String get restoreBackupPasswordSubtitle;
+
+  /// Label for password confirmation field
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// Placeholder text for password confirmation field
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter password'**
+  String get reEnterPassword;
+
+  /// Error message when password field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Password cannot be empty'**
+  String get passwordCannotBeEmpty;
+
+  /// Error message when passwords don't match
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// Important warning about remembering the password
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.'**
+  String get passwordTip;
 }
 
 class _AppLocalizationsDelegate

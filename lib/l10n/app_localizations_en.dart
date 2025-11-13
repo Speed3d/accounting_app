@@ -2908,4 +2908,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toEnsureContinuedUse => 'To ensure continued use of the app';
+
+  @override
+  String get createBackupPasswordTitle => 'Protect Your Backup';
+
+  @override
+  String get createBackupPasswordSubtitle =>
+      'Choose a password to protect your backup. You\'ll need it to restore on any device.';
+
+  @override
+  String get restoreBackupPasswordTitle => 'Decrypt Backup';
+
+  @override
+  String get restoreBackupPasswordSubtitle =>
+      'Enter the password you used when creating this backup.';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get reEnterPassword => 'Re-enter password';
+
+  @override
+  String get passwordCannotBeEmpty => 'Password cannot be empty';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordTip =>
+      '⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.';
 }
