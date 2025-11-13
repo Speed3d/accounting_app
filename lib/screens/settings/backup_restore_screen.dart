@@ -31,25 +31,36 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   // ============= الدوال =============
 
   /// ← Hint: إنشاء نسخة احتياطية وحفظها في Downloads
+  /// ← Hint: الخطوة 1 - طلب كلمة المرور أولاً
   Future<void> _handleCreateBackup() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
+    // ← Hint: عرض نافذة إدخال كلمة المرور أولاً
+    final password = await _showPasswordDialog(
+      title: l10n.createBackupPasswordTitle,
+      subtitle: l10n.createBackupPasswordSubtitle,
+      isConfirmation: true, // ← Hint: نطلب تأكيد كلمة المرور عند الإنشاء
+    );
+
+    // إذا ألغى المستخدم إدخال كلمة المرور
+    if (password == null) return;
+
     setState(() => _isBackingUp = true);
 
     try {
-      // ← Hint: استدعاء الدالة المحدثة التي تعيد Map بدلاً من String
-      final result = await _backupService.createAndShareBackup();
+      // ← Hint: استدعاء الدالة المحدثة مع كلمة المرور
+      final result = await _backupService.createAndShareBackup(password);
 
       if (mounted) {
         setState(() => _isBackingUp = false);
-        
+
         if (result['status'] == 'success') {
           // ← Hint: حفظ معلومات الملف المنشأ
           setState(() {
             _lastBackupFilePath = result['filePath'];
             _lastBackupFileName = result['fileName'];
           });
-          
+
           // ← Hint: عرض رسالة نجاح مع موقع الملف
           _showSuccessDialog(
             l10n,
@@ -70,7 +81,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isBackingUp = false);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('خطأ: ${e.toString()}'),
@@ -256,7 +267,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   /// استعادة البيانات من نسخة احتياطية
-  /// Hint: عملية خطرة! نطلب التأكيد أولاً
+  /// Hint: عملية خطرة! نطلب التأكيد أولاً ثم كلمة المرور
   Future<void> _handleRestoreBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -287,7 +298,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(l10n.cancel),
           ),
-          
+
           // زر التأكيد (خطر!)
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -306,11 +317,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     // إذا ألغى المستخدم، نتوقف
     if (confirm != true) return;
 
+    // ← Hint: عرض نافذة إدخال كلمة المرور
+    final password = await _showPasswordDialog(
+      title: l10n.restoreBackupPasswordTitle,
+      subtitle: l10n.restoreBackupPasswordSubtitle,
+      isConfirmation: false, // ← Hint: لا نحتاج تأكيد عند الاستعادة
+    );
+
+    // إذا ألغى المستخدم إدخال كلمة المرور
+    if (password == null) return;
+
     // ============= تنفيذ الاستعادة =============
     setState(() => _isRestoring = true);
 
     try {
-      final result = await _backupService.restoreBackup();
+      // ← Hint: استدعاء الدالة المحدثة مع كلمة المرور
+      final result = await _backupService.restoreBackup(password);
 
       if (mounted) {
         setState(() => _isRestoring = false);
@@ -358,7 +380,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isRestoring = false);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('خطأ: ${e.toString()}'),
@@ -368,6 +390,230 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         );
       }
     }
+  }
+
+  // ==========================================================
+  // ← Hint: دالة لعرض نافذة إدخال كلمة المرور بشكل احترافي
+  // ==========================================================
+  /// [title] عنوان النافذة
+  /// [subtitle] الوصف التوضيحي
+  /// [isConfirmation] هل نحتاج تأكيد لكلمة المرور (عند الإنشاء نعم، عند الاستعادة لا)
+  ///
+  /// ← Hint: تُرجع كلمة المرور إذا أدخلها المستخدم، أو null إذا ألغى
+  Future<String?> _showPasswordDialog({
+    required String title,
+    required String subtitle,
+    required bool isConfirmation,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // ← Hint: Controllers لحقول كلمة المرور
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    // ← Hint: متغيرات لإظهار/إخفاء كلمة المرور
+    bool obscurePassword = true;
+    bool obscureConfirmPassword = true;
+
+    // ← Hint: متغير لتتبع الأخطاء
+    String? errorMessage;
+
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  color: AppColors.info,
+                  size: 28,
+                ),
+                const SizedBox(width: AppConstants.spacingMd),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ← Hint: الوصف التوضيحي
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondaryLight,
+                    ),
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingLg),
+
+                  // ← Hint: حقل كلمة المرور
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      hintText: l10n.enterPassword,
+                      prefixIcon: const Icon(Icons.vpn_key),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                      errorText: errorMessage,
+                    ),
+                    onChanged: (_) {
+                      // ← Hint: إزالة رسالة الخطأ عند الكتابة
+                      if (errorMessage != null) {
+                        setDialogState(() => errorMessage = null);
+                      }
+                    },
+                  ),
+
+                  // ← Hint: حقل تأكيد كلمة المرور (فقط عند الإنشاء)
+                  if (isConfirmation) ...[
+                    const SizedBox(height: AppConstants.spacingMd),
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: l10n.confirmPassword,
+                        hintText: l10n.reEnterPassword,
+                        prefixIcon: const Icon(Icons.vpn_key_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscureConfirmPassword = !obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (_) {
+                        // ← Hint: إزالة رسالة الخطأ عند الكتابة
+                        if (errorMessage != null) {
+                          setDialogState(() => errorMessage = null);
+                        }
+                      },
+                    ),
+                  ],
+
+                  // ← Hint: نصيحة للمستخدم
+                  const SizedBox(height: AppConstants.spacingMd),
+                  Container(
+                    padding: AppConstants.paddingSm,
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withOpacity(0.1),
+                      borderRadius: AppConstants.borderRadiusSm,
+                      border: Border.all(
+                        color: AppColors.warning.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: AppColors.warning,
+                        ),
+                        const SizedBox(width: AppConstants.spacingSm),
+                        Expanded(
+                          child: Text(
+                            l10n.passwordTip,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              // ← Hint: زر الإلغاء
+              TextButton(
+                onPressed: () {
+                  passwordController.dispose();
+                  confirmPasswordController.dispose();
+                  Navigator.of(ctx).pop(null);
+                },
+                child: Text(l10n.cancel),
+              ),
+
+              // ← Hint: زر التأكيد
+              ElevatedButton(
+                onPressed: () {
+                  final password = passwordController.text;
+
+                  // ← Hint: التحقق من أن كلمة المرور ليست فارغة
+                  if (password.trim().isEmpty) {
+                    setDialogState(() {
+                      errorMessage = l10n.passwordCannotBeEmpty;
+                    });
+                    return;
+                  }
+
+                  // ← Hint: التحقق من الحد الأدنى لطول كلمة المرور
+                  if (password.length < 4) {
+                    setDialogState(() {
+                      errorMessage = l10n.passwordTooShort;
+                    });
+                    return;
+                  }
+
+                  // ← Hint: التحقق من تطابق كلمتي المرور (فقط عند الإنشاء)
+                  if (isConfirmation) {
+                    final confirmPassword = confirmPasswordController.text;
+                    if (password != confirmPassword) {
+                      setDialogState(() {
+                        errorMessage = l10n.passwordsDoNotMatch;
+                      });
+                      return;
+                    }
+                  }
+
+                  // ← Hint: كل شيء على ما يرام، نرجع كلمة المرور
+                  passwordController.dispose();
+                  confirmPasswordController.dispose();
+                  Navigator.of(ctx).pop(password);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.info,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(l10n.confirm),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    return result;
   }
 
   // ============= البناء =============
