@@ -646,9 +646,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   // ============================================================
-  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية
+  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية - النسخة الآمنة
   // ============================================================
   /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
+  /// ← Hint: ✅✅ النسخة الآمنة بدون frameBuilder
   Widget _buildProductImage(Product product, bool isInCart) {
     // ← Hint: التحقق من وجود صورة
     final hasImage = product.imagePath != null && 
@@ -679,8 +680,12 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             ? Image.file(
                 File(product.imagePath!),
                 fit: BoxFit.cover,
+                // ← Hint: cacheWidth مناسب لحجم الصورة 50px
+                cacheWidth: 100,
+                cacheHeight: 100,
+                // ← Hint: فقط errorBuilder - بدون frameBuilder
                 errorBuilder: (context, error, stackTrace) {
-                  // ← Hint: في حالة فشل تحميل الصورة، نعرض الأيقونة الافتراضية
+                  debugPrint('❌ خطأ في عرض صورة المنتج: ${product.productName}');
                   return Center(
                     child: Icon(
                       isInCart ? Icons.shopping_cart : Icons.inventory_2,

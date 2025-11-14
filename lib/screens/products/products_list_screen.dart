@@ -667,9 +667,10 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   }
 
   // ============================================================
-  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية
+  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية - محسّنة
   // ============================================================
   /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
+  /// ← Hint: ✅ محسّنة مع cacheWidth للأداء العالي
   Widget _buildProductImage(Product product, bool isDark) {
     // ← Hint: التحقق من وجود صورة
     final hasImage = product.imagePath != null && 
@@ -696,8 +697,33 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             ? Image.file(
                 File(product.imagePath!),
                 fit: BoxFit.cover,
+                // ← Hint: cacheWidth مناسب لحجم الصورة 60px
+                // ← Hint: نستخدم 120 (ضعف الحجم) للحصول على جودة جيدة على الشاشات عالية الكثافة
+                cacheWidth: 120,
+                cacheHeight: 120,
+                // ← Hint: عرض placeholder بسيط أثناء التحميل
+                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                  // ← Hint: إذا تم التحميل مباشرة، عرض الصورة فوراً
+                  if (wasSynchronouslyLoaded) return child;
+                  // ← Hint: إذا لم يتم التحميل بعد، عرض أيقونة تحميل صغيرة
+                  return frame != null
+                      ? child
+                      : Container(
+                          color: isDark 
+                              ? AppColors.surfaceDark 
+                              : AppColors.surfaceLight,
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                },
+                // ← Hint: معالجة الأخطاء - عرض أيقونة broken_image
                 errorBuilder: (context, error, stackTrace) {
-                  // ← Hint: في حالة فشل تحميل الصورة، نعرض الأيقونة الافتراضية
+                  debugPrint('❌ خطأ في عرض صورة المنتج: ${product.productName}');
                   return const Center(
                     child: Icon(
                       Icons.broken_image,

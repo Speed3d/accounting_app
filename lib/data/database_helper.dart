@@ -73,8 +73,8 @@ class DatabaseHelper {
         CanManageEmployees INTEGER NOT NULL DEFAULT 0,
         CanViewSettings INTEGER NOT NULL DEFAULT 0,
         CanViewEmployeesReport INTEGER NOT NULL DEFAULT 0,
-        canManageExpenses INTEGER NOT NULL DEFAULT 0,
-        canViewCashSales INTEGER NOT NULL DEFAULT 0
+        CanManageExpenses INTEGER NOT NULL DEFAULT 0,
+        CanViewCashSales INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
