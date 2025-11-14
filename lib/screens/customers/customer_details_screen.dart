@@ -178,106 +178,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
     }
   }
   
-  // =================================================================================================
-  // 🛒 تسجيل عملية بيع - Record New Sale
-  // =================================================================================================
-  
-  /// Hint: فتح شاشة اختيار المنتجات وتسجيل عملية بيع جديدة
-  // Future<void> _recordNewSale() async {
-  //   final l10n = AppLocalizations.of(context)!;
-    
-  //   // === الخطوة 1: فتح شاشة اختيار المنتجات ===
-  //   final result = await Navigator.of(context).push<List<CartItem>>(
-  //     MaterialPageRoute(
-  //       builder: (context) => const NewSaleScreen(),
-  //     ),
-  //   );
-    
-  //   // Hint: إذا ألغى المستخدم أو لم يختر منتجات
-  //   if (result == null || result.isEmpty) return;
-    
-  //   // === الخطوة 2: تسجيل العملية في قاعدة البيانات ===
-  //   try {
-  //     final db = await _dbHelper.database;
-  //     double totalSaleAmount = 0;
-      
-  //     // Hint: استخدام Transaction لضمان تنفيذ كل العمليات معاً
-  //     await db.transaction((txn) async {
-  //       for (var item in result) {
-  //         final product = item.product;
-  //         final quantitySold = item.quantity;
-          
-  //         // حساب القيم
-  //         final salePriceForItem = product.sellingPrice * quantitySold;
-  //         final profitForItem = (product.sellingPrice - product.costPrice) * quantitySold;
-  //         totalSaleAmount += salePriceForItem;
-          
-  //         // تفاصيل البيع
-  //         final saleDetails = l10n.saleDetails(
-  //           product.productName,
-  //           quantitySold.toString(),
-  //         );
-          
-  //         // === إدراج سجل الدين (المشتريات) ===
-  //         final newDebt = CustomerDebt(
-  //           customerID: _currentCustomer.customerID!,
-  //           customerName: _currentCustomer.customerName,
-  //           details: saleDetails,
-  //           debt: salePriceForItem,
-  //           dateT: DateTime.now().toIso8601String(),
-  //           qty_Coustomer: quantitySold,
-  //           productID: product.productID!,
-  //           costPriceAtTimeOfSale: product.costPrice,
-  //           profitAmount: profitForItem,
-  //         );
-  //         await txn.insert('Debt_Customer', newDebt.toMap());
-          
-  //         // === تحديث كمية المنتج في المخزن ===
-  //         await txn.rawUpdate(
-  //           'UPDATE Store_Products SET Quantity = Quantity - ? WHERE ProductID = ?',
-  //           [quantitySold, product.productID],
-  //         );
-  //       }
-        
-  //       // === تحديث رصيد الزبون ===
-  //       await txn.rawUpdate(
-  //         'UPDATE TB_Customer SET Debt = Debt + ?, Remaining = Remaining + ? WHERE CustomerID = ?',
-  //         [totalSaleAmount, totalSaleAmount, _currentCustomer.customerID],
-  //       );
-  //     });
-      
-  //     // === الخطوة 3: تسجيل النشاط ===
-  //     await _dbHelper.logActivity(
-  //       l10n.newSaleActivityLog(_currentCustomer.customerName, formatCurrency(totalSaleAmount)),
-  //       userId: _authService.currentUser?.id,
-  //       userName: _authService.currentUser?.fullName,
-  //     );
-      
-  //     // === الخطوة 4: إظهار رسالة نجاح ===
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(l10n.newSaleSuccess),
-  //           backgroundColor: AppColors.success,
-  //           behavior: SnackBarBehavior.floating,
-  //         ),
-  //       );
-        
-  //       // === الخطوة 5: تحديث البيانات ===
-  //       _reloadData();
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text(l10n.saleRecordError(e.toString())),
-  //           backgroundColor: AppColors.error,
-  //           behavior: SnackBarBehavior.floating,
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
+
 
   Future<void> _recordNewSale() async {
   final l10n = AppLocalizations.of(context)!;
@@ -320,7 +221,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           details: saleDetails,
           debt: salePriceForItem,
           dateT: saleDate.toIso8601String(), // ✅ Hint: هنا التغيير
-          qty_Coustomer: quantitySold,
+          qty_Customer: quantitySold,
           productID: product.productID!,
           costPriceAtTimeOfSale: product.costPrice,
           profitAmount: profitForItem,

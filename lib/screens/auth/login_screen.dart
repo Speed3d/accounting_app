@@ -164,7 +164,7 @@ try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.noUsersFound), // ✅ Hint: سنضيفها في الترجمة
+            content: Text(l10n.noUsersFound),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -360,7 +360,7 @@ _buildCompanyLogo(),
                   horizontal: AppConstants.spacingMd,
                 ),
                 child: Text(
-                  l10n.or, // ✅ Hint: سنضيفها في الترجمة
+                  l10n.or,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark 
                       ? AppColors.textSecondaryDark 
@@ -383,11 +383,11 @@ _buildCompanyLogo(),
           
           // ✅ Hint: الزر نفسه
           CustomButton(
-            text: l10n.loginWithBiometric, // ✅ Hint: سنضيفها في الترجمة
+            text: l10n.loginWithBiometric,
             icon: Icons.fingerprint,
             onPressed: _handleBiometricLogin,
             isLoading: _isBiometricLoading,
-            type: ButtonType.secondary, // ✅ Hint: نوع ثانوي (Outlined)
+            type: ButtonType.secondary,
             size: ButtonSize.large,
           ),
         ],

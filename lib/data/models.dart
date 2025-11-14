@@ -69,8 +69,8 @@ class User {
         'CanManageEmployees': canManageEmployees ? 1 : 0,
         'CanViewSettings': canViewSettings ? 1 : 0,
         'CanViewEmployeesReport': canViewEmployeesReport ? 1 : 0,
-        'canManageExpenses': canManageExpenses ? 1 : 0,
-        'canViewCashSales': canViewCashSales ? 1 : 0,
+        'CanManageExpenses': canManageExpenses ? 1 : 0,
+        'CanViewCashSales': canViewCashSales ? 1 : 0,
       };
 
   // Hint: دالة fromMap تقوم بالعكس، تحول 1 أو 0 من قاعدة البيانات إلى true أو false.
@@ -98,8 +98,8 @@ class User {
       canManageEmployees: (map['CanManageEmployees'] ?? 0) == 1,
       canViewSettings: (map['CanViewSettings'] ?? 0) == 1,
       canViewEmployeesReport: (map['CanViewEmployeesReport'] ?? 0) ==1,
-      canManageExpenses: (map['canManageExpenses'] ?? 0) == 1,
-      canViewCashSales: (map['canViewCashSales'] ?? 0) == 1,
+      canManageExpenses: (map['CanManageExpenses'] ?? 0) == 1,
+      canViewCashSales: (map['CanViewCashSales'] ?? 0) == 1,
     );
 }
 
@@ -472,17 +472,18 @@ class CustomerDebt {
   final String details;
   final double debt;
   final String dateT;
-  final int qty_Coustomer;
+  // final int qty_Coustomer;
+  final int qty_Customer;
   final int productID;
   final double costPriceAtTimeOfSale;
   final double profitAmount;
   final int isReturned; // 0 = not returned, 1 = returned
 
-  CustomerDebt({this.id, required this.customerID, this.customerName, required this.details, required this.debt, required this.dateT, required this.qty_Coustomer, required this.productID, required this.costPriceAtTimeOfSale, required this.profitAmount, this.isReturned = 0});
+  CustomerDebt({this.id, required this.customerID, this.customerName, required this.details, required this.debt, required this.dateT, required this.qty_Customer, required this.productID, required this.costPriceAtTimeOfSale, required this.profitAmount, this.isReturned = 0});
 
-  Map<String, dynamic> toMap() => {'ID': id, 'CustomerID': customerID, 'CustomerName': customerName, 'Details': details, 'Debt': debt, 'DateT': dateT, 'Qty_Coustomer': qty_Coustomer, 'ProductID': productID, 'CostPriceAtTimeOfSale': costPriceAtTimeOfSale, 'ProfitAmount': profitAmount, 'IsReturned': isReturned};
+  Map<String, dynamic> toMap() => {'ID': id, 'CustomerID': customerID, 'CustomerName': customerName, 'Details': details, 'Debt': debt, 'DateT': dateT, 'Qty_Customer': qty_Customer, 'ProductID': productID, 'CostPriceAtTimeOfSale': costPriceAtTimeOfSale, 'ProfitAmount': profitAmount, 'IsReturned': isReturned};
 
-  factory CustomerDebt.fromMap(Map<String, dynamic> map) => CustomerDebt(id: map['ID'], customerID: map['CustomerID'], customerName: map['CustomerName'], details: map['Details'], debt: (map['Debt'] as num).toDouble(), dateT: map['DateT'], qty_Coustomer: map['Qty_Coustomer'], productID: map['ProductID'], costPriceAtTimeOfSale: (map['CostPriceAtTimeOfSale'] as num).toDouble(), profitAmount: (map['ProfitAmount'] as num).toDouble(), isReturned: map['IsReturned'] ?? 0);
+  factory CustomerDebt.fromMap(Map<String, dynamic> map) => CustomerDebt(id: map['ID'], customerID: map['CustomerID'], customerName: map['CustomerName'], details: map['Details'], debt: (map['Debt'] as num).toDouble(), dateT: map['DateT'], qty_Customer: map['Qty_Customer'], productID: map['ProductID'], costPriceAtTimeOfSale: (map['CostPriceAtTimeOfSale'] as num).toDouble(), profitAmount: (map['ProfitAmount'] as num).toDouble(), isReturned: map['IsReturned'] ?? 0);
 }
 
 // --- نموذج دفعة الزبون ---

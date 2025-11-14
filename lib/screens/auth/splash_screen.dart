@@ -45,8 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
   File? _companyLogo;
   
   // ← Hint: عدد أيام الفترة التجريبية قبل طلب التفعيل
-  // static const int trialPeriodDays = 14;
-  static const int trialPeriodDays = 19;
+  static const int trialPeriodDays = 14;
 
   // ← Hint: مدة عرض شاشة البداية بالميلي ثانية (2.5 ثانية)
   static const int splashDuration = 2500;

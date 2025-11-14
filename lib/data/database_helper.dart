@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
   // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
-  static const _databaseVersion = 4;
+  static const _databaseVersion = 1;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -194,7 +194,7 @@ class DatabaseHelper {
           Details TEXT, 
           Debt REAL NOT NULL, 
           DateT TEXT NOT NULL, 
-          Qty_Coustomer INTEGER NOT NULL, 
+          Qty_Customer INTEGER NOT NULL, 
           CostPriceAtTimeOfSale REAL NOT NULL, 
           ProfitAmount REAL NOT NULL, 
           IsReturned INTEGER NOT NULL DEFAULT 0,
@@ -294,115 +294,6 @@ class DatabaseHelper {
   // =================================================================================================
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     debugPrint('🔄 ترقية قاعدة البيانات من $oldVersion إلى $newVersion');
-
-    // if (oldVersion < 1) {
-    //   final oldData = await db.query('TB_App_State', limit: 1);
-    //   String? firstRunDate;
-    //   if (oldData.isNotEmpty) {
-    //     firstRunDate = oldData.first['first_run_date'] as String?;
-    //   }
-    //   await db.execute("DROP TABLE IF EXISTS TB_App_State");
-    //   await db.execute('''
-    //     CREATE TABLE TB_App_State (
-    //       ID INTEGER PRIMARY KEY,
-    //       first_run_date TEXT,
-    //       activation_expiry_date TEXT 
-    //     )
-    //   ''');
-    //   if (firstRunDate != null) {
-    //     await db.insert('TB_App_State', {'ID': 1, 'first_run_date': firstRunDate});
-    //   }
-    // }
-
-    // // --- ✅ الترقية من الإصدار 1 إلى 2 ---
-    // if (oldVersion < 2) {
-    //   // 1. إنشاء جدول الفواتير الجديد
-    //   await db.execute('''
-    //     CREATE TABLE TB_Invoices (
-    //       InvoiceID INTEGER PRIMARY KEY AUTOINCREMENT,
-    //       CustomerID INTEGER NOT NULL,
-    //       InvoiceDate TEXT NOT NULL,
-    //       TotalAmount REAL NOT NULL,
-    //       FOREIGN KEY (CustomerID) REFERENCES TB_Customer (CustomerID)
-    //     )
-    //   ''');
-
-    //   // 2. إعادة إنشاء جدول الديون (المبيعات) بالهيكل الجديد
-    //   // للأسف، إضافة Foreign Key لجدول موجود معقدة في SQLite،
-    //   // لذا إعادة الإنشاء هي الطريقة الأكثر أماناً هنا.
-    //   // بما أننا في مرحلة التطوير، هذا الإجراء مقبول.
-    //   await db.execute("DROP TABLE IF EXISTS Debt_Customer");
-    //   await db.execute('''
-    //     CREATE TABLE Debt_Customer (
-    //       ID INTEGER PRIMARY KEY AUTOINCREMENT, 
-    //       InvoiceID INTEGER,
-    //       CustomerID INTEGER NOT NULL, 
-    //       ProductID INTEGER NOT NULL, 
-    //       CustomerName TEXT, 
-    //       Details TEXT, 
-    //       Debt REAL NOT NULL, 
-    //       DateT TEXT NOT NULL, 
-    //       Qty_Coustomer INTEGER NOT NULL, 
-    //       CostPriceAtTimeOfSale REAL NOT NULL, 
-    //       ProfitAmount REAL NOT NULL, 
-    //       IsReturned INTEGER NOT NULL DEFAULT 0,
-    //       FOREIGN KEY (InvoiceID) REFERENCES TB_Invoices (InvoiceID)
-    //     )
-    //   ''');
-    // }
-
-    //  if (oldVersion < 3) {
-    //   // إضافة الحقل الجديد `IsVoid` إلى جدول الفواتير
-    //   await db.execute('ALTER TABLE TB_Invoices ADD COLUMN IsVoid INTEGER NOT NULL DEFAULT 0');
-    //   // إضافة الحقل الجديد `Status` (اختياري لكن مفيد)
-    //   await db.execute('ALTER TABLE TB_Invoices ADD COLUMN Status TEXT');
-    // }
-
-    // if (oldVersion < 4) {
-    //   await db.execute('''
-    //     CREATE TABLE TB_Profit_Withdrawals (
-    //       WithdrawalID INTEGER PRIMARY KEY AUTOINCREMENT,
-    //       SupplierID INTEGER NOT NULL,
-    //       PartnerName TEXT,
-    //       WithdrawalAmount REAL NOT NULL,
-    //       WithdrawalDate TEXT NOT NULL,
-    //       Notes TEXT
-    //     )
-    //   ''');
-    // }
-
-    // if (oldVersion < 5) {
-    //   await db.execute('''
-    //     CREATE TABLE TB_Expenses (
-    //       ExpenseID INTEGER PRIMARY KEY AUTOINCREMENT,
-    //       Description TEXT NOT NULL,
-    //       Amount REAL NOT NULL,
-    //       ExpenseDate TEXT NOT NULL,
-    //       Category TEXT,
-    //       Notes TEXT
-    //     )
-    //   ''');
-    // }
-
-    //  if (oldVersion < 6) {
-    //   // 1. إنشاء جدول فئات المصاريف
-    //   await db.execute('''
-    //     CREATE TABLE TB_Expense_Categories (
-    //       CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-    //       CategoryName TEXT NOT NULL UNIQUE
-    //     )
-    //   ''');
-    //   // 2. إضافة الفئات الافتراضية
-    //   await _insertDefaultCategories(db);
-    // }
-
-    //  if (oldVersion < 7) {
-    //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canManageExpenses INTEGER NOT NULL DEFAULT 0');
-    //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canViewCashSales INTEGER NOT NULL DEFAULT 0');
-    // }
-    if (oldVersion < 4) { // غيّر الرقم حسب الإصدار الحالي
-      await db.execute('ALTER TABLE Store_Products ADD COLUMN ImagePath TEXT');
-     }
 
       }
 
@@ -912,7 +803,7 @@ class DatabaseHelper {
       // الخطوة 1: تحديث حالة عملية البيع الأصلية إلى "مرجع".
       await txn.update('Debt_Customer', {'IsReturned': 1}, where: 'ID = ?', whereArgs: [saleToReturn.id]);
       // الخطوة 2: زيادة كمية المنتج في المخزن.
-      await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?', [saleToReturn.qty_Coustomer, saleToReturn.productID]);
+      await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?', [saleToReturn.qty_Customer, saleToReturn.productID]);
       
       // الخطوة 3 (المُعدلة): إنقاص المبلغ المتبقي على الزبون.
       // لا يوجد تغيير في الكود هنا، لكن المنطق تغير. الآن نسمح بأن تكون النتيجة سالبة.
@@ -923,7 +814,7 @@ class DatabaseHelper {
         originalSaleID: saleToReturn.id!,
         customerID: saleToReturn.customerID,
         productID: saleToReturn.productID,
-        returnedQuantity: saleToReturn.qty_Coustomer,
+        returnedQuantity: saleToReturn.qty_Customer,
         returnAmount: saleToReturn.debt,
         returnDate: DateTime.now().toIso8601String(),
         reason: 'إرجاع من قبل المستخدم',
@@ -1343,7 +1234,7 @@ Future<int> getActiveEmployeesCount() async {
         // تحديث حالة البند إلى "مرجع"
         await txn.update('Debt_Customer', {'IsReturned': 1}, where: 'ID = ?', whereArgs: [sale.id]);
         // زيادة كمية المنتج في المخزن
-        await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?', [sale.qty_Coustomer, sale.productID]);
+        await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?', [sale.qty_Customer, sale.productID]);
       }
 
       // 3. تحديث حالة الفاتورة الرئيسية إلى "ملغاة"
@@ -1553,7 +1444,7 @@ Future<int> getActiveEmployeesCount() async {
     // 5. ORDER BY total_quantity DESC: نرتب المنتجات تنازلياً حسب الكمية المباعة.
     // 6. LIMIT ?: نأخذ فقط العدد المحدد من النتائج.
     final result = await db.rawQuery('''
-      SELECT P.*, SUM(D.Qty_Coustomer) as total_quantity
+      SELECT P.*, SUM(D.Qty_Customer) as total_quantity
       FROM Debt_Customer D
       JOIN Store_Products P ON D.ProductID = P.ProductID
       WHERE D.IsReturned = 0
@@ -1773,7 +1664,7 @@ Future<List<Map<String, dynamic>>> getCustomerSalesReport({
     SELECT 
       D.ID as saleId,
       D.DateT as saleDate,
-      D.Qty_Coustomer as quantity,
+      D.Qty_Customer as quantity,
       D.Debt as amount,
       D.ProfitAmount as profit,
       D.CostPriceAtTimeOfSale as costPrice,
@@ -1858,7 +1749,7 @@ Future<Map<String, dynamic>> getCustomerSalesStatistics({
   String sql = '''
     SELECT 
       COUNT(D.ID) as totalTransactions,
-      SUM(D.Qty_Coustomer) as totalQuantity,
+      SUM(D.Qty_Customer) as totalQuantity,
       SUM(D.Debt) as totalSales,
       SUM(D.ProfitAmount) as totalProfit,
       AVG(D.Debt) as averageTransaction,
@@ -1942,7 +1833,7 @@ Future<List<Map<String, dynamic>>> getTopSellingProductsInPeriod({
     SELECT 
       P.ProductID,
       P.ProductName,
-      SUM(D.Qty_Coustomer) as totalQuantity,
+      SUM(D.Qty_Customer) as totalQuantity,
       SUM(D.Debt) as totalSales,
       SUM(D.ProfitAmount) as totalProfit
     FROM Debt_Customer D
