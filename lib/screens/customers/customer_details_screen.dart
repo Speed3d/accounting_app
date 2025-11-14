@@ -198,7 +198,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   
   try {
     final db = await _dbHelper.database;
-    double totalSaleAmount = 0;
+    dynamic totalSaleAmount = 0;
     
     await db.transaction((txn) async {
       for (var item in cartItems) {

@@ -115,8 +115,8 @@ class Employee {
   final String? phone;
   final String? imagePath;
   final String hireDate;
-  final double baseSalary;
-  final double balance; // الرصيد المستحق على الموظف (للسلف)
+  final dynamic baseSalary;
+  final dynamic balance; // الرصيد المستحق على الموظف (للسلف)
   final bool isActive;
 
   Employee({
@@ -166,11 +166,11 @@ class PayrollEntry {
   final String paymentDate;
   final int payrollMonth; // ✅ الحقل الجديد
   final int payrollYear;  // ✅ الحقل الجديد
-  final double baseSalary;
-  final double bonuses;
-  final double deductions;
-  final double advanceDeduction; // المبلغ المخصوم من السلفة
-  final double netSalary;
+  final dynamic baseSalary;
+  final dynamic bonuses;
+  final dynamic deductions;
+  final dynamic advanceDeduction; // المبلغ المخصوم من السلفة
+  final dynamic netSalary;
   final String? notes;
 
   PayrollEntry({
@@ -221,7 +221,7 @@ class EmployeeAdvance {
   final int? advanceID;
   final int employeeID;
   final String advanceDate;
-  final double advanceAmount;
+  final dynamic advanceAmount;
   final String repaymentStatus; // "غير مسددة", "مسددة جزئيًا", "مسددة بالكامل"
   final String? notes;
 
@@ -307,7 +307,7 @@ class Partner {
   final int? partnerID;
   final int? supplierID;
   final String partnerName;
-  final double sharePercentage;
+  final dynamic sharePercentage;
   final String? partnerAddress;
   final String? partnerPhone;
   final String? imagePath;
@@ -350,7 +350,7 @@ class Partner {
     int? partnerID, 
     int? supplierID,
      String? partnerName, 
-     double? sharePercentage, 
+     dynamic? sharePercentage, 
      String? partnerAddress, 
      String? partnerPhone, 
      String? imagePath,
@@ -374,8 +374,9 @@ class Product {
   final String? productDetails;
   final String? barcode; 
   final int quantity;
-  final double costPrice;
-  final double sellingPrice;
+  // final double costPrice;
+  final dynamic costPrice;
+  final dynamic sellingPrice;
   final int supplierID;
   final bool isActive;
   String? supplierName;
@@ -429,9 +430,9 @@ class Customer {
   final String customerName;
   final String? address;
   final String? phone;
-  final double debt;
-  final double payment;
-  final double remaining;
+  final dynamic debt;
+  final dynamic payment;
+  final dynamic remaining;
   final String dateT;
   final String? imagePath;
   final bool isActive;
@@ -470,13 +471,13 @@ class CustomerDebt {
   final int customerID;
   final String? customerName;
   final String details;
-  final double debt;
+  final dynamic debt;
   final String dateT;
   // final int qty_Coustomer;
   final int qty_Customer;
   final int productID;
-  final double costPriceAtTimeOfSale;
-  final double profitAmount;
+  final dynamic costPriceAtTimeOfSale;
+  final dynamic profitAmount;
   final int isReturned; // 0 = not returned, 1 = returned
 
   CustomerDebt({this.id, required this.customerID, this.customerName, required this.details, required this.debt, required this.dateT, required this.qty_Customer, required this.productID, required this.costPriceAtTimeOfSale, required this.profitAmount, this.isReturned = 0});
@@ -492,7 +493,7 @@ class CustomerPayment {
   final int? id;
   final int customerID;
   final String? customerName;
-  final double payment;
+  final dynamic payment;
   final String dateT;
   final String? comments;
 
@@ -516,7 +517,7 @@ class SalesReturn {
   final int originalSaleID;
   final int productID;
   final int returnedQuantity;
-  final double returnAmount;
+  final dynamic returnAmount;
   final String returnDate;
   final int customerID;
   final String? reason;

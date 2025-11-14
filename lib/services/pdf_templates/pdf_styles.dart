@@ -43,20 +43,20 @@ class PdfStyles {
 
   // ============= أحجام الخطوط (محسّنة للطباعة) =============
   
-  static const double fontSizeTitle = 15.0;      // عنوان التقرير (كان 20)
-  static const double fontSizeHeading = 12.0;    // عناوين الأقسام (كان 16)
-  static const double fontSizeSubheading = 10.5; // عناوين فرعية (كان 14)
-  static const double fontSizeBody = 9.0;        // النص العادي (كان 12)
-  static const double fontSizeSmall = 8.0;       // النصوص الصغيرة (كان 10)
-  static const double fontSizeCaption = 7.0;     // التعليقات (كان 8)
+  static const dynamic fontSizeTitle = 15.0;      // عنوان التقرير (كان 20)
+  static const dynamic fontSizeHeading = 12.0;    // عناوين الأقسام (كان 16)
+  static const dynamic fontSizeSubheading = 10.5; // عناوين فرعية (كان 14)
+  static const dynamic fontSizeBody = 9.0;        // النص العادي (كان 12)
+  static const dynamic fontSizeSmall = 8.0;       // النصوص الصغيرة (كان 10)
+  static const dynamic fontSizeCaption = 7.0;     // التعليقات (كان 8)
 
   // ============= المسافات (محسّنة للطباعة) =============
   
-  static const double spacingXs = 3.0;   // كان 4
-  static const double spacingSm = 5.0;   // كان 8
-  static const double spacingMd = 8.0;   // كان 16
-  static const double spacingLg = 12.0;  // كان 24
-  static const double spacingXl = 16.0;  // كان 32
+  static const dynamic spacingXs = 3.0;   // كان 4
+  static const dynamic spacingSm = 5.0;   // كان 8
+  static const dynamic spacingMd = 8.0;   // كان 16
+  static const dynamic spacingLg = 12.0;  // كان 24
+  static const dynamic spacingXl = 16.0;  // كان 32
 
   // ============= أنماط النصوص =============
   
@@ -100,7 +100,7 @@ class PdfStyles {
       );
 
   /// نمط النص الغامق
-  static pw.TextStyle boldStyle({double? fontSize, PdfColor? color}) =>
+  static pw.TextStyle boldStyle({dynamic fontSize, PdfColor? color}) =>
       pw.TextStyle(
         fontSize: fontSize ?? fontSizeBody,
         fontWeight: pw.FontWeight.bold,

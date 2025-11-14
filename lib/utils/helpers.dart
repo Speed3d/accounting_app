@@ -11,12 +11,12 @@ return input;
 }
 /// ✅ Hint: تنسيق الأرقام كعملة باستخدام CurrencyService
 /// الآن تستخدم العملة المختارة من المستخدم
-String formatCurrency(double amount) {
+String formatCurrency(dynamic amount) {
 // ✅ Hint: استخدام CurrencyService لتنسيق المبلغ
 return CurrencyService.instance.formatAmount(amount);
 }
 /// ✅ Hint: دالة جديدة - تنسيق بدون رمز العملة
-String formatCurrencyWithoutSymbol(double amount) {
+String formatCurrencyWithoutSymbol(dynamic amount) {
 return CurrencyService.instance.formatAmountWithoutSymbol(amount);
 }
 // ✅ نسخة محسّنة تدعم حالات أكثر

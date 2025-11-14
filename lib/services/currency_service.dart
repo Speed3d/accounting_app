@@ -45,7 +45,7 @@ debugPrint('❌ خطأ في حفظ العملة: $e');
 }
 /// ✅ Hint: تنسيق الرقم حسب العملة المختارة
 /// مثال: formatAmount(50000.5) -> "50,000.5 IQD" أو "$50,000.50"
-String formatAmount(double amount) {
+String formatAmount(dynamic amount) {
 // ✅ Hint: إنشاء NumberFormat حسب نوع العملة
 final formatter = NumberFormat.currency(
 locale: _currentCurrency.locale,
@@ -56,12 +56,12 @@ return formatter.format(amount);
 }
 /// ✅ Hint: تنسيق الرقم بدون رمز العملة
 /// مثال: formatAmountWithoutSymbol(50000.5) -> "50,000.5"
-String formatAmountWithoutSymbol(double amount) {
+String formatAmountWithoutSymbol(dynamic value) {
 final formatter = NumberFormat(
 _currentCurrency.pattern,
 _currentCurrency.locale,
 );
-return formatter.format(amount);
+return formatter.format(value.toString());
 }
 }
 /// ✅ Hint: تعريف العملات المدعومة

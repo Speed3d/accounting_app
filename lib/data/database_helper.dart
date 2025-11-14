@@ -1438,7 +1438,7 @@ Future<int> getActiveEmployeesCount() async {
   Future<List<Product>> getTopSellingProducts({int limit = 5}) async {
     final db = await instance.database;
     // الشرح:
-    // 1. SUM(D.Qty_Coustomer) as total_quantity: نحسب مجموع الكميات المباعة لكل منتج ونسميه total_quantity.
+    // 1. SUM(D.Qty_Customer) as total_quantity: نحسب مجموع الكميات المباعة لكل منتج ونسميه total_quantity.
     // 2. JOIN: نربط جدول المبيعات (Debt_Customer) بجدول المنتجات (Store_Products).
     // 3. WHERE D.IsReturned = 0: نستبعد المبيعات التي تم إرجاعها.
     // 4. GROUP BY P.ProductID: نجمع النتائج لكل منتج على حدة.

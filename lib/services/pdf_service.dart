@@ -93,7 +93,7 @@ class PdfService {
   }
 
   /// تنسيق العملة
-  String _formatCurrency(double amount) {
+  String _formatCurrency(dynamic amount) {
     final formatter = NumberFormat('#,##0.00', 'ar');
     return '${formatter.format(amount)} د.ع';
   }
@@ -660,9 +660,9 @@ pw.Widget _buildTableCell(String text) {
 // ============================================================================
 Future<pw.Document> buildCashFlowReport({
   required List<Map<String, dynamic>> transactions,
-  required double totalCashSales,
-  required double totalDebtPayments,
-  required double totalCashIn,
+  required dynamic totalCashSales,
+  required dynamic totalDebtPayments,
+  required dynamic totalCashIn,
   required DateTime startDate,
   required DateTime endDate,
 }) async {
@@ -832,10 +832,10 @@ pw.Widget _buildCashFlowTable(List<Map<String, dynamic>> transactions) {
 // 📊 تقرير الأرباح العام
 // ============================================================================
 Future<pw.Document> buildProfitReport({
-  required double totalProfit,
-  required double totalExpenses,
-  required double totalWithdrawals,
-  required double netProfit,
+  required dynamic totalProfit,
+  required dynamic totalExpenses,
+  required dynamic totalWithdrawals,
+  required dynamic netProfit,
   required List<Map<String, dynamic>> salesData,
 }) async {
   final content = <pw.Widget>[
@@ -1087,8 +1087,8 @@ pw.Widget _buildSuppliersProfitTable(List<Map<String, dynamic>> data) {
 // 👥 تقرير الموظفين
 // ============================================================================
 Future<pw.Document> buildEmployeesReport({
-  required double totalSalaries,
-  required double totalAdvances,
+  required dynamic totalSalaries,
+  required dynamic totalAdvances,
   required int employeesCount,
   required List<Map<String, dynamic>> employeesData,
 }) async {
@@ -1193,9 +1193,9 @@ pw.Widget _buildEmployeesTable(List<Map<String, dynamic>> data) {
 Future<pw.Document> buildSupplierDetailsReport({
   required String supplierName,
   required String supplierType,
-  required double totalProfit,
-  required double totalWithdrawn,
-  required double netProfit,
+  required dynamic totalProfit,
+  required dynamic totalWithdrawn,
+  required dynamic netProfit,
   required List<Map<String, Object>> partnersData,
   required List<Map<String, dynamic>> withdrawalsData,
 }) async {

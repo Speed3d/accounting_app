@@ -97,7 +97,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             'Details': l10n.saleDetails(product.productName, quantitySold.toString()),
             'Debt': salePriceForItem,
             'DateT': DateTime.now().toIso8601String(),
-            'Qty_Coustomer': quantitySold,
+            'Qty_Customer': quantitySold,
             'CostPriceAtTimeOfSale': product.costPrice,
             'ProfitAmount': profitForItem,
           });
