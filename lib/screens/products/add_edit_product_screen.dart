@@ -55,7 +55,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   bool get _isEditMode => widget.product != null;
 
   /// ← Hint: التحقق من وجود صورة (جديدة أو قديمة)
-  bool get _hasImage => 
+  bool get _hasImage =>
       (_productImage != null || (_existingImagePath != null && !_shouldDeleteImage));
 
   // ============= دورة الحياة =============
@@ -87,7 +87,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _costPriceController.text = p.costPrice.toString();
       _sellingPriceController.text = p.sellingPrice.toString();
       _barcodeController.text = p.barcode ?? '';
-      
+
       // ← Hint: تحميل مسار الصورة الموجودة
       if (p.imagePath != null && p.imagePath!.isNotEmpty) {
         _existingImagePath = p.imagePath;
@@ -174,27 +174,53 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   /// ← Hint: اختيار صورة من المصدر المحدد
+  /// ← Hint: ✅ تم إصلاحها لتجنب crash عند اختيار صورة من الكاميرا
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _imagePicker.pickImage(
         source: source,
         imageQuality: 70, // ← Hint: ضغط الصورة للحفاظ على المساحة
         maxWidth: 800, // ← Hint: الحد الأقصى للعرض
+        maxHeight: 800, // ← Hint: الحد الأقصى للارتفاع (يمنع صور كبيرة جداً)
       );
 
-      if (pickedFile != null) {
-        setState(() {
-          _productImage = File(pickedFile.path);
-          _shouldDeleteImage = false; // ← Hint: إلغاء علامة الحذف
-        });
+      if (pickedFile != null && mounted) {
+        // ← Hint: التحقق من وجود الملف فعلياً قبل استخدامه
+        final imageFile = File(pickedFile.path);
+
+        // ← Hint: انتظار صغير للتأكد من اكتمال كتابة الملف (مهم جداً للكاميرا!)
+        await Future.delayed(const Duration(milliseconds: 150));
+
+        // ← Hint: التحقق من أن الملف موجود وحجمه معقول
+        if (await imageFile.exists()) {
+          final fileSize = await imageFile.length();
+
+          // ← Hint: التحقق من أن حجم الملف ليس صفر (ملف تالف)
+          if (fileSize > 0) {
+            if (mounted) {
+              setState(() {
+                _productImage = imageFile;
+                _shouldDeleteImage = false; // ← Hint: إلغاء علامة الحذف
+              });
+
+              debugPrint('✅ تم اختيار الصورة بنجاح: ${imageFile.path} (${(fileSize / 1024).toStringAsFixed(2)} KB)');
+            }
+          } else {
+            throw Exception('الملف المختار فارغ أو تالف');
+          }
+        } else {
+          throw Exception('لا يمكن الوصول إلى الملف المختار');
+        }
       }
     } catch (e) {
+      debugPrint('❌ خطأ في اختيار الصورة: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('خطأ في اختيار الصورة: ${e.toString()}'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -226,13 +252,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
 
       // ← Hint: إنشاء اسم فريد للملف باستخدام timestamp
-      final String fileName = 
+      final String fileName =
           'product_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
       final String newPath = path.join(productImagesDir, fileName);
 
       // ← Hint: نسخ الصورة إلى المجلد الدائم
       final File newImage = await imageFile.copy(newPath);
 
+      debugPrint('✅ تم حفظ الصورة في: $newPath');
       return newImage.path;
     } catch (e) {
       debugPrint('❌ خطأ في حفظ الصورة: $e');
@@ -663,20 +690,95 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   // ============================================================
   // 🖼️ بناء معاينة الصورة
+  // ← Hint: ✅ تم إصلاحها لتجنب crash عند عرض الصورة
   // ============================================================
   Widget _buildImagePreview(bool isDark) {
     // ← Hint: تحديد مصدر الصورة (جديدة أو موجودة)
-    final imageWidget = _productImage != null
-        ? Image.file(
-            _productImage!,
-            fit: BoxFit.cover,
-          )
-        : (_existingImagePath != null && !_shouldDeleteImage)
-            ? Image.file(
-                File(_existingImagePath!),
-                fit: BoxFit.cover,
-              )
-            : null;
+    Widget? imageWidget;
+
+    try {
+      if (_productImage != null) {
+        // ← Hint: صورة جديدة مختارة
+        imageWidget = Image.file(
+          _productImage!,
+          fit: BoxFit.cover,
+          // ← Hint: تقليل استهلاك الذاكرة بتحديد حجم الـ cache
+          cacheWidth: 800,
+          cacheHeight: 800,
+          // ← Hint: عرض placeholder أثناء التحميل
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return frame != null
+                ? child
+                : Container(
+                    color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+          },
+          // ← Hint: معالجة الأخطاء عند فشل تحميل الصورة
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('❌ خطأ في عرض الصورة: $error');
+            return Container(
+              color: AppColors.error.withOpacity(0.1),
+              child: const Center(
+                child: Icon(
+                  Icons.broken_image,
+                  size: 64,
+                  color: AppColors.error,
+                ),
+              ),
+            );
+          },
+        );
+      } else if (_existingImagePath != null && !_shouldDeleteImage) {
+        // ← Hint: صورة موجودة مسبقاً
+        final existingFile = File(_existingImagePath!);
+        imageWidget = Image.file(
+          existingFile,
+          fit: BoxFit.cover,
+          cacheWidth: 800,
+          cacheHeight: 800,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return frame != null
+                ? child
+                : Container(
+                    color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('❌ خطأ في عرض الصورة الموجودة: $error');
+            return Container(
+              color: AppColors.error.withOpacity(0.1),
+              child: const Center(
+                child: Icon(
+                  Icons.broken_image,
+                  size: 64,
+                  color: AppColors.error,
+                ),
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ خطأ في بناء معاينة الصورة: $e');
+      imageWidget = Container(
+        color: AppColors.error.withOpacity(0.1),
+        child: const Center(
+          child: Icon(
+            Icons.broken_image,
+            size: 64,
+            color: AppColors.error,
+          ),
+        ),
+      );
+    }
 
     if (imageWidget == null) return const SizedBox.shrink();
 
