@@ -132,8 +132,8 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
             Card(
               child: Column(
                 children: [
-                  _buildDurationTile(0, l10n.immediately, isDark),
-                  _buildDivider(isDark),
+                  // _buildDurationTile(0, l10n.immediately, isDark),
+                  // _buildDivider(isDark),
                   _buildDurationTile(1, l10n.oneMinute, isDark),
                   _buildDivider(isDark),
                   _buildDurationTile(2, l10n.twoMinutes, isDark),

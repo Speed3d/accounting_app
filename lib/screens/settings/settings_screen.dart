@@ -798,6 +798,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppConstants.spacingXs),
+          const SizedBox(height: AppConstants.spacingXs),
           Text(
             l10n.appVersion,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -811,6 +812,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
 
 // ============================================================
 // 📋 ويدجت بطاقة الإعدادات

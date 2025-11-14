@@ -10,6 +10,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:crypto/crypto.dart';
+import 'package:sqflite/sqflite.dart';
 
 /// 🧠 كلاس مسؤول عن إنشاء النسخ الاحتياطي واستعادته بشكل آمن ومشفر
 ///
@@ -18,6 +19,7 @@ import 'package:crypto/crypto.dart';
 /// ← Hint: هيكل الملف المشفر: [Magic Number] + [Salt 16 bytes] + [Encrypted Data]
 class BackupService {
   // 1️⃣ اسم ملف قاعدة البيانات (كما هو في تطبيقك)
+  /// ← Hint: هذا هو اسم ملف قاعدة البيانات الذي نريد نسخه واستعادته
   static const String _dbFileName = "accounting.db";
 
   // 2️⃣ معرف خاص للتحقق من صحة ملف النسخة الاحتياطية
@@ -25,6 +27,7 @@ class BackupService {
   static const String _magicNumber = 'MY_ACCOUNTING_APP_BACKUP_V2';
 
   // 3️⃣ الامتداد الخاص بملف النسخ الاحتياطي
+  /// ← Hint: امتداد مخصص لملفاتنا لسهولة التعرف عليها
   static const String _backupFileExtension = 'accbak';
 
   // 4️⃣ عدد مرات التكرار لـ PBKDF2 (كلما زاد كان أكثر أماناً ولكن أبطأ)
@@ -77,6 +80,295 @@ class BackupService {
   }
 
   // ==========================================================
+  // ← Hint: استخراج قائمة المستخدمين من ملف نسخة احتياطية
+  // ← Hint: بدون استعادة كاملة - فقط للمعاينة
+  // ← Hint: هذه الدالة مفيدة لعرض المستخدمين قبل اتخاذ قرار الاستعادة
+  // ==========================================================
+  /// [backupFile] ملف النسخة الاحتياطية
+  /// [password] كلمة المرور
+  /// قائمة المستخدمين أو null في حالة الفشل
+  Future<List<Map<String, dynamic>>?> extractUsersFromBackup(
+    File backupFile,
+    String password,
+  ) async {
+    try {
+      print("🔹 استخراج المستخدمين من النسخة الاحتياطية...");
+
+      // ← Hint: التحقق من كلمة المرور ليست فارغة
+      if (password.trim().isEmpty) {
+        return null;
+      }
+
+      // ← Hint: قراءة محتوى الملف
+      final fileBytes = await backupFile.readAsBytes();
+
+      // ← Hint: التحقق من الحد الأدنى لحجم الملف
+      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      if (fileBytes.length < minFileSize) {
+        throw Exception('حجم الملف صغير جداً');
+      }
+
+      // ← Hint: استخراج Magic Number
+      final magicNumberSize = _magicNumber.codeUnits.length;
+      final fileMagicNumber = String.fromCharCodes(
+        fileBytes.sublist(0, magicNumberSize),
+      );
+
+      if (fileMagicNumber != _magicNumber) {
+        throw Exception('ملف غير صالح');
+      }
+
+      // ← Hint: استخراج Salt
+      final salt = fileBytes.sublist(
+        magicNumberSize,
+        magicNumberSize + _saltLength,
+      );
+
+      // ← Hint: استخراج البيانات المشفرة
+      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
+      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+      // ← Hint: اشتقاق مفتاح فك التشفير
+      final decryptionKey = _deriveKeyFromPassword(password, salt);
+      final iv = _deriveIVFromSalt(salt);
+
+      // ← Hint: فك التشفير
+      final encrypter = enc.Encrypter(enc.AES(decryptionKey, mode: enc.AESMode.cbc));
+
+      Uint8List dbBytes;
+      try {
+        final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);
+        dbBytes = Uint8List.fromList(decryptedData);
+      } catch (e) {
+        throw Exception('كلمة المرور غير صحيحة');
+      }
+
+      // ← Hint: التحقق من أن البيانات صحيحة (SQLite)
+      if (dbBytes.length < 16 ||
+          String.fromCharCodes(dbBytes.sublist(0, 6)) != 'SQLite') {
+        throw Exception('كلمة المرور غير صحيحة أو الملف تالف');
+      }
+
+      // ← Hint: حفظ قاعدة البيانات في ملف مؤقت
+      final tempDir = await getTemporaryDirectory();
+      final tempDbPath = p.join(tempDir.path, 'temp_backup.db');
+      final tempDbFile = File(tempDbPath);
+      await tempDbFile.writeAsBytes(dbBytes);
+
+      // ← Hint: فتح قاعدة البيانات المؤقتة وقراءة المستخدمين
+      final tempDb = await openDatabase(tempDbPath);
+      
+      try {
+        final users = await tempDb.query('TB_Users');
+        print("✅ تم استخراج ${users.length} مستخدم");
+        return users;
+      } finally {
+        await tempDb.close();
+        // ← Hint: حذف الملف المؤقت
+        if (await tempDbFile.exists()) {
+          await tempDbFile.delete();
+        }
+      }
+
+    } catch (e) {
+      print('❌ خطأ في استخراج المستخدمين: $e');
+      return null;
+    }
+  }
+
+  // ==========================================================
+  // ← Hint: استعادة ذكية مع خيارات دمج المستخدمين
+  // ← Hint: هذه الدالة الرئيسية للاستعادة مع الحفاظ على الصلاحيات
+  // ==========================================================
+  /// [password] كلمة المرور
+  /// [backupFile] ملف النسخة الاحتياطية
+  /// [userMergeOption] خيار دمج المستخدمين:
+  ///   - 'merge': دمج المستخدمين (الأفضل - يحافظ على الصلاحيات)
+  ///   - 'replace': استبدال كامل
+  ///   - 'keep': الاحتفاظ بالمستخدمين الحاليين فقط
+  Future<Map<String, dynamic>> restoreBackupSmart(
+    String password,
+    File backupFile,
+    String userMergeOption,
+  ) async {
+    try {
+      print("🔹 بدء عملية الاستعادة الذكية...");
+      print("🔹 خيار الدمج: $userMergeOption");
+
+      // ← Hint: التحقق من كلمة المرور
+      if (password.trim().isEmpty) {
+        return {
+          'status': 'error',
+          'message': 'كلمة المرور لا يمكن أن تكون فارغة',
+        };
+      }
+
+      // ← Hint: قراءة محتوى الملف
+      final fileBytes = await backupFile.readAsBytes();
+
+      // ← Hint: التحقق من الحد الأدنى للحجم
+      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      if (fileBytes.length < minFileSize) {
+        throw Exception('حجم الملف صغير جداً. الملف قد يكون تالفاً.');
+      }
+
+      // ← Hint: استخراج Magic Number
+      final magicNumberSize = _magicNumber.codeUnits.length;
+      final fileMagicNumber = String.fromCharCodes(
+        fileBytes.sublist(0, magicNumberSize),
+      );
+
+      if (fileMagicNumber != _magicNumber) {
+        throw Exception('ملف النسخة الاحتياطية غير صالح أو لا يخص هذا التطبيق.');
+      }
+
+      // ← Hint: استخراج Salt والبيانات المشفرة
+      final salt = fileBytes.sublist(
+        magicNumberSize,
+        magicNumberSize + _saltLength,
+      );
+
+      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
+      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+      // ← Hint: فك التشفير
+      print("🔹 فك تشفير البيانات...");
+      final decryptionKey = _deriveKeyFromPassword(password, salt);
+      final iv = _deriveIVFromSalt(salt);
+
+      final encrypter = enc.Encrypter(enc.AES(decryptionKey, mode: enc.AESMode.cbc));
+
+      Uint8List dbBytes;
+      try {
+        final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);
+        dbBytes = Uint8List.fromList(decryptedData);
+      } catch (e) {
+        throw Exception(
+          'فشل فك التشفير. تأكد من صحة كلمة المرور أو أن الملف غير تالف.',
+        );
+      }
+
+      // ← Hint: التحقق من صحة البيانات
+      if (dbBytes.length < 16 ||
+          String.fromCharCodes(dbBytes.sublist(0, 6)) != 'SQLite') {
+        throw Exception(
+          'كلمة المرور غير صحيحة أو الملف تالف.',
+        );
+      }
+
+      // ← Hint: ✅ النقطة المهمة - حفظ المستخدمين الحاليين قبل الاستبدال
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbFile = File(p.join(dbFolder.path, _dbFileName));
+      
+      List<Map<String, dynamic>> currentUsers = [];
+      
+      // ← Hint: قراءة المستخدمين الحاليين إذا كان الخيار ليس 'replace'
+      if (userMergeOption != 'replace') {
+        if (await dbFile.exists()) {
+          final currentDb = await openDatabase(dbFile.path);
+          try {
+            currentUsers = await currentDb.query('TB_Users');
+            print("🔹 تم حفظ ${currentUsers.length} مستخدم حالي");
+          } finally {
+            await currentDb.close();
+          }
+        }
+      }
+
+      // ← Hint: نسخ احتياطية من القاعدة الحالية (للأمان)
+      if (await dbFile.exists()) {
+        final backupPath = '${dbFile.path}.old';
+        await dbFile.copy(backupPath);
+        print("🔸 تم إنشاء نسخة احتياطية من القاعدة الحالية: $backupPath");
+      }
+
+      // ← Hint: كتابة البيانات المستعادة
+      await dbFile.writeAsBytes(dbBytes);
+      print("✅ تم استعادة قاعدة البيانات");
+
+      // ← Hint: ✅ الجزء الأهم - معالجة المستخدمين حسب الخيار
+      if (userMergeOption == 'merge' && currentUsers.isNotEmpty) {
+        // ← Hint: دمج المستخدمين - الحفاظ على الصلاحيات الحالية
+        print("🔹 بدء دمج المستخدمين...");
+        
+        final restoredDb = await openDatabase(dbFile.path);
+        
+        try {
+          int mergedCount = 0;
+          int skippedCount = 0;
+          
+          for (var user in currentUsers) {
+            try {
+              // ← Hint: محاولة إدراج المستخدم
+              // ← Hint: إذا كان UserName موجود، سيفشل (UNIQUE constraint)
+              await restoredDb.insert('TB_Users', user);
+              mergedCount++;
+              print("  ✅ تم دمج: ${user['UserName']}");
+            } catch (e) {
+              // ← Hint: اسم المستخدم موجود - نتخطاه
+              // ← Hint: هذا يحافظ على الصلاحيات الحالية
+              skippedCount++;
+              print("  ⚠️ تم تخطي (موجود): ${user['UserName']}");
+            }
+          }
+          
+          print("✅ اكتمل الدمج - تم دمج: $mergedCount، تم تخطي: $skippedCount");
+          
+          return {
+            'status': 'success',
+            'message': 'تم دمج المستخدمين بنجاح',
+            'merged': mergedCount,
+            'skipped': skippedCount,
+          };
+        } finally {
+          await restoredDb.close();
+        }
+        
+      } else if (userMergeOption == 'keep' && currentUsers.isNotEmpty) {
+        // ← Hint: الاحتفاظ بالمستخدمين الحاليين - حذف المستخدمين من النسخة المستعادة
+        print("🔹 الاحتفاظ بالمستخدمين الحاليين فقط...");
+        
+        final restoredDb = await openDatabase(dbFile.path);
+        
+        try {
+          // ← Hint: حذف جميع المستخدمين من النسخة المستعادة
+          await restoredDb.delete('TB_Users');
+          
+          // ← Hint: إعادة إدراج المستخدمين الحاليين
+          for (var user in currentUsers) {
+            await restoredDb.insert('TB_Users', user);
+          }
+          
+          print("✅ تم الاحتفاظ بـ ${currentUsers.length} مستخدم حالي");
+          
+          return {
+            'status': 'success',
+            'message': 'تم الاحتفاظ بالمستخدمين الحاليين',
+            'kept': currentUsers.length,
+          };
+        } finally {
+          await restoredDb.close();
+        }
+      }
+
+      // ← Hint: الخيار 'replace' - لا نفعل شيء (الاستبدال الكامل)
+      print("✅ تم استبدال قاعدة البيانات بالكامل");
+
+      return {
+        'status': 'success',
+        'message': 'نجاح',
+      };
+
+    } catch (e) {
+      print('❌ خطأ أثناء استعادة النسخة الاحتياطية: $e');
+      return {
+        'status': 'error',
+        'message': e.toString().replaceFirst("Exception: ", ""),
+      };
+    }
+  }
+
+  // ==========================================================
   // ← Hint: دالة للحصول على مجلد Downloads مع طلب الأذونات
   // ==========================================================
   Future<Directory?> _getDownloadsDirectory() async {
@@ -119,7 +411,7 @@ class BackupService {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbFolder.path, _dbFileName));
 
-      // تحقق من وجود قاعدة البيانات
+      // ← Hint: تحقق من وجود قاعدة البيانات
       if (!await dbFile.exists()) {
         print("⚠️ ملف قاعدة البيانات غير موجود في: ${dbFile.path}");
         return {
@@ -128,7 +420,7 @@ class BackupService {
         };
       }
 
-      // قراءة محتوى قاعدة البيانات كـ Bytes
+      // ← Hint: قراءة محتوى قاعدة البيانات كـ Bytes
       final dbBytes = await dbFile.readAsBytes();
 
       // 🔸 توليد Salt عشوائي لهذه النسخة الاحتياطية
@@ -187,7 +479,7 @@ class BackupService {
       };
 
     } catch (e) {
-      // طباعة الخطأ في الـ Console لتتبع المشكلة
+      // ← Hint: طباعة الخطأ في الـ Console لتتبع المشكلة
       print('❌ خطأ أثناء إنشاء النسخة الاحتياطية: $e');
       return {
         'status': 'error',
@@ -256,7 +548,7 @@ class BackupService {
 
       final backupFile = File(result.files.single.path!);
 
-      // قراءة محتوى الملف كاملاً
+      // ← Hint: قراءة محتوى الملف كاملاً
       final fileBytes = await backupFile.readAsBytes();
 
       // 🔸 التحقق من الحد الأدنى لحجم الملف
@@ -330,7 +622,7 @@ class BackupService {
         print("🔸 تم إنشاء نسخة احتياطية من القاعدة الحالية: $backupPath");
       }
 
-      // كتابة البيانات المستعادة
+      // ← Hint: كتابة البيانات المستعادة
       await dbFile.writeAsBytes(dbBytes);
 
       print("✅ تم استعادة النسخة الاحتياطية بنجاح!");

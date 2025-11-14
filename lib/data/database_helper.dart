@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
   // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -164,7 +164,8 @@ class DatabaseHelper {
     Quantity INTEGER NOT NULL, 
     CostPrice REAL NOT NULL, 
     SellingPrice REAL NOT NULL, 
-    SupplierID INTEGER NOT NULL, 
+    SupplierID INTEGER NOT NULL,
+    ImagePath TEXT, 
     IsActive INTEGER NOT NULL DEFAULT 1
     )
     ''');
@@ -399,6 +400,9 @@ class DatabaseHelper {
     //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canManageExpenses INTEGER NOT NULL DEFAULT 0');
     //   await db.execute('ALTER TABLE TB_Users ADD COLUMN canViewCashSales INTEGER NOT NULL DEFAULT 0');
     // }
+    if (oldVersion < 4) { // غيّر الرقم حسب الإصدار الحالي
+      await db.execute('ALTER TABLE Store_Products ADD COLUMN ImagePath TEXT');
+     }
 
       }
 

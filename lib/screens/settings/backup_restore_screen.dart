@@ -1,8 +1,11 @@
 // lib/screens/settings/backup_restore_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../services/backup_service.dart';
+import '../../data/database_helper.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -10,7 +13,8 @@ import '../../widgets/custom_card.dart';
 import '../../widgets/custom_button.dart';
 
 /// 💾 شاشة النسخ الاحتياطي والاستعادة
-/// Hint: صفحة فرعية مهمة جداً - تتيح للمستخدم حفظ واستعادة بياناته
+/// ← Hint: صفحة فرعية مهمة جداً - تتيح للمستخدم حفظ واستعادة بياناته
+/// ← Hint: تم تحديثها لتشمل خيارات ذكية لدمج المستخدمين
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
 
@@ -20,11 +24,19 @@ class BackupRestoreScreen extends StatefulWidget {
 
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   // ============= المتغيرات =============
+  /// ← Hint: متغير لتتبع حالة إنشاء النسخة الاحتياطية
   bool _isBackingUp = false;
+  
+  /// ← Hint: متغير لتتبع حالة الاستعادة
   bool _isRestoring = false;
+  
+  /// ← Hint: خدمة النسخ الاحتياطي
   final BackupService _backupService = BackupService();
   
-  // ← Hint: متغيرات لتخزين معلومات آخر نسخة احتياطية تم إنشاؤها
+  /// ← Hint: helper قاعدة البيانات للحصول على عدد المستخدمين
+  final DatabaseHelper dbHelper = DatabaseHelper.instance;
+  
+  /// ← Hint: متغيرات لتخزين معلومات آخر نسخة احتياطية تم إنشاؤها
   String? _lastBackupFilePath;
   String? _lastBackupFileName;
 
@@ -42,7 +54,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       isConfirmation: true, // ← Hint: نطلب تأكيد كلمة المرور عند الإنشاء
     );
 
-    // إذا ألغى المستخدم إدخال كلمة المرور
+    // ← Hint: إذا ألغى المستخدم إدخال كلمة المرور
     if (password == null) return;
 
     setState(() => _isBackingUp = true);
@@ -266,130 +278,496 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
-  /// استعادة البيانات من نسخة احتياطية
-  /// Hint: عملية خطرة! نطلب التأكيد أولاً ثم كلمة المرور
+  /// ← Hint: ✅ الإصلاح 3 - تحسين ترتيب الاستعادة
+  /// ← Hint: الترتيب الجديد: اختيار الملف → كلمة المرور → المعاينة → التأكيد → التنفيذ
   Future<void> _handleRestoreBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // ============= طلب التأكيد =============
-    // Hint: نستخدم AlertDialog بسيط لكن واضح وخطير
-    final confirm = await showDialog<bool>(
+    // ============= الخطوة 1: اختيار ملف النسخة الاحتياطية =============
+    print("🔹 الخطوة 1: اختيار الملف");
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['accbak'],
+      dialogTitle: l10n.selectBackupFile,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      print("ℹ️ تم إلغاء اختيار الملف");
+      return;
+    }
+
+    final backupFile = File(result.files.single.path!);
+    print("✅ تم اختيار الملف: ${backupFile.path}");
+
+    // ============= الخطوة 2: طلب كلمة المرور =============
+    print("🔹 الخطوة 2: طلب كلمة المرور");
+    final password = await _showPasswordDialog(
+      title: l10n.enterBackupPassword,
+      subtitle: l10n.restoreBackupPasswordSubtitle,
+      isConfirmation: false,
+    );
+
+    if (password == null) {
+      print("ℹ️ تم إلغاء إدخال كلمة المرور");
+      return;
+    }
+
+    // ============= الخطوة 3: استخراج المستخدمين من النسخة =============
+    print("🔹 الخطوة 3: استخراج المستخدمين للمعاينة");
+    
+    // ← Hint: عرض مؤشر تحميل أثناء فك التشفير
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: AppConstants.spacingLg),
+              Expanded(child: Text(l10n.verifyingPassword)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ← Hint: محاولة استخراج المستخدمين من النسخة الاحتياطية
+    final backupUsers = await _backupService.extractUsersFromBackup(
+      backupFile,
+      password,
+    );
+
+    if (!mounted) return;
+
+    // ← Hint: إغلاق مؤشر التحميل
+    Navigator.of(context).pop();
+
+    // ← Hint: التحقق من نجاح فك التشفير
+    if (backupUsers == null) {
+      _showErrorSnackBar(l10n.incorrectPassword);
+      return;
+    }
+
+    print("✅ تم استخراج ${backupUsers.length} مستخدم من النسخة");
+
+    // ============= الخطوة 4: الحصول على المستخدمين الحاليين =============
+    print("🔹 الخطوة 4: فحص المستخدمين الحاليين");
+    final currentUsersCount = await dbHelper.getUserCount();
+    print("ℹ️ عدد المستخدمين الحاليين: $currentUsersCount");
+
+    String userMergeOption = 'replace'; // ← Hint: الافتراضي
+
+    // ← Hint: ✅ الإصلاح 2 - سؤال المستخدم عن طريقة الدمج
+    if (currentUsersCount > 0 && backupUsers.isNotEmpty) {
+      print("🔹 الخطوة 5: سؤال المستخدم عن خيار الدمج");
+      
+      final selectedOption = await _showUserMergeDialog(
+        l10n,
+        currentUsersCount,
+        backupUsers.length,
+      );
+
+      if (selectedOption == null) {
+        print("ℹ️ تم إلغاء عملية الاستعادة");
+        return;
+      }
+
+      userMergeOption = selectedOption;
+      print("✅ الخيار المختار: $userMergeOption");
+    }
+
+    // ============= الخطوة 6: طلب التأكيد النهائي =============
+    print("🔹 الخطوة 6: طلب التأكيد النهائي");
+    final finalConfirm = await _showFinalConfirmDialog(l10n, userMergeOption);
+
+    if (finalConfirm != true) {
+      print("ℹ️ تم إلغاء التأكيد النهائي");
+      return;
+    }
+
+    // ============= الخطوة 7: تنفيذ الاستعادة =============
+    print("🔹 الخطوة 7: بدء الاستعادة الفعلية");
+    setState(() => _isRestoring = true);
+
+    try {
+      final result = await _backupService.restoreBackupSmart(
+        password,
+        backupFile,
+        userMergeOption,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _isRestoring = false);
+
+      if (result['status'] == 'success') {
+        // ============= نجحت الاستعادة =============
+        print("✅ نجحت الاستعادة");
+        
+        String successMessage = l10n.restoreSuccessContent;
+        
+        // ← Hint: إضافة معلومات إضافية حسب نوع العملية
+        if (userMergeOption == 'merge') {
+          final merged = result['merged'] ?? 0;
+          final skipped = result['skipped'] ?? 0;
+          
+          if (skipped > 0) {
+            successMessage += '\n\n${l10n.duplicateUsernamesSkipped(skipped)}';
+          }
+          
+          successMessage = l10n.usersMergedSuccessfully;
+        } else if (userMergeOption == 'keep') {
+          successMessage = '${l10n.restoreSuccessContent}\n\n${l10n.permissionsWillBePreserved}';
+        }
+
+        await _showRestoreSuccessDialog(l10n, successMessage);
+        
+      } else {
+        // ============= فشلت الاستعادة =============
+        print("❌ فشلت الاستعادة: ${result['message']}");
+        _showErrorSnackBar(l10n.restoreFailed(result['message'] ?? 'خطأ غير معروف'));
+      }
+
+    } catch (e) {
+      print('❌ خطأ غير متوقع: $e');
+      
+      if (mounted) {
+        setState(() => _isRestoring = false);
+        _showErrorSnackBar('خطأ: ${e.toString()}');
+      }
+    }
+  }
+
+  // ==========================================================================
+  // ← Hint: دالة جديدة - حوار اختيار طريقة دمج المستخدمين
+  // ==========================================================================
+  Future<String?> _showUserMergeDialog(
+    AppLocalizations l10n,
+    int currentCount,
+    int backupCount,
+  ) async {
+    return showDialog<String>(
       context: context,
-      barrierDismissible: false, // يجب أن يختار المستخدم
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.people_alt,
+              color: AppColors.warning,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingMd),
+            Expanded(child: Text(l10n.userMergeTitle)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ← Hint: رسالة توضيحية
+              Text(
+                l10n.userMergeMessage(currentCount),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // ← Hint: الخيار 1 - دمج المستخدمين (الموصى به)
+              _buildMergeOption(
+                ctx,
+                title: l10n.mergeUsers,
+                subtitle: l10n.mergeUsersDescription,
+                icon: Icons.merge_type,
+                color: AppColors.success,
+                isRecommended: true,
+                onTap: () => Navigator.of(ctx).pop('merge'),
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // ← Hint: الخيار 2 - الاحتفاظ بالمستخدمين الحاليين
+              _buildMergeOption(
+                ctx,
+                title: l10n.keepCurrentUsers,
+                subtitle: l10n.keepCurrentUsersDescription,
+                icon: Icons.shield,
+                color: AppColors.info,
+                isRecommended: false,
+                onTap: () => Navigator.of(ctx).pop('keep'),
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // ← Hint: الخيار 3 - استبدال الكل (خطر)
+              _buildMergeOption(
+                ctx,
+                title: l10n.replaceAllUsers,
+                subtitle: l10n.replaceAllUsersDescription,
+                icon: Icons.warning_amber,
+                color: AppColors.error,
+                isRecommended: false,
+                onTap: () => Navigator.of(ctx).pop('replace'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // ← Hint: دالة مساعدة - بناء خيار الدمج
+  // ==========================================================================
+  Widget _buildMergeOption(
+    BuildContext ctx, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool isRecommended,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppConstants.borderRadiusMd,
+      child: Container(
+        padding: AppConstants.paddingMd,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: AppConstants.borderRadiusMd,
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: isRecommended ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // ← Hint: الأيقونة
+            Container(
+              padding: const EdgeInsets.all(AppConstants.spacingSm),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // ← Hint: العنوان والوصف
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                      // ← Hint: شارة "موصى به"
+                      if (isRecommended)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            borderRadius: AppConstants.borderRadiusFull,
+                          ),
+                          child: const Text(
+                            '✓ موصى به',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingSm),
+
+            // ← Hint: سهم
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: color,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // ← Hint: دالة جديدة - حوار التأكيد النهائي
+  // ==========================================================================
+  Future<bool?> _showFinalConfirmDialog(
+    AppLocalizations l10n,
+    String mergeOption,
+  ) async {
+    String warningMessage = '';
+    Color warningColor = AppColors.info;
+
+    if (mergeOption == 'merge') {
+      warningMessage = l10n.permissionsWillBePreserved;
+      warningColor = AppColors.success;
+    } else if (mergeOption == 'replace') {
+      warningMessage = l10n.allDataWillBeReplaced;
+      warningColor = AppColors.error;
+    } else {
+      warningMessage = l10n.permissionsWillBePreserved;
+      warningColor = AppColors.info;
+    }
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
             Icon(
               Icons.warning_amber_rounded,
-              color: AppColors.warning,
+              color: warningColor,
               size: 28,
             ),
             const SizedBox(width: AppConstants.spacingMd),
             Expanded(child: Text(l10n.restoreConfirmTitle)),
           ],
         ),
-        content: Text(
-          l10n.restoreConfirmContent,
-          style: Theme.of(context).textTheme.bodyMedium,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.restoreConfirmContent,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingSm,
+              decoration: BoxDecoration(
+                color: warningColor.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusSm,
+                border: Border.all(
+                  color: warningColor.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: warningColor,
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      warningMessage,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: warningColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
-          // زر الإلغاء
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(l10n.cancel),
           ),
-
-          // زر التأكيد (خطر!)
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: warningColor,
+              foregroundColor: Colors.white,
             ),
-            child: Text(
-              l10n.restore,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            child: Text(l10n.restore),
           ),
         ],
       ),
     );
+  }
 
-    // إذا ألغى المستخدم، نتوقف
-    if (confirm != true) return;
-
-    // ← Hint: عرض نافذة إدخال كلمة المرور
-    final password = await _showPasswordDialog(
-      title: l10n.restoreBackupPasswordTitle,
-      subtitle: l10n.restoreBackupPasswordSubtitle,
-      isConfirmation: false, // ← Hint: لا نحتاج تأكيد عند الاستعادة
-    );
-
-    // إذا ألغى المستخدم إدخال كلمة المرور
-    if (password == null) return;
-
-    // ============= تنفيذ الاستعادة =============
-    setState(() => _isRestoring = true);
-
-    try {
-      // ← Hint: استدعاء الدالة المحدثة مع كلمة المرور
-      final result = await _backupService.restoreBackup(password);
-
-      if (mounted) {
-        setState(() => _isRestoring = false);
-
-        if (result == 'نجاح') {
-          // ============= نجحت الاستعادة =============
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) => AlertDialog(
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: AppColors.success,
-                    size: 28,
-                  ),
-                  const SizedBox(width: AppConstants.spacingMd),
-                  Expanded(child: Text(l10n.restoreSuccessTitle)),
-                ],
-              ),
-              content: Text(
-                l10n.restoreSuccessContent,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.ok),
-                ),
-              ],
+  // ==========================================================================
+  // ← Hint: دالة جديدة - حوار نجاح الاستعادة
+  // ==========================================================================
+  Future<void> _showRestoreSuccessDialog(
+    AppLocalizations l10n,
+    String message,
+  ) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: AppColors.success,
+              size: 28,
             ),
-          );
-        } else {
-          // ============= فشلت الاستعادة =============
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.restoreFailed(result)),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isRestoring = false);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
+            const SizedBox(width: AppConstants.spacingMd),
+            Expanded(child: Text(l10n.restoreSuccessTitle)),
+          ],
+        ),
+        content: Text(
+          message,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.ok),
           ),
-        );
-      }
-    }
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // ← Hint: دالة مساعدة - عرض رسالة خطأ
+  // ==========================================================================
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusMd,
+        ),
+      ),
+    );
   }
 
   // ==========================================================
@@ -721,8 +1099,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
 // ============================================================
 // --- بطاقة خيار النسخ الاحتياطي ---
+// ← Hint: ويدجت مخصصة جميلة لعرض خيارات النسخ الاحتياطي
 // ============================================================
-/// Hint: ويدجت مخصصة جميلة لعرض خيارات النسخ الاحتياطي
 class _BackupCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -748,9 +1126,9 @@ class _BackupCard extends StatelessWidget {
 
     return CustomCard(
       margin: EdgeInsets.zero,
-      // Hint: إذا كانت معطلة، نجعل onTap = null
+      // ← Hint: إذا كانت معطلة، نجعل onTap = null
       onTap: enabled ? onTap : null,
-      // Hint: نغير اللون قليلاً إذا كانت معطلة
+      // ← Hint: نغير اللون قليلاً إذا كانت معطلة
       color: enabled 
           ? null 
           : (isDark 
@@ -784,7 +1162,7 @@ class _BackupCard extends StatelessWidget {
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    // Hint: نخفف اللون إذا كانت معطلة
+                    // ← Hint: نخفف اللون إذا كانت معطلة
                     color: enabled 
                         ? null 
                         : (isDark 
@@ -808,7 +1186,7 @@ class _BackupCard extends StatelessWidget {
           const SizedBox(width: AppConstants.spacingMd),
 
           // ============= مؤشر التحميل أو السهم =============
-          // Hint: AnimatedSwitcher يعطي تأثير انتقال سلس
+          // ← Hint: AnimatedSwitcher يعطي تأثير انتقال سلس
           AnimatedSwitcher(
             duration: AppConstants.animationNormal,
             child: isLoading

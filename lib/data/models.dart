@@ -379,6 +379,7 @@ class Product {
   final int supplierID;
   final bool isActive;
   String? supplierName;
+  final String? imagePath;
 
   Product({
     this.productID, required 
@@ -390,7 +391,9 @@ class Product {
     this.sellingPrice, required 
     this.supplierID, 
     this.supplierName, 
-    this.isActive = true});
+    this.isActive = true,
+    this.imagePath,
+    });
 
   Map<String, dynamic> toMap() => {
     'ProductID': productID, 
@@ -401,7 +404,9 @@ class Product {
     'CostPrice': costPrice, 
     'SellingPrice': sellingPrice, 
     'SupplierID': supplierID, 
-    'IsActive': isActive ? 1 : 0};
+    'IsActive': isActive ? 1 : 0,
+    'ImagePath': imagePath,
+    };
 
   factory Product.fromMap(Map<String, dynamic> map) => Product(
     productID: map['ProductID'], 
@@ -413,7 +418,9 @@ class Product {
     sellingPrice: (map['SellingPrice'] as num).toDouble(), 
     supplierID: map['SupplierID'], 
     supplierName: map['SupplierName'], 
-    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1);
+    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
+    imagePath: map['ImagePath'],
+    );
 }
 
 // --- نموذج الزبون ---

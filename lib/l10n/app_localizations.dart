@@ -4859,13 +4859,13 @@ abstract class AppLocalizations {
   /// No description provided for @productOutOfStock.
   ///
   /// In en, this message translates to:
-  /// **'Product out of stock'**
+  /// **'Product is out of stock'**
   String get productOutOfStock;
 
   /// No description provided for @selectSaleDate.
   ///
   /// In en, this message translates to:
-  /// **'Select sale date'**
+  /// **'Select Sale Date'**
   String get selectSaleDate;
 
   /// No description provided for @saleDate.
@@ -5473,6 +5473,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.'**
   String get passwordTip;
+
+  /// No description provided for @userMergeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Users'**
+  String get userMergeTitle;
+
+  /// No description provided for @userMergeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} current user(s).\n\nWhat would you like to do?'**
+  String userMergeMessage(int count);
+
+  /// No description provided for @mergeUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Users'**
+  String get mergeUsers;
+
+  /// No description provided for @mergeUsersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add users from backup while keeping current users'**
+  String get mergeUsersDescription;
+
+  /// No description provided for @replaceAllUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace All'**
+  String get replaceAllUsers;
+
+  /// No description provided for @replaceAllUsersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all current users and replace with backup users'**
+  String get replaceAllUsersDescription;
+
+  /// No description provided for @keepCurrentUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Current Users'**
+  String get keepCurrentUsers;
+
+  /// No description provided for @keepCurrentUsersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore data only without changing users'**
+  String get keepCurrentUsersDescription;
+
+  /// No description provided for @selectBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Backup File'**
+  String get selectBackupFile;
+
+  /// No description provided for @enterBackupPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Backup Password'**
+  String get enterBackupPassword;
+
+  /// No description provided for @verifyingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying password...'**
+  String get verifyingPassword;
+
+  /// No description provided for @incorrectPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password'**
+  String get incorrectPassword;
+
+  /// No description provided for @usersMergedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Users merged successfully'**
+  String get usersMergedSuccessfully;
+
+  /// No description provided for @usersReplacedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Users replaced successfully'**
+  String get usersReplacedSuccessfully;
+
+  /// No description provided for @noUsersInBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'No user data in backup'**
+  String get noUsersInBackup;
+
+  /// No description provided for @duplicateUsernamesSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} user(s) skipped due to duplicate usernames'**
+  String duplicateUsernamesSkipped(int count);
+
+  /// No description provided for @permissionsWillBePreserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: Current user permissions will be preserved'**
+  String get permissionsWillBePreserved;
+
+  /// No description provided for @allDataWillBeReplaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: All current data will be deleted'**
+  String get allDataWillBeReplaced;
+
+  /// No description provided for @productImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Image'**
+  String get productImage;
+
+  /// No description provided for @addImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Image'**
+  String get addImage;
+
+  /// No description provided for @selectImageSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Image Source'**
+  String get selectImageSource;
+
+  /// No description provided for @productImageNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Image is optional. You can add it now or later.'**
+  String get productImageNote;
 }
 
 class _AppLocalizationsDelegate

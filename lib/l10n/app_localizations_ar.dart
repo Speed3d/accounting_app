@@ -2594,7 +2594,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get overdueCustomers => 'عملاء متأخرون';
 
   @override
-  String get productOutOfStock => 'المنتج غير متوفر في المخزن';
+  String get productOutOfStock => 'المنتج غير متوفر في المخزون';
 
   @override
   String get selectSaleDate => 'اختر تاريخ البيع';
@@ -2913,4 +2913,79 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get passwordTip =>
       '⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.';
+
+  @override
+  String get userMergeTitle => 'دمج المستخدمين';
+
+  @override
+  String userMergeMessage(int count) {
+    return 'لديك $count مستخدم حالياً.\n\nماذا تريد أن تفعل؟';
+  }
+
+  @override
+  String get mergeUsers => 'دمج المستخدمين';
+
+  @override
+  String get mergeUsersDescription =>
+      'إضافة المستخدمين من النسخة الاحتياطية مع الاحتفاظ بالمستخدمين الحاليين';
+
+  @override
+  String get replaceAllUsers => 'استبدال الكل';
+
+  @override
+  String get replaceAllUsersDescription =>
+      'حذف جميع المستخدمين الحاليين واستبدالهم بالمستخدمين من النسخة الاحتياطية';
+
+  @override
+  String get keepCurrentUsers => 'الاحتفاظ بالمستخدمين الحاليين';
+
+  @override
+  String get keepCurrentUsersDescription =>
+      'استعادة البيانات فقط بدون تغيير المستخدمين';
+
+  @override
+  String get selectBackupFile => 'اختر ملف النسخة الاحتياطية';
+
+  @override
+  String get enterBackupPassword => 'أدخل كلمة مرور النسخة الاحتياطية';
+
+  @override
+  String get verifyingPassword => 'جاري التحقق من كلمة المرور...';
+
+  @override
+  String get incorrectPassword => 'كلمة المرور غير صحيحة';
+
+  @override
+  String get usersMergedSuccessfully => 'تم دمج المستخدمين بنجاح';
+
+  @override
+  String get usersReplacedSuccessfully => 'تم استبدال المستخدمين بنجاح';
+
+  @override
+  String get noUsersInBackup => 'لا توجد بيانات مستخدمين في النسخة الاحتياطية';
+
+  @override
+  String duplicateUsernamesSkipped(int count) {
+    return 'تم تخطي $count مستخدم لأن اسم المستخدم موجود مسبقاً';
+  }
+
+  @override
+  String get permissionsWillBePreserved =>
+      'ملاحظة: سيتم الاحتفاظ بصلاحيات المستخدمين الحاليين';
+
+  @override
+  String get allDataWillBeReplaced => 'تحذير: سيتم حذف جميع البيانات الحالية';
+
+  @override
+  String get productImage => 'صورة المنتج';
+
+  @override
+  String get addImage => 'إضافة صورة';
+
+  @override
+  String get selectImageSource => 'اختر مصدر الصورة';
+
+  @override
+  String get productImageNote =>
+      'الصورة اختيارية. يمكنك إضافتها الآن أو لاحقاً.';
 }

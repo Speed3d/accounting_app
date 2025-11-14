@@ -2114,7 +2114,54 @@
   "workingOffline": "العمل بدون إنترنت",
   "daysRemainingOffline": "الأيام المتبقية قبل الحاجة للاتصال",
   "connectTodayRequired": "يجب الاتصال بالإنترنت اليوم",
-  "toEnsureContinuedUse": "لضمان استمرار عمل التطبيق"
+  "toEnsureContinuedUse": "لضمان استمرار عمل التطبيق",
+
+    "userMergeTitle": "دمج المستخدمين",
+  "userMergeMessage": "لديك {count} مستخدم حالياً.\n\nماذا تريد أن تفعل؟",
+  "@userMergeMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mergeUsers": "دمج المستخدمين",
+  "mergeUsersDescription": "إضافة المستخدمين من النسخة الاحتياطية مع الاحتفاظ بالمستخدمين الحاليين",
+  "replaceAllUsers": "استبدال الكل",
+  "replaceAllUsersDescription": "حذف جميع المستخدمين الحاليين واستبدالهم بالمستخدمين من النسخة الاحتياطية",
+  "keepCurrentUsers": "الاحتفاظ بالمستخدمين الحاليين",
+  "keepCurrentUsersDescription": "استعادة البيانات فقط بدون تغيير المستخدمين",
+  "selectBackupFile": "اختر ملف النسخة الاحتياطية",
+  "enterBackupPassword": "أدخل كلمة مرور النسخة الاحتياطية",
+  "verifyingPassword": "جاري التحقق من كلمة المرور...",
+  "incorrectPassword": "كلمة المرور غير صحيحة",
+  "usersMergedSuccessfully": "تم دمج المستخدمين بنجاح",
+  "usersReplacedSuccessfully": "تم استبدال المستخدمين بنجاح",
+  "noUsersInBackup": "لا توجد بيانات مستخدمين في النسخة الاحتياطية",
+  "duplicateUsernamesSkipped": "تم تخطي {count} مستخدم لأن اسم المستخدم موجود مسبقاً",
+  "@duplicateUsernamesSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "permissionsWillBePreserved": "ملاحظة: سيتم الاحتفاظ بصلاحيات المستخدمين الحاليين",
+  "allDataWillBeReplaced": "تحذير: سيتم حذف جميع البيانات الحالية",
+
+    "productImage": "صورة المنتج",
+  "addImage": "إضافة صورة",
+  "changeImage": "تغيير الصورة",
+  "selectImageSource": "اختر مصدر الصورة",
+  "camera": "الكاميرا",
+  "gallery": "المعرض",
+  "productImageNote": "الصورة اختيارية. يمكنك إضافتها الآن أو لاحقاً.",
+  
+  "productOutOfStock": "المنتج غير متوفر في المخزون",
+  "selectSaleDate": "اختر تاريخ البيع",
+  "saleDate": "تاريخ البيع",
+  "today": "اليوم"
 
 
 }

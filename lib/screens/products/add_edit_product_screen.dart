@@ -1,6 +1,10 @@
 // lib/screens/products/add_edit_product_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../utils/helpers.dart';
@@ -13,7 +17,7 @@ import '../../widgets/custom_card.dart';
 import 'barcode_scanner_screen.dart';
 
 /// 📦 شاشة إضافة/تعديل منتج - صفحة فرعية
-/// Hint: نموذج شامل لإدخال بيانات المنتج
+/// ← Hint: نموذج شامل لإدخال بيانات المنتج مع دعم الصور
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
 
@@ -27,8 +31,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   // ============= متغيرات النموذج =============
   final _formKey = GlobalKey<FormState>();
   final dbHelper = DatabaseHelper.instance;
+  final ImagePicker _imagePicker = ImagePicker();
 
-  // Controllers
+  // ← Hint: Controllers للحقول النصية
   final _nameController = TextEditingController();
   final _detailsController = TextEditingController();
   final _quantityController = TextEditingController();
@@ -41,8 +46,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late Future<List<Supplier>> _suppliersFuture;
   bool _isLoading = false;
 
+  // ← Hint: متغيرات الصورة
+  File? _productImage; // الصورة الجديدة المختارة
+  String? _existingImagePath; // مسار الصورة الموجودة (في حالة التعديل)
+  bool _shouldDeleteImage = false; // علامة لحذف الصورة
+
   // ============= Getters =============
   bool get _isEditMode => widget.product != null;
+
+  /// ← Hint: التحقق من وجود صورة (جديدة أو قديمة)
+  bool get _hasImage => 
+      (_productImage != null || (_existingImagePath != null && !_shouldDeleteImage));
 
   // ============= دورة الحياة =============
   @override
@@ -63,7 +77,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
-  /// تهيئة النموذج
+  /// ← Hint: تهيئة النموذج بالبيانات الموجودة (في حالة التعديل)
   void _initializeForm() {
     if (_isEditMode) {
       final p = widget.product!;
@@ -73,8 +87,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _costPriceController.text = p.costPrice.toString();
       _sellingPriceController.text = p.sellingPrice.toString();
       _barcodeController.text = p.barcode ?? '';
+      
+      // ← Hint: تحميل مسار الصورة الموجودة
+      if (p.imagePath != null && p.imagePath!.isNotEmpty) {
+        _existingImagePath = p.imagePath;
+      }
 
-      // تحميل المورد
+      // ← Hint: تحميل المورد المرتبط
       _suppliersFuture.then((suppliers) {
         if (suppliers.isNotEmpty) {
           try {
@@ -85,6 +104,154 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           } catch (_) {}
         }
       });
+    }
+  }
+
+  // ============================================================
+  // 📷 دوال إدارة الصور
+  // ============================================================
+
+  /// ← Hint: عرض خيارات اختيار الصورة (كاميرا أو معرض)
+  Future<void> _showImageSourceDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.add_photo_alternate, color: AppColors.info),
+            const SizedBox(width: AppConstants.spacingSm),
+            Text(l10n.selectImageSource),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ← Hint: خيار الكاميرا
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
+                ),
+                child: const Icon(Icons.camera_alt, color: AppColors.info),
+              ),
+              title: Text(l10n.camera),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            const SizedBox(height: AppConstants.spacingSm),
+            // ← Hint: خيار المعرض
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
+                ),
+                child: const Icon(Icons.photo_library, color: AppColors.success),
+              ),
+              title: Text(l10n.gallery),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ← Hint: اختيار صورة من المصدر المحدد
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 70, // ← Hint: ضغط الصورة للحفاظ على المساحة
+        maxWidth: 800, // ← Hint: الحد الأقصى للعرض
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _productImage = File(pickedFile.path);
+          _shouldDeleteImage = false; // ← Hint: إلغاء علامة الحذف
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في اختيار الصورة: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// ← Hint: حذف الصورة المختارة
+  void _removeImage() {
+    setState(() {
+      _productImage = null;
+      if (_existingImagePath != null) {
+        _shouldDeleteImage = true; // ← Hint: وضع علامة للحذف
+      }
+    });
+  }
+
+  /// ← Hint: حفظ الصورة في مجلد التطبيق الدائم
+  /// يُرجع مسار الصورة المحفوظة أو null إذا فشل
+  Future<String?> _saveImageToStorage(File imageFile) async {
+    try {
+      // ← Hint: الحصول على مجلد التطبيق الدائم
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      final String productImagesDir = path.join(appDir.path, 'product_images');
+
+      // ← Hint: إنشاء المجلد إذا لم يكن موجوداً
+      final Directory imageDirectory = Directory(productImagesDir);
+      if (!await imageDirectory.exists()) {
+        await imageDirectory.create(recursive: true);
+      }
+
+      // ← Hint: إنشاء اسم فريد للملف باستخدام timestamp
+      final String fileName = 
+          'product_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
+      final String newPath = path.join(productImagesDir, fileName);
+
+      // ← Hint: نسخ الصورة إلى المجلد الدائم
+      final File newImage = await imageFile.copy(newPath);
+
+      return newImage.path;
+    } catch (e) {
+      debugPrint('❌ خطأ في حفظ الصورة: $e');
+      return null;
+    }
+  }
+
+  /// ← Hint: حذف الصورة القديمة من التخزين (عند التعديل)
+  Future<void> _deleteOldImage(String? imagePath) async {
+    if (imagePath == null || imagePath.isEmpty) return;
+
+    try {
+      final File oldImage = File(imagePath);
+      if (await oldImage.exists()) {
+        await oldImage.delete();
+        debugPrint('✅ تم حذف الصورة القديمة: $imagePath');
+      }
+    } catch (e) {
+      debugPrint('⚠️ خطأ في حذف الصورة القديمة: $e');
     }
   }
 
@@ -110,7 +277,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _saveProduct() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // التحقق من صحة البيانات
+    // ← Hint: التحقق من صحة البيانات
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSupplier == null) {
@@ -127,13 +294,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // معالجة الباركود
+      // ← Hint: معالجة الباركود
       String barcodeToSave = _barcodeController.text.trim();
       if (barcodeToSave.isEmpty) {
         barcodeToSave = 'INTERNAL-${DateTime.now().millisecondsSinceEpoch}';
       }
 
-      // التحقق من عدم تكرار الباركود
+      // ← Hint: التحقق من عدم تكرار الباركود
       final exists = await dbHelper.barcodeExists(
         barcodeToSave,
         currentProductId: _isEditMode ? widget.product!.productID : null,
@@ -153,6 +320,27 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return;
       }
 
+      // ============= معالجة الصورة =============
+      String? finalImagePath;
+
+      if (_productImage != null) {
+        // ← Hint: توجد صورة جديدة - حفظها
+        finalImagePath = await _saveImageToStorage(_productImage!);
+
+        // ← Hint: حذف الصورة القديمة إذا كنا في وضع التعديل
+        if (_isEditMode && _existingImagePath != null) {
+          await _deleteOldImage(_existingImagePath);
+        }
+      } else if (_shouldDeleteImage && _existingImagePath != null) {
+        // ← Hint: المستخدم حذف الصورة - حذفها من التخزين
+        await _deleteOldImage(_existingImagePath);
+        finalImagePath = null;
+      } else if (_existingImagePath != null) {
+        // ← Hint: لا توجد تغييرات على الصورة - الاحتفاظ بالمسار القديم
+        finalImagePath = _existingImagePath;
+      }
+
+      // ← Hint: إنشاء كائن المنتج
       final product = Product(
         productID: _isEditMode ? widget.product!.productID : null,
         productName: _nameController.text.trim(),
@@ -168,8 +356,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           convertArabicNumbersToEnglish(_sellingPriceController.text),
         ),
         supplierID: _selectedSupplier!.supplierID!,
+        imagePath: finalImagePath, // ← Hint: حفظ مسار الصورة
       );
 
+      // ← Hint: حفظ في قاعدة البيانات
       if (_isEditMode) {
         await dbHelper.updateProduct(product);
       } else {
@@ -247,7 +437,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             // ============= المورد =============
             _buildSectionHeader(l10n.supplierInfo, Icons.store, isDark),
             const SizedBox(height: AppConstants.spacingMd),
-
             _buildSupplierDropdown(l10n, isDark),
 
             const SizedBox(height: AppConstants.spacingXl),
@@ -276,7 +465,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               hint: l10n.scanOrEnterBarcode,
               prefixIcon: Icons.qr_code,
               suffixIcon: Icons.qr_code_scanner,
-              onSuffixIconPressed: _scanBarcode,  // ✅ هنا التعديل - سيعمل الآن!
+              onSuffixIconPressed: _scanBarcode,
               textInputAction: TextInputAction.next,
             ),
 
@@ -291,6 +480,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               maxLines: 3,
               textInputAction: TextInputAction.next,
             ),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
+            // ============= صورة المنتج =============
+            _buildSectionHeader(l10n.productImage, Icons.image_outlined, isDark),
+            const SizedBox(height: AppConstants.spacingMd),
+            _buildImageSection(l10n, isDark),
 
             const SizedBox(height: AppConstants.spacingXl),
 
@@ -390,13 +586,126 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ============================================================
+  // 🖼️ بناء قسم الصورة
+  // ============================================================
+  Widget _buildImageSection(AppLocalizations l10n, bool isDark) {
+    return CustomCard(
+      child: Column(
+        children: [
+          // ← Hint: عرض معاينة الصورة
+          if (_hasImage) ...[
+            _buildImagePreview(isDark),
+            const SizedBox(height: AppConstants.spacingMd),
+          ],
+
+          // ← Hint: أزرار الإجراءات
+          Row(
+            children: [
+              // ← Hint: زر اختيار/تغيير الصورة
+              Expanded(
+                child: CustomButton(
+                  text: _hasImage ? l10n.changeImage : l10n.addImage,
+                  icon: _hasImage ? Icons.edit : Icons.add_photo_alternate,
+                  type: ButtonType.secondary,
+                  size: ButtonSize.medium,
+                  onPressed: _showImageSourceDialog,
+                ),
+              ),
+
+              // ← Hint: زر حذف الصورة (يظهر فقط إذا كانت هناك صورة)
+              if (_hasImage) ...[
+                const SizedBox(width: AppConstants.spacingSm),
+                CustomButton(
+                  text: l10n.delete,
+                  icon: Icons.delete_outline,
+                  type: ButtonType.secondary,
+                  size: ButtonSize.medium,
+                  onPressed: _removeImage,
+                ),
+              ],
+            ],
+          ),
+
+          // ← Hint: ملاحظة توضيحية
+          const SizedBox(height: AppConstants.spacingMd),
+          Container(
+            padding: AppConstants.paddingSm,
+            decoration: BoxDecoration(
+              color: AppColors.info.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusSm,
+              border: Border.all(
+                color: AppColors.info.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.info,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    l10n.productImageNote,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.info,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🖼️ بناء معاينة الصورة
+  // ============================================================
+  Widget _buildImagePreview(bool isDark) {
+    // ← Hint: تحديد مصدر الصورة (جديدة أو موجودة)
+    final imageWidget = _productImage != null
+        ? Image.file(
+            _productImage!,
+            fit: BoxFit.cover,
+          )
+        : (_existingImagePath != null && !_shouldDeleteImage)
+            ? Image.file(
+                File(_existingImagePath!),
+                fit: BoxFit.cover,
+              )
+            : null;
+
+    if (imageWidget == null) return const SizedBox.shrink();
+
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        borderRadius: AppConstants.borderRadiusMd,
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+          width: 2,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: AppConstants.borderRadiusMd,
+        child: imageWidget,
+      ),
+    );
+  }
+
+  // ============================================================
   // 🏢 بناء قائمة الموردين
   // ============================================================
   Widget _buildSupplierDropdown(AppLocalizations l10n, bool isDark) {
     return FutureBuilder<List<Supplier>>(
       future: _suppliersFuture,
       builder: (context, snapshot) {
-        // حالة التحميل
+        // ← Hint: حالة التحميل
         if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -414,7 +723,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           );
         }
 
-        // حالة الخطأ
+        // ← Hint: حالة الخطأ
         if (snapshot.hasError) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -441,7 +750,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           );
         }
 
-        // حالة الفراغ
+        // ← Hint: حالة الفراغ
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -667,7 +976,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     );
   }
 
-  /// بناء صف سعر
+  /// ← Hint: بناء صف سعر
   Widget _buildPriceRow(
     String label,
     String value,

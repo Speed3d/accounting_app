@@ -1,5 +1,6 @@
 // lib/screens/sales/direct_sale_screen.dart
 
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +22,8 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../products/barcode_scanner_screen.dart';
 
+/// 🚀 شاشة البيع السريع - مع دعم عرض صور المنتجات
+/// ← Hint: تتيح بيع نقدي مباشر مع طباعة فاتورة
 class DirectSaleScreen extends StatefulWidget {
   const DirectSaleScreen({super.key});
 
@@ -365,7 +368,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                             subtitle: Text('${l10n.quantity}: ${item.quantity}'),
                             trailing: Text(
                               formatCurrency(item.quantity * item.product.sellingPrice),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.success,
                               ),
@@ -484,7 +487,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
     );
   }
 
-  // ============= بناء واجهة المنتج =============
+  // ============= بناء واجهة المنتج - مع دعم الصور =============
   Widget _buildProductCard(Product product, bool isDark, AppLocalizations l10n) {
     final cartItemIndex = _cartItems.indexWhere(
       (item) => item.product.productID == product.productID,
@@ -503,34 +506,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
           : null,
       child: Row(
         children: [
-          // أيقونة/عدد
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: isInCart
-                  ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
-                  : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
-              borderRadius: AppConstants.borderRadiusMd,
-            ),
-            child: Center(
-              child: isInCart
-                  ? Text(
-                      'x$quantityInCart',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    )
-                  : Icon(
-                      Icons.inventory_2_outlined,
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
-                    ),
-            ),
-          ),
+          // ← Hint: عرض صورة المنتج أو أيقونة/عدد
+          _buildProductImage(product, isInCart, quantityInCart, isDark),
           
           const SizedBox(width: AppConstants.spacingMd),
           
@@ -589,18 +566,119 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
     );
   }
 
+  // ============================================================
+  // 🖼️ بناء صورة المنتج أو أيقونة/عدد
+  // ============================================================
+  /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة أو العدد
+  Widget _buildProductImage(
+    Product product,
+    bool isInCart,
+    int quantityInCart,
+    bool isDark,
+  ) {
+    // ← Hint: التحقق من وجود صورة
+    final hasImage = product.imagePath != null && 
+                      product.imagePath!.isNotEmpty;
+
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: hasImage
+            ? Colors.transparent
+            : (isInCart
+                ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight)),
+        borderRadius: AppConstants.borderRadiusMd,
+        border: hasImage
+            ? Border.all(
+                color: isInCart
+                    ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                    : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                width: isInCart ? 2 : 1,
+              )
+            : null,
+      ),
+      child: ClipRRect(
+        borderRadius: AppConstants.borderRadiusMd,
+        child: hasImage
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(
+                    File(product.imagePath!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // ← Hint: في حالة فشل تحميل الصورة
+                      return Center(
+                        child: isInCart
+                            ? Text(
+                                'x$quantityInCart',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              )
+                            : Icon(
+                                Icons.inventory_2_outlined,
+                                color: isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondaryLight,
+                              ),
+                      );
+                    },
+                  ),
+                  // ← Hint: عرض العدد فوق الصورة إذا كان في السلة
+                  if (isInCart)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: AppConstants.borderRadiusMd,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'x$quantityInCart',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            : Center(
+                child: isInCart
+                    ? Text(
+                        'x$quantityInCart',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      )
+                    : Icon(
+                        Icons.inventory_2_outlined,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                      ),
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    // ✅ استخدام Scaffold بدلاً من MainLayout
     return Scaffold(
-      // === AppBar عادي مع زر الرجوع التلقائي ===
       appBar: AppBar(
         title: Text(l10n.directSalePoint),
-        // ✅ زر الرجوع يظهر تلقائياً
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -619,7 +697,6 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         ],
       ),
       
-      // === الزر العائم ===
       floatingActionButton: _cartItems.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: _isProcessingSale ? null : _completeSale,
@@ -641,12 +718,11 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             )
           : null,
       
-      // === المحتوى الرئيسي ===
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return  LoadingState(message: l10n.loadingProducts);
+            return LoadingState(message: l10n.loadingProducts);
           }
 
           if (snapshot.hasError) {

@@ -1,5 +1,6 @@
 // 📁 lib/screens/customers/new_sale_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -13,6 +14,8 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
 import '../products/barcode_scanner_screen.dart';
 
+/// 🛒 شاشة البيع للزبون - مع دعم عرض صور المنتجات
+/// ← Hint: تتيح اختيار منتجات متعددة وإضافتها للسلة مع تحديد تاريخ البيع
 class NewSaleScreen extends StatefulWidget {
   const NewSaleScreen({super.key});
 
@@ -33,7 +36,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   
   final _searchController = TextEditingController();
   
-  // ✅ Hint: متغير لحفظ تاريخ البيع المختار
+  // ← Hint: متغير لحفظ تاريخ البيع المختار
   DateTime _selectedSaleDate = DateTime.now();
   
   @override
@@ -48,7 +51,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     super.dispose();
   }
   
-  /// ✅ Hint: تحميل المنتجات (استبعاد المنتجات ذات الكمية صفر)
+  /// ← Hint: تحميل المنتجات (استبعاد المنتجات ذات الكمية صفر)
   Future<void> _loadProducts() async {
     setState(() {
       _isLoading = true;
@@ -60,7 +63,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       
       if (mounted) {
         setState(() {
-          // ✅ Hint: فلترة المنتجات - استبعاد الكمية صفر
+          // ← Hint: فلترة المنتجات - استبعاد الكمية صفر
           _allProducts = products.where((product) => product.quantity > 0).toList();
           _filteredProducts = _allProducts;
           _isLoading = false;
@@ -105,14 +108,14 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     final product = await _dbHelper.getProductByBarcode(barcodeScanRes);
     
     if (product != null) {
-      // ✅ Hint: التحقق من أن الكمية أكبر من صفر
+      // ← Hint: التحقق من أن الكمية أكبر من صفر
       if (product.quantity > 0) {
         _addProductToCart(product, 1, l10n);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.productOutOfStock), // ✅ Hint: سنضيفها في الترجمة
+              content: Text(l10n.productOutOfStock),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
@@ -316,14 +319,14 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     );
   }
   
-  // ✅ Hint: دالة جديدة - اختيار تاريخ البيع
+  // ← Hint: دالة جديدة - اختيار تاريخ البيع
   Future<void> _selectSaleDate(BuildContext context, AppLocalizations l10n) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedSaleDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      helpText: l10n.selectSaleDate, // ✅ Hint: سنضيفها في الترجمة
+      helpText: l10n.selectSaleDate,
     );
     
     if (picked != null && picked != _selectedSaleDate) {
@@ -346,7 +349,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () {
-              // ✅ Hint: إرجاع السلة + التاريخ
+              // ← Hint: إرجاع السلة + التاريخ
               Navigator.of(context).pop({
                 'items': _cartItems,
                 'date': _selectedSaleDate,
@@ -361,7 +364,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         children: [
           _buildSearchBar(l10n),
           
-          // ✅ Hint: قسم اختيار التاريخ (جديد)
+          // ← Hint: قسم اختيار التاريخ
           _buildDateSelector(l10n),
           
           Expanded(
@@ -382,7 +385,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     );
   }
   
-  // ✅ Hint: ويدجت جديد - محدد التاريخ
+  // ← Hint: ويدجت جديد - محدد التاريخ
   Widget _buildDateSelector(AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isToday = _selectedSaleDate.year == DateTime.now().year &&
@@ -427,7 +430,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.saleDate, // ✅ Hint: سنضيفها في الترجمة
+                      l10n.saleDate,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4),
@@ -562,6 +565,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     );
   }
   
+  /// ← Hint: بناء بطاقة المنتج - مع دعم عرض الصورة
   Widget _buildProductCard(Product product, AppLocalizations l10n) {
     final cartQuantity = _getCartQuantity(product.productID!);
     final isInCart = cartQuantity > 0;
@@ -571,22 +575,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       onTap: () => _showAddToCartDialog(product, l10n),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppConstants.spacingMd),
-            decoration: BoxDecoration(
-              color: isInCart
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusMd,
-            ),
-            child: Icon(
-              isInCart ? Icons.shopping_cart : Icons.inventory_2,
-              color: isInCart
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.grey,
-              size: AppConstants.iconSizeLg,
-            ),
-          ),
+          // ← Hint: عرض صورة المنتج أو الأيقونة الافتراضية
+          _buildProductImage(product, isInCart),
           
           const SizedBox(width: AppConstants.spacingMd),
           
@@ -651,6 +641,64 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية
+  // ============================================================
+  /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
+  Widget _buildProductImage(Product product, bool isInCart) {
+    // ← Hint: التحقق من وجود صورة
+    final hasImage = product.imagePath != null && 
+                      product.imagePath!.isNotEmpty;
+
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: hasImage
+            ? Colors.transparent
+            : (isInCart
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.1)),
+        borderRadius: AppConstants.borderRadiusMd,
+        border: hasImage
+            ? Border.all(
+                color: isInCart
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey.withOpacity(0.3),
+                width: 1.5,
+              )
+            : null,
+      ),
+      child: ClipRRect(
+        borderRadius: AppConstants.borderRadiusMd,
+        child: hasImage
+            ? Image.file(
+                File(product.imagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // ← Hint: في حالة فشل تحميل الصورة، نعرض الأيقونة الافتراضية
+                  return Center(
+                    child: Icon(
+                      isInCart ? Icons.shopping_cart : Icons.inventory_2,
+                      color: isInCart
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                      size: AppConstants.iconSizeMd,
+                    ),
+                  );
+                },
+              )
+            : Icon(
+                isInCart ? Icons.shopping_cart : Icons.inventory_2,
+                color: isInCart
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey,
+                size: AppConstants.iconSizeMd,
+              ),
       ),
     );
   }
@@ -723,7 +771,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   ),
             ),
           ),
-          // ✅ Hint: تقليل flex من 2 إلى 1
           Expanded(
             flex: 1,
             child: Text(
@@ -757,8 +804,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                 Text(
                   item.product.productName,
                   style: Theme.of(context).textTheme.bodyMedium,
-                  maxLines: 1, // ✅ Hint: إضافة
-                  overflow: TextOverflow.ellipsis, // ✅ Hint: إضافة
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -769,14 +816,12 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             ),
           ),
           
-          // ✅ Hint: تقليل flex + إضافة Flexible
           Expanded(
             flex: 1,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min, // ✅ Hint: إضافة
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // ✅ Hint: جعل النص مرناً
                 Flexible(
                   child: Text(
                     formatCurrency(item.quantity * item.product.sellingPrice),
@@ -788,8 +833,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 4), // ✅ Hint: تقليل من 8
-                // ✅ Hint: جعل الأيقونة أصغر
+                const SizedBox(width: 4),
                 InkWell(
                   onTap: () {
                     setDialogState(() => _removeFromCart(index));
@@ -799,9 +843,9 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                       Navigator.of(context).pop();
                     }
                   },
-                  child: Icon(
+                  child: const Icon(
                     Icons.delete_outline,
-                    size: 18, // ✅ Hint: تقليل من 20
+                    size: 18,
                     color: AppColors.error,
                   ),
                 ),
@@ -825,7 +869,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   fontWeight: FontWeight.bold,
                 ),
           ),
-          // ✅ Hint: جعل النص مرناً
           Flexible(
             child: Text(
               formatCurrency(_calculateTotal()),

@@ -2616,10 +2616,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get overdueCustomers => 'Overdue Customers';
 
   @override
-  String get productOutOfStock => 'Product out of stock';
+  String get productOutOfStock => 'Product is out of stock';
 
   @override
-  String get selectSaleDate => 'Select sale date';
+  String get selectSaleDate => 'Select Sale Date';
 
   @override
   String get saleDate => 'Sale Date';
@@ -2938,4 +2938,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get passwordTip =>
       '⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.';
+
+  @override
+  String get userMergeTitle => 'Merge Users';
+
+  @override
+  String userMergeMessage(int count) {
+    return 'You have $count current user(s).\n\nWhat would you like to do?';
+  }
+
+  @override
+  String get mergeUsers => 'Merge Users';
+
+  @override
+  String get mergeUsersDescription =>
+      'Add users from backup while keeping current users';
+
+  @override
+  String get replaceAllUsers => 'Replace All';
+
+  @override
+  String get replaceAllUsersDescription =>
+      'Delete all current users and replace with backup users';
+
+  @override
+  String get keepCurrentUsers => 'Keep Current Users';
+
+  @override
+  String get keepCurrentUsersDescription =>
+      'Restore data only without changing users';
+
+  @override
+  String get selectBackupFile => 'Select Backup File';
+
+  @override
+  String get enterBackupPassword => 'Enter Backup Password';
+
+  @override
+  String get verifyingPassword => 'Verifying password...';
+
+  @override
+  String get incorrectPassword => 'Incorrect password';
+
+  @override
+  String get usersMergedSuccessfully => 'Users merged successfully';
+
+  @override
+  String get usersReplacedSuccessfully => 'Users replaced successfully';
+
+  @override
+  String get noUsersInBackup => 'No user data in backup';
+
+  @override
+  String duplicateUsernamesSkipped(int count) {
+    return '$count user(s) skipped due to duplicate usernames';
+  }
+
+  @override
+  String get permissionsWillBePreserved =>
+      'Note: Current user permissions will be preserved';
+
+  @override
+  String get allDataWillBeReplaced =>
+      'Warning: All current data will be deleted';
+
+  @override
+  String get productImage => 'Product Image';
+
+  @override
+  String get addImage => 'Add Image';
+
+  @override
+  String get selectImageSource => 'Select Image Source';
+
+  @override
+  String get productImageNote =>
+      'Image is optional. You can add it now or later.';
 }

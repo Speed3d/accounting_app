@@ -1,5 +1,6 @@
 // lib/screens/products/products_list_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
@@ -13,7 +14,7 @@ import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
 
 /// 📦 شاشة قائمة المنتجات - صفحة فرعية
-/// Hint: تعرض جميع المنتجات النشطة مع معلوماتها الأساسية
+/// ← Hint: تعرض جميع المنتجات النشطة مع معلوماتها الأساسية وصورها
 class ProductsListScreen extends StatefulWidget {
   const ProductsListScreen({super.key});
 
@@ -47,7 +48,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     super.dispose();
   }
 
-  /// تحميل قائمة المنتجات
+  /// ← Hint: تحميل قائمة المنتجات
   Future<void> _reloadProducts() async {
     setState(() {
       _productsFuture = dbHelper.getAllProductsWithSupplierName();
@@ -64,7 +65,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// تطبيق الفلتر المحدد
+  /// ← Hint: تطبيق الفلتر المحدد
   void _applyFilter() {
     if (_selectedFilter == null) {
       _filteredProducts = _allProducts;
@@ -80,7 +81,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// تغيير الفلتر
+  /// ← Hint: تغيير الفلتر
   void _changeFilter(String? filter) {
     setState(() {
       _selectedFilter = filter;
@@ -88,7 +89,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     });
   }
 
-  /// البحث في قائمة المنتجات
+  /// ← Hint: البحث في قائمة المنتجات
   void _filterProducts(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -112,7 +113,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     });
   }
 
-  /// أرشفة منتج
+  /// ← Hint: أرشفة منتج
   Future<void> _handleArchiveProduct(Product product) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -133,7 +134,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
     // تأكيد الأرشفة
     final confirm = await showDialog<bool>(
-      
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.confirmArchive),
@@ -155,15 +155,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
 
     if (confirm != true) return;
-    
 
     // تنفيذ الأرشفة
     try {
       await dbHelper.archiveProduct(product.productID!);
       await dbHelper.logActivity(
-        
-        // ارشفة المنتج
-        // 'أرشفة المنتج: ${product.productName}',
         l10n.archiveProductAction(product.productName),
         userId: _authService.currentUser?.id,
         userName: _authService.currentUser?.fullName,
@@ -177,7 +173,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
-                  // تم ارشفة المنتج بنجاح
                   child: Text(l10n.productArchivedSuccess(product.productName)),
                 ),
               ],
@@ -193,10 +188,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              // حدث خطا في الارشفة
-               l10n.productArchivedError(e.toString()),
-              ),
+            content: Text(l10n.productArchivedError(e.toString())),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -212,7 +204,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // ============= AppBar =============
+      // ============= App Bar =============
       appBar: AppBar(
         title: Row(
           children: [
@@ -270,7 +262,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         builder: (context, snapshot) {
           // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return  LoadingState(message: l10n.loadingProducts);
+            return LoadingState(message: l10n.loadingProducts);
           }
 
           // حالة الخطأ
@@ -317,7 +309,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddProduct,
               icon: const Icon(Icons.add),
-              label:  Text(l10n.addProduct),
+              label: Text(l10n.addProduct),
               tooltip: l10n.addNewProduct,
             )
           : null,
@@ -385,7 +377,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               value: totalQuantity.toString(),
               color: AppColors.info,
               isDark: isDark,
-              filterType: null, // عرض الكل
+              filterType: null,
             ),
           ),
           const SizedBox(width: AppConstants.spacingSm),
@@ -398,7 +390,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               value: lowStockCount.toString(),
               color: lowStockCount > 0 ? AppColors.warning : AppColors.success,
               isDark: isDark,
-              filterType: 'low', // فلتر المنخفضة
+              filterType: 'low',
             ),
           ),
           const SizedBox(width: AppConstants.spacingSm),
@@ -412,7 +404,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               color: AppColors.success,
               isDark: isDark,
               isCompact: true,
-              filterType: null, // عرض الكل
+              filterType: null,
             ),
           ),
         ],
@@ -420,7 +412,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  /// بناء بطاقة إحصائية
+  /// ← Hint: بناء بطاقة إحصائية
   Widget _buildStatCard({
     required IconData icon,
     required String label,
@@ -501,7 +493,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   }
 
   // ============================================================
-  // 🃏 بناء بطاقة منتج
+  // 🃏 بناء بطاقة منتج - مع دعم الصور
   // ============================================================
   Widget _buildProductCard(Product product) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -521,19 +513,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             padding: AppConstants.paddingMd,
             child: Row(
               children: [
-                // أيقونة المنتج
-                Container(
-                  padding: const EdgeInsets.all(AppConstants.spacingMd),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.1),
-                    borderRadius: AppConstants.borderRadiusMd,
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2,
-                    color: AppColors.info,
-                    size: 28,
-                  ),
-                ),
+                // ← Hint: عرض صورة المنتج أو الأيقونة الافتراضية
+                _buildProductImage(product, isDark),
 
                 const SizedBox(width: AppConstants.spacingMd),
 
@@ -686,6 +667,58 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   }
 
   // ============================================================
+  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية
+  // ============================================================
+  /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
+  Widget _buildProductImage(Product product, bool isDark) {
+    // ← Hint: التحقق من وجود صورة
+    final hasImage = product.imagePath != null && 
+                      product.imagePath!.isNotEmpty;
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: hasImage 
+            ? Colors.transparent 
+            : AppColors.info.withOpacity(0.1),
+        borderRadius: AppConstants.borderRadiusMd,
+        border: hasImage
+            ? Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
+              )
+            : null,
+      ),
+      child: ClipRRect(
+        borderRadius: AppConstants.borderRadiusMd,
+        child: hasImage
+            ? Image.file(
+                File(product.imagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // ← Hint: في حالة فشل تحميل الصورة، نعرض الأيقونة الافتراضية
+                  return const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: AppColors.error,
+                      size: 28,
+                    ),
+                  );
+                },
+              )
+            : const Center(
+                child: Icon(
+                  Icons.inventory_2,
+                  color: AppColors.info,
+                  size: 28,
+                ),
+              ),
+      ),
+    );
+  }
+
+  // ============================================================
   // 📋 بناء عنصر معلومات
   // ============================================================
   Widget _buildInfoItem({
@@ -735,7 +768,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   // 🧭 التنقل
   // ============================================================
 
-  /// الانتقال لصفحة إضافة منتج جديد
+  /// ← Hint: الانتقال لصفحة إضافة منتج جديد
   Future<void> _navigateToAddProduct() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -748,7 +781,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// الانتقال لصفحة تعديل المنتج
+  /// ← Hint: الانتقال لصفحة تعديل المنتج
   Future<void> _navigateToEditProduct(Product product) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(

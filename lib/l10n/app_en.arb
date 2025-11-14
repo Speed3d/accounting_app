@@ -2227,7 +2227,54 @@
   "confirm": "Confirm",
   "@confirm": {
     "description": "Confirm button text"
-  }
+  },
+
+    "userMergeTitle": "Merge Users",
+  "userMergeMessage": "You have {count} current user(s).\n\nWhat would you like to do?",
+  "@userMergeMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mergeUsers": "Merge Users",
+  "mergeUsersDescription": "Add users from backup while keeping current users",
+  "replaceAllUsers": "Replace All",
+  "replaceAllUsersDescription": "Delete all current users and replace with backup users",
+  "keepCurrentUsers": "Keep Current Users",
+  "keepCurrentUsersDescription": "Restore data only without changing users",
+  "selectBackupFile": "Select Backup File",
+  "enterBackupPassword": "Enter Backup Password",
+  "verifyingPassword": "Verifying password...",
+  "incorrectPassword": "Incorrect password",
+  "usersMergedSuccessfully": "Users merged successfully",
+  "usersReplacedSuccessfully": "Users replaced successfully",
+  "noUsersInBackup": "No user data in backup",
+  "duplicateUsernamesSkipped": "{count} user(s) skipped due to duplicate usernames",
+  "@duplicateUsernamesSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "permissionsWillBePreserved": "Note: Current user permissions will be preserved",
+  "allDataWillBeReplaced": "Warning: All current data will be deleted",
+
+    "productImage": "Product Image",
+  "addImage": "Add Image",
+  "changeImage": "Change Image",
+  "selectImageSource": "Select Image Source",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "productImageNote": "Image is optional. You can add it now or later.",
+  
+  "productOutOfStock": "Product is out of stock",
+  "selectSaleDate": "Select Sale Date",
+  "saleDate": "Sale Date",
+  "today": "Today"
 
 
 }

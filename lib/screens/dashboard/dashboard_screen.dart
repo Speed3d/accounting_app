@@ -145,7 +145,7 @@ Future<void> _loadDashboardData() async {
               child: ListView(
                 // ✅ Hint: استخدام ListView بدلاً من SingleChildScrollView لتحسين الأداء
                 padding: AppConstants.screenPadding,
-                // ✅ Hint: إضافة cacheExtent لتحسين الأداء
+                // ✅  إضافة cacheExtent لتحسين الأداء
                 cacheExtent: 1000,
                 children: [
                   const SizedBox(height: AppConstants.spacingMd),
@@ -159,6 +159,11 @@ Future<void> _loadDashboardData() async {
                   _buildAlertsSection(l10n, isDark),
 
                   const SizedBox(height: AppConstants.spacingXl),
+                
+                  // ============= القسم 5: العملاء المدينون =============
+                  _buildTopDebtorsSection(l10n, isDark),
+
+                  const SizedBox(height: AppConstants.spacingXl),
 
                   // ============= القسم 3: الإحصائيات المالية =============
                   _buildFinancialStatsSection(l10n, isDark),
@@ -167,11 +172,6 @@ Future<void> _loadDashboardData() async {
 
                   // ============= القسم 4: أكثر العملاء شراءً =============
                   _buildTopBuyersSection(l10n, isDark),
-
-                  const SizedBox(height: AppConstants.spacingXl),
-
-                  // ============= القسم 5: العملاء المدينون =============
-                  _buildTopDebtorsSection(l10n, isDark),
 
                   const SizedBox(height: AppConstants.spacingXl),
 
@@ -554,6 +554,81 @@ Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
   );
 }
 
+   // ==========================================================================
+  // 📉 القسم 5: العملاء المدينون
+  // ==========================================================================
+  Widget _buildTopDebtorsSection(AppLocalizations l10n, bool isDark) {
+    if (_topDebtors.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.warning_amber, color: AppColors.error),
+            const SizedBox(width: AppConstants.spacingSm),
+            Text(
+              l10n.topDebtors,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppConstants.spacingMd),
+
+        CustomCard(
+          padding: EdgeInsets.zero,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _topDebtors.length > 5 ? 5 : _topDebtors.length,
+            separatorBuilder: (context, index) => Divider(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              height: 1,
+            ),
+            itemBuilder: (context, index) {
+              final debtor = _topDebtors[index];
+              final customerName = debtor['CustomerName'] as String;
+              final remaining = (debtor['Remaining'] as num).toDouble();
+              final daysSince = (debtor['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
+
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.error.withOpacity(0.1),
+                  child: Text(
+                    '${index + 1}',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  customerName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  l10n.daysSinceLastTransaction(daysSince),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                trailing: Text(
+                  formatCurrency(remaining),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
 // ==========================================================================
 // 🃏 بناء بطاقة تنبيه واحدة
 // ==========================================================================
@@ -778,81 +853,6 @@ Widget _buildAlertCard({
                 AppColors.success,
                 isDark,
                 index + 1,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================================================
-  // 📉 القسم 5: العملاء المدينون
-  // ==========================================================================
-  Widget _buildTopDebtorsSection(AppLocalizations l10n, bool isDark) {
-    if (_topDebtors.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.warning_amber, color: AppColors.error),
-            const SizedBox(width: AppConstants.spacingSm),
-            Text(
-              l10n.topDebtors,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppConstants.spacingMd),
-
-        CustomCard(
-          padding: EdgeInsets.zero,
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _topDebtors.length > 5 ? 5 : _topDebtors.length,
-            separatorBuilder: (context, index) => Divider(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-              height: 1,
-            ),
-            itemBuilder: (context, index) {
-              final debtor = _topDebtors[index];
-              final customerName = debtor['CustomerName'] as String;
-              final remaining = (debtor['Remaining'] as num).toDouble();
-              final daysSince = (debtor['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
-
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.error.withOpacity(0.1),
-                  child: Text(
-                    '${index + 1}',
-                    style: TextStyle(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  customerName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  l10n.daysSinceLastTransaction(daysSince),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                trailing: Text(
-                  formatCurrency(remaining),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.error,
-                      ),
-                ),
               );
             },
           ),
