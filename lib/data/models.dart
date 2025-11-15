@@ -613,6 +613,18 @@ class SalesReturn {
     'ReturnDate': returnDate, 
     'CustomerID': customerID, 
     'Reason': reason};
+
+    factory SalesReturn.fromMap(Map<String, dynamic> map) {
+  return SalesReturn(
+    returnID: map['ReturnID'] as int,
+    originalSaleID: map['OriginalSaleID'] as int,
+    productID: map['ProductID'] as int,
+    customerID: map['CustomerID'] as int,
+    returnAmount: map.getDecimal('ReturnAmount'),
+    returnedQuantity: map['ReturnedQuantity'] as int,
+    returnDate: map['ReturnDate'] as String,
+  );
+}
 }
 
 // --- نموذج سجل النشاط ---

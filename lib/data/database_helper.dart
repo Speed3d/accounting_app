@@ -805,11 +805,13 @@ class DatabaseHelper {
       // الخطوة 1: تحديث حالة عملية البيع الأصلية إلى "مرجع".
       await txn.update('Debt_Customer', {'IsReturned': 1}, where: 'ID = ?', whereArgs: [saleToReturn.id]);
       // الخطوة 2: زيادة كمية المنتج في المخزن.
-      await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?', [saleToReturn.qty_Customer, saleToReturn.productID]);
+      await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?',
+       [saleToReturn.qty_Customer, saleToReturn.productID]);
       
       // الخطوة 3 (المُعدلة): إنقاص المبلغ المتبقي على الزبون.
       // لا يوجد تغيير في الكود هنا، لكن المنطق تغير. الآن نسمح بأن تكون النتيجة سالبة.
-      await txn.rawUpdate('UPDATE TB_Customer SET Remaining = Remaining - ? WHERE CustomerID = ?', [saleToReturn.debt, saleToReturn.customerID]);
+      await txn.rawUpdate('UPDATE TB_Customer SET Remaining = Remaining - ? WHERE CustomerID = ?',
+       [saleToReturn.debt.toDouble(), saleToReturn.customerID]);
       
       // الخطوة 4: تسجيل عملية الإرجاع في جدول المرتجعات.
       final saleReturn = SalesReturn(
@@ -1884,8 +1886,10 @@ Future<Map<String, dynamic>> getCustomerSalesStatistics({
   return {
     'totalTransactions': result.first['totalTransactions'] ?? 0,
     'totalQuantity': result.first['totalQuantity'] ?? 0,
-    'totalSales': (result.first['totalSales'] as num?)?.toDouble() ?? 0.0,
-    'totalProfit': (result.first['totalProfit'] as num?)?.toDouble() ?? 0.0,
+    // 'totalSales': (result.first['totalSales'] as num?)?.toDouble() ?? 0.0,
+    'totalSales': Decimal.parse((result.first['totalSales'] as num?)?.toString() ?? '0'),
+    // 'totalProfit': (result.first['totalProfit'] as num?)?.toDouble() ?? 0.0,
+    'totalProfit': Decimal.parse((result.first['totalProfit'] as num?)?.toString() ?? '0'),
     'averageTransaction': (result.first['averageTransaction'] as num?)?.toDouble() ?? 0.0,
     'minTransaction': (result.first['minTransaction'] as num?)?.toDouble() ?? 0.0,
     'maxTransaction': (result.first['maxTransaction'] as num?)?.toDouble() ?? 0.0,
