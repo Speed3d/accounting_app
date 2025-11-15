@@ -1,5 +1,6 @@
 // lib/screens/dashboard/dashboard_screen.dart
 
+import 'package:accounting_app/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +68,9 @@ Future<void> _loadDashboardData() async {
   setState(() => _isLoading = true);
 
   try {
+    // ✅ إضافة تشخيص
+    debugPrint('🔍 بدء تحميل البيانات...');
+
     final results = await Future.wait([
       dbHelper.getTotalSales(),
       dbHelper.getTotalProfit(),
@@ -82,6 +86,18 @@ Future<void> _loadDashboardData() async {
       dbHelper.getMonthlySales(months: 6),
       dbHelper.getTopSuppliersByProfit(limit: 5),
     ]);
+
+     // ✅ طباعة النتائج
+    debugPrint('📊 إجمالي المبيعات: ${results[0]}');
+    debugPrint('💰 إجمالي الأرباح: ${results[1]}');
+    debugPrint('👥 عدد الزبائن النشطين: ${results[2]}');
+    debugPrint('📦 عدد المنتجات النشطة: ${results[3]}');
+    debugPrint('💳 إجمالي الديون: ${results[4]}');
+    debugPrint('🏆 أكثر الزبائن شراءً: ${(results[7] as List).length}');
+    debugPrint('⚠️ زبائن متأخرين: ${(results[8] as List).length}');
+    debugPrint('⭐ أكثر المنتجات مبيعاً: ${(results[9] as List).length}');
+    debugPrint('📉 منتجات منخفضة المخزون: ${(results[10] as List).length}');
+    debugPrint('🏪 أكثر الموردين ربحاً: ${(results[12] as List).length}');
 
     if (mounted) {
       setState(() {
@@ -104,6 +120,8 @@ Future<void> _loadDashboardData() async {
 
         _isLoading = false;
       });
+
+      debugPrint('✅ تم تحميل البيانات بنجاح!');
     }
   } catch (e) {
     debugPrint('❌ خطأ في تحميل بيانات Dashboard: $e');
@@ -593,7 +611,7 @@ Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
             itemBuilder: (context, index) {
               final debtor = _topDebtors[index];
               final customerName = debtor['CustomerName'] as String;
-              final remaining = debtor['Remaining'] as Decimal;
+              final remaining = debtor.getDecimal('Remaining');
               final daysSince = (debtor['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
 
               return ListTile(
@@ -1178,7 +1196,8 @@ Widget _buildAlertCard({
 
     final totalProfit = _topSuppliers.fold<Decimal>(
        Decimal.zero,
-       (sum, supplier) => sum + (supplier['TotalProfit'] as Decimal),
+      //  (sum, supplier) => sum + (supplier['TotalProfit'] as Decimal),
+      (sum, supplier) => sum + supplier.getDecimal('TotalProfit'),
     );
 
     return Column(
@@ -1202,7 +1221,8 @@ Widget _buildAlertCard({
                     sections: _topSuppliers.asMap().entries.map((entry) {
                       final index = entry.key;
                       final supplier = entry.value;
-                      final profit = supplier['TotalProfit'] as Decimal;
+                      // final profit = supplier['TotalProfit'] as Decimal;
+                      final profit = supplier.getDecimal('TotalProfit'); 
 
                      // تحويل لـ double قبل الحسابات
                       final profitDouble = profit.toDouble();
@@ -1233,7 +1253,8 @@ Widget _buildAlertCard({
                 final index = entry.key;
                 final supplier = entry.value;
                 final name = supplier['SupplierName'] as String;
-                final profit = supplier['TotalProfit'] as Decimal;
+                // final profit = supplier['TotalProfit'] as Decimal;
+                final profit = supplier.getDecimal('TotalProfit'); 
                 final color = AppColors.chartColors[index % AppColors.chartColors.length];
 
                 return Padding(
@@ -1340,7 +1361,7 @@ Widget _buildAlertCard({
             itemBuilder: (context, index) {
               final customer = _overdueCustomers[index];
               final name = customer['CustomerName'] as String;
-              final remaining = customer['Remaining'] as Decimal;
+              final remaining = customer.getDecimal('Remaining');
               final days = (customer['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
 
               return ListTile(
@@ -1740,7 +1761,7 @@ Widget _buildOverdueCustomersListInSheet(AppLocalizations l10n, bool isDark) {
             itemBuilder: (context, index) {
               final customer = _overdueCustomers[index];
               final customerName = customer['CustomerName'] as String;
-              final remaining = customer['Remaining'] as Decimal;
+              final remaining = customer.getDecimal('Remaining');
               final daysSince = (customer['DaysSinceLastTransaction'] as num?)
                       ?.toInt() ??
                   0;

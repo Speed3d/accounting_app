@@ -1654,15 +1654,15 @@ Future<int> getActiveEmployeesCount() async {
   Future<Decimal> getCollectionRate() async {
       final totalSales = await getTotalSales();
 
-  if (totalSales == Decimal.zero) return Decimal.fromInt(100);
+      if (totalSales == Decimal.zero) return Decimal.fromInt(100);
 
-  final totalPayments = await getTotalPaymentsCollected();
+      final totalPayments = await getTotalPaymentsCollected();
 
-  // القسمة ترجع Rational فنحوّلها إلى Decimal
-  final ratio = (totalPayments / totalSales).toDecimal();
+      final ratio = totalPayments / totalSales;
+      final percentage = ratio.toDecimal(scaleOnInfinitePrecision: 10) * Decimal.fromInt(100);
+  
+       return percentage;
 
-  // الآن النتيجة Decimal × Decimal
-  return ratio * Decimal.fromInt(100);
   }
 
   /// ✅ Hint: جلب المبيعات الشهرية لآخر 6 أشهر (للرسم البياني)
@@ -1705,7 +1705,15 @@ Future<int> getActiveEmployeesCount() async {
       LIMIT ?
     ''', [limit]);
     
-    return result;
+    // ✅ تحويل TotalProfit إلى Decimal
+    return result.map((row) {
+      final map = Map<String, dynamic>.from(row);
+      if (map['TotalProfit'] != null) {
+        map['TotalProfit'] = Decimal.parse(map['TotalProfit'].toString());
+       }
+      return map;
+     }).toList();
+
   }
 
 
