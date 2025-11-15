@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
@@ -836,34 +837,48 @@ class DatabaseHelper {
     return [];
   }
 
+  //================================
   // Hint: دالة لحساب إجمالي الأرباح من جميع المبيعات التي لم يتم إرجاعها.
-  Future<double> getTotalProfit() async {
-    final db = await instance.database;
-    final result = await db.rawQuery('SELECT SUM(ProfitAmount) as Total FROM Debt_Customer WHERE IsReturned = 0');
-    final data = result.first;
-    if (data['Total'] != null) {
-      return (data['Total'] as num).toDouble();
-    } else {
-      return 0.0;
-    }
-  }
+  Future<Decimal> getTotalProfit() async {
+     final db = await instance.database;
+     final result = await db.rawQuery(
+      'SELECT SUM(ProfitAmount) as Total FROM Debt_Customer WHERE IsReturned = 0'
+     );
+  
+     final data = result.first;
+     if (data['Total'] != null) {
+     return Decimal.parse(data['Total'].toString());
+     }
+     return Decimal.zero;
+   }
 
   // Hint: دالة لجلب إجمالي الأرباح مجمعة حسب كل مورد (فقط من المبيعات غير المرجعة).
   Future<List<Map<String, dynamic>>> getProfitBySupplier() async {
-    final db = await instance.database;
-    final String sql = """
-      SELECT 
-        S.SupplierID, S.SupplierName, S.SupplierType, SUM(D.ProfitAmount) as TotalProfit
-      FROM Debt_Customer D
-      JOIN Store_Products P ON D.ProductID = P.ProductID
-      JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
-      WHERE D.IsReturned = 0
-      GROUP BY S.SupplierID, S.SupplierName, S.SupplierType
-      ORDER BY TotalProfit DESC
-    """;
-    return await db.rawQuery(sql);
-  }
 
+    final db = await instance.database;
+  final String sql = """
+    SELECT 
+      S.SupplierID, S.SupplierName, S.SupplierType, SUM(D.ProfitAmount) as TotalProfit
+    FROM Debt_Customer D
+    JOIN Store_Products P ON D.ProductID = P.ProductID
+    JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
+    WHERE D.IsReturned = 0
+    GROUP BY S.SupplierID, S.SupplierName, S.SupplierType
+    ORDER BY TotalProfit DESC
+  """;
+  
+  final results = await db.rawQuery(sql);
+  
+  // ✅ تحويل TotalProfit إلى Decimal
+  return results.map((row) {
+    final map = Map<String, dynamic>.from(row);
+    if (map['TotalProfit'] != null) {
+      map['TotalProfit'] = Decimal.parse(map['TotalProfit'].toString());
+    }
+    return map;
+  }).toList();
+
+    }
 
 
   // Hint: دالة لجلب تفاصيل المبيعات (غير المرجعة) لمورد معين.
@@ -995,42 +1010,43 @@ Future<Employee?> getEmployeeById(int id) async {
 // Hint: دالة لتسجيل سلفة جديدة لموظف.
 // تستخدم transaction لضمان تنفيذ العمليتين معًا.
 Future<void> recordNewAdvance(EmployeeAdvance advance) async {
-  final db = await instance.database;
+    final db = await instance.database;
   await db.transaction((txn) async {
-    // الخطوة 1: إدراج سجل السلفة الجديد.
     await txn.insert('TB_Employee_Advances', advance.toMap());
     
-    // الخطوة 2: تحديث رصيد الموظف (زيادة الدين عليه).
+    // ✅ تحديث رصيد الموظف
     await txn.rawUpdate(
       'UPDATE TB_Employees SET Balance = Balance + ? WHERE EmployeeID = ?',
-      [advance.advanceAmount, advance.employeeID],
+      [advance.advanceAmount.toDouble(), advance.employeeID],
     );
   });
 }
 
 
 
-// Hint: دالة لتسجيل عملية دفع راتب جديدة.
+// دالة لتسجيل عملية دفع راتب جديدة.
 // هذه دالة حرجة تستخدم transaction لضمان تكامل البيانات.
-Future<void> recordNewPayroll(PayrollEntry payroll, double advanceAmountToRepay) async {
+Future<void> recordNewPayroll(PayrollEntry payroll, Decimal advanceAmountToRepay) async {
   final db = await instance.database;
   await db.transaction((txn) async {
-    // الخطوة 1: إدراج سجل الراتب الجديد في جدول الرواتب.
     await txn.insert('TB_Payroll', payroll.toMap());
 
-    // الخطوة 2: تحديث رصيد الموظف.
-    // ننقص رصيد السلفة عليه بمقدار المبلغ الذي تم تسديده من السلفة.
     await txn.rawUpdate(
       'UPDATE TB_Employees SET Balance = Balance - ? WHERE EmployeeID = ?',
-      [advanceAmountToRepay, payroll.employeeID],
+      [advanceAmountToRepay.toDouble(), payroll.employeeID],
     );
 
-    // الخطوة 3 (اختياري لكن مهم): تحديث حالة السلف القديمة.
-    // هذا منطق معقد قليلاً، يقوم بتحديث حالة السلف من "غير مسددة" إلى "مسددة بالكامل"
-    // إذا أصبح رصيد الموظف صفرًا أو أقل.
-    final result = await txn.query('TB_Employees', columns: ['Balance'], where: 'EmployeeID = ?', whereArgs: [payroll.employeeID]);
-    final currentBalance = (result.first['Balance'] as num).toDouble();
-    if (currentBalance <= 0) {
+    // ✅ تحديث حالة السلف
+    final result = await txn.query(
+      'TB_Employees',
+      columns: ['Balance'],
+      where: 'EmployeeID = ?',
+      whereArgs: [payroll.employeeID],
+    );
+    
+    final currentBalance = Decimal.parse(result.first['Balance'].toString());
+    
+    if (currentBalance <= Decimal.zero) {
       await txn.update(
         'TB_Employee_Advances',
         {'RepaymentStatus': 'مسددة بالكامل'},
@@ -1055,17 +1071,29 @@ Future<bool> isPayrollDuplicate(int employeeId, int month, int year) async {
 
 
 // Hint: دالة لحساب إجمالي الرواتب الصافية المدفوعة.
-Future<double> getTotalNetSalariesPaid() async {
-  final db = await instance.database;
-  final result = await db.rawQuery('SELECT SUM(NetSalary) as Total FROM TB_Payroll');
-  return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+Future<Decimal> getTotalNetSalariesPaid() async {
+    final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(NetSalary) as Total FROM TB_Payroll'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
 }
 
 // Hint: دالة لحساب إجمالي رصيد السلف المستحقة على جميع الموظفين.
-Future<double> getTotalActiveAdvancesBalance() async {
-  final db = await instance.database;
-  final result = await db.rawQuery('SELECT SUM(Balance) as Total FROM TB_Employees WHERE IsActive = 1');
-  return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+Future<Decimal> getTotalActiveAdvancesBalance() async {
+    final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Balance) as Total FROM TB_Employees WHERE IsActive = 1'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
 }
 
 // Hint: دالة لحساب عدد الموظفين النشطين.
@@ -1315,19 +1343,32 @@ Future<int> getActiveEmployeesCount() async {
   
   /// دالة لحفظ سجل سحب أرباح جديد.
   Future<int> recordProfitWithdrawal(Map<String, dynamic> withdrawalData) async {
-    final db = await instance.database;
-    return await db.insert('TB_Profit_Withdrawals', withdrawalData);
+      final db = await instance.database;
+  
+  // ✅ تحويل Decimal إلى double للتخزين
+  final dataToStore = Map<String, dynamic>.from(withdrawalData);
+  if (dataToStore['WithdrawalAmount'] is Decimal) {
+    dataToStore['WithdrawalAmount'] = 
+      (dataToStore['WithdrawalAmount'] as Decimal).toDouble();
+  }
+  
+  return await db.insert('TB_Profit_Withdrawals', dataToStore);
+
   }
 
 
   /// دالة لجلب إجمالي المبالغ المسحوبة لمورد معين.
-  Future<double> getTotalWithdrawnForSupplier(int supplierId) async {
-    final db = await instance.database;
-    final result = await db.rawQuery(
-      'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ?',
-      [supplierId],
-    );
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalWithdrawnForSupplier(int supplierId) async {
+      final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ?',
+    [supplierId],
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
 
@@ -1361,10 +1402,16 @@ Future<int> getActiveEmployeesCount() async {
   }
 
   /// دالة لحساب إجمالي المصاريف.
-  Future<double> getTotalExpenses() async {
-    final db = await instance.database;
-    final result = await db.rawQuery('SELECT SUM(Amount) as Total FROM TB_Expenses');
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalExpenses() async {
+      final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Amount) as Total FROM TB_Expenses'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
 
@@ -1374,10 +1421,16 @@ Future<int> getActiveEmployeesCount() async {
   // =================================================================================================
   
   /// دالة لحساب إجمالي كل المبالغ المسحوبة من أرباح الموردين والشركاء.
-  Future<double> getTotalAllProfitWithdrawals() async {
-    final db = await instance.database;
-    final result = await db.rawQuery('SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals');
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalAllProfitWithdrawals() async {
+      final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
 
@@ -1491,12 +1544,16 @@ Future<int> getActiveEmployeesCount() async {
   // =================================================================================================
 
   /// ✅ Hint: حساب إجمالي المبيعات (مجموع كل الديون من المبيعات غير المرجعة)
-  Future<double> getTotalSales() async {
-    final db = await instance.database;
-    final result = await db.rawQuery(
-      'SELECT SUM(Debt) as Total FROM Debt_Customer WHERE IsReturned = 0'
-    );
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalSales() async {
+      final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Debt) as Total FROM Debt_Customer WHERE IsReturned = 0'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
   /// ✅ Hint: حساب عدد العملاء النشطين (الذين لديهم معاملات)
@@ -1564,33 +1621,46 @@ Future<int> getActiveEmployeesCount() async {
   }
 
   /// ✅ Hint: حساب إجمالي الديون المستحقة على جميع العملاء
-  Future<double> getTotalDebts() async {
-    final db = await instance.database;
-    final result = await db.rawQuery('''
-      SELECT SUM(Remaining) as Total 
-      FROM TB_Customer 
-      WHERE Remaining > 0 AND IsActive = 1 AND CustomerName != ?
-    ''', [cashCustomerInternalName]);
-    
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalDebts() async {
+      final db = await instance.database;
+  final result = await db.rawQuery('''
+    SELECT SUM(Remaining) as Total 
+    FROM TB_Customer 
+    WHERE Remaining > 0 AND IsActive = 1 AND CustomerName != ?
+  ''', [cashCustomerInternalName]);
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
   /// ✅ Hint: حساب إجمالي المدفوعات المحصلة
-  Future<double> getTotalPaymentsCollected() async {
-    final db = await instance.database;
-    final result = await db.rawQuery(
-      'SELECT SUM(Payment) as Total FROM Payment_Customer'
-    );
-    return (result.first['Total'] as num?)?.toDouble() ?? 0.0;
+  Future<Decimal> getTotalPaymentsCollected() async {
+      final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Payment) as Total FROM Payment_Customer'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
   }
 
   /// ✅ Hint: حساب نسبة التحصيل (المدفوعات / المبيعات × 100)
-  Future<double> getCollectionRate() async {
-    final totalSales = await getTotalSales();
-    if (totalSales == 0) return 100.0; // تجنب القسمة على صفر
-    
-    final totalPayments = await getTotalPaymentsCollected();
-    return (totalPayments / totalSales) * 100;
+  Future<Decimal> getCollectionRate() async {
+      final totalSales = await getTotalSales();
+
+  if (totalSales == Decimal.zero) return Decimal.fromInt(100);
+
+  final totalPayments = await getTotalPaymentsCollected();
+
+  // القسمة ترجع Rational فنحوّلها إلى Decimal
+  final ratio = (totalPayments / totalSales).toDecimal();
+
+  // الآن النتيجة Decimal × Decimal
+  return ratio * Decimal.fromInt(100);
   }
 
   /// ✅ Hint: جلب المبيعات الشهرية لآخر 6 أشهر (للرسم البياني)

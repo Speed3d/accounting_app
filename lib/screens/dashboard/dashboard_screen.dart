@@ -1,5 +1,6 @@
 // lib/screens/dashboard/dashboard_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
@@ -36,13 +37,13 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   int _overdueDaysThreshold = 30; // افتراضياً 30 يوم
 
   // ✅ Hint: متغيرات الإحصائيات السريعة
-  double _totalSales = 0.0;
-  double _totalProfit = 0.0;
+  Decimal _totalSales = Decimal.zero;
+  Decimal _totalProfit = Decimal.zero;
   int _activeCustomersCount = 0;
   int _activeProductsCount = 0;
-  double _totalDebts = 0.0;
-  double _totalPayments = 0.0;
-  double _collectionRate = 0.0;
+  Decimal _totalDebts = Decimal.zero;
+  Decimal _totalPayments = Decimal.zero;
+  Decimal _collectionRate = Decimal.zero;
 
   // ✅ Hint: متغيرات القوائم
   List<Customer> _topBuyers = [];

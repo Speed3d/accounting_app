@@ -1,6 +1,7 @@
 // lib/screens/products/add_edit_product_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,6 +10,7 @@ import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
+import '../../utils/decimal_extensions.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -19,15 +21,10 @@ import 'barcode_scanner_screen.dart';
 
 /// ===========================================================================
 /// شاشة إضافة/تعديل منتج (Add/Edit Product Screen)
-/// ===========================================================================
-/// الغرض:
-/// - إضافة منتج جديد مع صورة اختيارية
-/// - تعديل بيانات منتج موجود
-/// - اختيار صورة من الكاميرا أو المعرض
-/// - حفظ البيانات في قاعدة البيانات
+/// Hint: محدثة بالكامل لدعم Decimal
 /// ===========================================================================
 class AddEditProductScreen extends StatefulWidget {
-  final Product? product; // null = وضع الإضافة، موجود = وضع التعديل
+  final Product? product;
 
   const AddEditProductScreen({
     super.key,
@@ -54,33 +51,32 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final AuthService _authService = AuthService();
   
   // ============= متغيرات الحالة =============
-  File? _imageFile;                    // الصورة المختارة
-  bool _isLoading = false;             // حالة الحفظ
-  Supplier? _selectedSupplier;         // المورد المختار
-  late Future<List<Supplier>> _suppliersFuture; // قائمة الموردين
+  File? _imageFile;
+  bool _isLoading = false;
+  Supplier? _selectedSupplier;
+  late Future<List<Supplier>> _suppliersFuture;
   
   // ============= Getters =============
   bool get _isEditMode => widget.product != null;
 
   // ===========================================================================
-  // التهيئة الأولية
+  // Hint: التهيئة الأولية - تعبئة الحقول في وضع التعديل
   // ===========================================================================
   @override
   void initState() {
     super.initState();
     _suppliersFuture = dbHelper.getAllSuppliers();
     
-    // إذا كنا في وضع التعديل، املأ الحقول بالبيانات الموجودة
     if (_isEditMode) {
       final product = widget.product!;
       _nameController.text = product.productName;
       _detailsController.text = product.productDetails ?? '';
       _quantityController.text = product.quantity.toString();
+      // Hint: تحويل Decimal إلى String للعرض
       _costPriceController.text = product.costPrice.toString();
       _sellingPriceController.text = product.sellingPrice.toString();
       _barcodeController.text = product.barcode ?? '';
       
-      // تحميل الصورة إذا كانت موجودة
       if (product.imagePath != null && product.imagePath!.isNotEmpty) {
         final imageFile = File(product.imagePath!);
         if (imageFile.existsSync()) {
@@ -88,7 +84,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         }
       }
       
-      // تحميل المورد المرتبط
       _suppliersFuture.then((suppliers) {
         if (suppliers.isNotEmpty) {
           try {
@@ -103,7 +98,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // التنظيف
+  // Hint: التنظيف
   // ===========================================================================
   @override
   void dispose() {
@@ -117,7 +112,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // اختيار صورة
+  // Hint: اختيار صورة
   // ===========================================================================
   Future<void> _pickImage(ImageSource source) async {
     final l10n = AppLocalizations.of(context)!;
@@ -125,15 +120,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final picker = ImagePicker();
       
-      // اختيار الصورة
       final pickedFile = await picker.pickImage(
         source: source,
-        imageQuality: 80, // ضغط الصورة لتوفير المساحة
+        imageQuality: 80,
       );
       
-      if (pickedFile == null) return; // المستخدم ألغى العملية
+      if (pickedFile == null) return;
       
-      // حفظ الصورة في مجلد التطبيق
       final appDir = await getApplicationDocumentsDirectory();
       final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}${p.extension(pickedFile.path)}';
       final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
@@ -155,7 +148,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // مسح الباركود
+  // Hint: مسح الباركود
   // ===========================================================================
   Future<void> _scanBarcode() async {
     final result = await Navigator.push<String>(
@@ -171,15 +164,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // حفظ المنتج
+  // Hint: حفظ المنتج - محدث لـ Decimal
   // ===========================================================================
   Future<void> _saveProduct() async {
     final l10n = AppLocalizations.of(context)!;
     
-    // التحقق من صحة النموذج
     if (!_formKey.currentState!.validate()) return;
     
-    // التحقق من اختيار المورد
     if (_selectedSupplier == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -190,17 +181,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       return;
     }
     
-    // بدء التحميل
     setState(() => _isLoading = true);
     
     try {
-      // إنشاء باركود تلقائي إذا كان فارغاً
       String barcodeToSave = _barcodeController.text.trim();
       if (barcodeToSave.isEmpty) {
         barcodeToSave = 'INTERNAL-${DateTime.now().millisecondsSinceEpoch}';
       }
       
-      // التحقق من تكرار الباركود
       final exists = await dbHelper.barcodeExists(
         barcodeToSave,
         currentProductId: _isEditMode ? widget.product!.productID : null,
@@ -220,6 +208,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return;
       }
 
+      // Hint: تحويل String إلى Decimal باستخدام parseDecimal
+      final costPrice = parseDecimal(
+        convertArabicNumbersToEnglish(_costPriceController.text),
+      );
+      
+      final sellingPrice = parseDecimal(
+        convertArabicNumbersToEnglish(_sellingPriceController.text),
+      );
+
       String action;
       String successMessage;
       
@@ -233,12 +230,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           quantity: int.parse(
             convertArabicNumbersToEnglish(_quantityController.text),
           ),
-          costPrice: double.parse(
-            convertArabicNumbersToEnglish(_costPriceController.text),
-          ),
-          sellingPrice: double.parse(
-            convertArabicNumbersToEnglish(_sellingPriceController.text),
-          ),
+          costPrice: costPrice, // Hint: Decimal مباشرة
+          sellingPrice: sellingPrice, // Hint: Decimal مباشرة
           supplierID: _selectedSupplier!.supplierID!,
           imagePath: _imageFile?.path,
         );
@@ -256,12 +249,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           quantity: int.parse(
             convertArabicNumbersToEnglish(_quantityController.text),
           ),
-          costPrice: double.parse(
-            convertArabicNumbersToEnglish(_costPriceController.text),
-          ),
-          sellingPrice: double.parse(
-            convertArabicNumbersToEnglish(_sellingPriceController.text),
-          ),
+          costPrice: costPrice, // Hint: Decimal مباشرة
+          sellingPrice: sellingPrice, // Hint: Decimal مباشرة
           supplierID: _selectedSupplier!.supplierID!,
           imagePath: _imageFile?.path,
         );
@@ -271,7 +260,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         successMessage = l10n.productAddedSuccess;
       }
       
-      // تسجيل النشاط
       await dbHelper.logActivity(
         action,
         userId: _authService.currentUser?.id,
@@ -279,7 +267,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       );
       
       if (mounted) {
-        // عرض رسالة نجاح
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(successMessage),
@@ -287,7 +274,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           ),
         );
         
-        // العودة للصفحة السابقة مع إشعار بالنجاح
         Navigator.of(context).pop(true);
       }
       
@@ -308,18 +294,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء واجهة المستخدم
+  // Hint: بناء واجهة المستخدم
   // ===========================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      // ============= AppBar =============
       appBar: AppBar(
         title: Text(_isEditMode ? l10n.editProduct : l10n.addProduct),
         actions: [
-          // زر الحفظ في الـ AppBar
           IconButton(
             icon: const Icon(Icons.check),
             tooltip: l10n.save,
@@ -328,38 +312,31 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         ],
       ),
       
-      // ============= Body =============
       body: Form(
         key: _formKey,
         child: ListView(
           padding: AppConstants.screenPadding,
           children: [
-            // ============= صورة المنتج =============
             _buildImageSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= قسم المورد =============
             _buildSupplierSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= قسم معلومات المنتج =============
             _buildProductInfoSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= قسم الكميات والأسعار =============
             _buildPricesSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= ملخص الأسعار =============
             _buildPriceSummary(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
             
-            // ============= زر الحفظ =============
             CustomButton(
               text: _isEditMode ? l10n.editProduct : l10n.addProduct,
               icon: _isEditMode ? Icons.update : Icons.add,
@@ -377,13 +354,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء قسم الصورة
+  // Hint: بناء قسم الصورة
   // ===========================================================================
   Widget _buildImageSection(AppLocalizations l10n) {
     return Center(
       child: Stack(
         children: [
-          // ============= الصورة الرمزية =============
           Container(
             width: 130,
             height: 130,
@@ -412,7 +388,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ),
           ),
           
-          // ============= زر الكاميرا =============
           Positioned(
             bottom: 0,
             right: 0,
@@ -442,14 +417,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء قسم المورد
+  // Hint: بناء قسم المورد
   // ===========================================================================
   Widget _buildSupplierSection(AppLocalizations l10n) {
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // عنوان القسم
           Row(
             children: [
               Container(
@@ -476,7 +450,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingLg),
           
-          // قائمة الموردين
           _buildSupplierDropdown(l10n),
         ],
       ),
@@ -484,13 +457,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء قائمة الموردين المنسدلة
+  // Hint: بناء قائمة الموردين المنسدلة
   // ===========================================================================
   Widget _buildSupplierDropdown(AppLocalizations l10n) {
     return FutureBuilder<List<Supplier>>(
       future: _suppliersFuture,
       builder: (context, snapshot) {
-        // حالة التحميل
         if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -508,7 +480,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           );
         }
 
-        // حالة الخطأ
         if (snapshot.hasError) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -535,7 +506,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           );
         }
 
-        // حالة البيانات الفارغة
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Container(
             padding: AppConstants.paddingMd,
@@ -635,14 +605,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء قسم معلومات المنتج
+  // Hint: بناء قسم معلومات المنتج
   // ===========================================================================
   Widget _buildProductInfoSection(AppLocalizations l10n) {
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // عنوان القسم
           Row(
             children: [
               Container(
@@ -669,7 +638,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingLg),
           
-          // اسم المنتج
           CustomTextField(
             controller: _nameController,
             label: l10n.productName,
@@ -686,7 +654,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // الباركود
           CustomTextField(
             controller: _barcodeController,
             label: l10n.barcode,
@@ -699,7 +666,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // تفاصيل المنتج
           CustomTextField(
             controller: _detailsController,
             label: l10n.productDetailsOptional,
@@ -714,14 +680,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء قسم الكميات والأسعار
+  // Hint: بناء قسم الكميات والأسعار
   // ===========================================================================
   Widget _buildPricesSection(AppLocalizations l10n) {
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // عنوان القسم
           Row(
             children: [
               Container(
@@ -748,7 +713,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingLg),
           
-          // الكمية
           CustomTextField(
             controller: _quantityController,
             label: l10n.quantity,
@@ -773,7 +737,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // سعر الشراء
           CustomTextField(
             controller: _costPriceController,
             label: l10n.costPrice,
@@ -785,12 +748,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               if (value == null || value.isEmpty) {
                 return l10n.fieldRequired;
               }
-              final number = double.tryParse(convertArabicNumbersToEnglish(value));
-              if (number == null) {
+              // Hint: استخدام parseDecimal للتحقق
+              try {
+                final decimal = parseDecimal(convertArabicNumbersToEnglish(value));
+                if (decimal < Decimal.zero) {
+                  return l10n.fieldCannotBeNegative;
+                }
+              } catch (e) {
                 return l10n.enterValidNumber;
-              }
-              if (number < 0) {
-                return l10n.fieldCannotBeNegative;
               }
               return null;
             },
@@ -798,7 +763,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingMd),
           
-          // سعر البيع
           CustomTextField(
             controller: _sellingPriceController,
             label: l10n.sellingPrice,
@@ -810,12 +774,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               if (value == null || value.isEmpty) {
                 return l10n.fieldRequired;
               }
-              final number = double.tryParse(convertArabicNumbersToEnglish(value));
-              if (number == null) {
+              // Hint: استخدام parseDecimal للتحقق
+              try {
+                final decimal = parseDecimal(convertArabicNumbersToEnglish(value));
+                if (decimal < Decimal.zero) {
+                  return l10n.fieldCannotBeNegative;
+                }
+              } catch (e) {
                 return l10n.enterValidNumber;
-              }
-              if (number < 0) {
-                return l10n.fieldCannotBeNegative;
               }
               return null;
             },
@@ -826,24 +792,32 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء ملخص الأسعار
+  // Hint: بناء ملخص الأسعار - محدث لـ Decimal
   // ===========================================================================
   Widget _buildPriceSummary(AppLocalizations l10n) {
-    final costPrice = Decimal.tryParse(
-          // convertArabicNumbersToEnglish(_costPriceController.text.trim()),
-          convertArabicNumbersToEnglish(_costPriceController.text.trim()),
-        ) ?? Decimal.zero;
-    final sellingPrice = double.tryParse(
-          convertArabicNumbersToEnglish(_sellingPriceController.text.trim()),
-        ) ?? 0.0;
+    // Hint: تحويل آمن من String إلى Decimal
+    final costPrice = parseDecimal(
+      convertArabicNumbersToEnglish(_costPriceController.text.trim()),
+      fallback: Decimal.zero,
+    );
+    
+    final sellingPrice = parseDecimal(
+      convertArabicNumbersToEnglish(_sellingPriceController.text.trim()),
+      fallback: Decimal.zero,
+    );
+    
+    // Hint: حساب الربح باستخدام Decimal
     final profit = sellingPrice - costPrice;
-    final profitPercentage = costPrice > 0 ? (profit / costPrice) * 100 : 0.0;
+    
+    // Hint: حساب نسبة الربح
+    final profitPercentage = costPrice > Decimal.zero 
+        ? (profit.toDouble() / costPrice.toDouble()) * 100
+        : 0.0;
 
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // عنوان القسم
           Row(
             children: [
               Container(
@@ -870,7 +844,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingLg),
           
-          // سعر الشراء
+          // Hint: عرض الأسعار باستخدام formatCurrency
           _buildPriceRow(
             l10n.costPrice,
             formatCurrency(costPrice),
@@ -880,7 +854,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           
           const SizedBox(height: AppConstants.spacingSm),
           
-          // سعر البيع
           _buildPriceRow(
             l10n.salePrice,
             formatCurrency(sellingPrice),
@@ -893,11 +866,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             color: Theme.of(context).dividerColor,
           ),
           
-          // الربح
+          // Hint: عرض الربح
           Container(
             padding: AppConstants.paddingMd,
             decoration: BoxDecoration(
-              color: profit >= 0
+              color: profit >= Decimal.zero
                   ? AppColors.success.withOpacity(0.1)
                   : AppColors.error.withOpacity(0.1),
               borderRadius: AppConstants.borderRadiusMd,
@@ -908,8 +881,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 Row(
                   children: [
                     Icon(
-                      profit >= 0 ? Icons.trending_up : Icons.trending_down,
-                      color: profit >= 0 ? AppColors.success : AppColors.error,
+                      profit >= Decimal.zero ? Icons.trending_up : Icons.trending_down,
+                      color: profit >= Decimal.zero ? AppColors.success : AppColors.error,
                       size: 20,
                     ),
                     const SizedBox(width: AppConstants.spacingSm),
@@ -917,7 +890,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       l10n.profit,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: profit >= 0 ? AppColors.success : AppColors.error,
+                        color: profit >= Decimal.zero ? AppColors.success : AppColors.error,
                         fontSize: 16,
                       ),
                     ),
@@ -931,14 +904,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: profit >= 0 ? AppColors.success : AppColors.error,
+                        color: profit >= Decimal.zero ? AppColors.success : AppColors.error,
                       ),
                     ),
                     Text(
                       '${profitPercentage.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 12,
-                        color: profit >= 0 ? AppColors.success : AppColors.error,
+                        color: profit >= Decimal.zero ? AppColors.success : AppColors.error,
                       ),
                     ),
                   ],
@@ -952,7 +925,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // بناء صف السعر
+  // Hint: بناء صف السعر
   // ===========================================================================
   Widget _buildPriceRow(
     String label,
@@ -982,7 +955,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ===========================================================================
-  // مربع حوار اختيار مصدر الصورة
+  // Hint: مربع حوار اختيار مصدر الصورة
   // ===========================================================================
   void _showImageSourceDialog(AppLocalizations l10n) {
     showModalBottomSheet(
@@ -998,7 +971,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ============= عنوان =============
               Text(
                 l10n.imageSource,
                 style: Theme.of(context).textTheme.titleLarge,
@@ -1006,7 +978,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               
               const SizedBox(height: AppConstants.spacingLg),
               
-              // ============= خيار المعرض =============
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(AppConstants.spacingSm),
@@ -1029,7 +1000,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               
               const SizedBox(height: AppConstants.spacingSm),
               
-              // ============= خيار الكاميرا =============
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(AppConstants.spacingSm),
@@ -1052,7 +1022,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               
               const SizedBox(height: AppConstants.spacingMd),
               
-              // ============= زر الإلغاء =============
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(l10n.cancel),

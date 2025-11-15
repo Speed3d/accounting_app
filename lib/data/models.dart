@@ -3,6 +3,9 @@
 // --- نموذج المستخدم ---
 //  قمنا بإزالة 'role' 
 //وأضفنا متغيرات bool لكل صلاحية.
+import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:decimal/decimal.dart';
+
 class User {
   final int? id;
   final String fullName;
@@ -115,8 +118,8 @@ class Employee {
   final String? phone;
   final String? imagePath;
   final String hireDate;
-  final dynamic baseSalary;
-  final dynamic balance; // الرصيد المستحق على الموظف (للسلف)
+  final Decimal baseSalary;
+  final Decimal balance; // الرصيد المستحق على الموظف (للسلف)
   final bool isActive;
 
   Employee({
@@ -128,9 +131,9 @@ class Employee {
     this.imagePath,
     required this.hireDate,
     required this.baseSalary,
-    this.balance = 0.0,
+    Decimal? balance,
     this.isActive = true,
-  });
+  }) : balance = balance ?? Decimal.zero;
 
   Map<String, dynamic> toMap() => {
         'EmployeeID': employeeID,
@@ -140,8 +143,8 @@ class Employee {
         'Phone': phone,
         'ImagePath': imagePath,
         'HireDate': hireDate,
-        'BaseSalary': baseSalary,
-        'Balance': balance,
+        'BaseSalary': baseSalary.toDouble(),
+        'Balance': balance.toDouble(),
         'IsActive': isActive ? 1 : 0,
       };
 
@@ -153,8 +156,8 @@ class Employee {
         phone: map['Phone'],
         imagePath: map['ImagePath'],
         hireDate: map['HireDate'],
-        baseSalary: (map['BaseSalary'] as num).toDouble(),
-        balance: (map['Balance'] as num).toDouble(),
+        baseSalary: map.getDecimal('BaseSalary'),
+        balance: map.getDecimal('Balance'),
         isActive: map['IsActive'] == 1,
       );
 }
@@ -164,40 +167,42 @@ class PayrollEntry {
   final int? payrollID;
   final int employeeID;
   final String paymentDate;
-  final int payrollMonth; // ✅ الحقل الجديد
-  final int payrollYear;  // ✅ الحقل الجديد
-  final dynamic baseSalary;
-  final dynamic bonuses;
-  final dynamic deductions;
-  final dynamic advanceDeduction; // المبلغ المخصوم من السلفة
-  final dynamic netSalary;
+  final int payrollMonth;
+  final int payrollYear; 
+  final Decimal baseSalary;
+  final Decimal bonuses;
+  final Decimal deductions;
+  final Decimal advanceDeduction; // المبلغ المخصوم من السلفة
+  final Decimal netSalary;
   final String? notes;
 
   PayrollEntry({
     this.payrollID,
     required this.employeeID,
     required this.paymentDate,
-    required this.payrollMonth, // ✅
-    required this.payrollYear,  // ✅
+    required this.payrollMonth, 
+    required this.payrollYear, 
     required this.baseSalary,
-    this.bonuses = 0.0,
-    this.deductions = 0.0,
-    this.advanceDeduction = 0.0,
+    Decimal? bonuses,
+    Decimal? deductions,
+    Decimal? advanceDeduction,
     required this.netSalary,
     this.notes,
-  });
+  }) : bonuses = bonuses ?? Decimal.zero,
+        deductions = deductions ?? Decimal.zero,
+        advanceDeduction = advanceDeduction ?? Decimal.zero;
 
   Map<String, dynamic> toMap() => {
         'PayrollID': payrollID,
         'EmployeeID': employeeID,
         'PaymentDate': paymentDate,
-        'PayrollMonth': payrollMonth, // ✅
-        'PayrollYear': payrollYear,   // ✅
-        'BaseSalary': baseSalary,
-        'Bonuses': bonuses,
-        'Deductions': deductions,
-        'AdvanceDeduction': advanceDeduction,
-        'NetSalary': netSalary,
+        'PayrollMonth': payrollMonth, 
+        'PayrollYear': payrollYear, 
+        'BaseSalary': baseSalary.toDouble(),
+        'Bonuses': bonuses.toDouble(),
+        'Deductions': deductions.toDouble(),
+        'AdvanceDeduction': advanceDeduction.toDouble(),
+        'NetSalary': netSalary.toDouble(),
         'Notes': notes,
       };
 
@@ -205,13 +210,13 @@ class PayrollEntry {
         payrollID: map['PayrollID'],
         employeeID: map['EmployeeID'],
         paymentDate: map['PaymentDate'],
-        payrollMonth: map['PayrollMonth'], // ✅
-        payrollYear: map['PayrollYear'],   // ✅
-        baseSalary: (map['BaseSalary'] as num).toDouble(),
-        bonuses: (map['Bonuses'] as num).toDouble(),
-        deductions: (map['Deductions'] as num).toDouble(),
-        advanceDeduction: (map['AdvanceDeduction'] as num).toDouble(),
-        netSalary: (map['NetSalary'] as num).toDouble(),
+        payrollMonth: map['PayrollMonth'],
+        payrollYear: map['PayrollYear'], 
+        baseSalary: map.getDecimal('BaseSalary'),
+        bonuses: map.getDecimal('Bonuses'),
+        deductions: map.getDecimal('Deductions'),
+        advanceDeduction: map.getDecimal('AdvanceDeduction'),
+        netSalary: map.getDecimal('NetSalary'),
         notes: map['Notes'],
       );
 }
@@ -221,7 +226,7 @@ class EmployeeAdvance {
   final int? advanceID;
   final int employeeID;
   final String advanceDate;
-  final dynamic advanceAmount;
+  final Decimal advanceAmount;
   final String repaymentStatus; // "غير مسددة", "مسددة جزئيًا", "مسددة بالكامل"
   final String? notes;
 
@@ -238,7 +243,7 @@ class EmployeeAdvance {
         'AdvanceID': advanceID,
         'EmployeeID': employeeID,
         'AdvanceDate': advanceDate,
-        'AdvanceAmount': advanceAmount,
+        'AdvanceAmount': advanceAmount.toDouble(),
         'RepaymentStatus': repaymentStatus,
         'Notes': notes,
       };
@@ -247,7 +252,7 @@ class EmployeeAdvance {
         advanceID: map['AdvanceID'],
         employeeID: map['EmployeeID'],
         advanceDate: map['AdvanceDate'],
-        advanceAmount: (map['AdvanceAmount'] as num).toDouble(),
+        advanceAmount: map.getDecimal('AdvanceAmount'),
         repaymentStatus: map['RepaymentStatus'],
         notes: map['Notes'],
       );
@@ -307,7 +312,7 @@ class Partner {
   final int? partnerID;
   final int? supplierID;
   final String partnerName;
-  final dynamic sharePercentage;
+  final Decimal sharePercentage;
   final String? partnerAddress;
   final String? partnerPhone;
   final String? imagePath;
@@ -315,9 +320,9 @@ class Partner {
   final String? notes;
 
   Partner({this.partnerID, 
-  this.supplierID, required 
-  this.partnerName, required 
-  this.sharePercentage, 
+  this.supplierID, 
+  required this.partnerName, 
+  required this.sharePercentage, 
   this.partnerAddress, 
   this.partnerPhone, 
   this.imagePath,
@@ -328,7 +333,7 @@ class Partner {
     'PartnerID': partnerID, 
     'SupplierID': supplierID, 
     'PartnerName': partnerName, 
-    'SharePercentage': sharePercentage, 
+    'SharePercentage': sharePercentage.toDouble(), 
     'PartnerAddress': partnerAddress, 
     'PartnerPhone': partnerPhone, 
     'ImagePath': imagePath,
@@ -339,7 +344,7 @@ class Partner {
    partnerID: map['PartnerID'],
    supplierID: map['SupplierID'], 
    partnerName: map['PartnerName'], 
-   sharePercentage: map['SharePercentage'], 
+   sharePercentage: map.getDecimal('SharePercentage'), 
    partnerAddress: map['PartnerAddress'], 
    partnerPhone: map['PartnerPhone'], 
    imagePath: map['ImagePath'],
@@ -350,12 +355,14 @@ class Partner {
     int? partnerID, 
     int? supplierID,
      String? partnerName, 
-     dynamic? sharePercentage, 
+     Decimal? sharePercentage, 
      String? partnerAddress, 
      String? partnerPhone, 
      String? imagePath,
      String? dateAdded, 
-     String? notes}) => Partner(
+     String? notes
+     }) => 
+        Partner(
      partnerID: partnerID ?? this.partnerID, 
      supplierID: supplierID ?? this.supplierID, 
      partnerName: partnerName ?? this.partnerName, 
@@ -374,9 +381,8 @@ class Product {
   final String? productDetails;
   final String? barcode; 
   final int quantity;
-  // final double costPrice;
-  final dynamic costPrice;
-  final dynamic sellingPrice;
+  final Decimal costPrice;
+  final Decimal sellingPrice;
   final int supplierID;
   final bool isActive;
   String? supplierName;
@@ -402,8 +408,8 @@ class Product {
     'ProductDetails': productDetails, 
     'Barcode': barcode,
     'Quantity': quantity, 
-    'CostPrice': costPrice, 
-    'SellingPrice': sellingPrice, 
+    'CostPrice': costPrice.toDouble(), 
+    'SellingPrice': sellingPrice.toDouble(), 
     'SupplierID': supplierID, 
     'IsActive': isActive ? 1 : 0,
     'ImagePath': imagePath,
@@ -415,8 +421,8 @@ class Product {
     productDetails: map['ProductDetails'], 
     barcode: map['Barcode'],
     quantity: map['Quantity'], 
-    costPrice: (map['CostPrice'] as num).toDouble(), 
-    sellingPrice: (map['SellingPrice'] as num).toDouble(), 
+    costPrice: map.getDecimal('CostPrice'), 
+    sellingPrice: map.getDecimal('SellingPrice'), 
     supplierID: map['SupplierID'], 
     supplierName: map['SupplierName'], 
     isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
@@ -430,9 +436,9 @@ class Customer {
   final String customerName;
   final String? address;
   final String? phone;
-  final dynamic debt;
-  final dynamic payment;
-  final dynamic remaining;
+  final Decimal debt;
+  final Decimal payment;
+  final Decimal remaining;
   final String dateT;
   final String? imagePath;
   final bool isActive;
@@ -442,26 +448,39 @@ class Customer {
     required this.customerName, 
     this.address, 
     this.phone, 
-    this.debt = 0.0, 
-    this.payment = 0.0, 
-    this.remaining = 0.0, 
+    Decimal? debt, 
+    Decimal? payment, 
+    Decimal? remaining, 
     required this.dateT, 
     this.imagePath, 
-    this.isActive = true});
+    this.isActive = true}) 
+       : debt = debt ?? Decimal.zero,
+        payment = payment ?? Decimal.zero,
+        remaining = remaining ?? Decimal.zero;
 
   Map<String, dynamic> toMap() => {
     'CustomerID': customerID,
     'CustomerName': customerName,
     'Address': address, 
     'Phone': phone, 
-    'Debt': debt, 
-    'Payment': payment, 
-    'Remaining': remaining, 
+    'Debt': debt.toDouble(), 
+    'Payment': payment.toDouble(), 
+    'Remaining': remaining.toDouble(), 
     'DateT': dateT, 
     'ImagePath': imagePath, 
     'IsActive': isActive ? 1 : 0};
 
-  factory Customer.fromMap(Map<String, dynamic> map) => Customer(customerID: map['CustomerID'], customerName: map['CustomerName'], address: map['Address'], phone: map['Phone'], debt: (map['Debt'] as num).toDouble(), payment: (map['Payment'] as num).toDouble(), remaining: (map['Remaining'] as num).toDouble(), dateT: map['DateT'], imagePath: map['ImagePath'], isActive: map['IsActive'] == 1);
+  factory Customer.fromMap(Map<String, dynamic> map) => Customer(
+    customerID: map['CustomerID'], 
+    customerName: map['CustomerName'], 
+    address: map['Address'], 
+    phone: map['Phone'], 
+    debt: map.getDecimal('Debt'), 
+    payment: map.getDecimal('Payment'), 
+    remaining: map.getDecimal('Remaining'), 
+    dateT: map['DateT'], 
+    imagePath: map['ImagePath'], 
+    isActive: map['IsActive'] == 1);
 }
 
 // --- نموذج دين الزبون (عملية شراء) ---
@@ -471,20 +490,52 @@ class CustomerDebt {
   final int customerID;
   final String? customerName;
   final String details;
-  final dynamic debt;
+  final Decimal debt;
   final String dateT;
-  // final int qty_Coustomer;
   final int qty_Customer;
   final int productID;
-  final dynamic costPriceAtTimeOfSale;
-  final dynamic profitAmount;
+  final Decimal costPriceAtTimeOfSale;
+  final Decimal profitAmount;
   final int isReturned; // 0 = not returned, 1 = returned
 
-  CustomerDebt({this.id, required this.customerID, this.customerName, required this.details, required this.debt, required this.dateT, required this.qty_Customer, required this.productID, required this.costPriceAtTimeOfSale, required this.profitAmount, this.isReturned = 0});
+  CustomerDebt({
+    this.id, 
+    required this.customerID, 
+    this.customerName, 
+    required this.details, 
+    required this.debt, 
+    required this.dateT, 
+    required this.qty_Customer, 
+    required this.productID, 
+    required this.costPriceAtTimeOfSale, 
+    required this.profitAmount, 
+    this.isReturned = 0});
 
-  Map<String, dynamic> toMap() => {'ID': id, 'CustomerID': customerID, 'CustomerName': customerName, 'Details': details, 'Debt': debt, 'DateT': dateT, 'Qty_Customer': qty_Customer, 'ProductID': productID, 'CostPriceAtTimeOfSale': costPriceAtTimeOfSale, 'ProfitAmount': profitAmount, 'IsReturned': isReturned};
+  Map<String, dynamic> toMap() => {
+    'ID': id, 
+    'CustomerID': customerID, 
+    'CustomerName': customerName, 
+    'Details': details, 
+    'Debt': debt.toDouble(), 
+    'DateT': dateT, 
+    'Qty_Customer': qty_Customer, 
+    'ProductID': productID, 
+    'CostPriceAtTimeOfSale': costPriceAtTimeOfSale.toDouble(),
+    'ProfitAmount': profitAmount.toDouble(),
+    'IsReturned': isReturned};
 
-  factory CustomerDebt.fromMap(Map<String, dynamic> map) => CustomerDebt(id: map['ID'], customerID: map['CustomerID'], customerName: map['CustomerName'], details: map['Details'], debt: (map['Debt'] as num).toDouble(), dateT: map['DateT'], qty_Customer: map['Qty_Customer'], productID: map['ProductID'], costPriceAtTimeOfSale: (map['CostPriceAtTimeOfSale'] as num).toDouble(), profitAmount: (map['ProfitAmount'] as num).toDouble(), isReturned: map['IsReturned'] ?? 0);
+  factory CustomerDebt.fromMap(Map<String, dynamic> map) => CustomerDebt(
+    id: map['ID'], 
+    customerID: map['CustomerID'], 
+    customerName: map['CustomerName'], 
+    details: map['Details'], 
+    debt: map.getDecimal('Debt'), 
+    dateT: map['DateT'], 
+    qty_Customer: map['Qty_Customer'], 
+    productID: map['ProductID'], 
+    costPriceAtTimeOfSale: map.getDecimal('CostPriceAtTimeOfSale'), 
+    profitAmount: map.getDecimal('ProfitAmount'), 
+    isReturned: map['IsReturned'] ?? 0);
 }
 
 // --- نموذج دفعة الزبون ---
@@ -493,22 +544,43 @@ class CustomerPayment {
   final int? id;
   final int customerID;
   final String? customerName;
-  final dynamic payment;
+  final Decimal payment;
   final String dateT;
   final String? comments;
 
-  CustomerPayment({this.id, required this.customerID, this.customerName, required this.payment, required this.dateT, this.comments});
+  CustomerPayment({
+    this.id, required 
+    this.customerID, 
+    this.customerName, 
+    required this.payment, 
+    required this.dateT, 
+    this.comments});
 
-  Map<String, dynamic> toMap() => {'ID': id, 'CustomerID': customerID, 'CustomerName': customerName, 'Payment': payment, 'DateT': dateT, 'Comments': comments};
+  Map<String, dynamic> toMap() => {
+    'ID': id, 
+    'CustomerID': customerID, 
+    'CustomerName': customerName, 
+    'Payment': payment.toDouble(), 
+    'DateT': dateT, 
+    'Comments': comments};
 
-  factory CustomerPayment.fromMap(Map<String, dynamic> map) => CustomerPayment(id: map['ID'], customerID: map['CustomerID'], customerName: map['CustomerName'], payment: (map['Payment'] as num).toDouble(), dateT: map['DateT'], comments: map['Comments']);
+  factory CustomerPayment.fromMap(Map<String, dynamic> map) => CustomerPayment(
+    id: map['ID'], 
+    customerID: map['CustomerID'], 
+    customerName: map['CustomerName'], 
+    payment: map.getDecimal('Payment'), 
+    dateT: map['DateT'], 
+    comments: map['Comments']);
 }
 
 // --- نموذج عنصر سلة المشتريات ---
 class CartItem {
   final Product product;
   final int quantity;
-  CartItem({required this.product, required this.quantity});
+  CartItem({
+  required this.product, 
+  required this.quantity
+  });
 }
 
 // --- نموذج مرتجع المبيعات ---
@@ -517,14 +589,30 @@ class SalesReturn {
   final int originalSaleID;
   final int productID;
   final int returnedQuantity;
-  final dynamic returnAmount;
+  final Decimal returnAmount;
   final String returnDate;
   final int customerID;
   final String? reason;
 
-  SalesReturn({this.returnID, required this.originalSaleID, required this.productID, required this.returnedQuantity, required this.returnAmount, required this.returnDate, required this.customerID, this.reason});
+  SalesReturn({
+  this.returnID, 
+  required this.originalSaleID, 
+  required this.productID, 
+  required this.returnedQuantity, 
+  required this.returnAmount, 
+  required this.returnDate, 
+  required this.customerID, 
+  this.reason});
 
-  Map<String, dynamic> toMap() => {'ReturnID': returnID, 'OriginalSaleID': originalSaleID, 'ProductID': productID, 'ReturnedQuantity': returnedQuantity, 'ReturnAmount': returnAmount, 'ReturnDate': returnDate, 'CustomerID': customerID, 'Reason': reason};
+  Map<String, dynamic> toMap() => {
+    'ReturnID': returnID, 
+    'OriginalSaleID': originalSaleID, 
+    'ProductID': productID, 
+    'ReturnedQuantity': returnedQuantity, 
+    'ReturnAmount': returnAmount.toDouble(), 
+    'ReturnDate': returnDate, 
+    'CustomerID': customerID, 
+    'Reason': reason};
 }
 
 // --- نموذج سجل النشاط ---
