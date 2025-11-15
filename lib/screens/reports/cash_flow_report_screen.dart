@@ -1,5 +1,6 @@
 // lib/screens/reports/cash_flow_report_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -163,8 +164,8 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                 }
 
                 // حساب الإجماليات
-                double totalCashSales = 0;
-                double totalDebtPayments = 0;
+                Decimal totalCashSales = Decimal.zero;
+                Decimal totalDebtPayments = Decimal.zero;
                 
                 for (var trans in snapshot.data!) {
                   if (trans['type'] == 'CASH_SALE') {
@@ -273,7 +274,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
   /// بناء بطاقة ملخص
   Widget _buildSummaryCard(
     String title,
-    double amount,
+    Decimal amount,
     IconData icon,
     Color color, {
     bool isTotal = false,
@@ -324,7 +325,7 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
           ),
           
           // مؤشر الزيادة
-          if (amount > 0)
+          if (amount > Decimal.zero)
             Icon(
               Icons.trending_up,
               color: color,
@@ -548,8 +549,8 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
       final transactions = await _transactionsFuture;
       
       // 2️⃣ حساب الإجماليات
-      double totalCashSales = 0;
-      double totalDebtPayments = 0;
+      Decimal totalCashSales = Decimal.zero;
+      Decimal totalDebtPayments = Decimal.zero;
       
       for (var trans in transactions) {
         if (trans['type'] == 'CASH_SALE') {

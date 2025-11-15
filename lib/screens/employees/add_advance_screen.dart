@@ -1,5 +1,6 @@
 // lib/screens/employees/add_advance_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -66,8 +67,8 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final amount = double.parse(
-        convertArabicNumbersToEnglish(_amountController.text),
+      final amount = parseDecimal(
+       convertArabicNumbersToEnglish(_amountController.text),
       );
       final l10n = AppLocalizations.of(context)!;
       final newAdvance = EmployeeAdvance(
@@ -360,7 +361,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: widget.employee.balance > 0
+                    color: widget.employee.balance > Decimal.zero
                         ? AppColors.error
                         : AppColors.success,
                   ),
@@ -408,13 +409,14 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   Widget _buildSummaryCard(AppLocalizations l10n, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     // حساب الرصيد المتوقع بعد السلفة
-    final currentAmount = double.tryParse(
-      convertArabicNumbersToEnglish(_amountController.text.trim()),
-    );
+    final currentAmount = parseDecimal(
+     convertArabicNumbersToEnglish(_amountController.text.trim()),
+     fallback: Decimal.zero,
+     );
     final currentBalance = widget.employee.balance;
-    final expectedBalance = currentAmount != null
-        ? currentBalance + currentAmount
-        : currentBalance;
+    final expectedBalance = currentAmount > Decimal.zero
+    ? currentBalance + currentAmount
+    : currentBalance;
 
     return CustomCard(
       child: Container(
@@ -463,7 +465,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
             // مبلغ السلفة
             _buildSummaryRow(
               l10n.advanceAmount,
-              currentAmount != null ? formatCurrency(currentAmount) : '---',
+              currentAmount > Decimal.zero ? formatCurrency(currentAmount) : '---',
               AppColors.warning,
               isDark,
             ),
@@ -477,7 +479,7 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
             _buildSummaryRow(
               l10n.expectedBalance,
               formatCurrency(expectedBalance),
-              expectedBalance > 0 ? AppColors.error : AppColors.success,
+              expectedBalance > Decimal.zero ? AppColors.error : AppColors.success,
               isDark,
               isBold: true,
             ),

@@ -1,5 +1,6 @@
 // lib/screens/reports/supplier_profit_report_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
@@ -304,8 +305,8 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
                     context,
                     label: l10n.netProfit,
                     value: formatCurrency(netProfit),
-                    color: netProfit >= 0 ? AppColors.success : AppColors.error,
-                    icon: netProfit >= 0 
+                    color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
+                    icon: netProfit >= Decimal.zero 
                         ? Icons.check_circle 
                         : Icons.warning,
                   ),
@@ -462,8 +463,8 @@ class SupplierProfitData {
   final int supplierId;
   final String supplierName;
   final String supplierType;
-  final double totalProfit;
-  final double totalWithdrawn;
+  final Decimal totalProfit;
+  final Decimal totalWithdrawn;
   final List<Partner> partners;
 
   SupplierProfitData({

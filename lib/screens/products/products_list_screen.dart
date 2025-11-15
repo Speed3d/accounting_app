@@ -1,11 +1,13 @@
 // lib/screens/products/products_list_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
+import '../../utils/decimal_extensions.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -13,8 +15,11 @@ import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
 
+/// ===========================================================================
 /// 📦 شاشة قائمة المنتجات - صفحة فرعية
-/// ← Hint: تعرض جميع المنتجات النشطة مع معلوماتها الأساسية وصورها
+/// Hint: محدثة بالكامل لدعم Decimal
+/// Hint: تعرض جميع المنتجات النشطة مع معلوماتها الأساسية وصورها
+/// ===========================================================================
 class ProductsListScreen extends StatefulWidget {
   const ProductsListScreen({super.key});
 
@@ -48,7 +53,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     super.dispose();
   }
 
-  /// ← Hint: تحميل قائمة المنتجات
+  /// Hint: تحميل قائمة المنتجات
   Future<void> _reloadProducts() async {
     setState(() {
       _productsFuture = dbHelper.getAllProductsWithSupplierName();
@@ -61,11 +66,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         _applyFilter();
       });
     } catch (e) {
-      // معالجة الخطأ
+      debugPrint('❌ خطأ في تحميل المنتجات: $e');
     }
   }
 
-  /// ← Hint: تطبيق الفلتر المحدد
+  /// Hint: تطبيق الفلتر المحدد
   void _applyFilter() {
     if (_selectedFilter == null) {
       _filteredProducts = _allProducts;
@@ -75,13 +80,12 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       }).toList();
     }
     
-    // إعادة تطبيق البحث إذا كان موجوداً
     if (_searchController.text.isNotEmpty) {
       _filterProducts(_searchController.text);
     }
   }
 
-  /// ← Hint: تغيير الفلتر
+  /// Hint: تغيير الفلتر
   void _changeFilter(String? filter) {
     setState(() {
       _selectedFilter = filter;
@@ -89,7 +93,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     });
   }
 
-  /// ← Hint: البحث في قائمة المنتجات
+  /// Hint: البحث في قائمة المنتجات
   void _filterProducts(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -113,11 +117,10 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     });
   }
 
-  /// ← Hint: أرشفة منتج
+  /// Hint: أرشفة منتج
   Future<void> _handleArchiveProduct(Product product) async {
     final l10n = AppLocalizations.of(context)!;
 
-    // التحقق من عدم بيع المنتج
     final isSold = await dbHelper.isProductSold(product.productID!);
     if (isSold) {
       if (mounted) {
@@ -132,7 +135,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       return;
     }
 
-    // تأكيد الأرشفة
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -156,7 +158,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
     if (confirm != true) return;
 
-    // تنفيذ الأرشفة
     try {
       await dbHelper.archiveProduct(product.productID!);
       await dbHelper.logActivity(
@@ -197,14 +198,15 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  // ============= بناء الواجهة =============
+  // ===========================================================================
+  // Hint: بناء الواجهة
+  // ===========================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // ============= App Bar =============
       appBar: AppBar(
         title: Row(
           children: [
@@ -217,7 +219,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ],
         ),
         actions: [
-          // عدد المنتجات
           if (_allProducts.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(
@@ -256,16 +257,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         ],
       ),
 
-      // ============= Body =============
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
-          // حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadingState(message: l10n.loadingProducts);
           }
 
-          // حالة الخطأ
           if (snapshot.hasError) {
             return ErrorState(
               message: snapshot.error.toString(),
@@ -273,7 +271,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             );
           }
 
-          // حالة الفراغ
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return EmptyState(
               icon: Icons.inventory_2_outlined,
@@ -284,16 +281,10 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             );
           }
 
-          // عرض القائمة
           return Column(
             children: [
-              // ============= شريط البحث =============
               _buildSearchBar(l10n),
-
-              // ============= الإحصائيات السريعة =============
               _buildQuickStats(l10n, isDark),
-
-              // ============= قائمة المنتجات =============
               Expanded(
                 child: _filteredProducts.isEmpty
                     ? _buildNoResultsState(l10n)
@@ -304,7 +295,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         },
       ),
 
-      // ============= زر الإضافة =============
       floatingActionButton: _isAdmin
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddProduct,
@@ -316,9 +306,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 🔍 بناء شريط البحث
-  // ============================================================
+  // ===========================================================================
+  // 🔍 Hint: بناء شريط البحث
+  // ===========================================================================
   Widget _buildSearchBar(AppLocalizations l10n) {
     return Container(
       padding: AppConstants.paddingMd,
@@ -342,25 +332,31 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 📊 بناء الإحصائيات السريعة
-  // ============================================================
+  // ===========================================================================
+  // 📊 Hint: بناء الإحصائيات السريعة - محدث لـ Decimal
+  // ===========================================================================
   Widget _buildQuickStats(AppLocalizations l10n, bool isDark) {
     if (_allProducts.isEmpty) return const SizedBox.shrink();
 
-    // حساب الإحصائيات
+    // Hint: حساب إجمالي الكمية (int - بدون تغيير)
     final totalQuantity = _allProducts.fold<int>(
       0,
       (sum, product) => sum + product.quantity,
     );
     
+    // Hint: عد المنتجات منخفضة المخزون
     final lowStockCount = _allProducts.where(
       (product) => product.quantity < 10,
     ).length;
 
-    final totalValue = _allProducts.fold<double>(
-      0,
-      (sum, product) => sum + (product.sellingPrice * product.quantity),
+    // Hint: ✅ حساب قيمة المخزون باستخدام Decimal
+    final totalValue = _allProducts.fold<Decimal>(
+      Decimal.zero,
+      (sum, product) {
+        // Hint: sellingPrice (Decimal) × quantity (int)
+        final productValue = product.sellingPrice.multiplyByInt(product.quantity);
+        return sum + productValue;
+      },
     );
 
     return Container(
@@ -369,7 +365,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       ),
       child: Row(
         children: [
-          // إجمالي الكمية
+          // Hint: إجمالي الكمية
           Expanded(
             child: _buildStatCard(
               icon: Icons.inventory_outlined,
@@ -382,7 +378,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ),
           const SizedBox(width: AppConstants.spacingSm),
           
-          // منتجات منخفضة
+          // Hint: منتجات منخفضة
           Expanded(
             child: _buildStatCard(
               icon: Icons.warning_amber,
@@ -395,7 +391,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ),
           const SizedBox(width: AppConstants.spacingSm),
           
-          // قيمة المخزون
+          // Hint: ✅ قيمة المخزون - تنسيق Decimal
           Expanded(
             child: _buildStatCard(
               icon: Icons.attach_money,
@@ -412,7 +408,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  /// ← Hint: بناء بطاقة إحصائية
+  /// Hint: بناء بطاقة إحصائية
   Widget _buildStatCard({
     required IconData icon,
     required String label,
@@ -467,9 +463,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 📭 حالة عدم وجود نتائج بحث
-  // ============================================================
+  // ===========================================================================
+  // 📭 Hint: حالة عدم وجود نتائج بحث
+  // ===========================================================================
   Widget _buildNoResultsState(AppLocalizations l10n) {
     return EmptyState(
       icon: Icons.search_off,
@@ -478,9 +474,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 📜 بناء قائمة المنتجات
-  // ============================================================
+  // ===========================================================================
+  // 📜 Hint: بناء قائمة المنتجات
+  // ===========================================================================
   Widget _buildProductsList() {
     return ListView.builder(
       padding: const EdgeInsets.all(AppConstants.spacingMd),
@@ -492,14 +488,14 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 🃏 بناء بطاقة منتج - مع دعم الصور
-  // ============================================================
+  // ===========================================================================
+  // 🃏 Hint: بناء بطاقة منتج - مع دعم الصور والـ Decimal
+  // ===========================================================================
   Widget _buildProductCard(Product product) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     
-    // تحديد حالة المخزون
+    // Hint: تحديد حالة المخزون
     final isLowStock = product.quantity < 5;
     final stockColor = isLowStock ? AppColors.warning : AppColors.success;
 
@@ -513,17 +509,16 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             padding: AppConstants.paddingMd,
             child: Row(
               children: [
-                // ← Hint: عرض صورة المنتج أو الأيقونة الافتراضية
+                // Hint: عرض صورة المنتج أو الأيقونة الافتراضية
                 _buildProductImage(product, isDark),
 
                 const SizedBox(width: AppConstants.spacingMd),
 
-                // معلومات المنتج
+                // Hint: معلومات المنتج
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // اسم المنتج
                       Text(
                         product.productName,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -533,7 +528,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
                       const SizedBox(height: AppConstants.spacingXs),
 
-                      // المورد
                       Row(
                         children: [
                           Icon(
@@ -559,7 +553,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   ),
                 ),
 
-                // أزرار الإجراءات (للمسؤول فقط)
+                // Hint: أزرار الإجراءات (للمسؤول فقط)
                 if (_isAdmin) ...[
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
@@ -588,7 +582,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             padding: AppConstants.paddingMd,
             child: Row(
               children: [
-                // الكمية
+                // Hint: الكمية (int - بدون تغيير)
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.inventory_outlined,
@@ -598,7 +592,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   ),
                 ),
 
-                // سعر الشراء
+                // Hint: ✅ سعر الشراء - Decimal
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.shopping_cart_outlined,
@@ -608,7 +602,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   ),
                 ),
 
-                // سعر البيع
+                // Hint: ✅ سعر البيع - Decimal
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.sell_outlined,
@@ -666,13 +660,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 🖼️ بناء صورة المنتج أو الأيقونة الافتراضية - محسّنة
-  // ============================================================
-  /// ← Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
-  /// ← Hint: ✅ محسّنة مع cacheWidth للأداء العالي
+  // ===========================================================================
+  // 🖼️ Hint: بناء صورة المنتج أو الأيقونة الافتراضية - محسّنة
+  // Hint: يعرض صورة المنتج إذا كانت موجودة، وإلا يعرض أيقونة افتراضية
+  // Hint: ✅ محسّنة مع cacheWidth للأداء العالي
+  // ===========================================================================
   Widget _buildProductImage(Product product, bool isDark) {
-    // ← Hint: التحقق من وجود صورة
+    // Hint: التحقق من وجود صورة
     final hasImage = product.imagePath != null && 
                       product.imagePath!.isNotEmpty;
 
@@ -697,15 +691,15 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             ? Image.file(
                 File(product.imagePath!),
                 fit: BoxFit.cover,
-                // ← Hint: cacheWidth مناسب لحجم الصورة 60px
-                // ← Hint: نستخدم 120 (ضعف الحجم) للحصول على جودة جيدة على الشاشات عالية الكثافة
+                // Hint: cacheWidth مناسب لحجم الصورة 60px
+                // Hint: نستخدم 120 (ضعف الحجم) للحصول على جودة جيدة على الشاشات عالية الكثافة
                 cacheWidth: 120,
                 cacheHeight: 120,
-                // ← Hint: عرض placeholder بسيط أثناء التحميل
+                // Hint: عرض placeholder بسيط أثناء التحميل
                 frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                  // ← Hint: إذا تم التحميل مباشرة، عرض الصورة فوراً
+                  // Hint: إذا تم التحميل مباشرة، عرض الصورة فوراً
                   if (wasSynchronouslyLoaded) return child;
-                  // ← Hint: إذا لم يتم التحميل بعد، عرض أيقونة تحميل صغيرة
+                  // Hint: إذا لم يتم التحميل بعد، عرض أيقونة تحميل صغيرة
                   return frame != null
                       ? child
                       : Container(
@@ -721,7 +715,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                           ),
                         );
                 },
-                // ← Hint: معالجة الأخطاء - عرض أيقونة broken_image
+                // Hint: معالجة الأخطاء - عرض أيقونة broken_image
                 errorBuilder: (context, error, stackTrace) {
                   debugPrint('❌ خطأ في عرض صورة المنتج: ${product.productName}');
                   return const Center(
@@ -744,9 +738,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 📋 بناء عنصر معلومات
-  // ============================================================
+  // ===========================================================================
+  // 📋 Hint: بناء عنصر معلومات
+  // ===========================================================================
   Widget _buildInfoItem({
     required IconData icon,
     required String label,
@@ -790,11 +784,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
   }
 
-  // ============================================================
-  // 🧭 التنقل
-  // ============================================================
+  // ===========================================================================
+  // 🧭 Hint: التنقل
+  // ===========================================================================
 
-  /// ← Hint: الانتقال لصفحة إضافة منتج جديد
+  /// Hint: الانتقال لصفحة إضافة منتج جديد
   Future<void> _navigateToAddProduct() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -807,7 +801,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// ← Hint: الانتقال لصفحة تعديل المنتج
+  /// Hint: الانتقال لصفحة تعديل المنتج
   Future<void> _navigateToEditProduct(Product product) async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(

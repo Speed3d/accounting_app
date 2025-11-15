@@ -1,6 +1,7 @@
 // lib/screens/employees/employee_details_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -319,7 +320,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                           icon: Icons.account_balance_wallet_outlined,
                           label: l10n.advancesLabel,
                           value: formatCurrency(_currentEmployee.balance),
-                          color: _currentEmployee.balance > 0
+                          color: _currentEmployee.balance > Decimal.zero
                               ? AppColors.error
                               : AppColors.success,
                         ),

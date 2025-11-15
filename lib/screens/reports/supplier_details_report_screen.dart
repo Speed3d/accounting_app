@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:accounting_app/services/pdf_service.dart' show PdfService;
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -23,8 +24,8 @@ class SupplierDetailsReportScreen extends StatefulWidget {
   final int supplierId;
   final String supplierName;
   final String supplierType;
-  final double totalProfit;
-  final double totalWithdrawn;
+  final Decimal totalProfit;
+  final Decimal totalWithdrawn;
 
   const SupplierDetailsReportScreen({
     super.key,
@@ -49,7 +50,7 @@ class _SupplierDetailsReportScreenState
   
   Future<List<Partner>>? _partnersFuture;
   Future<List<Map<String, dynamic>>>? _withdrawalsFuture;
-  late double _currentTotalWithdrawn;
+  late Decimal _currentTotalWithdrawn;
   
   bool _isLoading = true;
   bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
@@ -165,7 +166,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 💰 بناء قسم الملخص المالي
   // ============================================================================
-  Widget _buildFinancialSummarySection(double netProfit, AppLocalizations l10n) {
+  Widget _buildFinancialSummarySection(Decimal netProfit, AppLocalizations l10n) {
     return Column(
       children: [
         // --- بطاقة إجمالي الأرباح ---
@@ -192,7 +193,7 @@ class _SupplierDetailsReportScreenState
 
         // --- بطاقة صافي الربح ---
         CustomCard(
-          color: netProfit >= 0
+          color: netProfit >= Decimal.zero
               ? AppColors.success.withOpacity(0.1)
               : AppColors.error.withOpacity(0.1),
           child: Padding(
@@ -204,14 +205,14 @@ class _SupplierDetailsReportScreenState
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: netProfit >= 0
+                    color: netProfit >= Decimal.zero
                         ? AppColors.success.withOpacity(0.2)
                         : AppColors.error.withOpacity(0.2),
                     borderRadius: AppConstants.borderRadiusLg,
                   ),
                   child: Icon(
                     Icons.account_balance_wallet,
-                    color: netProfit >= 0 ? AppColors.success : AppColors.error,
+                    color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
                     size: 22,
                   ),
                 ),
@@ -233,7 +234,7 @@ class _SupplierDetailsReportScreenState
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: netProfit >= 0 ? AppColors.success : AppColors.error,
+                          color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
                         ),
                       ),
                     ],
@@ -250,7 +251,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 👥 بناء قسم توزيع الأرباح على الشركاء
   // ============================================================================
-  Widget _buildPartnersProfitSection(double netProfit, AppLocalizations l10n) {
+  Widget _buildPartnersProfitSection(Decimal netProfit, AppLocalizations l10n) {
     if (_partnersFuture == null) {
       return const SizedBox.shrink();
     }
@@ -364,9 +365,10 @@ class _SupplierDetailsReportScreenState
 
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
-              final partnerShare = netProfit * (partner.sharePercentage / 100);
+              final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
+              final partnerShare = (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
               return _buildPartnerCard(partner, partnerShare, l10n);
-            }).toList(),
+              }).toList(),
 
             const SizedBox(height: AppConstants.spacingXl),
           ],
@@ -378,7 +380,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 🧑 بناء بطاقة الشريك الواحد
   // ============================================================================
-  Widget _buildPartnerCard(Partner partner, double partnerShare, AppLocalizations l10n) {
+  Widget _buildPartnerCard(Partner partner, Decimal partnerShare, AppLocalizations l10n) {
     ImageProvider? avatarImage;
     try {
       if (partner.imagePath != null && partner.imagePath!.isNotEmpty) {
@@ -543,7 +545,7 @@ class _SupplierDetailsReportScreenState
   // 📄 بناء بطاقة المسحوب الواحد
   // ============================================================================
   Widget _buildWithdrawalCard(Map<String, dynamic> withdrawal, AppLocalizations l10n) {
-    final amount = withdrawal['WithdrawalAmount'] as double;
+    final amount = withdrawal['WithdrawalAmount'] as Decimal;
     final date = DateTime.parse(withdrawal['WithdrawalDate'] as String);
     final partnerName = withdrawal['PartnerName'] as String?;
     final notes = withdrawal['Notes'] as String?;
@@ -662,7 +664,7 @@ class _SupplierDetailsReportScreenState
                 Container(
                   padding: AppConstants.paddingMd,
                   decoration: BoxDecoration(
-                    color: netProfit >= 0
+                    color: netProfit >= Decimal.zero
                         ? AppColors.success.withOpacity(0.1)
                         : AppColors.error.withOpacity(0.1),
                     borderRadius: AppConstants.borderRadiusMd,
@@ -671,7 +673,7 @@ class _SupplierDetailsReportScreenState
                     children: [
                       Icon(
                         Icons.account_balance_wallet,
-                        color: netProfit >= 0 ? AppColors.success : AppColors.error,
+                        color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -687,7 +689,7 @@ class _SupplierDetailsReportScreenState
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
-                                color: netProfit >= 0 ? AppColors.success : AppColors.error,
+                                color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
                               ),
                             ),
                           ],
@@ -711,16 +713,20 @@ class _SupplierDetailsReportScreenState
                       return l10n.amountRequired;
                     }
 
-                    final convertedValue = convertArabicNumbersToEnglish(value);
-                    final amount = double.tryParse(convertedValue);
+                final convertedValue = convertArabicNumbersToEnglish(value);
+                   try {
+                    final amount = parseDecimal(convertedValue);
 
-                    if (amount == null || amount <= 0) {
-                      return l10n.enterValidAmount;
+                    if (amount <= Decimal.zero) {
+                    return l10n.enterValidAmount;
                     }
 
                     if (amount > netProfit) {
-                      return l10n.amountExceedsProfit;
-                    }
+                    return l10n.amountExceedsProfit;
+                     }
+                   } catch (e) {
+                      return l10n.enterValidAmount;
+                  }
 
                     return null;
                   },
@@ -753,7 +759,7 @@ class _SupplierDetailsReportScreenState
                 final withdrawalData = {
                   'SupplierID': widget.supplierId,
                   'PartnerName': partnerName,
-                  'WithdrawalAmount': double.parse(
+                  'WithdrawalAmount': parseDecimal(
                     convertArabicNumbersToEnglish(amountController.text),
                   ),
                   'WithdrawalDate': DateTime.now().toIso8601String(),
@@ -774,7 +780,7 @@ class _SupplierDetailsReportScreenState
                 );
 
                 setState(() {
-                  _currentTotalWithdrawn += withdrawalData['WithdrawalAmount'] as double;
+                  _currentTotalWithdrawn += withdrawalData['WithdrawalAmount'] as Decimal;
                   _loadData();
                 });
               } catch (e) {
@@ -813,11 +819,14 @@ class _SupplierDetailsReportScreenState
       final netProfit = widget.totalProfit - _currentTotalWithdrawn;
       
       // 2️⃣ تحويل بيانات الشركاء
-      final partnersData = partners.map((p) => {
-        'partnerName': p.partnerName,
-        'sharePercentage': p.sharePercentage,
-        'partnerShare': netProfit * (p.sharePercentage / 100),
-      }).toList();
+      final partnersData = partners.map((p) {
+         final shareDecimal = Decimal.parse(p.sharePercentage.toString());
+         return {
+              'partnerName': p.partnerName,
+              'sharePercentage': p.sharePercentage,
+              'partnerShare': (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal(),
+               };
+        }).toList();
       
       // 3️⃣ إنشاء PDF
       final pdf = await PdfService.instance.buildSupplierDetailsReport(

@@ -13,6 +13,9 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_text_field.dart';
+import 'package:decimal/decimal.dart';
+import '../../utils/decimal_extensions.dart';
+
 
 /// شاشة إضافة أو تعديل شريك
 class AddEditPartnerScreen extends StatefulWidget {
@@ -587,8 +590,8 @@ class _AddEditPartnerScreenState extends State<AddEditPartnerScreen> {
         partnerID: _isEditMode ? widget.partner!.partnerID : null,
         supplierID: _isEditMode ? widget.partner!.supplierID : null,
         partnerName: _nameController.text.trim(),
-        sharePercentage: double.parse(
-          convertArabicNumbersToEnglish(_shareController.text.trim()),
+        sharePercentage: parseDecimal(
+        convertArabicNumbersToEnglish(_shareController.text.trim()),
         ),
         partnerAddress: _addressController.text.trim(),
         partnerPhone: _phoneController.text.trim(),

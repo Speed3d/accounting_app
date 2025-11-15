@@ -85,13 +85,13 @@ Future<void> _loadDashboardData() async {
 
     if (mounted) {
       setState(() {
-        _totalSales = results[0] as double;
-        _totalProfit = results[1] as double;
+        _totalSales = results[0] as Decimal;
+        _totalProfit = results[1] as Decimal;
         _activeCustomersCount = results[2] as int;
         _activeProductsCount = results[3] as int;
-        _totalDebts = results[4] as double;
-        _totalPayments = results[5] as double;
-        _collectionRate = results[6] as double;
+        _totalDebts = results[4] as Decimal;
+        _totalPayments = results[5] as Decimal;
+        _collectionRate = results[6] as Decimal;
         _topBuyers = results[7] as List<Customer>;
         _overdueCustomers = results[8] as List<Map<String, dynamic>>;
         _topSellingProducts = results[9] as List<Product>;
@@ -593,7 +593,7 @@ Widget _buildAlertsSection(AppLocalizations l10n, bool isDark) {
             itemBuilder: (context, index) {
               final debtor = _topDebtors[index];
               final customerName = debtor['CustomerName'] as String;
-              final remaining = (debtor['Remaining'] as num).toDouble();
+              final remaining = debtor['Remaining'] as Decimal;
               final daysSince = (debtor['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
 
               return ListTile(
@@ -756,7 +756,7 @@ Widget _buildAlertCard({
                     ClipRRect(
                       borderRadius: AppConstants.borderRadiusFull,
                       child: LinearProgressIndicator(
-                        value: _collectionRate / 100,
+                        value: (_collectionRate / Decimal.fromInt(100)).toDouble(),
                         backgroundColor: isDark
                             ? AppColors.surfaceDark
                             : AppColors.surfaceLight,
@@ -807,9 +807,9 @@ Widget _buildAlertCard({
     );
   }
 
-  Color _getCollectionRateColor(double rate) {
-    if (rate >= 80) return AppColors.success;
-    if (rate >= 50) return AppColors.warning;
+  Color _getCollectionRateColor(Decimal rate) {
+       if (rate >= Decimal.fromInt(80)) return AppColors.success;
+       if (rate >= Decimal.fromInt(50)) return AppColors.warning;
     return AppColors.error;
   }
 
@@ -1176,9 +1176,9 @@ Widget _buildAlertCard({
       return const SizedBox.shrink();
     }
 
-    final totalProfit = _topSuppliers.fold<double>(
-      0.0,
-      (sum, supplier) => sum + (supplier['TotalProfit'] as num).toDouble(),
+    final totalProfit = _topSuppliers.fold<Decimal>(
+       Decimal.zero,
+       (sum, supplier) => sum + (supplier['TotalProfit'] as Decimal),
     );
 
     return Column(
@@ -1202,11 +1202,15 @@ Widget _buildAlertCard({
                     sections: _topSuppliers.asMap().entries.map((entry) {
                       final index = entry.key;
                       final supplier = entry.value;
-                      final profit = (supplier['TotalProfit'] as num).toDouble();
-                      final percentage = (profit / totalProfit) * 100;
+                      final profit = supplier['TotalProfit'] as Decimal;
+
+                     // تحويل لـ double قبل الحسابات
+                      final profitDouble = profit.toDouble();
+                      final totalProfitDouble = totalProfit.toDouble();
+                      final percentage = (profitDouble / totalProfitDouble) * 100;
 
                       return PieChartSectionData(
-                        value: profit,
+                        value: profitDouble,
                         title: '${percentage.toStringAsFixed(1)}%',
                         color: AppColors.chartColors[index % AppColors.chartColors.length],
                         radius: 80,
@@ -1229,7 +1233,7 @@ Widget _buildAlertCard({
                 final index = entry.key;
                 final supplier = entry.value;
                 final name = supplier['SupplierName'] as String;
-                final profit = (supplier['TotalProfit'] as num).toDouble();
+                final profit = supplier['TotalProfit'] as Decimal;
                 final color = AppColors.chartColors[index % AppColors.chartColors.length];
 
                 return Padding(
@@ -1336,7 +1340,7 @@ Widget _buildAlertCard({
             itemBuilder: (context, index) {
               final customer = _overdueCustomers[index];
               final name = customer['CustomerName'] as String;
-              final remaining = (customer['Remaining'] as num).toDouble();
+              final remaining = customer['Remaining'] as Decimal;
               final days = (customer['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
 
               return ListTile(
@@ -1736,7 +1740,7 @@ Widget _buildOverdueCustomersListInSheet(AppLocalizations l10n, bool isDark) {
             itemBuilder: (context, index) {
               final customer = _overdueCustomers[index];
               final customerName = customer['CustomerName'] as String;
-              final remaining = (customer['Remaining'] as num).toDouble();
+              final remaining = customer['Remaining'] as Decimal;
               final daysSince = (customer['DaysSinceLastTransaction'] as num?)
                       ?.toInt() ??
                   0;

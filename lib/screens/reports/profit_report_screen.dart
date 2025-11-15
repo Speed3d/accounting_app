@@ -1,5 +1,6 @@
 // lib/screens/reports/profit_report_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -62,9 +63,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     ]);
 
     return FinancialSummary(
-      grossProfit: results[0] as double,
-      totalExpenses: results[1] as double,
-      totalWithdrawals: results[2] as double,
+      grossProfit: results[0] as Decimal,
+      totalExpenses: results[1] as Decimal,
+      totalWithdrawals: results[2] as Decimal,
       sales: results[3] as List<CustomerDebt>,
     );
   }
@@ -180,7 +181,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
   /// 4. صافي الربح (النتيجة النهائية)
   Widget _buildFinancialSummarySection(
     FinancialSummary summary,
-    double netProfit,
+    Decimal netProfit,
     AppLocalizations l10n,
   ) {
     return Column(
@@ -221,7 +222,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 
         // --- بطاقة صافي الربح (النتيجة النهائية) ---
         CustomCard(
-          color: netProfit >= 0
+          color: netProfit >= Decimal.zero
               ? AppColors.success.withOpacity(0.1)
               : AppColors.error.withOpacity(0.1),
           child: Padding(
@@ -233,16 +234,16 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: netProfit >= 0
+                    color: netProfit >= Decimal.zero
                         ? AppColors.success.withOpacity(0.2)
                         : AppColors.error.withOpacity(0.2),
                     borderRadius: AppConstants.borderRadiusLg,
                   ),
                   child: Icon(
-                    netProfit >= 0
+                    netProfit >= Decimal.zero
                         ? Icons.arrow_upward
                         : Icons.arrow_downward,
-                    color: netProfit >= 0
+                    color: netProfit >= Decimal.zero
                         ? AppColors.success
                         : AppColors.error,
                     size: 28,
@@ -266,7 +267,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: netProfit >= 0
+                          color: netProfit >= Decimal.zero
                               ? AppColors.success
                               : AppColors.error,
                         ),
@@ -522,9 +523,9 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
 // ============================================================================
 /// كلاس مساعد لتمثيل الملخص المالي الشامل
 class FinancialSummary {
-  final double grossProfit; // إجمالي الأرباح قبل المصاريف
-  final double totalExpenses; // إجمالي المصاريف العامة
-  final double totalWithdrawals; // إجمالي مسحوبات الأرباح
+  final Decimal grossProfit; // إجمالي الأرباح قبل المصاريف
+  final Decimal totalExpenses; // إجمالي المصاريف العامة
+  final Decimal totalWithdrawals; // إجمالي مسحوبات الأرباح
   final List<CustomerDebt> sales; // قائمة جميع المبيعات
 
   FinancialSummary({

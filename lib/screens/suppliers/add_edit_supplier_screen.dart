@@ -1,6 +1,7 @@
 // lib/screens/suppliers/add_edit_supplier_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -451,11 +452,13 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
 
   /// بناء قسم الشركاء
   Widget _buildPartnersSection(AppLocalizations l10n) {
-    final totalPercentage = _partners.fold<double>(
-      0.0,
-      (sum, partner) => sum + partner.sharePercentage,
-    );
-    final isPercentageValid = totalPercentage <= 100;
+
+    final totalPercentage = _partners.fold<Decimal>(
+    Decimal.zero,
+   (sum, partner) => sum + partner.sharePercentage,
+   );
+
+    final isPercentageValid = totalPercentage <= Decimal.fromInt(100);
     
     return CustomCard(
       child: Column(
@@ -899,13 +902,12 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
         return;
       }
       
-      final totalPercentage = _partners.fold<double>(
-        
-        0.0,
-        (sum, partner) => sum + partner.sharePercentage,
-      );
+      final totalPercentage = _partners.fold<Decimal>(
+       Decimal.zero,
+       (sum, partner) => sum + partner.sharePercentage,
+       );
       
-      if (totalPercentage > 100) {
+      if (totalPercentage < Decimal.fromInt(100)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.partnerShareTotalExceeds100(totalPercentage.toString())),
@@ -917,7 +919,7 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
       
       
       // تحذير إذا كانت النسب أقل من 100%
-      if (totalPercentage < 100) {
+      if (totalPercentage > Decimal.fromInt(100)) {
         
         final proceed = await showDialog<bool>(
           

@@ -1,5 +1,6 @@
 // lib/screens/reports/expenses_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -229,7 +230,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final l10n = AppLocalizations.of(context);
     
     // Hint: استخراج البيانات من Map
-    final amount = expense['Amount'] as double;
+    final amount = expense['Amount'] as Decimal;
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
     final date = DateTime.parse(expense['ExpenseDate'] as String);
@@ -607,7 +608,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final l10n = AppLocalizations.of(context);
     
     // Hint: استخراج البيانات من Map
-    final amount = expense['Amount'] as double;
+    final amount = expense['Amount'] as Decimal;
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
     final date = DateTime.parse(expense['ExpenseDate'] as String);

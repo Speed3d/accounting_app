@@ -1,5 +1,6 @@
 // lib/screens/employees/add_payroll_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -42,7 +43,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   late int _selectedYear;
   late int _selectedMonth;
   DateTime _selectedDate = DateTime.now();
-  double _netSalary = 0.0;
+  Decimal _netSalary = Decimal.zero;
   bool _isLoading = false;
 
   // ============= دورة الحياة =============
@@ -78,21 +79,25 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // 🧮 حساب صافي الراتب
   // ============================================================
   void _calculateNetSalary() {
-    final baseSalary = double.tryParse(
-          convertArabicNumbersToEnglish(_baseSalaryController.text),
-        ) ?? 0.0;
-    final bonuses = double.tryParse(
-          convertArabicNumbersToEnglish(_bonusesController.text),
-        ) ?? 0.0;
-    final deductions = double.tryParse(
-          convertArabicNumbersToEnglish(_deductionsController.text),
-        ) ?? 0.0;
-    final advanceRepayment = double.tryParse(
-          convertArabicNumbersToEnglish(_advanceRepaymentController.text),
-        ) ?? 0.0;
+      final baseSalary = parseDecimal(
+      convertArabicNumbersToEnglish(_baseSalaryController.text),
+      fallback: Decimal.zero,
+     );
+      final bonuses = parseDecimal(
+      convertArabicNumbersToEnglish(_bonusesController.text),
+      fallback: Decimal.zero,
+     );
+     final deductions = parseDecimal(
+     convertArabicNumbersToEnglish(_deductionsController.text),
+     fallback: Decimal.zero,
+    );
+     final advanceRepayment = parseDecimal(
+     convertArabicNumbersToEnglish(_advanceRepaymentController.text),
+     fallback: Decimal.zero,
+    );
 
     setState(() {
-      _netSalary = (baseSalary + bonuses) - (deductions + advanceRepayment);
+    _netSalary = (baseSalary + bonuses) - (deductions + advanceRepayment);
     });
   }
 
@@ -183,18 +188,18 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
         return;
       }
 
-      final baseSalary = double.parse(
-        convertArabicNumbersToEnglish(_baseSalaryController.text),
+      final baseSalary = parseDecimal(
+      convertArabicNumbersToEnglish(_baseSalaryController.text),
       );
-      final bonuses = double.parse(
-        convertArabicNumbersToEnglish(_bonusesController.text),
-      );
-      final deductions = double.parse(
-        convertArabicNumbersToEnglish(_deductionsController.text),
-      );
-      final advanceRepayment = double.parse(
-        convertArabicNumbersToEnglish(_advanceRepaymentController.text),
-      );
+      final bonuses = parseDecimal(
+      convertArabicNumbersToEnglish(_bonusesController.text),
+     );
+      final deductions = parseDecimal(
+      convertArabicNumbersToEnglish(_deductionsController.text),
+     );
+      final advanceRepayment = parseDecimal(
+      convertArabicNumbersToEnglish(_advanceRepaymentController.text),
+     );
 
       final newPayroll = PayrollEntry(
         employeeID: widget.employee.employeeID!,
@@ -392,18 +397,23 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.next,
               validator: (v) {
-                if (v == null || v.isEmpty) return l10n.enterZeroIfNotRepaying;
-                final amount = double.tryParse(convertArabicNumbersToEnglish(v));
-                if (amount == null || amount < 0) return l10n.enterValidNumber;
+            if (v == null || v.isEmpty) return l10n.enterZeroIfNotRepaying;
+                try {
+                final amount = parseDecimal(convertArabicNumbersToEnglish(v));
+                if (amount < Decimal.zero) return l10n.enterValidNumber;
                 if (amount > widget.employee.balance) {
-                  return l10n.repaymentExceedsBalance;
-                }
-                return null;
+               return l10n.repaymentExceedsBalance;
+               }
+             } catch (e) {
+            return l10n.enterValidNumber;
+              }
+              return null;
+                
               },
             ),
 
             // ملاحظة رصيد السلف
-            if (widget.employee.balance > 0) ...[
+            if (widget.employee.balance > Decimal.zero) ...[
               const SizedBox(height: AppConstants.spacingSm),
               Container(
                 padding: const EdgeInsets.all(AppConstants.spacingSm),
@@ -496,8 +506,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // 💰 بناء بطاقة صافي الراتب
   // ============================================================
   Widget _buildNetSalaryCard(AppLocalizations l10n, bool isDark) {
-    final netColor = _netSalary >= 0 ? AppColors.success : AppColors.error;
-
+  final netColor = _netSalary >= Decimal.zero ? AppColors.success : AppColors.error;
     return Container(
       padding: AppConstants.paddingXl,
       decoration: BoxDecoration(
@@ -729,18 +738,22 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // 📊 بناء الملخص التفصيلي
   // ============================================================
   Widget _buildDetailedSummary(AppLocalizations l10n, bool isDark) {
-    final baseSalary = double.tryParse(
-          convertArabicNumbersToEnglish(_baseSalaryController.text),
-        ) ?? 0.0;
-    final bonuses = double.tryParse(
-          convertArabicNumbersToEnglish(_bonusesController.text),
-        ) ?? 0.0;
-    final deductions = double.tryParse(
-          convertArabicNumbersToEnglish(_deductionsController.text),
-        ) ?? 0.0;
-    final advanceRepayment = double.tryParse(
-          convertArabicNumbersToEnglish(_advanceRepaymentController.text),
-        ) ?? 0.0;
+      final baseSalary = parseDecimal(
+      convertArabicNumbersToEnglish(_baseSalaryController.text),
+       fallback: Decimal.zero,
+     );
+       final bonuses = parseDecimal(
+       convertArabicNumbersToEnglish(_bonusesController.text),
+       fallback: Decimal.zero,
+     );
+       final deductions = parseDecimal(
+       convertArabicNumbersToEnglish(_deductionsController.text),
+      fallback: Decimal.zero,
+     );
+       final advanceRepayment = parseDecimal(
+       convertArabicNumbersToEnglish(_advanceRepaymentController.text),
+       fallback: Decimal.zero,
+     );
 
     return CustomCard(
       child: Container(

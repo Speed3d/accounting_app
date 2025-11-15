@@ -1,6 +1,7 @@
 // 📁 lib/screens/customers/customers_list_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
@@ -138,7 +139,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
     final l10n = AppLocalizations.of(context)!;
     
     // === الخطوة 1: التحقق من عدم وجود ديون ===
-    if (customer.remaining > 0) {
+    if (customer.remaining > Decimal.zero) {
       // Hint: لا يمكن أرشفة زبون لديه دين متبقي
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -466,13 +467,13 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   
   /// Hint: حساب معلومات الرصيد (النص واللون والنوع)
   Map<String, dynamic> _calculateBalanceInfo(Customer customer, AppLocalizations l10n) {
-    if (customer.remaining > 0) {
+    if (customer.remaining > Decimal.zero) {
       // === حالة: الزبون مدين (له دين علينا) ===
       return {
         'text': '${l10n.remainingOnHim}: ${formatCurrency(customer.remaining)}',
         'type': StatusType.error, // أحمر
       };
-    } else if (customer.remaining < 0) {
+    } else if (customer.remaining < Decimal.zero) {
       // === حالة: الزبون دائن (لنا دين عليه) ===
       return {
         'text': '${l10n.remainingForHim}: ${formatCurrency(-customer.remaining)}',

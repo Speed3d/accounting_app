@@ -1,6 +1,8 @@
 // 📁 lib/screens/customers/new_sale_screen.dart
 
 import 'dart:io';
+import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -172,10 +174,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     });
   }
   
-  double _calculateTotal() {
+  Decimal _calculateTotal() {
     return _cartItems.fold(
-      0.0,
-      (sum, item) => sum + (item.product.sellingPrice * item.quantity),
+      Decimal.zero,
+      // (sum, item) => sum + (item.product.sellingPrice * item.quantity), السابق double
+      (sum, item) => sum + item.product.sellingPrice.multiplyByInt(item.quantity),
     );
   }
   
@@ -188,8 +191,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           productName: '',
           barcode: '',
           quantity: 0,
-          costPrice: 0,
-          sellingPrice: 0,
+          costPrice: Decimal.zero,
+          sellingPrice: Decimal.zero,
           supplierID: 0,
         ),
         quantity: 0,
@@ -829,7 +832,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               children: [
                 Flexible(
                   child: Text(
-                    formatCurrency(item.quantity * item.product.sellingPrice),
+                    // formatCurrency(item.quantity * item.product.sellingPrice),
+                    formatCurrency(item.product.sellingPrice.multiplyByInt(item.quantity)),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

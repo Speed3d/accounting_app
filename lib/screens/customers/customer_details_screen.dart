@@ -1,5 +1,7 @@
 // 📁 lib/screens/customers/customer_details_screen.dart
 
+import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -198,15 +200,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   
   try {
     final db = await _dbHelper.database;
-    dynamic totalSaleAmount = 0;
+    Decimal totalSaleAmount = Decimal.zero;
     
     await db.transaction((txn) async {
       for (var item in cartItems) {
         final product = item.product;
         final quantitySold = item.quantity;
         
-        final salePriceForItem = product.sellingPrice * quantitySold;
-        final profitForItem = (product.sellingPrice - product.costPrice) * quantitySold;
+        // final salePriceForItem = product.sellingPrice * quantitySold; السابق double
+        final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
+        // final profitForItem = (product.sellingPrice - product.costPrice) * quantitySold;
+        final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
         totalSaleAmount += salePriceForItem;
         
         final saleDetails = l10n.saleDetails(
@@ -302,15 +306,18 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
                     return l10n.amountRequired;
                   }
                   
-                  final amount = double.tryParse(convertArabicNumbersToEnglish(value));
-                  if (amount == null || amount <= 0) {
-                    return l10n.enterValidAmount;
-                  }
-                  
-                  // Hint: التحقق من أن المبلغ لا يتجاوز الدين
+               try {
+                final amount = parseDecimal(convertArabicNumbersToEnglish(value));
+                   if (amount <= Decimal.zero) {
+                return l10n.enterValidAmount;
+                   }
+
                   if (amount > _currentCustomer.remaining) {
-                    return l10n.amountExceedsDebt;
-                  }
+                return l10n.amountExceedsDebt;
+                   }
+                } catch (e) {
+               return l10n.enterValidAmount;
+                }
                   
                   return null;
                 },
@@ -348,7 +355,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
     // Hint: إذا تم التأكيد، نقوم بحفظ الدفعة
     if (result == true && mounted) {
       try {
-        final amount = double.parse(
+        final amount = parseDecimal(
           convertArabicNumbersToEnglish(paymentController.text),
         );
         
@@ -578,12 +585,15 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
     String balanceText;
     StatusType balanceType;
     
-    if (_currentCustomer.remaining > 0) {
+    if (_currentCustomer.remaining > Decimal.zero) {
       balanceText = '${l10n.remainingOnHim}: ${formatCurrency(_currentCustomer.remaining)}';
+
       balanceType = StatusType.error;
-    } else if (_currentCustomer.remaining < 0) {
+
+    } else if (_currentCustomer.remaining < Decimal.zero) {
       balanceText = '${l10n.remainingForHim}: ${formatCurrency(-_currentCustomer.remaining)}';
       balanceType = StatusType.info;
+
     } else {
       balanceText = '${l10n.balance}: 0';
       balanceType = StatusType.success;

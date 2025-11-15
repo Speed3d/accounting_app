@@ -1,6 +1,7 @@
 // lib/screens/reports/employees_report_screen.dart
 // النسخة المحدثة مع دعم PDF
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
@@ -37,8 +38,8 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   final dbHelper = DatabaseHelper.instance;
   
   // Future للبيانات الإحصائية
-  late Future<double> _totalSalariesFuture;
-  late Future<double> _totalAdvancesFuture;
+  late Future<Decimal> _totalSalariesFuture;
+  late Future<Decimal> _totalAdvancesFuture;
   late Future<int> _employeesCountFuture;
   late Future<List<Employee>> _employeesListFuture;
   
@@ -150,7 +151,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
           children: [
             // بطاقة الرواتب
             Expanded(
-              child: FutureBuilder<double>(
+              child: FutureBuilder<Decimal>(
                 future: _totalSalariesFuture,
                 builder: (context, snapshot) {
                   // عرض حالة التحميل
@@ -161,7 +162,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   // عرض البيانات
                   return StatCard(
                     label: l10n.stat_total_salaries,
-                    value: formatCurrency(snapshot.data ?? 0),
+                    value: formatCurrency(snapshot.data ?? Decimal.zero),
                     icon: Icons.payments,
                     color: AppColors.success,
                     subtitle: l10n.stat_salaries_paid,
@@ -174,7 +175,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
             
             // بطاقة السلف
             Expanded(
-              child: FutureBuilder<double>(
+              child: FutureBuilder<Decimal>(
                 future: _totalAdvancesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -183,7 +184,7 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
                   
                   return StatCard(
                     label: l10n.stat_advances_balance,
-                    value: formatCurrency(snapshot.data ?? 0),
+                    value: formatCurrency(snapshot.data ?? Decimal.zero),
                     icon: Icons.account_balance_wallet_outlined,
                     color: AppColors.warning,
                     subtitle: l10n.stat_advances_due,

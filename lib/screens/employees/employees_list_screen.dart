@@ -1,6 +1,7 @@
 // lib/screens/employees/employees_list_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
@@ -71,7 +72,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
     } else if (_selectedFilter == 'advances') {
       // عرض الموظفين الذين عليهم سلف فقط
       _filteredEmployees = _allEmployees.where((employee) {
-        return employee.balance > 0;
+        return employee.balance > Decimal.zero;
       }).toList();
     }
     
@@ -97,7 +98,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
       } else {
         List<Employee> baseList = _selectedFilter == null 
             ? _allEmployees 
-            : _allEmployees.where((e) => e.balance > 0).toList();
+            : _allEmployees.where((e) => e.balance > Decimal.zero).toList();
             
         _filteredEmployees = baseList.where((employee) {
           final nameLower = employee.fullName.toLowerCase();
@@ -268,14 +269,14 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
     if (_allEmployees.isEmpty) return const SizedBox.shrink();
 
     // حساب الإحصائيات
-    final totalSalaries = _allEmployees.fold<double>(
-      0,
-      (sum, emp) => sum + emp.baseSalary,
+    final totalSalaries = _allEmployees.fold<Decimal>(
+       Decimal.zero,
+       (sum, emp) => sum + emp.baseSalary,
     );
     
-    final totalAdvances = _allEmployees.fold<double>(
-      0,
-      (sum, emp) => sum + emp.balance,
+    final totalAdvances = _allEmployees.fold<Decimal>(
+       Decimal.zero,
+       (sum, emp) => sum + emp.balance, 
     );
 
     return Container(
@@ -303,7 +304,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               icon: Icons.account_balance_wallet,
               label: l10n.totalAdvances,
               value: formatCurrency(totalAdvances),
-              color: totalAdvances > 0 ? AppColors.error : AppColors.info,
+              color: totalAdvances > Decimal.zero ? AppColors.error : AppColors.info,
               isDark: isDark,
               filterType: 'advances', // فلتر السلف
             ),
@@ -410,7 +411,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
     final hasValidImage = imageFile != null && imageFile.existsSync();
 
     // حساب حالة السلف
-    final hasAdvances = employee.balance > 0;
+    final hasAdvances = employee.balance > Decimal.zero;
     final advanceColor = hasAdvances ? AppColors.error : AppColors.success;
 
     return CustomCard(

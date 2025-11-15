@@ -1,5 +1,6 @@
 // lib/screens/reports/customer_sales_report_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -654,8 +655,8 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
   /// بناء بطاقة مبيعة
   Widget _buildSaleCard(Map<String, dynamic> sale) {
     final date = DateTime.parse(sale['saleDate']);
-    final amount = (sale['amount'] as num).toDouble();
-    final profit = (sale['profit'] as num).toDouble();
+    final amount = sale['amount'] as Decimal;
+    final profit = sale['profit'] as Decimal;
     final quantity = sale['quantity'];
     
     return CustomCard(

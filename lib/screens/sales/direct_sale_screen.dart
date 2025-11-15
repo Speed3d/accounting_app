@@ -2,6 +2,8 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -86,8 +88,9 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         for (var item in _cartItems) {
           final product = item.product;
           final quantitySold = item.quantity;
-          final salePriceForItem = product.sellingPrice * quantitySold;
-          final profitForItem = (product.sellingPrice - product.costPrice) * quantitySold;
+          final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
+          final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
+
 
           await txn.insert('Debt_Customer', {
             'InvoiceID': invoiceId,
@@ -149,7 +152,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   // ============= توليد PDF =============
   Future<Uint8List> _generatePdfInvoice(
     int invoiceId,
-    double totalAmount,
+    Decimal totalAmount,
     AppLocalizations l10n,
   ) async {
     final pdf = pw.Document();
@@ -209,7 +212,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                   ],
                   data: _cartItems
                       .map((item) => [
-                            formatCurrency(item.product.sellingPrice * item.quantity),
+                            formatCurrency(item.product.sellingPrice.multiplyByInt(item.quantity)),
                             formatCurrency(item.product.sellingPrice),
                             item.quantity.toString(),
                             item.product.productName,
@@ -306,11 +309,11 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   }
 
   // ============= حساب الإجمالي =============
-  double _calculateTotal() {
-    return _cartItems.fold(
-      0.0,
-      (sum, item) => sum + (item.product.sellingPrice * item.quantity),
-    );
+  Decimal  _calculateTotal() {
+      return _cartItems.fold(
+        Decimal.zero,
+        (sum, item) => sum + item.product.sellingPrice.multiplyByInt(item.quantity),
+      );
   }
 
   // ============= مربع حوار مراجعة السلة =============
@@ -330,9 +333,9 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
-            double calculateDialogTotal() => _cartItems.fold(
-                  0.0,
-                  (sum, item) => sum + (item.product.sellingPrice * item.quantity),
+            Decimal calculateDialogTotal() => _cartItems.fold(
+                  Decimal.zero,
+                  (sum, item) => sum + item.product.sellingPrice.multiplyByInt(item.quantity),
                 );
 
             return AlertDialog(
@@ -367,7 +370,9 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                             title: Text(item.product.productName),
                             subtitle: Text('${l10n.quantity}: ${item.quantity}'),
                             trailing: Text(
-                              formatCurrency(item.quantity * item.product.sellingPrice),
+                        // formatCurrency(item.quantity * item.product.sellingPrice), 
+                          // هذا سابقا اذا كانت الصيغة double
+                              formatCurrency(item.product.sellingPrice.multiplyByInt(item.quantity)),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.success,

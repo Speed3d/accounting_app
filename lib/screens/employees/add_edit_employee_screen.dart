@@ -1,6 +1,7 @@
 // lib/screens/employees/add_edit_employee_screen.dart
 
 import 'dart:io';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -110,12 +111,12 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
         jobTitle: _jobTitleController.text.trim(),
         address: _addressController.text.trim(),
         phone: _phoneController.text.trim(),
-        baseSalary: double.parse(
-          convertArabicNumbersToEnglish(_salaryController.text),
+        baseSalary: parseDecimal(
+        convertArabicNumbersToEnglish(_salaryController.text),
         ),
         hireDate: _selectedHireDate!.toIso8601String(),
         imagePath: _imageFile?.path,
-        balance: _isEditMode ? widget.employee!.balance : 0.0,
+        balance: _isEditMode ? widget.employee!.balance : Decimal.zero,
       );
 
       String action;
@@ -350,14 +351,17 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textInputAction: TextInputAction.done,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return l10n.baseSalaryRequired;
-                }
-                if (double.tryParse(convertArabicNumbersToEnglish(v)) == null) {
-                  return l10n.enterValidNumber;
-                }
-                return null;
-              },
+           if (v == null || v.trim().isEmpty) {
+              return l10n.baseSalaryRequired;
+              }
+          try {
+               parseDecimal(convertArabicNumbersToEnglish(v));
+              } 
+          catch (e) {
+              return l10n.enterValidNumber;
+             }
+              return null;
+            },
             ),
 
             const SizedBox(height: AppConstants.spacingXl),

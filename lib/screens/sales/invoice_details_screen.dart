@@ -1,5 +1,6 @@
 // lib/screens/sales/invoice_details_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
@@ -247,14 +248,14 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     // حساب المبلغ الإجمالي (بدون المرتجعات)
     final totalAmount = sales
         .where((sale) => sale.isReturned == 0)
-        .fold(0.0, (sum, sale) => sum + sale.debt);
+        .fold(Decimal.zero, (sum, sale) => sum + sale.debt);
     
     // حساب المبلغ المرجع
     final returnedAmount = sales
         .where((sale) => sale.isReturned == 1)
-        .fold(0.0, (sum, sale) => sum + sale.debt);
+        .fold(Decimal.zero, (sum, sale) => sum + sale.debt);
     
-    final hasReturns = returnedAmount > 0;
+    final hasReturns = returnedAmount > Decimal.zero;
     
     return Container(
       padding: AppConstants.paddingLg,
