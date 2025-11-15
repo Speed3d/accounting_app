@@ -1873,11 +1873,11 @@ Future<Map<String, dynamic>> getCustomerSalesStatistics({
     return {
       'totalTransactions': 0,
       'totalQuantity': 0,
-      'totalSales': 0.0,
-      'totalProfit': 0.0,
-      'averageTransaction': 0.0,
-      'minTransaction': 0.0,
-      'maxTransaction': 0.0,
+      'totalSales': Decimal.zero,
+      'totalProfit': Decimal.zero,
+      'averageTransaction': Decimal.zero,
+      'minTransaction': Decimal.zero,
+      'maxTransaction': Decimal.zero,
     };
   }
   

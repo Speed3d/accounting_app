@@ -1,5 +1,6 @@
 // lib/screens/reports/customer_sales_report_screen.dart
 
+import 'package:accounting_app/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -535,7 +536,7 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'إجمالي المبيعات',
-                  value: formatCurrency(_statistics['totalSales'] ?? Decimal.zero),
+                  value: formatCurrency(_statistics['totalSales'] ?? 0),
                   icon: Icons.attach_money,
                   color: AppColors.success,
                 ),
@@ -544,7 +545,7 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'إجمالي الربح',
-                  value: formatCurrency(_statistics['totalProfit'] ?? Decimal.zero),
+                  value: formatCurrency(_statistics['totalProfit'] ?? 0),
                   icon: Icons.trending_up,
                   color: AppColors.primaryLight,
                 ),
@@ -569,7 +570,7 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'متوسط المعاملة',
-                  value: formatCurrency(_statistics['averageTransaction'] ?? Decimal.zero),
+                  value: formatCurrency(_statistics['averageTransaction'] ?? 0),
                   icon: Icons.analytics,
                   color: AppColors.warning,
                 ),
@@ -655,8 +656,8 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
   /// بناء بطاقة مبيعة
   Widget _buildSaleCard(Map<String, dynamic> sale) {
     final date = DateTime.parse(sale['saleDate']);
-    final amount = sale['amount'] as Decimal;
-    final profit = sale['profit'] as Decimal;
+    final amount = sale.getDecimal('amount');
+    final profit = sale.getDecimal('profit');
     final quantity = sale['quantity'];
     
     return CustomCard(

@@ -168,8 +168,10 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                 Decimal totalDebtPayments = Decimal.zero;
                 
                 for (var trans in snapshot.data!) {
+
                   if (trans['type'] == 'CASH_SALE') {
                     totalCashSales += trans['amount'];
+                    
                   } else if (trans['type'] == 'DEBT_PAYMENT') {
                     totalDebtPayments += trans['amount'];
                   }

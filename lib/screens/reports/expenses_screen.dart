@@ -230,7 +230,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final l10n = AppLocalizations.of(context);
     
     // Hint: استخراج البيانات من Map
-    final amount = expense['Amount'] as Decimal;
+    // final amount = expense['Amount'] as Decimal;
+    final amount = Decimal.parse(expense['Amount'].toString());
     final description = expense['Description'] as String;
     final category = expense['Category'] as String?;
     final date = DateTime.parse(expense['ExpenseDate'] as String);

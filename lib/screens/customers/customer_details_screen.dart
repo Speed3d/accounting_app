@@ -240,7 +240,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       
       await txn.rawUpdate(
         'UPDATE TB_Customer SET Debt = Debt + ?, Remaining = Remaining + ? WHERE CustomerID = ?',
-        [totalSaleAmount, totalSaleAmount, _currentCustomer.customerID],
+     // [totalSaleAmount, totalSaleAmount, _currentCustomer.customerID],
+        [totalSaleAmount.toDouble(), totalSaleAmount.toDouble(), _currentCustomer.customerID],
       );
     });
     
@@ -376,7 +377,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           // تحديث رصيد الزبون
           await txn.rawUpdate(
             'UPDATE TB_Customer SET Payment = Payment + ?, Remaining = Remaining - ? WHERE CustomerID = ?',
-            [amount, amount, _currentCustomer.customerID],
+            [amount.toDouble(), amount.toDouble(), _currentCustomer.customerID],
           );
         });
         

@@ -1,5 +1,6 @@
 // lib/screens/sales/cash_sales_history_screen.dart
 
+import 'package:accounting_app/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -228,7 +229,7 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
   ) {
     // --- استخراج البيانات ---
     final invoiceId = invoice['InvoiceID'] as int;
-    final totalAmount = invoice['TotalAmount'] as Decimal;
+    final totalAmount = invoice.getDecimal('TotalAmount');
     final invoiceDate = DateTime.parse(invoice['InvoiceDate'] as String);
     final isVoid = invoice['IsVoid'] == 1;
     final status = invoice['Status'] as String?;
