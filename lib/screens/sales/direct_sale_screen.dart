@@ -82,7 +82,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         final invoiceId = await txn.insert('TB_Invoices', {
           'CustomerID': cashCustomer.customerID!,
           'InvoiceDate': DateTime.now().toIso8601String(),
-          'TotalAmount': totalAmount,
+          'TotalAmount': totalAmount.toDouble(),
         });
 
         for (var item in _cartItems) {
@@ -98,11 +98,11 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             'ProductID': product.productID!,
             'CustomerName': cashCustomer.address,
             'Details': l10n.saleDetails(product.productName, quantitySold.toString()),
-            'Debt': salePriceForItem,
+            'Debt': salePriceForItem.toDouble(),
             'DateT': DateTime.now().toIso8601String(),
             'Qty_Customer': quantitySold,
-            'CostPriceAtTimeOfSale': product.costPrice,
-            'ProfitAmount': profitForItem,
+            'CostPriceAtTimeOfSale': product.costPrice.toDouble(),
+            'ProfitAmount': profitForItem.toDouble(),
           });
 
           await txn.rawUpdate(

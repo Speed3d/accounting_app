@@ -1345,12 +1345,12 @@ Future<int> getActiveEmployeesCount() async {
   Future<int> recordProfitWithdrawal(Map<String, dynamic> withdrawalData) async {
       final db = await instance.database;
   
-  // ✅ تحويل Decimal إلى double للتخزين
-  final dataToStore = Map<String, dynamic>.from(withdrawalData);
-  if (dataToStore['WithdrawalAmount'] is Decimal) {
-    dataToStore['WithdrawalAmount'] = 
+    // ✅ تحويل Decimal إلى double للتخزين
+      final dataToStore = Map<String, dynamic>.from(withdrawalData);
+      if (dataToStore['WithdrawalAmount'] is Decimal) {
+       dataToStore['WithdrawalAmount'] =
       (dataToStore['WithdrawalAmount'] as Decimal).toDouble();
-  }
+     }
   
   return await db.insert('TB_Profit_Withdrawals', dataToStore);
 

@@ -218,13 +218,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           quantitySold.toString(),
         );
         
-        // ✅ Hint: استخدام التاريخ المختار
+        //  Hint: استخدام التاريخ المختار
         final newDebt = CustomerDebt(
           customerID: _currentCustomer.customerID!,
           customerName: _currentCustomer.customerName,
           details: saleDetails,
           debt: salePriceForItem,
-          dateT: saleDate.toIso8601String(), // ✅ Hint: هنا التغيير
+          dateT: saleDate.toIso8601String(),
           qty_Customer: quantitySold,
           productID: product.productID!,
           costPriceAtTimeOfSale: product.costPrice,
