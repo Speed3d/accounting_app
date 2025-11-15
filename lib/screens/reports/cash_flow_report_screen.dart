@@ -1,5 +1,6 @@
 // lib/screens/reports/cash_flow_report_screen.dart
 
+import 'package:accounting_app/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -170,10 +171,14 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                 for (var trans in snapshot.data!) {
 
                   if (trans['type'] == 'CASH_SALE') {
-                    totalCashSales += trans['amount'];
+                    // totalCashSales += trans['amount'];
+       // totalCashSales += Decimal.parse(trans['amount'].toString());   //هذا حل  
+                    totalCashSales += trans.getDecimal('amount');  // ✅ أفضل
                     
                   } else if (trans['type'] == 'DEBT_PAYMENT') {
-                    totalDebtPayments += trans['amount'];
+                    // totalDebtPayments += trans['amount'];
+        // totalDebtPayments += Decimal.parse(trans['amount'].toString());   //هذا حل
+                    totalDebtPayments += trans.getDecimal('amount');  // ✅ أفضل
                   }
                 }
                 
@@ -494,7 +499,8 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        formatCurrency(trans['amount']),
+                        // formatCurrency(trans['amount']),
+                        formatCurrency(trans.getDecimal('amount')),
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppColors.success,
                           fontWeight: FontWeight.bold,
@@ -555,10 +561,14 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
       Decimal totalDebtPayments = Decimal.zero;
       
       for (var trans in transactions) {
+
         if (trans['type'] == 'CASH_SALE') {
-          totalCashSales += trans['amount'];
+          // totalCashSales += trans['amount'];
+          totalCashSales += trans.getDecimal('amount');
+
         } else if (trans['type'] == 'DEBT_PAYMENT') {
-          totalDebtPayments += trans['amount'];
+          // totalDebtPayments += trans['amount'];
+          totalDebtPayments += trans.getDecimal('amount');
         }
       }
       

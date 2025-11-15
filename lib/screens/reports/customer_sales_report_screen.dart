@@ -536,7 +536,8 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'إجمالي المبيعات',
-                  value: formatCurrency(_statistics['totalSales'] ?? 0),
+                  // value: formatCurrency(_statistics['totalSales'] ?? 0),
+                  value: formatCurrency(Decimal.parse((_statistics['totalSales'] ?? 0.0).toString())),
                   icon: Icons.attach_money,
                   color: AppColors.success,
                 ),
@@ -545,7 +546,8 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'إجمالي الربح',
-                  value: formatCurrency(_statistics['totalProfit'] ?? 0),
+                  // value: formatCurrency(_statistics['totalProfit'] ?? 0),
+                  value: formatCurrency(Decimal.parse((_statistics['totalProfit'] ?? 0.0).toString())),
                   icon: Icons.trending_up,
                   color: AppColors.primaryLight,
                 ),
@@ -570,7 +572,8 @@ class _CustomerSalesReportScreenState extends State<CustomerSalesReportScreen> {
               Expanded(
                 child: _buildStatItem(
                   label: 'متوسط المعاملة',
-                  value: formatCurrency(_statistics['averageTransaction'] ?? 0),
+                  // value: formatCurrency(_statistics['averageTransaction'] ?? 0),
+                  value: formatCurrency(Decimal.parse((_statistics['averageTransaction'] ?? 0.0).toString())), 
                   icon: Icons.analytics,
                   color: AppColors.warning,
                 ),

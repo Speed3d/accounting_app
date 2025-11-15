@@ -542,9 +542,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               // ============================================================================
               final expenseData = {
                 'Description': descriptionController.text.trim(),
-                'Amount': double.parse(
-                  convertArabicNumbersToEnglish(amountController.text),
-                ),
+                'Amount': parseDecimal(  // ✅ صحيح
+                 convertArabicNumbersToEnglish(amountController.text),
+                 ).toDouble(),  // للتخزين في قاعدة البيانات REAL
                 'ExpenseDate': DateTime.now().toIso8601String(),
                 'Category': selectedCategory,
                 'Notes': notesController.text.trim(),

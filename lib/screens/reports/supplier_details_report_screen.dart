@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:accounting_app/services/pdf_service.dart' show PdfService;
+import 'package:accounting_app/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -365,10 +366,10 @@ class _SupplierDetailsReportScreenState
 
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
-              final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
-              final partnerShare = (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
-              return _buildPartnerCard(partner, partnerShare, l10n);
-              }).toList(),
+            final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
+            final partnerShare = (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
+            return _buildPartnerCard(partner, partnerShare, l10n);
+            }).toList(),
 
             const SizedBox(height: AppConstants.spacingXl),
           ],
@@ -545,7 +546,7 @@ class _SupplierDetailsReportScreenState
   // 📄 بناء بطاقة المسحوب الواحد
   // ============================================================================
   Widget _buildWithdrawalCard(Map<String, dynamic> withdrawal, AppLocalizations l10n) {
-    final amount = withdrawal['WithdrawalAmount'] as Decimal;
+    final amount = withdrawal.getDecimal('WithdrawalAmount');
     final date = DateTime.parse(withdrawal['WithdrawalDate'] as String);
     final partnerName = withdrawal['PartnerName'] as String?;
     final notes = withdrawal['Notes'] as String?;
@@ -756,12 +757,14 @@ class _SupplierDetailsReportScreenState
               if (!formKey.currentState!.validate()) return;
 
               try {
+                final withdrawalAmount = parseDecimal(
+                convertArabicNumbersToEnglish(amountController.text),
+                );
+
                 final withdrawalData = {
                   'SupplierID': widget.supplierId,
                   'PartnerName': partnerName,
-                  'WithdrawalAmount': parseDecimal(
-                    convertArabicNumbersToEnglish(amountController.text),
-                  ),
+                  'WithdrawalAmount': withdrawalAmount.toDouble(), 
                   'WithdrawalDate': DateTime.now().toIso8601String(),
                   'Notes': notesController.text.trim(),
                 };
@@ -780,7 +783,8 @@ class _SupplierDetailsReportScreenState
                 );
 
                 setState(() {
-                  _currentTotalWithdrawn += withdrawalData['WithdrawalAmount'] as Decimal;
+                  // _currentTotalWithdrawn += Decimal.parse(withdrawalData['WithdrawalAmount'].toString());
+                  _currentTotalWithdrawn += withdrawalAmount;
                   _loadData();
                 });
               } catch (e) {
@@ -824,7 +828,8 @@ class _SupplierDetailsReportScreenState
          return {
               'partnerName': p.partnerName,
               'sharePercentage': p.sharePercentage,
-              'partnerShare': (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal(),
+              // 'partnerShare': (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal(),
+              'partnerShare': netProfit * shareDecimal / Decimal.fromInt(100),
                };
         }).toList();
       
