@@ -138,13 +138,12 @@ class FirebaseService {
         'app_min_version': '1.0.0',               // ← الحد الأدنى للإصدار المطلوب
         'app_force_update': false,                // ← هل التحديث إجباري؟
         'app_block_message': 'التطبيق متوقف مؤقتاً للصيانة',
+
+          // ========== Security Keys - من Firebase فقط ==========
+           // ← Hint: لا توجد قيم افتراضية للمفاتيح السرية - يجب أن تأتي من Firebase
+           // ← Hint: إذا فشل الاتصال، سيتم استخدام قيم Fallback في الـ Getters
         
-        // ========== Security Keys (مؤقت - سننقلها لاحقاً) ==========
-        // ← Hint: هذه مؤقتة فقط للتطوير - سنستبدلها بمفاتيح حقيقية من Firebase Console
-        'activation_secret': 'TEMP_ACTIVATION_KEY_CHANGE_ME',
-        'backup_magic_number': 'TEMP_BACKUP_MAGIC_V2',
-        'time_validation_secret': 'TEMP_TIME_VALIDATION_KEY',
-        
+         
         // ========== Security Settings ==========
         'pbkdf2_iterations': 100000,              // ← عدد التكرارات (سنستبدل بـ Argon2 لاحقاً)
         'max_suspicious_attempts': 3,             // ← المحاولات المشبوهة المسموحة
@@ -350,26 +349,124 @@ class FirebaseService {
   // ← Hint: هذه الدوال ستُستخدم بدلاً من المفاتيح الثابتة في الكود
   // ========================================================================
   
-  /// الحصول على Activation Secret
-  /// 
-  /// ← Hint: بدلاً من: static const String _secretKey = "..."
-  /// نستخدم: final secret = FirebaseService.instance.getActivationSecret()
-  String getActivationSecret() {
-    return _remoteConfig?.getString('activation_secret') 
-      ?? 'FALLBACK_SECRET_KEY';
+  //=================================================================
+  //=================================================================
+  /// الحصول على Activation Secret مع التحقق من الصحة 
+  /// ← Hint: يجب أن يكون على الأقل 32 حرف للأمان
+String getActivationSecret() {
+  try {
+    final secret = _remoteConfig?.getString('activation_secret');
+    
+    // ← Hint: التحقق من الطول والمحتوى
+    if (secret == null || secret.isEmpty) {
+      debugPrint('⚠️ Activation secret غير موجود في Remote Config!');
+      return _getFallbackKey('activation');
+    }
+    
+    if (secret.length < 32) {
+      debugPrint('⚠️ Activation secret قصير جداً (${secret.length} حرف)');
+      return _getFallbackKey('activation');
+    }
+    
+    // ← Hint: منع استخدام القيم المؤقتة
+    if (secret.contains('TEMP_') || secret.contains('CHANGE_ME')) {
+      debugPrint('🚨 Activation secret لا يزال مؤقتاً!');
+      return _getFallbackKey('activation');
+    }
+    
+    return secret;
+  } catch (e) {
+    debugPrint('❌ خطأ في قراءة activation_secret: $e');
+    return _getFallbackKey('activation');
   }
+}
 
-  /// الحصول على Backup Magic Number
-  String getBackupMagicNumber() {
-    return _remoteConfig?.getString('backup_magic_number') 
-      ?? 'FALLBACK_BACKUP_MAGIC';
+/// الحصول على Backup Magic Number مع التحقق
+/// 
+/// ← Hint: يجب أن يكون على الأقل 16 حرف
+String getBackupMagicNumber() {
+  try {
+    final magic = _remoteConfig?.getString('backup_magic_number');
+    
+    if (magic == null || magic.isEmpty) {
+      debugPrint('⚠️ Backup magic number غير موجود في Remote Config!');
+      return _getFallbackKey('backup');
+    }
+    
+    if (magic.length < 16) {
+      debugPrint('⚠️ Backup magic number قصير جداً (${magic.length} حرف)');
+      return _getFallbackKey('backup');
+    }
+    
+    if (magic.contains('TEMP_') || magic.contains('FALLBACK')) {
+      debugPrint('🚨 Backup magic number لا يزال مؤقتاً!');
+      return _getFallbackKey('backup');
+    }
+    
+    return magic;
+  } catch (e) {
+    debugPrint('❌ خطأ في قراءة backup_magic_number: $e');
+    return _getFallbackKey('backup');
   }
+}
 
-  /// الحصول على Time Validation Secret
-  String getTimeValidationSecret() {
-    return _remoteConfig?.getString('time_validation_secret') 
-      ?? 'FALLBACK_TIME_SECRET';
+/// الحصول على Time Validation Secret مع التحقق
+/// 
+/// ← Hint: يجب أن يكون على الأقل 32 حرف
+String getTimeValidationSecret() {
+  try {
+    final secret = _remoteConfig?.getString('time_validation_secret');
+    
+    if (secret == null || secret.isEmpty) {
+      debugPrint('⚠️ Time validation secret غير موجود في Remote Config!');
+      return _getFallbackKey('time');
+    }
+    
+    if (secret.length < 32) {
+      debugPrint('⚠️ Time validation secret قصير جداً (${secret.length} حرف)');
+      return _getFallbackKey('time');
+    }
+    
+    if (secret.contains('TEMP_') || secret.contains('FALLBACK')) {
+      debugPrint('🚨 Time validation secret لا يزال مؤقتاً!');
+      return _getFallbackKey('time');
+    }
+    
+    return secret;
+  } catch (e) {
+    debugPrint('❌ خطأ في قراءة time_validation_secret: $e');
+    return _getFallbackKey('time');
   }
+}
+
+/// ⚠️ مفاتيح احتياطية للطوارئ فقط
+/// 
+/// ← Hint: هذه المفاتيح ضعيفة جداً ويجب عدم الاعتماد عليها
+/// ← Hint: التطبيق سيعمل بها لكن بحماية أقل
+String _getFallbackKey(String type) {
+  // ← Hint: مفاتيح ضعيفة للاستخدام الطارئ فقط
+  final fallbacks = {
+    'activation': 'EMERGENCY_ACTIVATION_KEY_WEAK_DO_NOT_USE_IN_PRODUCTION',
+    'backup': 'EMERGENCY_BACKUP_WEAK',
+    'time': 'EMERGENCY_TIME_KEY_WEAK_DO_NOT_USE_IN_PRODUCTION',
+  };
+  
+  final key = fallbacks[type] ?? 'FALLBACK_KEY';
+  
+  // ← Hint: تسجيل في Crashlytics (مهم!)
+  logError(
+    Exception('Using weak fallback key for $type'),
+    StackTrace.current,
+    reason: 'Firebase Remote Config unavailable',
+    fatal: false,
+  );
+  
+  return key;
+}
+
+//=================================================================
+//=================================================================
+
 
   /// الحصول على عدد PBKDF2 iterations
   int getPbkdf2Iterations() {

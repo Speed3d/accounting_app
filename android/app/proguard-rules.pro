@@ -28,3 +28,12 @@
 -keepattributes SourceFile,LineNumberTable
 -keepattributes Signature
 -keepattributes Exceptions
+
+# Keep Play Core classes
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
+# Keep XML classes
+-keep class javax.xml.** { *; }
+-dontwarn javax.xml.**
+-dontwarn org.apache.tika.**
