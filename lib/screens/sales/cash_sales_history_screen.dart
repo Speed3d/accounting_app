@@ -1,11 +1,11 @@
 // lib/screens/sales/cash_sales_history_screen.dart
 
-import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:accountant_touch/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';

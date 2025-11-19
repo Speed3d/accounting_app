@@ -12,7 +12,7 @@ import '../../widgets/loading_state.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/custom_text_field.dart';
 import 'add_edit_user_screen.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 
 /// شاشة قائمة المستخدمين
 class UsersListScreen extends StatefulWidget {

@@ -8,7 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:bcrypt/bcrypt.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_text_field.dart';

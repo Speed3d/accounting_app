@@ -2885,34 +2885,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toEnsureContinuedUse => 'لضمان استمرار عمل التطبيق';
 
   @override
-  String get createBackupPasswordTitle => 'Protect Your Backup';
+  String get createBackupPasswordTitle => 'احمِ نسختك الاحتياطية';
 
   @override
   String get createBackupPasswordSubtitle =>
-      'Choose a password to protect your backup. You\'ll need it to restore on any device.';
+      'اختر كلمة مرور لحماية نسختك الاحتياطية. ستحتاجها للاستعادة على أي جهاز.';
 
   @override
-  String get restoreBackupPasswordTitle => 'Decrypt Backup';
+  String get restoreBackupPasswordTitle => 'فك تشفير النسخة الاحتياطية';
 
   @override
   String get restoreBackupPasswordSubtitle =>
-      'Enter the password you used when creating this backup.';
+      'أدخل كلمة المرور التي استخدمتها عند إنشاء هذه النسخة الاحتياطية.';
 
   @override
-  String get confirmPassword => 'Confirm Password';
+  String get confirmPassword => 'تأكيد كلمة المرور';
 
   @override
-  String get reEnterPassword => 'Re-enter password';
+  String get reEnterPassword => 'أعد إدخال كلمة المرور';
 
   @override
-  String get passwordCannotBeEmpty => 'Password cannot be empty';
+  String get passwordCannotBeEmpty => 'كلمة المرور لا يمكن أن تكون فارغة';
 
   @override
-  String get passwordsDoNotMatch => 'Passwords do not match';
+  String get passwordsDoNotMatch => 'كلمات المرور غير متطابقة';
 
   @override
   String get passwordTip =>
-      '⚠️ Remember your password carefully! Without it, you won\'t be able to restore your backup.';
+      '⚠️ تذكر كلمة المرور جيداً! بدونها لن تتمكن من استعادة نسختك الاحتياطية.';
 
   @override
   String get userMergeTitle => 'دمج المستخدمين';

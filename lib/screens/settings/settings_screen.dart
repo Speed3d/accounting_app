@@ -1,12 +1,12 @@
 // lib/screens/settings/settings_screen.dart
 
-import 'package:accounting_app/screens/archive/archive_center_screen.dart';
-import 'package:accounting_app/screens/settings/about_screen.dart';
-import 'package:accounting_app/screens/settings/app_lock_settings_screen.dart'; // ← Hint: إضافة استيراد إعدادات القفل
-import 'package:accounting_app/screens/settings/backup_restore_screen.dart';
-import 'package:accounting_app/screens/settings/company_info_screen.dart';
-import 'package:accounting_app/services/biometric_service.dart';
-import 'package:accounting_app/services/currency_service.dart';
+import 'package:accountant_touch/screens/archive/archive_center_screen.dart';
+import 'package:accountant_touch/screens/settings/about_screen.dart';
+import 'package:accountant_touch/screens/settings/app_lock_settings_screen.dart'; // ← Hint: إضافة استيراد إعدادات القفل
+import 'package:accountant_touch/screens/settings/backup_restore_screen.dart';
+import 'package:accountant_touch/screens/settings/company_info_screen.dart';
+import 'package:accountant_touch/services/biometric_service.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';

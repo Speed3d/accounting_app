@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "accounting_app",
+            "name": "accountant_touch",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "accounting_app (profile mode)",
+            "name": "accountant_touch (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "accounting_app (release mode)",
+            "name": "accountant_touch (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

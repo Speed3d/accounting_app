@@ -1,10 +1,11 @@
-import 'package:accounting_app/services/app_lock_service.dart'; // ← Hint: إضافة
-import 'package:accounting_app/services/currency_service.dart';
-import 'package:accounting_app/theme/app_theme.dart';
+import 'package:accountant_touch/services/app_lock_service.dart';
+import 'package:accountant_touch/services/currency_service.dart';
+import 'package:accountant_touch/services/firebase_service.dart'; // ← Hint: إضافة Firebase Service
+import 'package:accountant_touch/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
-import 'package:accounting_app/providers/theme_provider.dart';
-import 'package:accounting_app/providers/locale_provider.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
+import 'package:accountant_touch/providers/theme_provider.dart';
+import 'package:accountant_touch/providers/locale_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
@@ -12,27 +13,63 @@ import 'services/biometric_service.dart';
 import 'services/pdf_service.dart';
 
 Future<void> main() async {
+  // ← Hint: ضروري لتهيئة الخدمات قبل runApp
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ============= تهيئة الـ Providers =============
+  // ============================================================================
+  // 🔥 الخطوة 1: تهيئة Firebase (الأولوية القصوى!)
+  // ← Hint: يجب أن تكون أول خطوة قبل أي شيء آخر
+  // ============================================================================
+  
+  debugPrint('🚀 بدء تهيئة التطبيق...');
+  
+  final firebaseInitialized = await FirebaseService.instance.initialize(
+    onError: (error) {
+      // ← Hint: في حالة فشل Firebase، نطبع الخطأ ونكمل
+      // التطبيق سيعمل بالقيم الافتراضية
+      debugPrint('⚠️ Firebase initialization failed: $error');
+      debugPrint('ℹ️ التطبيق سيعمل بالوضع Offline مع القيم الافتراضية');
+    },
+  );
+
+  if (firebaseInitialized) {
+    debugPrint('✅ Firebase جاهز للاستخدام');
+  } else {
+    debugPrint('⚠️ Firebase غير متاح - الوضع Offline');
+  }
+
+  // ============================================================================
+  // الخطوة 2: تهيئة الـ Providers
+  // ============================================================================
+  
   final themeProvider = ThemeProvider();
   final localeProvider = LocaleProvider();
 
-  // ✅ Hint: تحميل خطوط PDF
+  // ============================================================================
+  // الخطوة 3: تحميل الإعدادات المحلية
+  // ============================================================================
+  
+  // ← Hint: تحميل خطوط PDF
   await PdfService.instance.loadFonts();
 
-  // تحميل اللغة المحفوظة
+  // ← Hint: تحميل اللغة المحفوظة
   await localeProvider.loadSavedLocale();
 
-  // ✅ Hint: تحميل العملة المحفوظة
+  // ← Hint: تحميل العملة المحفوظة
   await CurrencyService.instance.loadSavedCurrency();
 
-  // ✅ Hint: تحميل حالة البصمة المحفوظة
+  // ← Hint: تحميل حالة البصمة المحفوظة
   await BiometricService.instance.loadBiometricState();
 
-  // ← Hint: تحميل إعدادات القفل (جديد)
+  // ← Hint: تحميل إعدادات القفل
   await AppLockService.instance.loadSettings();
 
+  debugPrint('✅ اكتملت تهيئة جميع الخدمات');
+
+  // ============================================================================
+  // الخطوة 4: تشغيل التطبيق
+  // ============================================================================
+  
   runApp(
     MultiProvider(
       providers: [

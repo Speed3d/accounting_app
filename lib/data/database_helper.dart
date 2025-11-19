@@ -3,7 +3,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
-import 'package:accounting_app/data/models.dart';
+import 'package:accountant_touch/data/models.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'models.dart' as models;

@@ -1,11 +1,11 @@
 // lib/screens/reports/cash_flow_report_screen.dart
 
-import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:accountant_touch/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../utils/pdf_helpers.dart';
 import '../../services/pdf_service.dart';

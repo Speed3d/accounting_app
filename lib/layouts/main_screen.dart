@@ -1,10 +1,10 @@
 // lib/layouts/main_screen.dart
 
-import 'package:accounting_app/screens/auth/lock_screen.dart'; // ← Hint: إضافة
-import 'package:accounting_app/screens/dashboard/dashboard_screen.dart';
-import 'package:accounting_app/screens/reports/reports_hub_screen.dart';
-import 'package:accounting_app/screens/sales/direct_sale_screen.dart';
-import 'package:accounting_app/services/app_lock_service.dart'; // ← Hint: إضافة
+import 'package:accountant_touch/screens/auth/lock_screen.dart'; // ← Hint: إضافة
+import 'package:accountant_touch/screens/dashboard/dashboard_screen.dart';
+import 'package:accountant_touch/screens/reports/reports_hub_screen.dart';
+import 'package:accountant_touch/screens/sales/direct_sale_screen.dart';
+import 'package:accountant_touch/services/app_lock_service.dart'; // ← Hint: إضافة
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../layouts/main_layout.dart';

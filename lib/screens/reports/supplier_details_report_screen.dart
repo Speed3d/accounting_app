@@ -1,8 +1,8 @@
 // lib/screens/reports/supplier_details_report_screen.dart
 
 import 'dart:io';
-import 'package:accounting_app/services/pdf_service.dart' show PdfService;
-import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:accountant_touch/services/pdf_service.dart' show PdfService;
+import 'package:accountant_touch/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +15,7 @@ import '../../utils/pdf_helpers.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 
 /// 📊 شاشة تفاصيل تقرير المورد
 /// ============================================================================

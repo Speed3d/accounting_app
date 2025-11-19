@@ -1,4 +1,4 @@
-name: accounting_app
+name: accountant_touch
 description: "A new Flutter project."
 publish_to: 'none'
 version: 1.0.0+1
@@ -11,6 +11,24 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+
+    # ==================== Firebase ====================
+  # ← Hint: Firebase Core - إجباري لكل مشروع Firebase
+  firebase_core: ^2.24.2
+  
+  # ← Hint: Remote Config - لتخزين المفاتيح السرية عن بُعد
+  firebase_remote_config: ^4.3.8
+  
+  # ← Hint: Crashlytics - لتتبع الأخطاء ومحاولات القرصنة
+  firebase_crashlytics: ^3.4.9
+  
+  # ← Hint: Cloud Firestore - لتخزين بيانات الأجهزة المفعّلة (سنضيفه لاحقاً)
+  # cloud_firestore: ^4.13.6
+  
+  # ← Hint: Cloud Functions - للتحقق من جهة الخادم (اختياري)
+  # cloud_functions: ^4.5.7
+
+  # ==================== Existing Packages ====================  
 
   sqflite: any
   path_provider: any

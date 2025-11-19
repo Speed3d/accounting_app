@@ -2161,7 +2161,59 @@
   "productOutOfStock": "المنتج غير متوفر في المخزون",
   "selectSaleDate": "اختر تاريخ البيع",
   "saleDate": "تاريخ البيع",
-  "today": "اليوم"
+  "today": "اليوم",
+
+    "@_PASSWORD_BACKUP_ADDITIONS": "← إضافات تشفير النسخ الاحتياطي بكلمة مرور",
+  
+  "createBackupPasswordTitle": "احمِ نسختك الاحتياطية",
+  "@createBackupPasswordTitle": {
+    "description": "عنوان حوار إدخال كلمة المرور عند إنشاء النسخة الاحتياطية"
+  },
+
+  "createBackupPasswordSubtitle": "اختر كلمة مرور لحماية نسختك الاحتياطية. ستحتاجها للاستعادة على أي جهاز.",
+  "@createBackupPasswordSubtitle": {
+    "description": "نص توضيحي لإدخال كلمة المرور عند إنشاء النسخة الاحتياطية"
+  },
+
+  "restoreBackupPasswordTitle": "فك تشفير النسخة الاحتياطية",
+  "@restoreBackupPasswordTitle": {
+    "description": "عنوان حوار إدخال كلمة المرور عند استعادة النسخة الاحتياطية"
+  },
+
+  "restoreBackupPasswordSubtitle": "أدخل كلمة المرور التي استخدمتها عند إنشاء هذه النسخة الاحتياطية.",
+  "@restoreBackupPasswordSubtitle": {
+    "description": "نص توضيحي لإدخال كلمة المرور عند استعادة النسخة الاحتياطية"
+  },
+
+  "confirmPassword": "تأكيد كلمة المرور",
+  "@confirmPassword": {
+    "description": "تسمية حقل تأكيد كلمة المرور"
+  },
+
+  "reEnterPassword": "أعد إدخال كلمة المرور",
+  "@reEnterPassword": {
+    "description": "نص Placeholder لحقل تأكيد كلمة المرور"
+  },
+
+  "passwordCannotBeEmpty": "كلمة المرور لا يمكن أن تكون فارغة",
+  "@passwordCannotBeEmpty": {
+    "description": "رسالة خطأ عندما يكون حقل كلمة المرور فارغاً"
+  },
+
+  "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+  "@passwordsDoNotMatch": {
+    "description": "رسالة خطأ عندما لا تتطابق كلمات المرور"
+  },
+
+  "passwordTip": "⚠️ تذكر كلمة المرور جيداً! بدونها لن تتمكن من استعادة نسختك الاحتياطية.",
+  "@passwordTip": {
+    "description": "تحذير مهم حول تذكر كلمة المرور"
+  },
+
+  "confirm": "تأكيد",
+  "@confirm": {
+    "description": "نص زر التأكيد"
+  }
 
 
 }

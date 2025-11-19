@@ -1,4 +1,4 @@
-# accounting_app
+# accountant_touch
 
 A new Flutter project.
 

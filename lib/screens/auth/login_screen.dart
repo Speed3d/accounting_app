@@ -1,7 +1,7 @@
 // lib/screens/auth/login_screen.dart
 import 'dart:io';
-import 'package:accounting_app/layouts/main_screen.dart';
-import 'package:accounting_app/services/biometric_service.dart'; // ✅ Hint: إضافة BiometricService
+import 'package:accountant_touch/layouts/main_screen.dart';
+import 'package:accountant_touch/services/biometric_service.dart'; // ✅ Hint: إضافة BiometricService
 import 'package:flutter/material.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../../data/database_helper.dart';

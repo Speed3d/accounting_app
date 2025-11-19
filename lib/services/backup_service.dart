@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:accountant_touch/services/firebase_service.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,8 +24,8 @@ class BackupService {
   static const String _dbFileName = "accounting.db";
 
   // 2️⃣ معرف خاص للتحقق من صحة ملف النسخة الاحتياطية
-  /// ← Hint: Magic Number يضمن أن الملف من تطبيقنا وليس ملف عشوائي
-  static const String _magicNumber = 'MY_ACCOUNTING_APP_BACKUP_V2';
+  /// ← Hint: يتم جلبه من Firebase عند الحاجة بدلاً من القيمة الثابتة
+  String get _magicNumber => FirebaseService.instance.getBackupMagicNumber();
 
   // 3️⃣ الامتداد الخاص بملف النسخ الاحتياطي
   /// ← Hint: امتداد مخصص لملفاتنا لسهولة التعرف عليها
@@ -102,20 +103,23 @@ class BackupService {
       // ← Hint: قراءة محتوى الملف
       final fileBytes = await backupFile.readAsBytes();
 
+      // ← Hint: الحصول على Magic Number من Firebase
+      final magicNumber = _magicNumber;
+      final magicNumberSize = magicNumber.codeUnits.length;
+
       // ← Hint: التحقق من الحد الأدنى لحجم الملف
-      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      final minFileSize = magicNumberSize + _saltLength + 16;
       if (fileBytes.length < minFileSize) {
         throw Exception('حجم الملف صغير جداً');
       }
 
-      // ← Hint: استخراج Magic Number
-      final magicNumberSize = _magicNumber.codeUnits.length;
+      // ← Hint: استخراج Magic Number من الملف
       final fileMagicNumber = String.fromCharCodes(
         fileBytes.sublist(0, magicNumberSize),
       );
 
-      if (fileMagicNumber != _magicNumber) {
-        throw Exception('ملف غير صالح');
+      if (fileMagicNumber != magicNumber) {
+        throw Exception('ملف النسخة الاحتياطية غير صالح');
       }
 
       // ← Hint: استخراج Salt
@@ -206,19 +210,22 @@ class BackupService {
       // ← Hint: قراءة محتوى الملف
       final fileBytes = await backupFile.readAsBytes();
 
+      // ← Hint: الحصول على Magic Number من Firebase
+      final magicNumber = _magicNumber;
+      final magicNumberSize = magicNumber.codeUnits.length;
+
       // ← Hint: التحقق من الحد الأدنى للحجم
-      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      final minFileSize = magicNumberSize + _saltLength + 16;
       if (fileBytes.length < minFileSize) {
         throw Exception('حجم الملف صغير جداً. الملف قد يكون تالفاً.');
       }
 
       // ← Hint: استخراج Magic Number
-      final magicNumberSize = _magicNumber.codeUnits.length;
       final fileMagicNumber = String.fromCharCodes(
         fileBytes.sublist(0, magicNumberSize),
       );
 
-      if (fileMagicNumber != _magicNumber) {
+      if (fileMagicNumber != magicNumber) {
         throw Exception('ملف النسخة الاحتياطية غير صالح أو لا يخص هذا التطبيق.');
       }
 
@@ -396,6 +403,7 @@ class BackupService {
   // ==========================================================
   /// [password] كلمة المرور التي سيستخدمها المستخدم لحماية النسخة
   Future<Map<String, dynamic>> createAndShareBackup(String password) async {
+    
     try {
       print("🔹 بدء إنشاء النسخة الاحتياطية...");
 
@@ -441,12 +449,15 @@ class BackupService {
       print("🔹 تشفير البيانات...");
       final encryptedData = encrypter.encryptBytes(dbBytes, iv: iv);
 
+      // ← Hint: الحصول على Magic Number من Firebase
+      final magicNumber = _magicNumber;
+
       // 🔸 بناء الملف النهائي: [Magic Number] + [Salt] + [Encrypted Data]
       /// ← Hint: نحتاج Salt عند فك التشفير لاشتقاق نفس المفتاح
       final finalFileBytes = Uint8List.fromList([
-        ..._magicNumber.codeUnits,  // ← Hint: للتحقق من صحة الملف
-        ...salt,                     // ← Hint: Salt للاشتقاق (16 بايت)
-        ...encryptedData.bytes,      // ← Hint: البيانات المشفرة
+        ...magicNumber.codeUnits,    // ← Hint: للتحقق من صحة الملف
+        ...salt,                      // ← Hint: Salt للاشتقاق (16 بايت)
+        ...encryptedData.bytes,       // ← Hint: البيانات المشفرة
       ]);
 
       // ← Hint: إنشاء اسم ملف مع التاريخ والوقت
@@ -551,21 +562,24 @@ class BackupService {
       // ← Hint: قراءة محتوى الملف كاملاً
       final fileBytes = await backupFile.readAsBytes();
 
+      // ← Hint: الحصول على Magic Number من Firebase
+      final magicNumber = _magicNumber;
+      final magicNumberSize = magicNumber.codeUnits.length;
+
       // 🔸 التحقق من الحد الأدنى لحجم الملف
       /// ← Hint: الحد الأدنى = Magic Number + Salt (16 bytes) + بيانات مشفرة (16 bytes على الأقل)
-      final minFileSize = _magicNumber.codeUnits.length + _saltLength + 16;
+      final minFileSize = magicNumberSize + _saltLength + 16;
       if (fileBytes.length < minFileSize) {
         throw Exception('حجم الملف صغير جداً. الملف قد يكون تالفاً.');
       }
 
       // 🔸 استخراج Magic Number من بداية الملف
-      final magicNumberSize = _magicNumber.codeUnits.length;
       final fileMagicNumber = String.fromCharCodes(
         fileBytes.sublist(0, magicNumberSize),
       );
 
       // ← Hint: التحقق من Magic Number للتأكد أن الملف من تطبيقنا
-      if (fileMagicNumber != _magicNumber) {
+      if (fileMagicNumber != magicNumber) {
         throw Exception('ملف النسخة الاحتياطية غير صالح أو لا يخص هذا التطبيق.');
       }
 

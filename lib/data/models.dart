@@ -3,7 +3,7 @@
 // --- نموذج المستخدم ---
 //  قمنا بإزالة 'role' 
 //وأضفنا متغيرات bool لكل صلاحية.
-import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:accountant_touch/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 
 class User {

@@ -1,7 +1,7 @@
 // 📁 lib/screens/customers/new_sale_screen.dart
 
 import 'dart:io';
-import 'package:accounting_app/utils/decimal_extensions.dart';
+import 'package:accountant_touch/utils/decimal_extensions.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

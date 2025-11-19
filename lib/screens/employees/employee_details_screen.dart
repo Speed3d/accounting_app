@@ -1,6 +1,7 @@
 // lib/screens/employees/employee_details_screen.dart
 
 import 'dart:io';
+import 'package:accountant_touch/screens/employees/add_edit_employee_screen.dart' show AddEditEmployeeScreen;
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +16,6 @@ import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/status_badge.dart';
 import 'add_advance_screen.dart';
-import 'add_edit_employee_screen.dart';
 import 'add_payroll_screen.dart';
 
 /// 👤 شاشة تفاصيل الموظف - صفحة فرعية

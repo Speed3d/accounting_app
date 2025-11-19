@@ -1,6 +1,7 @@
 // lib/screens/auth/activation_screen.dart
 
 import 'dart:convert';
+import 'package:accountant_touch/services/firebase_service.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,9 +55,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
   bool _isLoading = false;           // حالة التحميل أثناء التحقق من الكود
   
   // ============= الثوابت =============
-  /// المفتاح السري المستخدم في توليد أكواد التفعيل
-  /// ⚠️ هذا المفتاح يجب أن يكون متطابقاً مع المفتاح في كود المطور
-  static const String _secretKey = "MY_APP_SHAHAD_2025_SECRET";
+  ///  توليد أكواد التفعيل
+  final secretKey = FirebaseService.instance.getActivationSecret();
 
   // ===========================================================================
   // التنظيف عند إغلاق الشاشة
@@ -70,81 +70,75 @@ class _ActivationScreenState extends State<ActivationScreen> {
   // ===========================================================================
   // معالجة التفعيل
   // ===========================================================================
-  Future<void> _handleActivation() async {
-    // --- التحقق من صحة النموذج ---
-    if (!_formKey.currentState!.validate()) return;
+Future<void> _handleActivation() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    // --- بدء التحميل ---
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final enteredCode = _activationCodeController.text.trim().toLowerCase();
-      
-      // ============= الخطوة 1: المدد المدعومة (بالأيام) =============
-      // يمكنك تعديل هذه المدد حسب احتياجك
-      const supportedDurations = [
-        730,  // سنتان
-        545,  // سنة ونصف
-        365,  // سنة
-        180,  // 6 أشهر
-        90,   // 3 أشهر
-        30,   // شهر واحد
-      ];
-      
-      int? matchedDuration;
+  try {
+    final enteredCode = _activationCodeController.text.trim().toLowerCase();
+    
+    // ← Hint: المدد المدعومة - الآن نجلبها من Firebase أيضاً
+    // يمكنك تركها ثابتة هنا أو نقلها لـ Remote Config
+    const supportedDurations = [
+      730,  // سنتان
+      545,  // سنة ونصف
+      365,  // سنة
+      180,  // 6 أشهر
+      90,   // 3 أشهر
+      30,   // شهر واحد
+    ];
+    
+    int? matchedDuration;
 
-      // ============= الخطوة 2: التحقق من الكود =============
-      for (var duration in supportedDurations) {
-        // --- توليد الكود المتوقع ---
-        final stringToHash = '${widget.deviceFingerprint}-$duration-$_secretKey';
-        final bytes = utf8.encode(stringToHash);
-        final digest = sha256.convert(bytes);
-        final generatedCode = digest.toString();
+    // ============================================================================
+    // 🔥 استخدام المفتاح من Firebase بدلاً من الثابت
+    // ============================================================================
+    
+    final secretKey = FirebaseService.instance.getActivationSecret();
+    
+    for (var duration in supportedDurations) {
+      final stringToHash = '${widget.deviceFingerprint}-$duration-$secretKey';
+      final bytes = utf8.encode(stringToHash);
+      final digest = sha256.convert(bytes);
+      final generatedCode = digest.toString();
 
-        // --- مقارنة الكود المدخل مع الكود المتوقع ---
-        if (enteredCode == generatedCode) {
-          matchedDuration = duration;
-          break; // تم العثور على تطابق ✅
-        }
-      }
-
-      // ============= الخطوة 3: معالجة النتيجة =============
-      if (matchedDuration != null) {
-        // --- التفعيل ناجح ✅ ---
-        await DatabaseHelper.instance.activateApp(
-          durationInDays: matchedDuration,
-        );
-
-        // ← Hint: إعادة تعيين بيانات الوقت (جديد)
-        await TimeValidationService.instance.resetOnNewActivation();
-
-        if (!mounted) return;
-
-        // --- عرض رسالة نجاح ---
-        await _showSuccessDialog(matchedDuration);
-        
-      } else {
-        // --- الكود غير صحيح ❌ ---
-        if (mounted) {
-          _showErrorSnackBar(
-            'كود التفعيل غير صحيح أو منتهي الصلاحية. الرجاء المحاولة مرة أخرى.',
-          );
-        }
-      }
-
-    } catch (e) {
-      // --- معالجة الأخطاء ---
-      if (mounted) {
-        _showErrorSnackBar('حدث خطأ أثناء التفعيل: ${e.toString()}');
-      }
-      debugPrint('❌ خطأ في التفعيل: $e');
-    } finally {
-      // --- إيقاف التحميل ---
-      if (mounted) {
-        setState(() => _isLoading = false);
+      if (enteredCode == generatedCode) {
+        matchedDuration = duration;
+        break;
       }
     }
+
+    if (matchedDuration != null) {
+      await DatabaseHelper.instance.activateApp(
+        durationInDays: matchedDuration,
+      );
+
+      await TimeValidationService.instance.resetOnNewActivation();
+
+      if (!mounted) return;
+
+      await _showSuccessDialog(matchedDuration);
+      
+    } else {
+      if (mounted) {
+        _showErrorSnackBar(
+          'كود التفعيل غير صحيح أو منتهي الصلاحية. الرجاء المحاولة مرة أخرى.',
+        );
+      }
+    }
+
+  } catch (e) {
+    if (mounted) {
+      _showErrorSnackBar('حدث خطأ أثناء التفعيل: ${e.toString()}');
+    }
+    debugPrint('❌ خطأ في التفعيل: $e');
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
+}
 
   // ===========================================================================
   // عرض رسالة نجاح التفعيل

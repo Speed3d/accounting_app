@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import 'package:accounting_app/l10n/app_localizations.dart';
+import 'package:accountant_touch/l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../utils/pdf_helpers.dart';
 import '../../services/pdf_service.dart';

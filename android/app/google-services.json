@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "919759124930",
+    "project_id": "accountant-touch",
+    "storage_bucket": "accountant-touch.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919759124930:android:788f5f3b7c76da2e03be5b",
+        "android_client_info": {
+          "package_name": "com.accountant.touch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvEe5XDxDm3DFUAdD3q3dFc9oEtuV86ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

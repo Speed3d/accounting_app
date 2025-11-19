@@ -1,3 +1,27 @@
+import org.gradle.api.file.Directory
+import org.gradle.api.tasks.Delete
+
+extra["kotlin_version"] = "1.9.0"
+
+// ← Hint: هذا الملف الرئيسي لإعدادات Gradle على مستوى المشروع
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.3.0")
+
+        // ✅ Hint: إضافة Google Services plugin للاتصال بـ Firebase
+        classpath("com.google.gms:google-services:4.4.4")
+
+        // ✅ Hint: Crashlytics للتتبع (سنستخدمه لاحقاً)
+        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.9")
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -6,11 +30,11 @@ allprojects {
 }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+rootProject.layout.buildDirectory.set(newBuildDir)
 
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
+    project.layout.buildDirectory.set(newSubprojectBuildDir)
 }
 subprojects {
     project.evaluationDependsOn(":app")

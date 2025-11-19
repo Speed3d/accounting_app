@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'firebase_service.dart';
+
 /// 🔐 التخزين الآمن لبيانات الوقت
 /// ← Hint: يستخدم SecureStorage مع Checksum للحماية من التلاعب
 class SecureTimeStorage {
@@ -26,8 +28,11 @@ class SecureTimeStorage {
   static const String _suspiciousAttemptsKey = 'suspicious_attempts';
   static const String _checksumKey = 'data_checksum';
 
-  // ← Hint: مفتاح سري للـ Checksum
-  static const String _secretKey = 'TIME_VALIDATION_SECRET_2025_SHAHAD';
+
+  // ← Hint: إضافة getter
+  String _getSecretKey() {
+  return FirebaseService.instance.getTimeValidationSecret();
+}
 
   // ==========================================================================
   // ← Hint: حفظ بيانات الوقت مع Checksum
@@ -121,22 +126,25 @@ class SecureTimeStorage {
   // ==========================================================================
   // ← Hint: حساب Checksum
   // ==========================================================================
-  String _calculateChecksum(Map<String, dynamic> data) {
-    // ← Hint: ترتيب المفاتيح للحصول على نتيجة ثابتة
-    final sortedData = Map.fromEntries(
-      data.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
-    );
+ String _calculateChecksum(Map<String, dynamic> data) {
+  final sortedData = Map.fromEntries(
+    data.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
 
-    // ← Hint: تحويل لـ JSON + إضافة المفتاح السري
-    final jsonString = jsonEncode(sortedData);
-    final stringToHash = '$jsonString-$_secretKey';
+  final jsonString = jsonEncode(sortedData);
+  
+  // ============================================================================
+  // 🔥 استخدام المفتاح من Firebase
+  // ============================================================================
+  
+  final secretKey = _getSecretKey();
+  final stringToHash = '$jsonString-$secretKey';
 
-    // ← Hint: حساب SHA256
-    final bytes = utf8.encode(stringToHash);
-    final digest = sha256.convert(bytes);
+  final bytes = utf8.encode(stringToHash);
+  final digest = sha256.convert(bytes);
 
-    return digest.toString();
-  }
+  return digest.toString();
+}
 
   // ==========================================================================
   // ← Hint: زيادة عداد المحاولات المشبوهة
