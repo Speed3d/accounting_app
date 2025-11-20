@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart'; // ← Hint: إضافة للحصول على version
-
 import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
 import '../../services/firebase_service.dart'; // ← Hint: إضافة Firebase Service
@@ -101,6 +100,16 @@ class _SplashScreenState extends State<SplashScreen>
     final timeService = TimeValidationService.instance;
     final firebaseService = FirebaseService.instance; // ← Hint: Firebase Service
 
+      // 🧪 اختبار - اطبع الإصدار
+  final packageInfo = await PackageInfo.fromPlatform();
+  debugPrint('════════════════════════════════');
+  debugPrint('📱 معلومات التطبيق:');
+  debugPrint('   - الإصدار: ${packageInfo.version}');
+  debugPrint('   - رقم البناء: ${packageInfo.buildNumber}');
+  debugPrint('   - اسم التطبيق: ${packageInfo.appName}');
+  debugPrint('   - Package: ${packageInfo.packageName}');
+  debugPrint('════════════════════════════════');
+
     // ============================================================================
     // 🔥 الخطوة 0: Kill Switch - فحص حالة التطبيق (الأهم!)
     // ← Hint: نفحص أولاً إذا كان التطبيق موقوف من المطور
@@ -111,9 +120,11 @@ class _SplashScreenState extends State<SplashScreen>
       
       // ← Hint: الحصول على إصدار التطبيق الحالي
       final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
+      final currentVersion = packageInfo.version;  // ← "1.0.0"
+      final buildNumber = packageInfo.buildNumber; // ← "1"
       
       debugPrint('ℹ️ إصدار التطبيق الحالي: $currentVersion');
+      debugPrint('رقم البناء: $buildNumber');
 
       // ← Hint: فحص حالة التطبيق من Firebase
       final appStatus = await firebaseService.checkAppStatus(
@@ -121,44 +132,83 @@ class _SplashScreenState extends State<SplashScreen>
       );
 
       // ========================================================================
-      // التعامل مع حالات Kill Switch المختلفة
+       // 🔥 Kill Switch المتقدم - معالجة جميع الحالات
       // ========================================================================
+
+      // 1️⃣ التحقق من الجهاز المحظور
+      if (appStatus['isBlocked'] == true) {
+         debugPrint('🚫 جهاز محظور - منع الدخول');
+  
+      if (!mounted) return;
+  
+     _showKillSwitchDialog(
+        title: 'الجهاز محظور',
+        message: appStatus['message'] ?? 'تم حظر هذا الجهاز',
+        canClose: false,
+        icon: Icons.block,
+        iconColor: AppColors.error,
+       );
+  
+      return; // ← إيقاف التنفيذ
+     }
+
+    // 2️⃣ التحقق من وضع الصيانة أو التطبيق موقوف
+    if (appStatus['isActive'] != true) {
+    final reason = appStatus['reason'] ?? '';
+    debugPrint('🚫 التطبيق موقوف - السبب: $reason');
+  
+    if (!mounted) return;
+  
+     // ← Hint: اختيار الأيقونة حسب السبب
+     IconData icon;
+     Color iconColor;
+  
+    if (reason == 'maintenance') {
+       icon = Icons.engineering;
+       iconColor = AppColors.warning;
+      } else {
+       icon = Icons.block;
+       iconColor = AppColors.error;
+      }
+  
+      _showKillSwitchDialog(
+        title: reason == 'maintenance' ? 'وضع الصيانة' : 'التطبيق متوقف',
+        message: appStatus['message'] ?? 'التطبيق متوقف مؤقتاً',
+        canClose: false,
+        icon: icon,
+        iconColor: iconColor,
+      );
+  
+      return; // ← إيقاف التنفيذ
+  }
+
+   // 3️⃣ التحقق من التحديثات
+    if (appStatus['needsUpdate'] == true) {
+     final forceUpdate = appStatus['forceUpdate'] == true;
+     final minVersion = appStatus['minVersion'] ?? '';
+     final reason = appStatus['reason'] ?? '';
+  
+     debugPrint('ℹ️ يوجد تحديث متاح (إجباري: $forceUpdate)');
+  
+     if (!mounted) return;
+  
+    _showUpdateDialog(
+      message: appStatus['message'] ?? 'يتوفر تحديث جديد',
+      required: forceUpdate,
+      minVersion: minVersion,
+      isCritical: reason == 'critical_update',
+    );
+  
+    if (forceUpdate) {
+    return; // ← منع الدخول إذا كان التحديث إجباري
+    }
+  
+    // ← Hint: إذا لم يكن إجباري، نكمل...
+  }
+
+     debugPrint('✅ التطبيق نشط وجاهز للاستخدام');
       
-      if (!appStatus['isActive']) {
-        // ← Hint: التطبيق موقوف من المطور
-        debugPrint('🚫 التطبيق موقوف من قبل المطور');
-        
-        if (!mounted) return;
-        
-        _showKillSwitchDialog(
-          title: 'التطبيق متوقف',
-          message: appStatus['message'] ?? 'التطبيق متوقف مؤقتاً للصيانة',
-          canClose: false,
-        );
-        
-        return; // ← Hint: نوقف التنفيذ هنا
-      }
 
-      if (appStatus['needsUpdate'] == true) {
-        // ← Hint: يوجد تحديث متاح
-        final forceUpdate = appStatus['forceUpdate'] == true;
-        
-        debugPrint('ℹ️ يوجد تحديث متاح (إجباري: $forceUpdate)');
-        
-        if (!mounted) return;
-        
-        _showUpdateDialog(
-          message: appStatus['message'] ?? 'يتوفر تحديث جديد',
-          required: forceUpdate,
-          minVersion: appStatus['minVersion'] ?? '',
-        );
-        
-        if (forceUpdate) {
-          return; // ← Hint: نوقف إذا كان التحديث إجباري
-        }
-      }
-
-      debugPrint('✅ التطبيق نشط وجاهز للاستخدام');
       
     } catch (e) {
       // ← Hint: في حالة خطأ، نكمل (fail-safe)
@@ -370,138 +420,174 @@ class _SplashScreenState extends State<SplashScreen>
   // 🔥 دوال Kill Switch (جديدة!)
   // ===========================================================================
   
-  /// عرض حوار Kill Switch (التطبيق موقوف)
-  void _showKillSwitchDialog({
-    required String title,
-    required String message,
-    required bool canClose,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: canClose,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => canClose,
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: AppConstants.borderRadiusLg,
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.block,
-                color: AppColors.error,
-                size: 28,
-              ),
-              const SizedBox(width: AppConstants.spacingSm),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(color: AppColors.error),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: AppConstants.spacingLg),
-              // ← Hint: أيقونة الصيانة
-              Icon(
-                Icons.engineering,
-                size: 64,
-                color: AppColors.warning,
-              ),
-            ],
-          ),
-          actions: [
-            if (canClose)
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('إغلاق'),
-              ),
-          ],
+/// عرض حوار Kill Switch المحسّن
+void _showKillSwitchDialog({
+  required String title,
+  required String message,
+  required bool canClose,
+  IconData? icon,
+  Color? iconColor,
+}) {
+  showDialog(
+    context: context,
+    barrierDismissible: canClose,
+    builder: (context) => WillPopScope(
+      onWillPop: () async => canClose,
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusLg,
         ),
-      ),
-    );
-  }
-
-  /// عرض حوار التحديث
-  void _showUpdateDialog({
-    required String message,
-    required bool required,
-    required String minVersion,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: !required,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => !required,
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: AppConstants.borderRadiusLg,
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.system_update,
-                color: required ? AppColors.error : AppColors.info,
-                size: 28,
+        title: Row(
+          children: [
+            Icon(
+              icon ?? Icons.block,
+              color: iconColor ?? AppColors.error,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingSm),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(color: iconColor ?? AppColors.error),
               ),
-              const SizedBox(width: AppConstants.spacingSm),
-              Expanded(
-                child: Text(
-                  required ? 'تحديث إجباري' : 'تحديث متاح',
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(message),
-              const SizedBox(height: AppConstants.spacingMd),
-              Container(
-                padding: AppConstants.paddingSm,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
-                  borderRadius: AppConstants.borderRadiusSm,
-                ),
-                child: Text(
-                  'الإصدار المطلوب: $minVersion',
-                  style: TextStyle(
-                    color: AppColors.info,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            if (!required)
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('لاحقاً'),
-              ),
-            ElevatedButton(
-              onPressed: () {
-                // ← Hint: TODO - فتح متجر التطبيقات
-                // يمكنك استخدام url_launcher أو store_redirect package
-                debugPrint('TODO: فتح متجر التطبيقات');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: required ? AppColors.error : AppColors.info,
-              ),
-              child: const Text('تحديث الآن'),
             ),
           ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppConstants.spacingLg),
+            // ← Hint: أيقونة كبيرة في الوسط
+            Icon(
+              icon ?? Icons.engineering,
+              size: 64,
+              color: iconColor ?? AppColors.warning,
+            ),
+          ],
+        ),
+        actions: [
+          if (canClose)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إغلاق'),
+            ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+  /// عرض حوار التحديث
+/// عرض حوار التحديث المحسّن
+void _showUpdateDialog({
+  required String message,
+  required bool required,
+  required String minVersion,
+  bool isCritical = false,
+}) {
+  showDialog(
+    context: context,
+    barrierDismissible: !required,
+    builder: (context) => WillPopScope(
+      onWillPop: () async => !required,
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusLg,
+        ),
+        title: Row(
+          children: [
+            Icon(
+              isCritical ? Icons.security_update : Icons.system_update,
+              color: isCritical ? AppColors.error : AppColors.info,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingSm),
+            Expanded(
+              child: Text(
+                isCritical ? 'تحديث أمني مهم' : (required ? 'تحديث إجباري' : 'تحديث متاح'),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ← Hint: رسالة مخصصة للتحديثات الأمنية
+            if (isCritical) ...[
+              Container(
+                padding: AppConstants.paddingSm,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
+                  border: Border.all(
+                    color: AppColors.error.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, color: AppColors.error, size: 20),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    Expanded(
+                      child: Text(
+                        'هذا التحديث يحتوي على إصلاحات أمنية مهمة',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppConstants.spacingMd),
+            ],
+            
+            Text(message),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingSm,
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusSm,
+              ),
+              child: Text(
+                'الإصدار المطلوب: $minVersion',
+                style: TextStyle(
+                  color: AppColors.info,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          if (!required)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('لاحقاً'),
+            ),
+          ElevatedButton(
+            onPressed: () {
+              // ← Hint: TODO - فتح متجر التطبيقات
+              debugPrint('TODO: فتح متجر التطبيقات');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isCritical 
+                ? AppColors.error 
+                : (required ? AppColors.error : AppColors.info),
+            ),
+            child: const Text('تحديث الآن'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   // ===========================================================================
   // الدوال الموجودة مسبقاً (بدون تغيير)

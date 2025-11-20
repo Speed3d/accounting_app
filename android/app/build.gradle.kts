@@ -30,17 +30,26 @@ android {
 
         // نفترض أن flutter.minSdkVersion موجود كخاصية في المشروع (كما في مشاريع Flutter عادة)
         // نحاول قراءتها من خصائص المشروع وتحويلها إلى Int
+
+       //val minSdkFromProps = (project.findProperty("flutter.minSdkVersion") as? String)?.toIntOrNull()
+        val flutterVersionName = project.findProperty("flutter.versionName") as String? 
+        ?: "1.0.0"
+
+        val flutterVersionCode = (project.findProperty("flutter.versionCode") as String?)?.toIntOrNull() 
+        ?: 1
+
+         versionName = flutterVersionName
+         versionCode = flutterVersionCode
+
+        // ← Hint: قراءة minSdk
         val minSdkFromProps = (project.findProperty("flutter.minSdkVersion") as? String)?.toIntOrNull()
         if (minSdkFromProps != null) {
-            minSdk = minSdkFromProps
+        minSdk = minSdkFromProps
         } else {
-            // fallback إن لم تُعرف الخاصية
-            minSdk = flutter.minSdkVersion
+          minSdk = flutter.minSdkVersion
         }
 
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
 
         // ✅ : تفعيل MultiDex لتجنب مشاكل 64K methods
         multiDexEnabled = true

@@ -139,9 +139,19 @@ class FirebaseService {
         'app_force_update': false,                // ← هل التحديث إجباري؟
         'app_block_message': 'التطبيق متوقف مؤقتاً للصيانة',
 
+
           // ========== Security Keys - من Firebase فقط ==========
            // ← Hint: لا توجد قيم افتراضية للمفاتيح السرية - يجب أن تأتي من Firebase
            // ← Hint: إذا فشل الاتصال، سيتم استخدام قيم Fallback في الـ Getters
+
+
+        // ========== Kill Switch المتقدم (جديد) ==========
+         'app_maintenance_mode': false,
+         'app_maintenance_message_ar': 'التطبيق متوقف مؤقتاً للصيانة. نعتذر عن الإزعاج.',
+         'app_maintenance_message_en': 'App is under maintenance. Sorry for the inconvenience.',
+         'app_critical_update_required': false,
+         'app_allowed_versions': '["1.0.0"]',
+         'app_blocked_devices': '[]',   
         
          
         // ========== Security Settings ==========
@@ -224,91 +234,229 @@ class FirebaseService {
   // ========================================================================
   // Kill Switch - التحكم في حالة التطبيق عن بُعد
   // ========================================================================
-  
-  /// التحقق من حالة التطبيق (هل نشط؟ هل يحتاج تحديث؟)
-  /// 
-  /// ← Hint: يُستدعى في SplashScreen قبل عرض أي شيء
-  /// 
-  /// Returns: Map يحتوي على:
-  ///   - isActive: bool
-  ///   - needsUpdate: bool
-  ///   - forceUpdate: bool
-  ///   - message: String
-  ///   - minVersion: String
-  Future<Map<String, dynamic>> checkAppStatus({
-    required String currentVersion,
-  }) async {
-    try {
-      // ← Hint: التأكد من تهيئة Remote Config
-      if (_remoteConfig == null) {
-        debugPrint('⚠️ Remote Config غير مُهيّأ - سيتم السماح بالدخول');
-        return {
-          'isActive': true,
-          'needsUpdate': false,
-          'forceUpdate': false,
-          'message': '',
-        };
-      }
-
-      // ========================================================================
-      // 1. التحقق من حالة التطبيق
-      // ========================================================================
-      
-      final isActive = _remoteConfig!.getBool('app_is_active');
-      
-      if (!isActive) {
-        final message = _remoteConfig!.getString('app_block_message');
-        
-        debugPrint('🚫 التطبيق موقوف من قبل المطور');
-        debugPrint('   السبب: $message');
-        
-        return {
-          'isActive': false,
-          'needsUpdate': false,
-          'forceUpdate': false,
-          'message': message,
-        };
-      }
-
-      // ========================================================================
-      // 2. التحقق من الإصدار
-      // ========================================================================
-      
-      final minVersion = _remoteConfig!.getString('app_min_version');
-      final forceUpdate = _remoteConfig!.getBool('app_force_update');
-      
-      // ← Hint: مقارنة الإصدارات
-      final needsUpdate = _compareVersions(currentVersion, minVersion) < 0;
-      
-      if (needsUpdate) {
-        debugPrint('ℹ️ يوجد تحديث متاح');
-        debugPrint('   الإصدار الحالي: $currentVersion');
-        debugPrint('   الإصدار المطلوب: $minVersion');
-        debugPrint('   إجباري: $forceUpdate');
-      }
-
+  /// التحقق من حالة التطبيق (Kill Switch المتقدم)
+/// 
+/// ← Hint: يُستدعى في SplashScreen قبل عرض أي شيء
+/// 
+/// Returns: Map يحتوي على:
+///   - isActive: bool
+///   - isBlocked: bool (جديد - للأجهزة المحظورة)
+///   - needsUpdate: bool
+///   - forceUpdate: bool
+///   - message: String
+///   - messageAr: String (جديد)
+///   - messageEn: String (جديد)
+///   - minVersion: String
+///   - reason: String (جديد - سبب الحظر)
+Future<Map<String, dynamic>> checkAppStatus({
+  required String currentVersion,
+  String? deviceFingerprint,
+  String? locale,
+}) async {
+  try {
+    debugPrint('🔍 فحص حالة التطبيق...');
+    debugPrint('   - الإصدار: $currentVersion');
+    debugPrint('   - Device ID: ${deviceFingerprint ?? "N/A"}');
+    debugPrint('   - اللغة: ${locale ?? "ar"}');
+    
+    // ========================================================================
+    // التأكد من تهيئة Remote Config
+    // ========================================================================
+    if (_remoteConfig == null) {
+      debugPrint('⚠️ Remote Config غير مُهيّأ - السماح بالدخول (fail-safe)');
       return {
         'isActive': true,
-        'needsUpdate': needsUpdate,
-        'forceUpdate': forceUpdate,
-        'message': needsUpdate 
-          ? 'يتوفر تحديث جديد. يرجى التحديث للمتابعة.' 
-          : '',
-        'minVersion': minVersion,
-      };
-
-    } catch (e) {
-      debugPrint('❌ خطأ في فحص حالة التطبيق: $e');
-      
-      // ← Hint: في حالة الخطأ، نسمح بالدخول (fail-safe)
-      return {
-        'isActive': true,
+        'isBlocked': false,
         'needsUpdate': false,
         'forceUpdate': false,
         'message': '',
+        'messageAr': '',
+        'messageEn': '',
+        'reason': '',
       };
     }
+
+    // ========================================================================
+    // 1️⃣ التحقق من الجهاز المحظور (أعلى أولوية!)
+    // ========================================================================
+    if (deviceFingerprint != null && deviceFingerprint.isNotEmpty) {
+      final blockedDevicesJson = _remoteConfig!.getString('app_blocked_devices');
+      
+      try {
+        final blockedDevices = (jsonDecode(blockedDevicesJson) as List<dynamic>)
+          .cast<String>();
+        
+        if (blockedDevices.contains(deviceFingerprint)) {
+          debugPrint('🚫 الجهاز محظور! Device: $deviceFingerprint');
+          
+          // ← Hint: تسجيل في Crashlytics
+          logSuspiciousActivity(
+            reason: 'blocked_device',
+            deviceId: deviceFingerprint,
+            additionalInfo: {'action': 'blocked_device_tried_to_access'},
+          );
+          
+          return {
+            'isActive': false,
+            'isBlocked': true,
+            'needsUpdate': false,
+            'forceUpdate': false,
+            'message': 'تم حظر هذا الجهاز من استخدام التطبيق',
+            'messageAr': 'تم حظر هذا الجهاز من استخدام التطبيق. للاستفسار تواصل مع الدعم الفني.',
+            'messageEn': 'This device has been blocked. Contact support for inquiries.',
+            'reason': 'blocked_device',
+          };
+        }
+      } catch (e) {
+        debugPrint('⚠️ خطأ في قراءة app_blocked_devices: $e');
+      }
+    }
+
+    // ========================================================================
+    // 2️⃣ التحقق من Maintenance Mode
+    // ========================================================================
+    final isMaintenanceMode = _remoteConfig!.getBool('app_maintenance_mode');
+    
+    if (isMaintenanceMode) {
+      debugPrint('🔧 وضع الصيانة مُفعّل');
+      
+      final messageAr = _remoteConfig!.getString('app_maintenance_message_ar');
+      final messageEn = _remoteConfig!.getString('app_maintenance_message_en');
+      final message = (locale == 'en') ? messageEn : messageAr;
+      
+      return {
+        'isActive': false,
+        'isBlocked': false,
+        'needsUpdate': false,
+        'forceUpdate': false,
+        'message': message,
+        'messageAr': messageAr,
+        'messageEn': messageEn,
+        'reason': 'maintenance',
+      };
+    }
+
+    // ========================================================================
+    // 3️⃣ التحقق من app_is_active (الطريقة القديمة - للتوافقية)
+    // ========================================================================
+    final isActive = _remoteConfig!.getBool('app_is_active');
+    
+    if (!isActive) {
+      debugPrint('🚫 التطبيق موقوف (app_is_active = false)');
+      
+      final blockMessage = _remoteConfig!.getString('app_block_message');
+      
+      return {
+        'isActive': false,
+        'isBlocked': false,
+        'needsUpdate': false,
+        'forceUpdate': false,
+        'message': blockMessage,
+        'messageAr': blockMessage,
+        'messageEn': blockMessage,
+        'reason': 'app_inactive',
+      };
+    }
+
+    // ========================================================================
+    // 4️⃣ التحقق من الإصدارات المسموحة (Whitelist)
+    // ========================================================================
+    try {
+      final allowedVersionsJson = _remoteConfig!.getString('app_allowed_versions');
+      final allowedVersions = (jsonDecode(allowedVersionsJson) as List<dynamic>)
+        .cast<String>();
+      
+      if (allowedVersions.isNotEmpty && !allowedVersions.contains(currentVersion)) {
+        debugPrint('⚠️ الإصدار الحالي ($currentVersion) غير مسموح');
+        debugPrint('   الإصدارات المسموحة: $allowedVersions');
+        
+        return {
+          'isActive': false,
+          'isBlocked': false,
+          'needsUpdate': true,
+          'forceUpdate': true,
+          'message': 'هذا الإصدار لم يعد مدعوماً. يرجى التحديث.',
+          'messageAr': 'هذا الإصدار من التطبيق لم يعد مدعوماً. يرجى تحديث التطبيق للمتابعة.',
+          'messageEn': 'This app version is no longer supported. Please update to continue.',
+          'reason': 'version_not_allowed',
+          'minVersion': allowedVersions.last,
+        };
+      }
+    } catch (e) {
+      debugPrint('⚠️ خطأ في قراءة app_allowed_versions: $e');
+    }
+
+    // ========================================================================
+    // 5️⃣ التحقق من الحد الأدنى للإصدار (الطريقة القديمة)
+    // ========================================================================
+    final minVersion = _remoteConfig!.getString('app_min_version');
+    final criticalUpdate = _remoteConfig!.getBool('app_critical_update_required');
+    final forceUpdate = _remoteConfig!.getBool('app_force_update');
+    
+    final needsUpdate = _compareVersions(currentVersion, minVersion) < 0;
+    
+    if (needsUpdate) {
+      debugPrint('ℹ️ يوجد تحديث متاح');
+      debugPrint('   الإصدار الحالي: $currentVersion');
+      debugPrint('   الإصدار المطلوب: $minVersion');
+      debugPrint('   إجباري: ${forceUpdate || criticalUpdate}');
+      
+      final isForceUpdate = forceUpdate || criticalUpdate;
+      
+      return {
+        'isActive': !isForceUpdate, // ← إذا كان التحديث إجباري، نوقف التطبيق
+        'isBlocked': false,
+        'needsUpdate': true,
+        'forceUpdate': isForceUpdate,
+        'message': isForceUpdate 
+          ? 'تحديث أمني مهم متاح. يجب التحديث للمتابعة.'
+          : 'يتوفر تحديث جديد. يُنصح بالتحديث.',
+        'messageAr': isForceUpdate
+          ? 'تحديث أمني مهم متاح. يجب تحديث التطبيق للمتابعة.'
+          : 'يتوفر تحديث جديد للتطبيق. يُنصح بالتحديث.',
+        'messageEn': isForceUpdate
+          ? 'Critical security update available. Please update to continue.'
+          : 'A new update is available. Update recommended.',
+        'reason': criticalUpdate ? 'critical_update' : 'update_available',
+        'minVersion': minVersion,
+      };
+    }
+
+    // ========================================================================
+    // ✅ كل شيء على ما يرام - السماح بالدخول
+    // ========================================================================
+    debugPrint('✅ التطبيق نشط وجاهز');
+    
+    return {
+      'isActive': true,
+      'isBlocked': false,
+      'needsUpdate': false,
+      'forceUpdate': false,
+      'message': '',
+      'messageAr': '',
+      'messageEn': '',
+      'reason': '',
+    };
+
+  } catch (e, stackTrace) {
+    debugPrint('❌ خطأ في فحص حالة التطبيق: $e');
+    
+    // ← Hint: تسجيل الخطأ
+    logError(e, stackTrace, reason: 'checkAppStatus_error');
+    
+    // ← Hint: في حالة الخطأ، نسمح بالدخول (fail-safe)
+    return {
+      'isActive': true,
+      'isBlocked': false,
+      'needsUpdate': false,
+      'forceUpdate': false,
+      'message': '',
+      'messageAr': '',
+      'messageEn': '',
+      'reason': 'error',
+    };
   }
+}
 
   // ========================================================================
   // مقارنة الإصدارات
