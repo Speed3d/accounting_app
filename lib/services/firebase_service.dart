@@ -140,9 +140,10 @@ class FirebaseService {
         'app_block_message': 'التطبيق متوقف مؤقتاً للصيانة',
 
 
-          // ========== Security Keys - من Firebase فقط ==========
-           // ← Hint: لا توجد قيم افتراضية للمفاتيح السرية - يجب أن تأتي من Firebase
-           // ← Hint: إذا فشل الاتصال، سيتم استخدام قيم Fallback في الـ Getters
+        // 🔐 إضافة المفاتيح السرية
+        'activation_secret': 'X4NL27OcZRHz6SaDoClQdeB0Psk5UgIw3tVMqvKnA1JmjbuiGE8FyfhpYTxrW9',
+        'backup_magic_number': 'LxwJtAU9bgXI3oH15B8zFfKWNamYuO7R',
+        'time_validation_secret': 'w0LAC8y57giFxtYvUZDzuTJdPalBX2W6roqhHsecIkEVR3Om19Knj4GQNMpfSb',
 
 
         // ========== Kill Switch المتقدم (جديد) ==========
@@ -587,29 +588,36 @@ String getTimeValidationSecret() {
   }
 }
 
-/// ⚠️ مفاتيح احتياطية للطوارئ فقط
-/// 
-/// ← Hint: هذه المفاتيح ضعيفة جداً ويجب عدم الاعتماد عليها
-/// ← Hint: التطبيق سيعمل بها لكن بحماية أقل
-String _getFallbackKey(String type) {
-  // ← Hint: مفاتيح ضعيفة للاستخدام الطارئ فقط
-  final fallbacks = {
-    'activation': 'EMERGENCY_ACTIVATION_KEY_WEAK_DO_NOT_USE_IN_PRODUCTION',
-    'backup': 'EMERGENCY_BACKUP_WEAK',
-    'time': 'EMERGENCY_TIME_KEY_WEAK_DO_NOT_USE_IN_PRODUCTION',
-  };
+// بحاجة الى  ترجمة النصوص   
+  //=================================================================
+  //=================================================================
+
+    // ⚠️ هذه الدالة لن تُستدعى أبداً الآن (لأن defaults موجودة)
+  // لكن إذا حدث شيء غير متوقع، نُوقف التطبيق بدل استخدام مفتاح ضعيف  
+ String _getFallbackKey(String type) {
+
+  debugPrint('🚨 CRITICAL: Fallback key requested for: $type');
+  debugPrint('   This should NEVER happen - both Firebase and defaults failed!');
   
-  final key = fallbacks[type] ?? 'FALLBACK_KEY';
-  
-  // ← Hint: تسجيل في Crashlytics (مهم!)
+  // تسجيل في Crashlytics
   logError(
-    Exception('Using weak fallback key for $type'),
+    Exception('Critical security failure: Cannot retrieve $type key'),
     StackTrace.current,
-    reason: 'Firebase Remote Config unavailable',
-    fatal: false,
+    reason: 'Both Firebase Remote Config and local defaults failed',
+    fatal: true,
   );
   
-  return key;
+  // إيقاف التطبيق
+  throw Exception(
+    '🚨 Security Error\n\n'
+    'Cannot start the app due to missing security keys.\n'
+    'Please check:\n'
+    '1. Internet connection\n'
+    '2. Firebase configuration\n'
+    '3. App integrity\n\n'
+    'Contact support if this persists.'
+  );
+
 }
 
 //=================================================================
