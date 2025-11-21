@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'package:accountant_touch/services/database_key_manager.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:accountant_touch/data/models.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
+import '../services/database_key_manager.dart';
+
+
 
 import 'models.dart' as models;
 
@@ -36,11 +41,22 @@ class DatabaseHelper {
   _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, _databaseName);
+     // ============================================================================
+     // 🔐 الحصول على مفتاح التشفير
+     // ← Hint: مفتاح فريد لكل جهاز، محفوظ بشكل آمن
+     // ============================================================================
+  
+    final encryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+    debugPrint('🔐 فتح قاعدة البيانات المشفرة...');
+    
     return await openDatabase(
       path, 
       version: _databaseVersion, 
       onCreate: _onCreate, 
-      onUpgrade: _onUpgrade);
+      onUpgrade: _onUpgrade,
+      // ← Hint: المفتاح السحري!
+      password: encryptionKey,
+      );
   }
 
 ///////////////////////////////////////////////////////////////

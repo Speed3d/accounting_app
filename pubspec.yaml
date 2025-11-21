@@ -30,7 +30,9 @@ dependencies:
 
   # ==================== Existing Packages ====================  
 
-  sqflite: any
+  #sqflite: any
+  # ✅ SQLCipher - نسخة مشفرة من sqflite
+  sqflite_sqlcipher: ^3.1.0
   path_provider: any
   path: any
   intl: any
@@ -38,6 +40,7 @@ dependencies:
   permission_handler: ^12.0.1
   file_picker: ^10.3.3
   share_plus: ^12.0.0
+  # ← Hint: نحتاج أيضاً crypto لتوليد مفاتيح قوية
   encrypt: ^5.0.3
   bcrypt: ^1.1.3
   flutter_secure_storage: ^9.0.0

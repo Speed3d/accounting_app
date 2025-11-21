@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 
+    ════════════════════════════════════════════════════════════════
+    🔐 Network Security Configuration
+    ════════════════════════════════════════════════════════════════
+    
+    الهدف: حماية الاتصالات الشبكية من:
+    - Man-in-the-Middle Attacks
+    - SSL Stripping
+    - Certificate Spoofing
+    
+    ════════════════════════════════════════════════════════════════
+    -->
+    
+    <!-- ============================================================
+         Base Configuration - الإعدادات الأساسية
+         ============================================================ -->
+    <base-config cleartextTrafficPermitted="false">
+        <!-- ← Hint: منع HTTP (فقط HTTPS مسموح) -->
+        <trust-anchors>
+            <!-- ← Hint: الثقة بشهادات النظام فقط -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- ============================================================
+     Localhost Exception (للتطوير فقط)
+     ← Hint: يسمح بالاتصال بـ localhost أثناء التطوير
+     ============================================================ -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android Emulator -->
+    </domain-config>
+    
+    <!-- ============================================================
+         Domain-specific Configuration - إعدادات Firebase
+         ============================================================ -->
+    
+    <!-- Firebase Services -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">firebaseapp.com</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        
+        <!-- ← Hint: Certificate Pinning لـ Firebase (اختياري - متقدم) -->
+        <!-- يمكن تفعيله لاحقاً إذا احتجت أمان أقوى -->
+        <!--
+        <pin-set expiration="2026-12-31">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+        </pin-set>
+        -->
+        
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- NTP Servers for Time Validation -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">time.google.com</domain>
+        <domain includeSubdomains="true">time.cloudflare.com</domain>
+        <domain includeSubdomains="true">pool.ntp.org</domain>
+        
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- ============================================================
+         Debug Configuration (للتطوير فقط)
+         ============================================================ -->
+    <debug-overrides>
+        <!-- ← Hint: في Development يمكن السماح بشهادات محلية -->
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+    
+</network-security-config>
