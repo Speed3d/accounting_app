@@ -109,26 +109,41 @@ class _SplashScreenState extends State<SplashScreen>
   debugPrint('   - اسم التطبيق: ${packageInfo.appName}');
   debugPrint('   - Package: ${packageInfo.packageName}');
   debugPrint('════════════════════════════════');
-
-    // ============================================================================
-    // 🔥 الخطوة 0: Kill Switch - فحص حالة التطبيق (الأهم!)
-    // ← Hint: نفحص أولاً إذا كان التطبيق موقوف من المطور
-    // ============================================================================
     
     try {
-      debugPrint('🔥 فحص حالة التطبيق من Firebase...');
-      
-      // ← Hint: الحصول على إصدار التطبيق الحالي
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;  // ← "1.0.0"
-      final buildNumber = packageInfo.buildNumber; // ← "1"
-      
-      debugPrint('ℹ️ إصدار التطبيق الحالي: $currentVersion');
-      debugPrint('رقم البناء: $buildNumber');
+  // ============================================================================
+  // 🔥 الخطوة 0.1: Force Refresh Remote Config (جديد!)
+  //  : يجبر Firebase على جلب أحدث القيم بدون اعتماد على Cache
+  //  : حل مشكلة عدم تحديث Kill Switch على الهواتف الحقيقية
+  // ============================================================================
+  
+  debugPrint('🔄 إجبار تحديث Remote Config...');
 
-      // ← Hint: فحص حالة التطبيق من Firebase
-      final appStatus = await firebaseService.checkAppStatus(
-        currentVersion: currentVersion,
+  try {
+    final refreshed = await firebaseService.forceRefreshConfig();
+    if (refreshed) {
+      debugPrint('✅ تم تحديث Remote Config بنجاح');
+
+    } else {
+      debugPrint('ℹ️ لا توجد تحديثات جديدة في Remote Config');
+    }
+
+  } catch (e) {
+    debugPrint('⚠️ فشل تحديث Remote Config: $e');
+    debugPrint('ℹ️ سيتم استخدام القيم المخزنة (Cache)');
+    //  : لا نوقف التطبيق - نكمل بالقيم المخزنة
+  }
+  
+  debugPrint('🔥 فحص حالة التطبيق من Firebase...');
+  
+  final packageInfo = await PackageInfo.fromPlatform();
+  final currentVersion = packageInfo.version;
+  
+  debugPrint('ℹ️ إصدار التطبيق الحالي: $currentVersion');
+
+  final appStatus = await firebaseService.checkAppStatus(
+    currentVersion: currentVersion,
+
       );
 
       // ========================================================================

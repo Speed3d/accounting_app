@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:accountant_touch/services/firebase_service.dart';
 import 'package:encrypt/encrypt.dart' as enc;
+import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -33,7 +34,7 @@ class BackupService {
 
   // 4️⃣ عدد مرات التكرار لـ PBKDF2 (كلما زاد كان أكثر أماناً ولكن أبطأ)
   /// ← Hint: 10000 iteration تعطي توازن جيد بين الأمان والسرعة
-  static const int _pbkdf2Iterations = 10000;
+  static const int _pbkdf2Iterations = 100000;
 
   // 5️⃣ طول Salt بالبايتات (16 بايت = 128 بت)
   /// ← Hint: Salt عشوائي يمنع هجمات Rainbow Table
@@ -128,12 +129,59 @@ class BackupService {
         magicNumberSize + _saltLength,
       );
 
-      // ← Hint: استخراج البيانات المشفرة
-      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
-      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+      // ============================================================================
+// 🔥 التحقق من HMAC
+// ============================================================================
+
+const int hmacLength = 32;
+
+final minFileSizeWithHMAC = magicNumberSize + _saltLength + hmacLength + 16;
+if (fileBytes.length < minFileSizeWithHMAC) {
+  throw Exception('حجم الملف صغير جداً أو الملف تالف.');
+}
+
+final storedHMAC = fileBytes.sublist(
+  magicNumberSize + _saltLength,
+  magicNumberSize + _saltLength + hmacLength,
+);
+
+final encryptedBytes = fileBytes.sublist(
+  magicNumberSize + _saltLength + hmacLength,
+);
+final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+print("🔹 التحقق من سلامة الملف...");
+
+final decryptionKey = _deriveKeyFromPassword(password, salt);
+final hmacKey = Hmac(sha256, decryptionKey.bytes);
+final calculatedHMAC = hmacKey.convert([
+  ...magicNumber.codeUnits,
+  ...salt,
+  ...encryptedBytes,
+]);
+
+bool hmacMatches = true;
+if (storedHMAC.length != calculatedHMAC.bytes.length) {
+  hmacMatches = false;
+} else {
+  for (int i = 0; i < storedHMAC.length; i++) {
+    if (storedHMAC[i] != calculatedHMAC.bytes[i]) {
+      hmacMatches = false;
+      break;
+    }
+  }
+}
+
+if (!hmacMatches) {
+  throw Exception('الملف تم التلاعب به أو تالف. HMAC غير متطابق.');
+}
+
+print("✅ تم التحقق من سلامة الملف بنجاح");
+
 
       // ← Hint: اشتقاق مفتاح فك التشفير
-      final decryptionKey = _deriveKeyFromPassword(password, salt);
+      // final decryptionKey = _deriveKeyFromPassword(password, salt);
+
       final iv = _deriveIVFromSalt(salt);
 
       // ← Hint: فك التشفير
@@ -235,12 +283,61 @@ class BackupService {
         magicNumberSize + _saltLength,
       );
 
-      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
-      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+      // ============================================================================
+// 🔥 التحقق من HMAC
+// ============================================================================
+
+const int hmacLength = 32;
+
+final minFileSizeWithHMAC = magicNumberSize + _saltLength + hmacLength + 16;
+if (fileBytes.length < minFileSizeWithHMAC) {
+  throw Exception('حجم الملف صغير جداً أو الملف تالف.');
+}
+
+final storedHMAC = fileBytes.sublist(
+  magicNumberSize + _saltLength,
+  magicNumberSize + _saltLength + hmacLength,
+);
+
+final encryptedBytes = fileBytes.sublist(
+  magicNumberSize + _saltLength + hmacLength,
+);
+final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+print("🔹 التحقق من سلامة الملف...");
+
+final decryptionKey = _deriveKeyFromPassword(password, salt);
+final hmacKey = Hmac(sha256, decryptionKey.bytes);
+final calculatedHMAC = hmacKey.convert([
+  ...magicNumber.codeUnits,
+  ...salt,
+  ...encryptedBytes,
+]);
+
+bool hmacMatches = true;
+if (storedHMAC.length != calculatedHMAC.bytes.length) {
+  hmacMatches = false;
+} else {
+  for (int i = 0; i < storedHMAC.length; i++) {
+    if (storedHMAC[i] != calculatedHMAC.bytes[i]) {
+      hmacMatches = false;
+      break;
+    }
+  }
+}
+
+if (!hmacMatches) {
+  throw Exception('الملف تم التلاعب به أو تالف. HMAC غير متطابق.');
+}
+
+print("✅ تم التحقق من سلامة الملف بنجاح");
+
 
       // ← Hint: فك التشفير
       print("🔹 فك تشفير البيانات...");
-      final decryptionKey = _deriveKeyFromPassword(password, salt);
+
+      // final decryptionKey = _deriveKeyFromPassword(password, salt);
+
       final iv = _deriveIVFromSalt(salt);
 
       final encrypter = enc.Encrypter(enc.AES(decryptionKey, mode: enc.AESMode.cbc));
@@ -448,17 +545,37 @@ class BackupService {
       // 🔸 تشفير بيانات قاعدة البيانات
       print("🔹 تشفير البيانات...");
       final encryptedData = encrypter.encryptBytes(dbBytes, iv: iv);
+      
+      // ============================================================================
+     // 🔥 إضافة HMAC للتحقق من سلامة البيانات (جديد!)
+     // ← Hint: HMAC يكشف أي تعديل على الملف المشفر
+     // ← Hint: يمنع Tampering Attacks
+     // ============================================================================
+     print("🔹 حساب HMAC للتحقق من السلامة...");
 
       // ← Hint: الحصول على Magic Number من Firebase
       final magicNumber = _magicNumber;
 
-      // 🔸 بناء الملف النهائي: [Magic Number] + [Salt] + [Encrypted Data]
-      /// ← Hint: نحتاج Salt عند فك التشفير لاشتقاق نفس المفتاح
-      final finalFileBytes = Uint8List.fromList([
-        ...magicNumber.codeUnits,    // ← Hint: للتحقق من صحة الملف
-        ...salt,                      // ← Hint: Salt للاشتقاق (16 بايت)
-        ...encryptedData.bytes,       // ← Hint: البيانات المشفرة
-      ]);
+           // ← Hint: إنشاء مفتاح HMAC من كلمة المرور والـ Salt
+      final hmacKey = Hmac(sha256, encryptionKey.bytes);
+      final hmacData = hmacKey.convert([
+       ...magicNumber.codeUnits,
+       ...salt,
+       ...encryptedData.bytes,
+     ]);
+
+     // ← Hint: HMAC = 32 bytes
+     final hmacBytes = hmacData.bytes;
+
+     debugPrint('✅ تم حساب HMAC: ${hmacBytes.length} bytes');
+
+     // [Magic Number] + [Salt 16] + [HMAC 32] + [Encrypted Data]
+     final finalFileBytes = Uint8List.fromList([
+      ...magicNumber.codeUnits,    // ← Magic Number (متغير الطول)
+      ...salt,                      // ← Salt (16 bytes)
+      ...hmacBytes,                 // ← HMAC (32 bytes) - جديد!
+      ...encryptedData.bytes,       // ← البيانات المشفرة
+    ]);
 
       // ← Hint: إنشاء اسم ملف مع التاريخ والوقت
       final timestamp = DateTime.now();
@@ -590,14 +707,67 @@ class BackupService {
         magicNumberSize + _saltLength,
       );
 
-      // 🔸 استخراج البيانات المشفرة
-      /// ← Hint: باقي الملف هو البيانات المشفرة
-      final encryptedBytes = fileBytes.sublist(magicNumberSize + _saltLength);
-      final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+    // ============================================================================
+    // 🔥 التحقق من HMAC (جديد!)
+    // ← Hint: نتأكد أن الملف لم يُعدّل
+    // ============================================================================
+
+    const int hmacLength = 32; // SHA256 HMAC = 32 bytes
+
+    // ← Hint: التحقق من حجم الملف (يجب أن يتضمن HMAC)
+    final minFileSizeWithHMAC = magicNumberSize + _saltLength + hmacLength + 16;
+    if (fileBytes.length < minFileSizeWithHMAC) {
+     throw Exception('حجم الملف صغير جداً أو الملف تالف.');
+    }
+
+    // ← Hint: استخراج HMAC المحفوظ
+    final storedHMAC = fileBytes.sublist(
+      magicNumberSize + _saltLength,
+      magicNumberSize + _saltLength + hmacLength,
+    );
+
+   // ← Hint: استخراج البيانات المشفرة (بعد HMAC)
+    final encryptedBytes = fileBytes.sublist(
+      magicNumberSize + _saltLength + hmacLength,
+   );
+    final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+
+    print("🔹 التحقق من سلامة الملف...");
+
+    // ← Hint: حساب HMAC المتوقع
+    final decryptionKey = _deriveKeyFromPassword(password, salt);
+    final hmacKey = Hmac(sha256, decryptionKey.bytes);
+    final calculatedHMAC = hmacKey.convert([
+      ...magicNumber.codeUnits,
+      ...salt,
+      ...encryptedBytes,
+    ]);
+
+// ← Hint: مقارنة HMAC      
+    bool hmacMatches = true;
+     if (storedHMAC.length != calculatedHMAC.bytes.length) {
+     hmacMatches = false;
+     } else {
+      for (int i = 0; i < storedHMAC.length; i++) {
+       if (storedHMAC[i] != calculatedHMAC.bytes[i]) {
+            hmacMatches = false;
+          break;
+        }
+      }
+    }
+
+      if (!hmacMatches) {
+          throw Exception(
+           'الملف تم التلاعب به أو تالف. HMAC غير متطابق.',
+         );
+       }
+
+      print("✅ تم التحقق من سلامة الملف بنجاح");
 
       // 🔸 اشتقاق مفتاح فك التشفير من كلمة المرور والـ Salt المستخرج
       print("🔹 اشتقاق مفتاح فك التشفير من كلمة المرور...");
-      final decryptionKey = _deriveKeyFromPassword(password, salt);
+
+      // final decryptionKey = _deriveKeyFromPassword(password, salt);
       final iv = _deriveIVFromSalt(salt);
 
       // 🔸 إنشاء أداة فك التشفير
@@ -605,6 +775,7 @@ class BackupService {
 
       // 🔸 فك تشفير البيانات
       print("🔹 فك تشفير البيانات...");
+
       Uint8List dbBytes;
       try {
         final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);

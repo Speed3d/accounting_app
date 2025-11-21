@@ -114,16 +114,18 @@ class FirebaseService {
       // ========================================================================
       
       await _remoteConfig!.setConfigSettings(
-        RemoteConfigSettings(
-          // ← Hint: Fetch timeout - المدة القصوى للانتظار عند جلب الإعدادات
-          fetchTimeout: const Duration(seconds: 10),
-          
-          // ← Hint: Minimum fetch interval - الحد الأدنى بين كل fetch
-          // في Development: 0 للتجربة السريعة
-          // في Production: 3600 (ساعة) لتقليل الاستهلاك
-          minimumFetchInterval: kDebugMode 
-            ? const Duration(seconds: 0)      // Development
-            : const Duration(hours: 1),       // Production
+         RemoteConfigSettings(
+        // ← Hint: Fetch timeout - المدة القصوى للانتظار عند جلب الإعدادات
+        fetchTimeout: const Duration(seconds: 10),
+    
+        // ✅ الإصلاح: 5 دقائق للجميع (Development + Production)
+        //: يتفعل عند اصدار للهواتف الحقيقية لـ Kill Switch 
+
+        // minimumFetchInterval: const Duration(minutes: 5),
+
+        // ✅ مثالي للتطوير - تحديث فوري
+        minimumFetchInterval: Duration.zero,
+
         ),
       );
 
