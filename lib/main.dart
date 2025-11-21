@@ -10,27 +10,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'services/biometric_service.dart';
-// import 'services/database_migration_service.dart';
 import 'services/pdf_service.dart';
 
 Future<void> main() async {
   // ← Hint: ضروري لتهيئة الخدمات قبل runApp
   WidgetsFlutterBinding.ensureInitialized();
-
-  // // ============================================================================
-  // // 🔄 ترحيل قاعدة البيانات إلى مشفرة (مرة واحدة فقط)
-  // // ← Hint: يحدث تلقائياً عند أول تشغيل بعد التحديث
-  // // ============================================================================
-
-  // debugPrint('🔄 فحص الحاجة لترحيل قاعدة البيانات...');
-  // final migrated = await DatabaseMigrationService.migrateIfNeeded();
-
-  // if (migrated) {
-  //   debugPrint('✅ تم ترحيل قاعدة البيانات بنجاح!');
-  //   debugPrint('🔐 قاعدة البيانات الآن مشفرة بـ AES-256');
-  // } else {
-  //   debugPrint('ℹ️ لا حاجة للترحيل');
-  // }
 
   // ============================================================================
   // 🔥 الخطوة 1: تهيئة Firebase (الأولوية القصوى!)
