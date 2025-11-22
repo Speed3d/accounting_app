@@ -178,15 +178,24 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
-        if (didPop && _hasChanged) {
-          // يمكن إضافة منطق إضافي مستقبلاً
+        if (didPop && _hasChanged && Navigator.canPop(context)) {
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.detailsForInvoice(widget.invoiceId.toString())),
-        ),
+  child: WillPopScope(
+    onWillPop: () async {
+      // ✅ نرجع القيمة للشاشة السابقة عند الضغط على زر الرجوع
+      if (_hasChanged) {
+        Navigator.of(context).pop(true);
+        return false; // نمنع الرجوع التلقائي لأننا تعاملنا معه يدوياً
+      }
+      return true; // نسمح بالرجوع العادي إذا لم يكن هناك تغيير
+    },
+    child: Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.detailsForInvoice(widget.invoiceId.toString())),
+      ),
         body: _buildBody(l10n),
+       ),
       ),
     );
   }

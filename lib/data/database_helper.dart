@@ -1228,20 +1228,33 @@ Future<int> getActiveEmployeesCount() async {
 
 
 
-  /// دالة لجلب كل الفواتير النقدية، مرتبة من الأحدث إلى الأقدم.
+  /// ✅ دالة محدّثة لجلب كل الفواتير النقدية مع حساب المبلغ الصافي ومجموع المرتجعات
+/// تحسب المبلغ الصافي بعد خصم المرتجعات ومجموع المرتجعات لكل فاتورة.    
   Future<List<Map<String, dynamic>>> getCashInvoices() async {
-    final db = await instance.database;
-    // 1. نحصل على الـ ID الخاص بالزبون النقدي أولاً.
-    final cashCustomer = await getOrCreateCashCustomer();
-    
-    // 2. نبحث عن كل الفواتير المرتبطة بهذا الـ ID.
-    final result = await db.query(
-      'TB_Invoices',
-      where: 'CustomerID = ?',
-      whereArgs: [cashCustomer.customerID],
-      orderBy: 'InvoiceDate DESC', // ترتيب تنازلي حسب التاريخ
-    );
-    return result;
+  final db = await instance.database;
+  // 1. نحصل على الـ ID الخاص بالزبون النقدي أولاً.
+  final cashCustomer = await getOrCreateCashCustomer();
+  
+  // 2. استعلام محسّن يحسب المبلغ الصافي ومجموع المرتجعات
+  final result = await db.rawQuery('''
+    SELECT 
+      I.InvoiceID,
+      I.CustomerID,
+      I.InvoiceDate,
+      I.TotalAmount,
+      I.IsVoid,
+      I.Status,
+      COALESCE(SUM(CASE WHEN D.IsReturned = 0 THEN D.Debt ELSE 0 END), 0) as NetAmount,
+      COALESCE(SUM(CASE WHEN D.IsReturned = 1 THEN D.Debt ELSE 0 END), 0) as ReturnedAmount,
+      COALESCE(SUM(CASE WHEN D.IsReturned = 1 THEN 1 ELSE 0 END), 0) as ReturnedItemsCount
+    FROM TB_Invoices I
+    LEFT JOIN Debt_Customer D ON I.InvoiceID = D.InvoiceID
+    WHERE I.CustomerID = ?
+    GROUP BY I.InvoiceID
+    ORDER BY I.InvoiceDate DESC
+  ''', [cashCustomer.customerID]);
+  
+  return result;
   }
 
 
@@ -1315,43 +1328,49 @@ Future<int> getActiveEmployeesCount() async {
   /// دالة لجلب كل المعاملات النقدية الواردة (مبيعات نقدية + تسديد ديون)
   /// ضمن فترة زمنية محددة.
   Future<List<Map<String, dynamic>>> getCashFlowTransactions({DateTime? startDate, DateTime? endDate}) async {
-    final db = await instance.database;
-    final cashCustomerId = (await getOrCreateCashCustomer()).customerID;
 
-    // تحديد التواريخ الافتراضية إذا لم يتم توفيرها
-    final now = DateTime.now();
-    final finalStartDate = startDate ?? DateTime(now.year, now.month, 1); // بداية الشهر الحالي
-    final finalEndDate = endDate ?? now.add(const Duration(days: 1)); // حتى نهاية اليوم الحالي
+  final db = await instance.database;
+  final cashCustomerId = (await getOrCreateCashCustomer()).customerID;
 
-    // 1. جلب المبيعات النقدية (فقط الفواتير غير الملغاة)
-    final cashSales = await db.rawQuery('''
-      SELECT 
-        'CASH_SALE' as type,
-        InvoiceID as id,
-        'بيع نقدي مباشر (فاتورة #' || InvoiceID || ')' as description,
-        TotalAmount as amount,
-        InvoiceDate as date
-      FROM TB_Invoices
-      WHERE CustomerID = ? AND IsVoid = 0 AND InvoiceDate BETWEEN ? AND ?
-    ''', [cashCustomerId, finalStartDate.toIso8601String(), finalEndDate.toIso8601String()]);
+  // تحديد التواريخ الافتراضية إذا لم يتم توفيرها
+  final now = DateTime.now();
+  final finalStartDate = startDate ?? DateTime(now.year, now.month, 1); // بداية الشهر الحالي
+  final finalEndDate = endDate ?? now.add(const Duration(days: 1)); // حتى نهاية اليوم الحالي
 
-    // 2. جلب تسديدات الديون
-    final debtPayments = await db.rawQuery('''
-      SELECT 
-        'DEBT_PAYMENT' as type,
-        ID as id,
-        'تسديد من الزبون: ' || CustomerName as description,
-        Payment as amount,
-        DateT as date
-      FROM Payment_Customer
-      WHERE DateT BETWEEN ? AND ?
-    ''', [finalStartDate.toIso8601String(), finalEndDate.toIso8601String()]);
+  // ✅ 1. جلب المبيعات النقدية مع المبلغ الصافي (بعد خصم المرتجعات)
+  final cashSales = await db.rawQuery('''
+    SELECT 
+      'CASH_SALE' as type,
+      I.InvoiceID as id,
+      'بيع نقدي مباشر (فاتورة #' || I.InvoiceID || ')' as description,
+      COALESCE(SUM(CASE WHEN D.IsReturned = 0 THEN D.Debt ELSE 0 END), 0) as amount,
+      I.InvoiceDate as date
+    FROM TB_Invoices I
+    LEFT JOIN Debt_Customer D ON I.InvoiceID = D.InvoiceID
+    WHERE I.CustomerID = ? 
+      AND I.IsVoid = 0 
+      AND I.InvoiceDate BETWEEN ? AND ?
+    GROUP BY I.InvoiceID
+  ''', [cashCustomerId, finalStartDate.toIso8601String(), finalEndDate.toIso8601String()]);
 
-    // 3. دمج القائمتين وترتيبها
-    final allTransactions = [...cashSales, ...debtPayments];
-    allTransactions.sort((a, b) => (b['date'] as String).compareTo(a['date'] as String)); // ترتيب تنازلي
+  // 2. جلب تسديدات الديون (بدون تغيير)
+  final debtPayments = await db.rawQuery('''
+    SELECT 
+      'DEBT_PAYMENT' as type,
+      ID as id,
+      'تسديد من الزبون: ' || CustomerName as description,
+      Payment as amount,
+      DateT as date
+    FROM Payment_Customer
+    WHERE DateT BETWEEN ? AND ?
+  ''', [finalStartDate.toIso8601String(), finalEndDate.toIso8601String()]);
 
-    return allTransactions;
+  // 3. دمج القائمتين وترتيبها
+  final allTransactions = [...cashSales, ...debtPayments];
+  allTransactions.sort((a, b) => (b['date'] as String).compareTo(a['date'] as String)); // ترتيب تنازلي
+
+  return allTransactions;
+
   }
 
 

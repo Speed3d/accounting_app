@@ -228,11 +228,15 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
     bool isDark,
   ) {
     // --- استخراج البيانات ---
-    final invoiceId = invoice['InvoiceID'] as int;
-    final totalAmount = invoice.getDecimal('TotalAmount');
-    final invoiceDate = DateTime.parse(invoice['InvoiceDate'] as String);
-    final isVoid = invoice['IsVoid'] == 1;
-    final status = invoice['Status'] as String?;
+      final invoiceId = invoice['InvoiceID'] as int;
+      final totalAmount = invoice.getDecimal('TotalAmount'); // المبلغ الأصلي
+      final netAmount = invoice.getDecimal('NetAmount'); // ✅ المبلغ الصافي
+      final returnedAmount = invoice.getDecimal('ReturnedAmount'); // ✅ مجموع المرتجعات
+      final returnedItemsCount = invoice['ReturnedItemsCount'] as int? ?? 0; // ✅ عدد البنود المرجعة
+      final invoiceDate = DateTime.parse(invoice['InvoiceDate'] as String);
+      final isVoid = invoice['IsVoid'] == 1;
+      final status = invoice['Status'] as String?;
+      final hasReturns = returnedItemsCount > 0; // ✅ هل توجد مرتجعات؟
 
     // --- تحديد الألوان والأنماط حسب الحالة ---
     final Color primaryColor = isVoid 
@@ -327,17 +331,72 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    formatCurrency(totalAmount),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isVoid 
-                          ? (isDark ? AppColors.textHintDark : AppColors.textHintLight)
-                          : AppColors.success,
-                      decoration: isVoid ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
+
+           // ✅ عرض أيقونة المرتجعات إذا وجدت
+    if (hasReturns && !isVoid)
+      Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spacingXs,
+          vertical: 2,
+        ),
+        margin: const EdgeInsets.only(bottom: AppConstants.spacingXs),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: AppColors.warning.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.undo,
+              size: 12,
+              color: AppColors.warning,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$returnedItemsCount',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.warning,
+              ),
+            ),
+          ],
+        ),
+      ),
+    
+    // ✅ عرض المبلغ الصافي (بدلاً من TotalAmount)
+    Text(
+      formatCurrency(netAmount),
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: isVoid 
+            ? (isDark ? AppColors.textHintDark : AppColors.textHintLight)
+            : (hasReturns ? AppColors.info : AppColors.success), // ✅ لون مختلف إذا كانت هناك مرتجعات
+        decoration: isVoid ? TextDecoration.lineThrough : null,
+      ),
+    ),
+    
+    // ✅ عرض المبلغ المرجع إذا وجد (تحت المبلغ الصافي)
+    if (hasReturns && !isVoid)
+      Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          '-${formatCurrency(returnedAmount)}',
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.error.withOpacity(0.7),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+
+
                   
                   // --- زر الحذف ---
                   if (!isVoid)

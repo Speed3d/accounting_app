@@ -59,30 +59,48 @@ class _CashFlowReportScreenState extends State<CashFlowReportScreen> {
 
   /// فتح نافذة اختيار نطاق التاريخ
   Future<void> _pickDateRange() async {
-    final newDateRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
-      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Theme.of(context).primaryColor,
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+  
+  final newDateRange = await showDateRangePicker(
+    context: context,
+    firstDate: DateTime(2020),
+    lastDate: DateTime.now().add(const Duration(days: 1)),
+    initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: isDark
+              ? ColorScheme.dark(
+                  primary: Theme.of(context).primaryColor,
+                  onPrimary: Colors.white,
+                  surface: const Color(0xFF1E1E1E),
+                  onSurface: Colors.white,
+                )
+              : ColorScheme.light(
+                  primary: Theme.of(context).primaryColor,
+                  onPrimary: Colors.white,
+                  surface: Colors.white,
+                  onSurface: Colors.black87,
+                ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: isDark ? Colors.white : Theme.of(context).primaryColor,
             ),
           ),
-          child: child!,
-        );
-      },
-    );
+        ),
+        child: child!,
+      );
+    },
+  );
 
-    if (newDateRange != null) {
-      setState(() {
-        _startDate = newDateRange.start;
-        _endDate = newDateRange.end;
-      });
-      _loadData();
-    }
+  if (newDateRange != null) {
+    setState(() {
+      _startDate = newDateRange.start;
+      _endDate = newDateRange.end;
+    });
+    _loadData();
+  }
+
   }
 
   // ============================================================================

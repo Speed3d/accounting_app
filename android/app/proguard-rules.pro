@@ -61,16 +61,9 @@
     public static boolean validateKeys();
 }
 
-# ← Hint: تشويش الدوال الخاصة
+# حماية الحقول الثابتة ولكن بصيغة صحيحة
 -keepclassmembers class com.accountant.touch.SecretKeys {
-    private static <methods>;
-    private static <fields>;
-}
-
-# ← Hint: تشويش الثوابت الخاصة (المفاتيح المشفرة)
--assumenosideeffects class com.accountant.touch.SecretKeys {
-    private static final java.lang.String ENCODED_* return "";
-    private static final byte[] xorKey return null;
+    private static final <fields>;
 }
 
 # ═══════════════════════════════════════════════════════════════
