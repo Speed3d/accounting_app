@@ -161,6 +161,12 @@ Future<void> main() async {
       debugPrint('⚠️ Firebase initialization failed: $error');
       debugPrint('ℹ️ التطبيق سيعمل بالوضع Offline مع القيم الافتراضية');
     },
+    ).timeout(
+     const Duration(seconds: 10),
+     onTimeout: () {
+     debugPrint('⏱️ Firebase timeout - continuing offline');
+    return false;
+   },
   );
 
   if (firebaseInitialized) {

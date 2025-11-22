@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
 import '../../services/firebase_service.dart';
@@ -13,14 +14,14 @@ import '../../services/time_validation_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
+
 import 'create_admin_screen.dart';
 import 'login_screen.dart';
 import 'activation_screen.dart';
 import 'blocked_screen.dart';
 
 /// ===========================================================================
-/// شاشة البداية (Splash Screen) - محسّنة مع Firebase Kill Switch
-/// ← Hint: النسخة المحدثة مع فحص حالة التطبيق عن بُعد
+/// شاشة البداية (Splash Screen) - نسخة محسّنة ونظيفة
 /// ===========================================================================
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,20 +33,23 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> 
     with SingleTickerProviderStateMixin {
   
-  // ← Hint: متحكم الأنيميشن
+  // ==========================================================================
+  // المتغيرات
+  // ==========================================================================
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   
-  // ← Hint: بيانات الشركة
   String _companyName = '';
   File? _companyLogo;
   
-  // ← Hint: عدد أيام الفترة التجريبية
   static const int trialPeriodDays = 14;
+  static const int splashDuration = 1500; // ← مُخفّض من 2500 إلى 1500
 
-  // ← Hint: مدة عرض شاشة البداية
-  static const int splashDuration = 2500;
+  // ==========================================================================
+  // Lifecycle
+  // ==========================================================================
 
   @override
   void initState() {
@@ -57,253 +61,144 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-  void _setupAnimations() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _animationController.forward();
-  }
-
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
 
-  // ===========================================================================
-  // ← Hint: تحميل البيانات والتنقل (محسّن مع Firebase!)
-  // ===========================================================================
+  // ==========================================================================
+  // الأنيميشن
+  // ==========================================================================
+
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000), // ← مُخفّض من 1500
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animationController.forward();
+  }
+
+  // ==========================================================================
+  // المنطق الرئيسي - محسّن للأداء
+  // ==========================================================================
+
   Future<void> _loadAndNavigate() async {
-    final l10n = AppLocalizations.of(context)!;
-    final dbHelper = DatabaseHelper.instance;
-    final deviceService = DeviceService.instance;
-    final timeService = TimeValidationService.instance;
-    final firebaseService = FirebaseService.instance; // ← Hint: Firebase Service
-
-      // 🧪 اختبار - اطبع الإصدار
-  final packageInfo = await PackageInfo.fromPlatform();
-  debugPrint('════════════════════════════════');
-  debugPrint('📱 معلومات التطبيق:');
-  debugPrint('   - الإصدار: ${packageInfo.version}');
-  debugPrint('   - رقم البناء: ${packageInfo.buildNumber}');
-  debugPrint('   - اسم التطبيق: ${packageInfo.appName}');
-  debugPrint('   - Package: ${packageInfo.packageName}');
-  debugPrint('════════════════════════════════');
-
-// ============================================================================
-// 🔥 الخطوة 0.1: Smart Force Refresh (محدث!)
-// ← Hint: فقط في حالات محددة لتوفير Firebase quota
-// ============================================================================
-
-debugPrint('🔄 فحص ضرورة تحديث Remote Config...');
-
-try {
-  bool shouldForceRefresh = false;
-  String reason = '';
-
-  // 1. في Debug mode - دائماً (للتطوير)
-  if (kDebugMode) {
-    shouldForceRefresh = true;
-    reason = 'Debug mode';
-  }
-  // 2. فحص آخر تحديث
-  else {
-    final prefs = await SharedPreferences.getInstance();
-    final lastFetch = prefs.getInt('last_config_fetch') ?? 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    
-    // إذا مر أكثر من 24 ساعة منذ آخر تحديث
-    if (lastFetch == 0 || (now - lastFetch) > (24 * 60 * 60 * 1000)) {
-      shouldForceRefresh = true;
-      reason = 'More than 24h since last fetch';
+    try {
+      final l10n = AppLocalizations.of(context)!;
       
-      // حفظ وقت التحديث الجديد
-      await prefs.setInt('last_config_fetch', now);
-    }
-  }
+      // ← Hint: كل الخدمات معرّفة مرة واحدة
+      final dbHelper = DatabaseHelper.instance;
+      final deviceService = DeviceService.instance;
+      final timeService = TimeValidationService.instance;
+      final firebaseService = FirebaseService.instance;
 
-  if (shouldForceRefresh) {
-    debugPrint('🔄 Force Refresh مطلوب: $reason');
-    
-    final refreshed = await firebaseService.forceRefreshConfig();
-    if (refreshed) {
-      debugPrint('✅ تم تحديث Remote Config بنجاح');
-    } else {
-      debugPrint('ℹ️ لا توجد تحديثات جديدة في Remote Config');
-    }
-  } else {
-    debugPrint('ℹ️ استخدام Remote Config المخزن (Cache)');
-  }
+      // ======================================================================
+      // المرحلة 1: تحميل بيانات الشركة (سريع - محلي)
+      // ======================================================================
+      
+      await _loadCompanyInfo(dbHelper, l10n);
 
-} catch (e) {
-  debugPrint('⚠️ فشل تحديث Remote Config: $e');
-  debugPrint('ℹ️ سيتم استخدام القيم المخزنة (Cache)');
-
-  //============================================================
-  //============================================================
-  
-  debugPrint('🔥 فحص حالة التطبيق من Firebase...');
-  
-  final packageInfo = await PackageInfo.fromPlatform();
-  final currentVersion = packageInfo.version;
-  
-  debugPrint('ℹ️ إصدار التطبيق الحالي: $currentVersion');
-
-  final appStatus = await firebaseService.checkAppStatus(
-    currentVersion: currentVersion,
-
-      );
-
-      // ========================================================================
-       // 🔥 Kill Switch المتقدم - معالجة جميع الحالات
-      // ========================================================================
-
-      // 1️⃣ التحقق من الجهاز المحظور
-      if (appStatus['isBlocked'] == true) {
-         debugPrint('🚫 جهاز محظور - منع الدخول');
-  
+      // ======================================================================
+      // المرحلة 2: انتظار الأنيميشن (متوازي)
+      // ======================================================================
+      
+      await Future.delayed(const Duration(milliseconds: splashDuration));
       if (!mounted) return;
-  
-     _showKillSwitchDialog(
-        title: 'الجهاز محظور',
-        message: appStatus['message'] ?? 'تم حظر هذا الجهاز',
-        canClose: false,
-        icon: Icons.block,
-        iconColor: AppColors.error,
-       );
-  
-      return; // ← إيقاف التنفيذ
-     }
 
-    // 2️⃣ التحقق من وضع الصيانة أو التطبيق موقوف
-    if (appStatus['isActive'] != true) {
-    final reason = appStatus['reason'] ?? '';
-    debugPrint('🚫 التطبيق موقوف - السبب: $reason');
-  
-    if (!mounted) return;
-  
-     // ← Hint: اختيار الأيقونة حسب السبب
-     IconData icon;
-     Color iconColor;
-  
-    if (reason == 'maintenance') {
-       icon = Icons.engineering;
-       iconColor = AppColors.warning;
-      } else {
-       icon = Icons.block;
-       iconColor = AppColors.error;
-      }
-  
-      _showKillSwitchDialog(
-        title: reason == 'maintenance' ? 'وضع الصيانة' : 'التطبيق متوقف',
-        message: appStatus['message'] ?? 'التطبيق متوقف مؤقتاً',
-        canClose: false,
-        icon: icon,
-        iconColor: iconColor,
-      );
-  
-      return; // ← إيقاف التنفيذ
-  }
-
-   // 3️⃣ التحقق من التحديثات
-    if (appStatus['needsUpdate'] == true) {
-     final forceUpdate = appStatus['forceUpdate'] == true;
-     final minVersion = appStatus['minVersion'] ?? '';
-     final reason = appStatus['reason'] ?? '';
-  
-     debugPrint('ℹ️ يوجد تحديث متاح (إجباري: $forceUpdate)');
-  
-     if (!mounted) return;
-  
-    _showUpdateDialog(
-      message: appStatus['message'] ?? 'يتوفر تحديث جديد',
-      required: forceUpdate,
-      minVersion: minVersion,
-      isCritical: reason == 'critical_update',
-    );
-  
-    if (forceUpdate) {
-    return; // ← منع الدخول إذا كان التحديث إجباري
-    }
-  
-    // ← Hint: إذا لم يكن إجباري، نكمل...
-  }
-
-     debugPrint('✅ التطبيق نشط وجاهز للاستخدام');
+      // ======================================================================
+      // المرحلة 3: Firebase Remote Config (سريع - مع timeout)
+      // ======================================================================
       
+      await _checkFirebaseUpdates(firebaseService);
 
-    // ignore: dead_code_catch_following_catch
-    } catch (e) {
-      // ← Hint: في حالة خطأ، نكمل (fail-safe)
-      debugPrint('⚠️ خطأ في فحص حالة التطبيق: $e');
-      debugPrint('ℹ️ سيتم المتابعة بشكل طبيعي');
+      // ======================================================================
+      // المرحلة 4: فحص حالة التطبيق (Kill Switch)
+      // ======================================================================
+      
+      final appStatus = await _checkAppStatus(firebaseService);
+      if (!mounted) return;
+      
+      // ← Hint: إذا فشل الفحص، نعرض الحوار ونوقف
+      if (!appStatus['canContinue']) return;
+
+      // ======================================================================
+      // المرحلة 5: Root Detection (سريع - اختياري)
+      // ======================================================================
+      
+      await _checkRootStatus(deviceService, l10n, firebaseService);
+      if (!mounted) return;
+
+      // ======================================================================
+      // المرحلة 6: Time Validation (محسّن - بدون NTP في البداية)
+      // ======================================================================
+      
+      await timeService.initialize();
+      
+      final manipulationResult = await timeService.detectManipulation();
+      
+      if (manipulationResult['isManipulated'] == true) {
+        _handleTimeManipulation(
+          l10n, 
+          manipulationResult, 
+          timeService, 
+          deviceService, 
+          firebaseService
+        );
+        return;
+      }
+
+      // ← Hint: NTP في الخلفية (لا نوقف التطبيق!)
+      final realTime = await _getRealTimeWithFallback(timeService);
+
+      // ← Hint: مزامنة خلفية (fire and forget)
+      timeService.backgroundSync().catchError((e) {
+        debugPrint('⚠️ خطأ في المزامنة الخلفية (غير حرج): $e');
+      });
+
+      // ======================================================================
+      // المرحلة 7: التحقق من الحاجة للإنترنت
+      // ======================================================================
+      
+      if (timeService.shouldRequireInternet()) {
+        _showInternetRequiredDialog(l10n);
+        return;
+      }
+
+      // ======================================================================
+      // المرحلة 8: منطق التنقل (النهائي)
+      // ======================================================================
+      
+      await _handleNavigation(
+        dbHelper, 
+        deviceService, 
+        realTime, 
+        l10n
+      );
+
+    } catch (e, stackTrace) {
+      _handleCriticalError(e, stackTrace);
     }
-
-    // ============================================================================
-// الخطوة 4.5: فحص Root (تحذير فقط)
-// ← Hint: لا نمنع الاستخدام، فقط ننبه المستخدم
-// ============================================================================
-
-debugPrint('🔍 فحص Root...');
-
-try {
-  final isRooted = await deviceService.isDeviceRooted();
-  
-  if (isRooted) {
-    debugPrint('⚠️ الجهاز مُخترق (Rooted) - عرض تحذير');
-    
-    // ← Hint: تسجيل في Crashlytics
-    firebaseService.logSuspiciousActivity(
-      reason: 'rooted_device',
-      deviceId: await deviceService.getDeviceFingerprint(),
-      additionalInfo: {
-        'action': 'device_root_detected',
-        'warning_shown': true,
-      },
-    );
-
-    if (!mounted) return;
-
-    // ← Hint: عرض تحذير للمستخدم
-    _showRootWarningDialog(l10n);
-    
-    // ← Hint: الانتظار 3 ثواني ليقرأ المستخدم التحذير
-    await Future.delayed(const Duration(seconds: 3));
   }
-} catch (e) {
-  debugPrint('⚠️ خطأ في فحص Root: $e');
-  // ← Hint: نكمل بدون تحذير
-}
 
-// ← Hint: الآن تواصل مع باقي الكود (التحقق من الحاجة للإنترنت...)
+  // ==========================================================================
+  // الدوال المساعدة - منظمة
+  // ==========================================================================
 
-
-    // ============================================================================
-    // الخطوة 1: تحميل معلومات الشركة
-    // ============================================================================
-    
+  /// تحميل معلومات الشركة
+  Future<void> _loadCompanyInfo(
+    DatabaseHelper dbHelper, 
+    AppLocalizations l10n
+  ) async {
     try {
       final settings = await dbHelper.getAppSettings();
       if (mounted) {
@@ -317,130 +212,224 @@ try {
         });
       }
     } catch (e) {
-      debugPrint('❌ خطأ في تحميل إعدادات الشركة: $e');
+      debugPrint('⚠️ خطأ في تحميل معلومات الشركة: $e');
     }
+  }
 
-    // ============================================================================
-    // الخطوة 2: الانتظار لإكمال الأنيميشن
-    // ============================================================================
-    
-    await Future.delayed(const Duration(milliseconds: splashDuration));
-    if (!mounted) return;
-
-    // ============================================================================
-    // الخطوة 3: تهيئة خدمة التحقق من الوقت
-    // ============================================================================
-    
-    debugPrint('🔄 بدء تهيئة TimeValidationService...');
-    await timeService.initialize();
-
-    // ============================================================================
-    // الخطوة 4: كشف التلاعب (سريع - بدون NTP!)
-    // ============================================================================
-    
-    debugPrint('🔍 فحص التلاعب...');
-    final manipulationResult = await timeService.detectManipulation();
-
-    if (manipulationResult['isManipulated'] == true) {
-      final attemptsRemaining = timeService.getAttemptsRemaining();
-      final currentAttempts = timeService.getSuspiciousAttempts();
+  /// فحص تحديثات Firebase (محسّن - بدون تأخير)
+  Future<void> _checkFirebaseUpdates(FirebaseService firebaseService) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastFetch = prefs.getInt('last_config_fetch') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
       
-      debugPrint('⚠️ تحذير #$currentAttempts - المحاولات المتبقية: $attemptsRemaining');
+      // ← Hint: تحديث كل 24 ساعة فقط (ليس كل Hot Restart!)
+      final shouldRefresh = lastFetch == 0 || 
+        (now - lastFetch) > (24 * 60 * 60 * 1000);
 
-      // ← Hint: 🔥 تسجيل محاولة مشبوهة في Firebase Crashlytics
-      firebaseService.logSuspiciousActivity(
-        reason: manipulationResult['reason'] ?? 'time_manipulation',
-        deviceId: await deviceService.getDeviceFingerprint(),
-        additionalInfo: {
-          'attempts': currentAttempts,
-          'message': manipulationResult['message'] ?? 'Unknown',
+      if (shouldRefresh) {
+        debugPrint('🔄 تحديث Remote Config...');
+        
+        final refreshed = await firebaseService.forceRefreshConfig().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {
+            debugPrint('⏱️ Timeout - استخدام Cache');
+            return false;
+          },
+        );
+        
+        if (refreshed) {
+          await prefs.setInt('last_config_fetch', now);
+          debugPrint('✅ تم التحديث');
+        }
+      } else {
+        final hoursSince = ((now - lastFetch) / (60 * 60 * 1000)).round();
+        debugPrint('ℹ️ استخدام Cache (آخر تحديث: منذ $hoursSince ساعة)');
+      }
+    } catch (e) {
+      debugPrint('⚠️ خطأ في Firebase refresh: $e');
+    }
+  }
+
+  /// فحص حالة التطبيق (Kill Switch)
+  Future<Map<String, dynamic>> _checkAppStatus(
+    FirebaseService firebaseService
+  ) async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+      
+      final appStatus = await firebaseService.checkAppStatus(
+        currentVersion: currentVersion,
+      ).timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => {
+          'canContinue': true,
+          'isActive': true,
         },
       );
 
-      if (attemptsRemaining <= 0) {
-        debugPrint('🚫 حظر نهائي - تجاوز الحد الأقصى');
-        _navigateToScreen(
-          BlockedScreen(
-            reason: manipulationResult['reason'] ?? 'unknown',
-            message: manipulationResult['message'],
-          ),
+      // 1️⃣ جهاز محظور
+      if (appStatus['isBlocked'] == true) {
+        _showKillSwitchDialog(
+          title: 'الجهاز محظور',
+          message: appStatus['message'] ?? 'تم حظر هذا الجهاز',
+          canClose: false,
+          icon: Icons.block,
+          iconColor: AppColors.error,
         );
-        return;
-      } else {
-        debugPrint('⚠️ تحذير - المحاولات المتبقية: $attemptsRemaining');
-        _showManipulationWarning(
-          l10n,
-          manipulationResult['message'] ?? 'تم رصد تلاعب',
-          attemptsRemaining,
-        );
+        return {'canContinue': false};
       }
-    }
 
-    // ============================================================================
-    // الخطوة 5: التحقق من الحاجة للإنترنت
-    // ============================================================================
-    
-    if (timeService.shouldRequireInternet()) {
-      debugPrint('⚠️ يتطلب اتصال بالإنترنت - مر 7 أيام');
-      _showInternetRequiredDialog(l10n);
-      return;
-    }
+      // 2️⃣ وضع صيانة أو موقوف
+      if (appStatus['isActive'] != true) {
+        final reason = appStatus['reason'] ?? '';
+        final isMaintenanceMode = reason == 'maintenance';
+        
+        _showKillSwitchDialog(
+          title: isMaintenanceMode ? 'وضع الصيانة' : 'التطبيق متوقف',
+          message: appStatus['message'] ?? 'التطبيق متوقف مؤقتاً',
+          canClose: false,
+          icon: isMaintenanceMode ? Icons.engineering : Icons.block,
+          iconColor: isMaintenanceMode ? AppColors.warning : AppColors.error,
+        );
+        return {'canContinue': false};
+      }
 
-    // ============================================================================
-    // الخطوة 6: الحصول على الوقت (سريع جداً!)
-    // ============================================================================
-    
-    DateTime realTime;
+      // 3️⃣ يحتاج تحديث
+      if (appStatus['needsUpdate'] == true) {
+        final forceUpdate = appStatus['forceUpdate'] == true;
+        final isCritical = appStatus['reason'] == 'critical_update';
+        
+        _showUpdateDialog(
+          message: appStatus['message'] ?? 'يتوفر تحديث جديد',
+          required: forceUpdate,
+          minVersion: appStatus['minVersion'] ?? '',
+          isCritical: isCritical,
+        );
+        
+        if (forceUpdate) {
+          return {'canContinue': false};
+        }
+      }
+
+      return {'canContinue': true};
+      
+    } catch (e) {
+      debugPrint('⚠️ خطأ في فحص حالة التطبيق: $e');
+      return {'canContinue': true}; // fail-safe
+    }
+  }
+
+  /// فحص Root (اختياري - بدون إيقاف)
+  Future<void> _checkRootStatus(
+    DeviceService deviceService,
+    AppLocalizations l10n,
+    FirebaseService firebaseService,
+  ) async {
     try {
-      realTime = await timeService.getRealTime().timeout(
-        const Duration(seconds: 3),
+      final isRooted = await deviceService.isDeviceRooted().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => false,
+      );
+      
+      if (isRooted) {
+        debugPrint('⚠️ الجهاز مُخترق (Rooted)');
+        
+        firebaseService.logSuspiciousActivity(
+          reason: 'rooted_device',
+          deviceId: await deviceService.getDeviceFingerprint(),
+          additionalInfo: {'action': 'device_root_detected'},
+        );
+
+        if (mounted) {
+          _showRootWarningDialog(l10n);
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ خطأ في فحص Root: $e');
+    }
+  }
+
+  /// الحصول على الوقت الحقيقي (مع fallback سريع)
+  Future<DateTime> _getRealTimeWithFallback(
+    TimeValidationService timeService
+  ) async {
+    try {
+      return await timeService.getRealTime().timeout(
+        const Duration(seconds: 2), // ← timeout قصير جداً
         onTimeout: () {
-          debugPrint('⏱️ انتهى وقت NTP - استخدام وقت الجهاز');
+          debugPrint('⏱️ NTP timeout - استخدام وقت الجهاز');
           return DateTime.now();
         },
       );
     } catch (e) {
       debugPrint('⚠️ خطأ في الحصول على الوقت: $e');
-      realTime = DateTime.now();
+      return DateTime.now();
     }
+  }
 
-    debugPrint('⏰ الوقت المستخدم: $realTime');
-
-    // ← Hint: بدء مزامنة في الخلفية
-    timeService.backgroundSync().then((_) {
-      debugPrint('✅ اكتملت المزامنة الخلفية');
-    }).catchError((e) {
-      debugPrint('⚠️ فشلت المزامنة الخلفية (لا مشكلة): $e');
-    });
-
-    // ============================================================================
-    // الخطوة 7: التحقق من حالة التطبيق
-    // ============================================================================
+  /// معالجة التلاعب بالوقت
+  void _handleTimeManipulation(
+    AppLocalizations l10n,
+    Map<String, dynamic> manipulationResult,
+    TimeValidationService timeService,
+    DeviceService deviceService,
+    FirebaseService firebaseService,
+  ) {
+    final attemptsRemaining = timeService.getAttemptsRemaining();
+    final currentAttempts = timeService.getSuspiciousAttempts();
     
+    debugPrint('⚠️ تحذير #$currentAttempts - المتبقي: $attemptsRemaining');
+
+    firebaseService.logSuspiciousActivity(
+      reason: manipulationResult['reason'] ?? 'time_manipulation',
+      deviceId: deviceService.getDeviceFingerprint().toString(),
+      additionalInfo: {
+        'attempts': currentAttempts,
+        'message': manipulationResult['message'] ?? 'Unknown',
+      },
+    );
+
+    if (attemptsRemaining <= 0) {
+      _navigateToScreen(
+        BlockedScreen(
+          reason: manipulationResult['reason'] ?? 'unknown',
+          message: manipulationResult['message'],
+        ),
+      );
+    } else {
+      _showManipulationWarning(
+        l10n,
+        manipulationResult['message'] ?? 'تم رصد تلاعب',
+        attemptsRemaining,
+      );
+    }
+  }
+
+  /// منطق التنقل النهائي
+  Future<void> _handleNavigation(
+    DatabaseHelper dbHelper,
+    DeviceService deviceService,
+    DateTime realTime,
+    AppLocalizations l10n,
+  ) async {
     try {
       final appState = await dbHelper.getAppState();
       final userCount = await dbHelper.getUserCount();
       final deviceFingerprint = await deviceService.getDeviceFingerprint();
 
-      // ========================================================================
-      // فحص ذكي للمستخدمين
-      // ========================================================================
-      
+      // 1. لا يوجد مستخدمين
       if (userCount == 0) {
-        debugPrint('ℹ️ لا يوجد مستخدمين - التوجه لإنشاء المدير');
-        
         if (appState == null) {
           await dbHelper.initializeAppState();
         }
-        
         _navigateToScreen(CreateAdminScreen(l10n: l10n));
         return;
       }
 
-      // ========================================================================
-      // التحقق من التفعيل
-      // ========================================================================
-      
+      // 2. التحقق من التفعيل
       if (appState == null) {
         await dbHelper.initializeAppState();
         _navigateToScreen(LoginScreen(l10n: l10n));
@@ -448,6 +437,7 @@ try {
       }
 
       final expiryDateString = appState['activation_expiry_date'];
+      
       if (expiryDateString != null) {
         final expiryDate = DateTime.parse(expiryDateString);
         
@@ -464,10 +454,7 @@ try {
         return;
       }
 
-      // ========================================================================
-      // الفترة التجريبية
-      // ========================================================================
-      
+      // 3. الفترة التجريبية
       final firstRunDate = DateTime.parse(appState['first_run_date']);
       final trialEndsAt = firstRunDate.add(
         const Duration(days: trialPeriodDays),
@@ -484,199 +471,179 @@ try {
         _navigateToScreen(LoginScreen(l10n: l10n));
       }
 
-    } catch (e) {
-      debugPrint('❌ خطأ أثناء التنقل من Splash Screen: $e');
-      
-      // ← Hint: 🔥 تسجيل الخطأ في Firebase
-      firebaseService.logError(
-        e,
-        StackTrace.current,
-        reason: 'Splash navigation error',
-      );
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في التنقل: $e');
+      FirebaseService.instance.logError(e, stackTrace, reason: 'navigation_error');
       
       if (mounted) {
-        _navigateToScreen(LoginScreen(l10n: l10n));
+        _navigateToScreen(LoginScreen(l10n: AppLocalizations.of(context)!));
       }
     }
   }
 
-  // ===========================================================================
-  // 🔥 دوال Kill Switch (جديدة!)
-  // ===========================================================================
-  
-/// عرض حوار Kill Switch المحسّن
-void _showKillSwitchDialog({
-  required String title,
-  required String message,
-  required bool canClose,
-  IconData? icon,
-  Color? iconColor,
-}) {
-  showDialog(
-    context: context,
-    barrierDismissible: canClose,
-    builder: (context) => WillPopScope(
-      onWillPop: () async => canClose,
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: AppConstants.borderRadiusLg,
-        ),
-        title: Row(
-          children: [
-            Icon(
-              icon ?? Icons.block,
-              color: iconColor ?? AppColors.error,
-              size: 28,
-            ),
-            const SizedBox(width: AppConstants.spacingSm),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(color: iconColor ?? AppColors.error),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppConstants.spacingLg),
-            // ← Hint: أيقونة كبيرة في الوسط
-            Icon(
-              icon ?? Icons.engineering,
-              size: 64,
-              color: iconColor ?? AppColors.warning,
-            ),
-          ],
-        ),
-        actions: [
-          if (canClose)
+  /// معالجة الأخطاء الحرجة
+  void _handleCriticalError(dynamic error, StackTrace stackTrace) {
+    debugPrint('❌ خطأ حرج في Splash Screen: $error');
+    debugPrint('Stack trace: $stackTrace');
+    
+    FirebaseService.instance.logError(
+      error, 
+      stackTrace, 
+      reason: 'splash_critical_error',
+      fatal: true,
+    );
+
+    if (mounted) {
+      _showErrorDialog(error.toString());
+    }
+  }
+
+  // ==========================================================================
+  // حوارات الـ UI
+  // ==========================================================================
+
+  void _showKillSwitchDialog({
+    required String title,
+    required String message,
+    required bool canClose,
+    IconData? icon,
+    Color? iconColor,
+  }) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: canClose,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => canClose,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: AppConstants.borderRadiusLg,
+          ),
+          title: Row(
+            children: [
+              Icon(icon ?? Icons.block, color: iconColor ?? AppColors.error, size: 28),
+              const SizedBox(width: AppConstants.spacingSm),
+              Expanded(child: Text(title, style: TextStyle(color: iconColor ?? AppColors.error))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: AppConstants.spacingLg),
+              Icon(icon ?? Icons.engineering, size: 64, color: iconColor ?? AppColors.warning),
+            ],
+          ),
+          actions: canClose ? [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('إغلاق'),
             ),
-        ],
+          ] : [],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  /// عرض حوار التحديث
-  /// عرض حوار التحديث المحسّن
-void _showUpdateDialog({
-  required String message,
-  required bool required,
-  required String minVersion,
-  bool isCritical = false,
-}) {
-  showDialog(
-    context: context,
-    barrierDismissible: !required,
-    builder: (context) => WillPopScope(
-      onWillPop: () async => !required,
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: AppConstants.borderRadiusLg,
-        ),
-        title: Row(
-          children: [
-            Icon(
-              isCritical ? Icons.security_update : Icons.system_update,
-              color: isCritical ? AppColors.error : AppColors.info,
-              size: 28,
-            ),
-            const SizedBox(width: AppConstants.spacingSm),
-            Expanded(
-              child: Text(
-                isCritical ? 'تحديث أمني مهم' : (required ? 'تحديث إجباري' : 'تحديث متاح'),
+  void _showUpdateDialog({
+    required String message,
+    required bool required,
+    required String minVersion,
+    bool isCritical = false,
+  }) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: !required,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => !required,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: AppConstants.borderRadiusLg),
+          title: Row(
+            children: [
+              Icon(
+                isCritical ? Icons.security_update : Icons.system_update,
+                color: isCritical ? AppColors.error : AppColors.info,
+                size: 28,
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ← Hint: رسالة مخصصة للتحديثات الأمنية
-            if (isCritical) ...[
+              const SizedBox(width: AppConstants.spacingSm),
+              Expanded(
+                child: Text(
+                  isCritical ? 'تحديث أمني مهم' : (required ? 'تحديث إجباري' : 'تحديث متاح'),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isCritical) ...[
+                Container(
+                  padding: AppConstants.paddingSm,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusSm,
+                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, color: AppColors.error, size: 20),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Expanded(
+                        child: Text(
+                          'هذا التحديث يحتوي على إصلاحات أمنية مهمة',
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppConstants.spacingMd),
+              ],
+              Text(message),
+              const SizedBox(height: AppConstants.spacingMd),
               Container(
                 padding: AppConstants.paddingSm,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: AppColors.info.withOpacity(0.1),
                   borderRadius: AppConstants.borderRadiusSm,
-                  border: Border.all(
-                    color: AppColors.error.withOpacity(0.3),
-                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning, color: AppColors.error, size: 20),
-                    const SizedBox(width: AppConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        'هذا التحديث يحتوي على إصلاحات أمنية مهمة',
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'الإصدار المطلوب: $minVersion',
+                  style: TextStyle(color: AppColors.info, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: AppConstants.spacingMd),
             ],
-            
-            Text(message),
-            const SizedBox(height: AppConstants.spacingMd),
-            Container(
-              padding: AppConstants.paddingSm,
-              decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.1),
-                borderRadius: AppConstants.borderRadiusSm,
+          ),
+          actions: [
+            if (!required)
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('لاحقاً'),
               ),
-              child: Text(
-                'الإصدار المطلوب: $minVersion',
-                style: TextStyle(
-                  color: AppColors.info,
-                  fontWeight: FontWeight.bold,
-                ),
+            ElevatedButton(
+              onPressed: () {
+                debugPrint('TODO: فتح متجر التطبيقات');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCritical 
+                  ? AppColors.error 
+                  : (required ? AppColors.error : AppColors.info),
               ),
+              child: const Text('تحديث الآن'),
             ),
           ],
         ),
-        actions: [
-          if (!required)
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('لاحقاً'),
-            ),
-          ElevatedButton(
-            onPressed: () {
-              // ← Hint: TODO - فتح متجر التطبيقات
-              debugPrint('TODO: فتح متجر التطبيقات');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isCritical 
-                ? AppColors.error 
-                : (required ? AppColors.error : AppColors.info),
-            ),
-            child: const Text('تحديث الآن'),
-          ),
-        ],
       ),
-    ),
-  );
-}
+    );
+  }
 
-  // ===========================================================================
-  // الدوال الموجودة مسبقاً (بدون تغيير)
-  // ===========================================================================
-  
   void _showManipulationWarning(
     AppLocalizations l10n,
     String message,
@@ -690,11 +657,7 @@ void _showUpdateDialog({
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: AppColors.warning,
-              size: 28,
-            ),
+            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
             const SizedBox(width: AppConstants.spacingSm),
             const Text('تحذير'),
           ],
@@ -703,19 +666,14 @@ void _showUpdateDialog({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            Text(message, style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: AppConstants.spacingMd),
             Container(
               padding: AppConstants.paddingMd,
               decoration: BoxDecoration(
                 color: AppColors.error.withOpacity(0.1),
                 borderRadius: AppConstants.borderRadiusMd,
-                border: Border.all(
-                  color: AppColors.error.withOpacity(0.3),
-                ),
+                border: Border.all(color: AppColors.error.withOpacity(0.3)),
               ),
               child: Text(
                 '⚠️ المحاولات المتبقية: $attemptsRemaining\n'
@@ -747,11 +705,7 @@ void _showUpdateDialog({
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(
-              Icons.wifi_off,
-              color: AppColors.error,
-              size: 28,
-            ),
+            Icon(Icons.wifi_off, color: AppColors.error, size: 28),
             const SizedBox(width: AppConstants.spacingSm),
             Text(l10n.internetRequired),
           ],
@@ -783,7 +737,7 @@ void _showUpdateDialog({
               } else if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('فشل الاتصال بالإنترنت. حاول مرة أخرى'),
+                    content: const Text('فشل الاتصال. حاول مرة أخرى'),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -800,6 +754,110 @@ void _showUpdateDialog({
     );
   }
 
+  void _showRootWarningDialog(AppLocalizations l10n) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppConstants.borderRadiusLg),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('تحذير أمني'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'تم كشف أن هذا الجهاز مُخترق (Rooted/Jailbroken)',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.warning,
+              ),
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWarningItem('• قد لا تعمل بعض الميزات بشكل صحيح'),
+                  _buildWarningItem('• بياناتك قد تكون في خطر'),
+                  _buildWarningItem('• نوصي باستخدام جهاز آمن'),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Text(
+              'يمكنك الاستمرار على مسؤوليتك الخاصة',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('فهمت، المتابعة'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: AppColors.error, size: 28),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('خطأ'),
+          ],
+        ),
+        content: Text(
+          'حدث خطأ غير متوقع:\n$errorMessage\n\nسيتم إعادة المحاولة...',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _loadAndNavigate();
+            },
+            child: const Text('إعادة المحاولة'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWarningItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.warning,
+        ),
+      ),
+    );
+  }
+
   void _navigateToScreen(Widget screen) {
     if (!mounted) return;
     
@@ -808,93 +866,9 @@ void _showUpdateDialog({
     );
   }
 
-  // ===========================================================================
-  // 🚨 حوار تحذير Root 
-  // ===========================================================================
-  
-void _showRootWarningDialog(AppLocalizations l10n) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: AppConstants.borderRadiusLg,
-      ),
-      title: Row(
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: AppColors.warning,
-            size: 28,
-          ),
-          const SizedBox(width: AppConstants.spacingSm),
-          const Text('تحذير أمني'),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'تم كشف أن هذا الجهاز مُخترق (Rooted/Jailbroken)',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.warning,
-            ),
-          ),
-          const SizedBox(height: AppConstants.spacingMd),
-          Container(
-            padding: AppConstants.paddingMd,
-            decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusMd,
-              border: Border.all(
-                color: AppColors.warning.withOpacity(0.3),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWarningItem('• قد لا تعمل بعض الميزات بشكل صحيح'),
-                _buildWarningItem('• بياناتك قد تكون في خطر'),
-                _buildWarningItem('• نوصي باستخدام جهاز آمن'),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppConstants.spacingMd),
-          Text(
-            'يمكنك الاستمرار على مسؤوليتك الخاصة',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('فهمت، المتابعة'),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildWarningItem(String text) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: AppColors.warning,
-      ),
-    ),
-  );
-}
-
-
-//==============================================
-//==============================================
+  // ==========================================================================
+  // UI
+  // ==========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -908,12 +882,9 @@ Widget _buildWarningItem(String text) {
           gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
-            colors: isDark 
-              ? AppColors.gradientDark
-              : AppColors.gradientLight,
+            colors: isDark ? AppColors.gradientDark : AppColors.gradientLight,
           ),
         ),
-        
         child: SafeArea(
           child: Center(
             child: Column(
@@ -932,7 +903,6 @@ Widget _buildWarningItem(String text) {
                     ),
                   ),
                 ),
-                
                 const SizedBox(height: AppConstants.spacingXl),
                 _buildLoadingIndicator(),
               ],
@@ -962,10 +932,7 @@ Widget _buildWarningItem(String text) {
       ),
       child: ClipOval(
         child: hasLogo
-          ? Image.file(
-              _companyLogo!,
-              fit: BoxFit.cover,
-            )
+          ? Image.file(_companyLogo!, fit: BoxFit.cover)
           : Icon(
               Icons.store,
               size: 70,
