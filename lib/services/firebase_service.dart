@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:accountant_touch/services/native_secrets_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -433,116 +434,103 @@ class FirebaseService {
   // ✅ الإصلاح 3: Getters للمفاتيح السرية مع التحقق الصارم
   // ========================================================================
   
-  /// الحصول على Activation Secret مع التحقق الصارم
+  /// الحصول على Activation Secret مع التحقق الصارم من Native Layer 
   String getActivationSecret() {
-    try {
-      final secret = _remoteConfig?.getString('activation_secret');
+        try {
+      final secret = NativeSecretsService.instance.cachedActivationSecret;
       
-      // 1. التحقق من الوجود
       if (secret == null || secret.isEmpty) {
-        debugPrint('⚠️ Activation secret غير موجود في Remote Config!');
-        return _getFallbackKey('activation');
+        debugPrint('⚠️ Activation secret غير محمّل - استدعِ NativeSecretsService.initialize() أولاً');
+        throw Exception('Activation secret not loaded. Call NativeSecretsService.initialize() first.');
       }
       
-      // 2. التحقق من الطول (32 حرف على الأقل)
       if (secret.length < 32) {
         debugPrint('⚠️ Activation secret قصير جداً (${secret.length} حرف)');
-        return _getFallbackKey('activation');
       }
       
-      // 3. منع استخدام القيم الوهمية
       if (secret.contains('INVALID') || 
-          secret.contains('FIREBASE_REQUIRED') ||
-          secret.contains('TEMP_') || 
-          secret.contains('CHANGE_ME')) {
-        debugPrint('🚨 Activation secret لا يزال وهمياً: ${secret.substring(0, 20)}...');
-        return _getFallbackKey('activation');
+          secret.contains('FAILED') ||
+          secret.contains('TEMP_')) {
+        debugPrint('🚨 Activation secret يبدو وهمياً أو غير صالح');
+        throw Exception('Invalid activation secret detected');
       }
       
-      // 4. تحذير إذا كان القيمة الافتراضية القديمة
-      const oldDefault = 'X4NL27OcZRHz6SaDoClQdeB0Psk5UgIw3tVMqvKnA1JmjbuiGE8FyfhpYTxrW9';
-      if (secret == oldDefault) {
-        debugPrint('⚠️ تحذير: لا يزال يستخدم المفتاح الافتراضي القديم!');
-        debugPrint('⚠️ يُنصح بتغييره في Firebase Console للأمان');
-      }
-      
-      debugPrint('✅ تم تحميل activation_secret بنجاح (${secret.length} حرف)');
       return secret;
     } catch (e) {
       debugPrint('❌ خطأ في قراءة activation_secret: $e');
-      return _getFallbackKey('activation');
+      
+      // ← Hint: Fail-Safe - إيقاف التطبيق
+      throw Exception(
+        '🚨 خطأ أمني حرج\n\n'
+        'لا يمكن الوصول لمفاتيح التفعيل.\n'
+        'رمز الخطأ: ACTIVATION_KEY_FAILED'
+      );
     }
-  }
+   }
 
-  /// الحصول على Backup Magic Number مع التحقق الصارم
+  /// الحصول على Backup Magic Number مع التحقق الصارم من Native Layer 
   String getBackupMagicNumber() {
-    try {
-      final magic = _remoteConfig?.getString('backup_magic_number');
+        try {
+      final magic = NativeSecretsService.instance.cachedBackupMagic;
       
       if (magic == null || magic.isEmpty) {
-        debugPrint('⚠️ Backup magic number غير موجود في Remote Config!');
-        return _getFallbackKey('backup');
+        debugPrint('⚠️ Backup magic غير محمّل');
+        throw Exception('Backup magic not loaded');
       }
       
       if (magic.length < 16) {
-        debugPrint('⚠️ Backup magic number قصير جداً (${magic.length} حرف)');
-        return _getFallbackKey('backup');
+        debugPrint('⚠️ Backup magic قصير جداً (${magic.length} حرف)');
       }
       
       if (magic.contains('INVALID') || 
-          magic.contains('USE_FIREBASE') ||
-          magic.contains('TEMP_') || 
-          magic.contains('FALLBACK')) {
-        debugPrint('🚨 Backup magic number لا يزال وهمياً: ${magic.substring(0, 15)}...');
-        return _getFallbackKey('backup');
+          magic.contains('FAILED') ||
+          magic.contains('USE_FIREBASE')) {
+        debugPrint('🚨 Backup magic يبدو وهمياً أو غير صالح');
+        throw Exception('Invalid backup magic detected');
       }
       
-      const oldDefault = 'LxwJtAU9bgXI3oH15B8zFfKWNamYuO7R';
-      if (magic == oldDefault) {
-        debugPrint('⚠️ تحذير: لا يزال يستخدم magic number الافتراضي القديم!');
-      }
-      
-      debugPrint('✅ تم تحميل backup_magic_number بنجاح (${magic.length} حرف)');
       return magic;
     } catch (e) {
       debugPrint('❌ خطأ في قراءة backup_magic_number: $e');
-      return _getFallbackKey('backup');
+      
+      throw Exception(
+        '🚨 خطأ أمني حرج\n\n'
+        'لا يمكن الوصول لمفاتيح النسخ الاحتياطي.\n'
+        'رمز الخطأ: BACKUP_KEY_FAILED'
+      );
     }
   }
 
   /// الحصول على Time Validation Secret مع التحقق الصارم
   String getTimeValidationSecret() {
-    try {
-      final secret = _remoteConfig?.getString('time_validation_secret');
+        try {
+      final secret = NativeSecretsService.instance.cachedTimeSecret;
       
       if (secret == null || secret.isEmpty) {
-        debugPrint('⚠️ Time validation secret غير موجود في Remote Config!');
-        return _getFallbackKey('time');
+        debugPrint('⚠️ Time secret غير محمّل');
+        throw Exception('Time secret not loaded');
       }
       
       if (secret.length < 32) {
-        debugPrint('⚠️ Time validation secret قصير جداً (${secret.length} حرف)');
-        return _getFallbackKey('time');
+        debugPrint('⚠️ Time secret قصير جداً (${secret.length} حرف)');
       }
       
       if (secret.contains('INVALID') || 
-          secret.contains('CONNECT_TO_INTERNET') ||
-          secret.contains('TEMP_') || 
-          secret.contains('FALLBACK')) {
-        debugPrint('🚨 Time validation secret لا يزال وهمياً: ${secret.substring(0, 20)}...');
-        return _getFallbackKey('time');
+          secret.contains('FAILED') ||
+          secret.contains('CONNECT_TO_INTERNET')) {
+        debugPrint('🚨 Time secret يبدو وهمياً أو غير صالح');
+        throw Exception('Invalid time secret detected');
       }
       
-      const oldDefault = 'w0LAC8y57giFxtYvUZDzuTJdPalBX2W6roqhHsecIkEVR3Om19Knj4GQNMpfSb';
-      if (secret == oldDefault) {
-        debugPrint('⚠️ تحذير: لا يزال يستخدم المفتاح الافتراضي القديم!');
-      }
-      
-      debugPrint('✅ تم تحميل time_validation_secret بنجاح (${secret.length} حرف)');
       return secret;
     } catch (e) {
       debugPrint('❌ خطأ في قراءة time_validation_secret: $e');
-      return _getFallbackKey('time');
+      
+      throw Exception(
+        '🚨 خطأ أمني حرج\n\n'
+        'لا يمكن الوصول لمفاتيح التحقق من الوقت.\n'
+        'رمز الخطأ: TIME_KEY_FAILED'
+      );
     }
   }
 

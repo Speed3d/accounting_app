@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:accountant_touch/services/app_lock_service.dart';
 import 'package:accountant_touch/services/currency_service.dart';
-import 'package:accountant_touch/services/firebase_service.dart'; // ← Hint: إضافة Firebase Service
+import 'package:accountant_touch/services/firebase_service.dart';
+import 'package:accountant_touch/services/native_secrets_service.dart';
 import 'package:accountant_touch/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:accountant_touch/l10n/app_localizations.dart';
@@ -17,11 +19,140 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ============================================================================
-  // 🔥 الخطوة 1: تهيئة Firebase (الأولوية القصوى!)
-  // ← Hint: يجب أن تكون أول خطوة قبل أي شيء آخر
+  // 🔐 الخطوة 0: تحميل المفاتيح السرية من Native Layer (محسّن!)
+  // ← Hint: يجب أن يكون قبل أي شيء آخر
   // ============================================================================
   
-  debugPrint('🚀 بدء تهيئة التطبيق...');
+  debugPrint('🔐 تحميل المفاتيح السرية من Native layer...');
+  
+  try {
+    final nativeSecrets = NativeSecretsService.instance;
+    
+    // ═══════════════════════════════════════════════════════════
+    // ← Hint: تحميل جميع المفاتيح بشكل متسلسل
+    // ═══════════════════════════════════════════════════════════
+    
+    await nativeSecrets.getActivationSecret();
+    await nativeSecrets.getBackupMagic();
+    await nativeSecrets.getTimeSecret();
+    
+    // ═══════════════════════════════════════════════════════════
+    // ← Hint: التحقق من الصلاحية (حرج جداً!)
+    // ═══════════════════════════════════════════════════════════
+    
+    final isValid = await nativeSecrets.validateKeys();
+    
+    if (!isValid) {
+      debugPrint('═════════════════════════════════════════════');
+      debugPrint('🚨 CRITICAL: المفاتيح السرية غير صالحة!');
+      debugPrint('═════════════════════════════════════════════');
+      
+      // ← Hint: 🔥 إيقاف التطبيق نهائياً
+      throw Exception(
+        'فشل التحقق من المفاتيح السرية.\n'
+        'التطبيق لا يمكن أن يعمل بدون مفاتيح صالحة.\n\n'
+        'الرجاء التواصل مع الدعم الفني.'
+      );
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // ← Hint: التحقق من أن المفاتيح ليست القيم الافتراضية القديمة
+    // ═══════════════════════════════════════════════════════════
+    
+    final activation = nativeSecrets.cachedActivationSecret ?? '';
+    
+    if (activation.contains('X4NL27OcZRHz6')) {
+      debugPrint('⚠️ تحذير: لا يزال يستخدم activation secret افتراضي!');
+      debugPrint('⚠️ يُنصح بتغييره لمفتاح فريد للأمان');
+    }
+    
+    debugPrint('✅ تم تحميل جميع المفاتيح السرية بنجاح');
+    debugPrint('   - Activation: ${activation.substring(0, 10)}... (${activation.length} chars)');
+    
+  } catch (e, stackTrace) {
+    // ═══════════════════════════════════════════════════════════
+    // 🔥 معالجة الأخطاء الحرجة
+    // ═══════════════════════════════════════════════════════════
+    
+    debugPrint('═════════════════════════════════════════════');
+    debugPrint('❌ خطأ حرج: فشل تحميل المفاتيح السرية');
+    debugPrint('❌ Error: $e');
+    debugPrint('❌ StackTrace: $stackTrace');
+    debugPrint('═════════════════════════════════════════════');
+    
+    // ← Hint: عرض رسالة للمستخدم قبل الإغلاق
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.red.shade50,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 80,
+                    color: Colors.red.shade700,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'خطأ في تهيئة التطبيق',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade900,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'فشل تحميل المفاتيح السرية الضرورية.\n\n'
+                    'الرجاء التأكد من:\n'
+                    '• تحديث التطبيق للإصدار الأحدث\n'
+                    '• إعادة تثبيت التطبيق\n'
+                    '• التواصل مع الدعم الفني\n\n'
+                    'رمز الخطأ: NATIVE_KEYS_FAILED',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.red.shade700,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () => exit(0),
+                    icon: const Icon(Icons.close),
+                    label: const Text('إغلاق التطبيق'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade700,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    // ← Hint: إيقاف التنفيذ - لن نكمل التهيئة
+    return;
+  }
+
+  // ============================================================================
+  // 🔥 الخطوة 1: تهيئة Firebase (الأولوية القصوى!)
+  // ← Hint: يجب أن تكون بعد Native Secrets مباشرة
+  // ============================================================================
+  
+  debugPrint('🚀 بدء تهيئة Firebase...');
   
   final firebaseInitialized = await FirebaseService.instance.initialize(
     onError: (error) {
@@ -49,20 +180,29 @@ Future<void> main() async {
   // الخطوة 3: تحميل الإعدادات المحلية
   // ============================================================================
   
-  // ← Hint: تحميل خطوط PDF
-  await PdfService.instance.loadFonts();
+  debugPrint('⚙️ تحميل الإعدادات المحلية...');
+  
+  try {
+    // ← Hint: تحميل خطوط PDF
+    await PdfService.instance.loadFonts();
 
-  // ← Hint: تحميل اللغة المحفوظة
-  await localeProvider.loadSavedLocale();
+    // ← Hint: تحميل اللغة المحفوظة
+    await localeProvider.loadSavedLocale();
 
-  // ← Hint: تحميل العملة المحفوظة
-  await CurrencyService.instance.loadSavedCurrency();
+    // ← Hint: تحميل العملة المحفوظة
+    await CurrencyService.instance.loadSavedCurrency();
 
-  // ← Hint: تحميل حالة البصمة المحفوظة
-  await BiometricService.instance.loadBiometricState();
+    // ← Hint: تحميل حالة البصمة المحفوظة
+    await BiometricService.instance.loadBiometricState();
 
-  // ← Hint: تحميل إعدادات القفل
-  await AppLockService.instance.loadSettings();
+    // ← Hint: تحميل إعدادات القفل
+    await AppLockService.instance.loadSettings();
+    
+    debugPrint('✅ تم تحميل جميع الإعدادات المحلية');
+  } catch (e) {
+    debugPrint('⚠️ خطأ في تحميل بعض الإعدادات: $e');
+    // ← Hint: نكمل - هذه الإعدادات غير حرجة
+  }
 
   debugPrint('✅ اكتملت تهيئة جميع الخدمات');
 

@@ -1,79 +1,19 @@
-#: قواعد ProGuard للحفاظ على كود Firebase من التشويش
+# ════════════════════════════════════════════════════════════════════════════
+# 🔥 ProGuard Rules - نسخة محسّنة للأمان القصوى
+# ════════════════════════════════════════════════════════════════════════════
 
-# Firebase
--keep class com.google.firebase.** { *; }
--keep class com.google.android.gms.** { *; }
+# ═══════════════════════════════════════════════════════════════
+# 1️⃣ إعدادات الأمان الأساسية
+# ═══════════════════════════════════════════════════════════════
 
-# Flutter
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.** { *; }
--keep class io.flutter.util.** { *; }
--keep class io.flutter.view.** { *; }
--keep class io.flutter.** { *; }
--keep class io.flutter.plugins.** { *; }
-
-#حماية الـ Models من التشويش (مهم للـ JSON serialization)#
--keep class com.accountant.touch.data.models.** { *; }
-
-#: احتفظ أيضاً بالـ Services المهمة
--keep class com.accountant.touch.services.FirebaseService { *; }
--keep class com.accountant.touch.services.BackupService { *; }
--keep class com.accountant.touch.services.TimeValidationService { *; }
--keep class com.accountant.touch.services.DeviceService { *; }
-
-
-# SQLite
--keep class org.sqlite.** { *; }
--keep class org.sqlite.database.** { *; }
-
-# Decimal
--keep class org.decimal4j.** { *; }
-
-#: منع إزالة الـ annotations المهمة
--keepattributes *Annotation*
--keepattributes SourceFile,LineNumberTable
--keepattributes Signature
--keepattributes Exceptions
-
-# Keep Play Core classes
--keep class com.google.android.play.core.** { *; }
--dontwarn com.google.android.play.core.**
-
-# Keep XML classes
--keep class javax.xml.** { *; }
--dontwarn javax.xml.**
--dontwarn org.apache.tika.**
-
-# ============================================================================
-# 🔥 حماية إضافية - تشويش الأكواد الحساسة
-#: هذه القواعد تجعل فك تشفير APK أصعب بكثير
-# ============================================================================
-
-#: إعادة تسمية Packages لإخفاء بنية المشروع
--repackageclasses 'a'
--allowaccessmodification
-
-#: الحفاظ على معلومات Debugging لـ Crashlytics
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
-
-#: تشويش أسماء الكلاسات والميثودات (ما عدا الـ public APIs)
--keepclassmembers class com.accountant.touch.services.** {
-    public <methods>;
-}
-
-#: حماية إضافية للـ Constants
--keepclassmembers class * {
-    static final <fields>;
-}
-
-#: تفعيل Optimization القوي
--optimizationpasses 5
+# ← Hint: تفعيل التشويش القوي
+-optimizationpasses 10
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
+-dontskipnonpubliclibraryclassmembers
 -verbose
 
-#: إزالة Logs من Production
+# ← Hint: إزالة Logs من Production
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
@@ -81,7 +21,126 @@
     public static *** w(...);
 }
 
-#: تشويش الـ Native Methods (إن وجدت)
+# ← Hint: تشويش أسماء الكلاسات
+-repackageclasses 'a'
+-allowaccessmodification
+
+# ← Hint: الحفاظ على معلومات Stack Trace لـ Crashlytics
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# ═══════════════════════════════════════════════════════════════
+# 2️⃣ حماية Firebase
+# ═══════════════════════════════════════════════════════════════
+
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# ═══════════════════════════════════════════════════════════════
+# 3️⃣ حماية Flutter
+# ═══════════════════════════════════════════════════════════════
+
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.** { *; }
+-keep class io.flutter.plugins.** { *; }
+
+# ═══════════════════════════════════════════════════════════════
+# 4️⃣ 🔐 حماية قوية لطبقة المفاتيح السرية (الأهم!)
+# ═══════════════════════════════════════════════════════════════
+
+# ← Hint: تشويش كامل لـ SecretKeys لكن الحفاظ على الدوال العامة
+-keep class com.accountant.touch.SecretKeys {
+    public static java.lang.String getActivationSecret();
+    public static java.lang.String getBackupMagic();
+    public static java.lang.String getTimeSecret();
+    public static boolean validateKeys();
+}
+
+# ← Hint: تشويش الدوال الخاصة
+-keepclassmembers class com.accountant.touch.SecretKeys {
+    private static <methods>;
+    private static <fields>;
+}
+
+# ← Hint: تشويش الثوابت الخاصة (المفاتيح المشفرة)
+-assumenosideeffects class com.accountant.touch.SecretKeys {
+    private static final java.lang.String ENCODED_* return "";
+    private static final byte[] xorKey return null;
+}
+
+# ═══════════════════════════════════════════════════════════════
+# 5️⃣ حماية Services الحساسة
+# ═══════════════════════════════════════════════════════════════
+
+-keep class com.accountant.touch.services.FirebaseService { *; }
+-keep class com.accountant.touch.services.BackupService { *; }
+-keep class com.accountant.touch.services.TimeValidationService { *; }
+-keep class com.accountant.touch.services.DeviceService { *; }
+-keep class com.accountant.touch.services.DatabaseKeyManager { *; }
+
+# ← Hint: تشويش MethodChannels لكن الحفاظ على أسماء الدوال
+-keep class com.accountant.touch.MainActivity {
+    public *;
+}
+
+# ═══════════════════════════════════════════════════════════════
+# 6️⃣ حماية Models
+# ═══════════════════════════════════════════════════════════════
+
+-keep class com.accountant.touch.data.models.** { *; }
+
+# ═══════════════════════════════════════════════════════════════
+# 7️⃣ حماية SQLite & Decimal
+# ═══════════════════════════════════════════════════════════════
+
+-keep class org.sqlite.** { *; }
+-keep class org.sqlite.database.** { *; }
+-keep class org.decimal4j.** { *; }
+
+# ═══════════════════════════════════════════════════════════════
+# 8️⃣ حماية Play Core & XML
+# ═══════════════════════════════════════════════════════════════
+
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
+-keep class javax.xml.** { *; }
+-dontwarn javax.xml.**
+-dontwarn org.apache.tika.**
+
+# ═══════════════════════════════════════════════════════════════
+# 9️⃣ الحفاظ على Annotations
+# ═══════════════════════════════════════════════════════════════
+
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
+
+# ═══════════════════════════════════════════════════════════════
+# 🔟 تشويش Native Methods
+# ═══════════════════════════════════════════════════════════════
+
 -keepclasseswithmembernames class * {
     native <methods>;
 }
+
+# ═══════════════════════════════════════════════════════════════
+# 1️⃣1️⃣ 🎯 تشويش إضافي للـ Strings (جديد!)
+# ═══════════════════════════════════════════════════════════════
+
+# ← Hint: إزالة Strings الثابتة غير المستخدمة
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    static void checkParameterIsNotNull(java.lang.Object, java.lang.String);
+}
+
+# ← Hint: تشويش String concatenation
+-optimizations !code/simplification/string
+
+# ════════════════════════════════════════════════════════════════════════════
+# ✅ نهاية الإعدادات
+# ════════════════════════════════════════════════════════════════════════════
