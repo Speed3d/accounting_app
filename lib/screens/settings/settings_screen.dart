@@ -257,11 +257,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
                 ),
+
+             _buildDivider(isDark),
+
+          // const SizedBox(height: AppConstants.spacingSm),
+
+_SettingsLinkTile(
+  title: 'تحديث إعدادات Firebase',
+  subtitle: 'جلب أحدث الإعدادات من الخادم',
+  icon: Icons.cloud_download,
+  iconColor: AppColors.info,
+  onTap: () async {
+    // عرض مؤشر تحميل
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final refreshed = await FirebaseService.instance.forceRefreshConfig();
+      
+      if (!mounted) return;
+      Navigator.pop(context); // إغلاق المؤشر
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            refreshed 
+              ? '✅ تم تحديث الإعدادات بنجاح'
+              : 'ℹ️ الإعدادات محدثة بالفعل',
+          ),
+          backgroundColor: refreshed ? AppColors.success : AppColors.info,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ فشل التحديث: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  },
+),
               ],
             ),
           ),
 
-          const SizedBox(height: AppConstants.spacingXl),
+          // const SizedBox(height: AppConstants.spacingXl),
+
 
           // // ============================================================
           // // 🧪 قسم الاختبار والتطوير (فقط في اصدار نسخة لهاتف حقيقي للتجربته Release mode)
@@ -349,6 +401,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildVersionInfo(context, isDark),
           
           const SizedBox(height: AppConstants.spacingXl),
+           const SizedBox(height: AppConstants.spacing2Xl),
+
+
         ],
       ),
     );

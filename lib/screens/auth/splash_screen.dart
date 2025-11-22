@@ -2,11 +2,13 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart'; // ← Hint: إضافة للحصول على version
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
-import '../../services/firebase_service.dart'; // ← Hint: إضافة Firebase Service
+import '../../services/firebase_service.dart';
 import '../../services/time_validation_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -109,30 +111,58 @@ class _SplashScreenState extends State<SplashScreen>
   debugPrint('   - اسم التطبيق: ${packageInfo.appName}');
   debugPrint('   - Package: ${packageInfo.packageName}');
   debugPrint('════════════════════════════════');
-    
-    try {
-  // ============================================================================
-  // 🔥 الخطوة 0.1: Force Refresh Remote Config (جديد!)
-  //  : يجبر Firebase على جلب أحدث القيم بدون اعتماد على Cache
-  //  : حل مشكلة عدم تحديث Kill Switch على الهواتف الحقيقية
-  // ============================================================================
-  
-  debugPrint('🔄 إجبار تحديث Remote Config...');
 
-  try {
+// ============================================================================
+// 🔥 الخطوة 0.1: Smart Force Refresh (محدث!)
+// ← Hint: فقط في حالات محددة لتوفير Firebase quota
+// ============================================================================
+
+debugPrint('🔄 فحص ضرورة تحديث Remote Config...');
+
+try {
+  bool shouldForceRefresh = false;
+  String reason = '';
+
+  // 1. في Debug mode - دائماً (للتطوير)
+  if (kDebugMode) {
+    shouldForceRefresh = true;
+    reason = 'Debug mode';
+  }
+  // 2. فحص آخر تحديث
+  else {
+    final prefs = await SharedPreferences.getInstance();
+    final lastFetch = prefs.getInt('last_config_fetch') ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    
+    // إذا مر أكثر من 24 ساعة منذ آخر تحديث
+    if (lastFetch == 0 || (now - lastFetch) > (24 * 60 * 60 * 1000)) {
+      shouldForceRefresh = true;
+      reason = 'More than 24h since last fetch';
+      
+      // حفظ وقت التحديث الجديد
+      await prefs.setInt('last_config_fetch', now);
+    }
+  }
+
+  if (shouldForceRefresh) {
+    debugPrint('🔄 Force Refresh مطلوب: $reason');
+    
     final refreshed = await firebaseService.forceRefreshConfig();
     if (refreshed) {
       debugPrint('✅ تم تحديث Remote Config بنجاح');
-
     } else {
       debugPrint('ℹ️ لا توجد تحديثات جديدة في Remote Config');
     }
-
-  } catch (e) {
-    debugPrint('⚠️ فشل تحديث Remote Config: $e');
-    debugPrint('ℹ️ سيتم استخدام القيم المخزنة (Cache)');
-    //  : لا نوقف التطبيق - نكمل بالقيم المخزنة
+  } else {
+    debugPrint('ℹ️ استخدام Remote Config المخزن (Cache)');
   }
+
+} catch (e) {
+  debugPrint('⚠️ فشل تحديث Remote Config: $e');
+  debugPrint('ℹ️ سيتم استخدام القيم المخزنة (Cache)');
+
+  //============================================================
+  //============================================================
   
   debugPrint('🔥 فحص حالة التطبيق من Firebase...');
   
@@ -224,12 +254,51 @@ class _SplashScreenState extends State<SplashScreen>
      debugPrint('✅ التطبيق نشط وجاهز للاستخدام');
       
 
-      
+    // ignore: dead_code_catch_following_catch
     } catch (e) {
       // ← Hint: في حالة خطأ، نكمل (fail-safe)
       debugPrint('⚠️ خطأ في فحص حالة التطبيق: $e');
       debugPrint('ℹ️ سيتم المتابعة بشكل طبيعي');
     }
+
+    // ============================================================================
+// الخطوة 4.5: فحص Root (تحذير فقط)
+// ← Hint: لا نمنع الاستخدام، فقط ننبه المستخدم
+// ============================================================================
+
+debugPrint('🔍 فحص Root...');
+
+try {
+  final isRooted = await deviceService.isDeviceRooted();
+  
+  if (isRooted) {
+    debugPrint('⚠️ الجهاز مُخترق (Rooted) - عرض تحذير');
+    
+    // ← Hint: تسجيل في Crashlytics
+    firebaseService.logSuspiciousActivity(
+      reason: 'rooted_device',
+      deviceId: await deviceService.getDeviceFingerprint(),
+      additionalInfo: {
+        'action': 'device_root_detected',
+        'warning_shown': true,
+      },
+    );
+
+    if (!mounted) return;
+
+    // ← Hint: عرض تحذير للمستخدم
+    _showRootWarningDialog(l10n);
+    
+    // ← Hint: الانتظار 3 ثواني ليقرأ المستخدم التحذير
+    await Future.delayed(const Duration(seconds: 3));
+  }
+} catch (e) {
+  debugPrint('⚠️ خطأ في فحص Root: $e');
+  // ← Hint: نكمل بدون تحذير
+}
+
+// ← Hint: الآن تواصل مع باقي الكود (التحقق من الحاجة للإنترنت...)
+
 
     // ============================================================================
     // الخطوة 1: تحميل معلومات الشركة
@@ -497,7 +566,7 @@ void _showKillSwitchDialog({
 }
 
   /// عرض حوار التحديث
-/// عرض حوار التحديث المحسّن
+  /// عرض حوار التحديث المحسّن
 void _showUpdateDialog({
   required String message,
   required bool required,
@@ -738,6 +807,94 @@ void _showUpdateDialog({
       MaterialPageRoute(builder: (context) => screen),
     );
   }
+
+  // ===========================================================================
+  // 🚨 حوار تحذير Root 
+  // ===========================================================================
+  
+void _showRootWarningDialog(AppLocalizations l10n) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: AppConstants.borderRadiusLg,
+      ),
+      title: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.warning,
+            size: 28,
+          ),
+          const SizedBox(width: AppConstants.spacingSm),
+          const Text('تحذير أمني'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'تم كشف أن هذا الجهاز مُخترق (Rooted/Jailbroken)',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.warning,
+            ),
+          ),
+          const SizedBox(height: AppConstants.spacingMd),
+          Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.warning.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildWarningItem('• قد لا تعمل بعض الميزات بشكل صحيح'),
+                _buildWarningItem('• بياناتك قد تكون في خطر'),
+                _buildWarningItem('• نوصي باستخدام جهاز آمن'),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppConstants.spacingMd),
+          Text(
+            'يمكنك الاستمرار على مسؤوليتك الخاصة',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('فهمت، المتابعة'),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildWarningItem(String text) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: AppColors.warning,
+      ),
+    ),
+  );
+}
+
+
+//==============================================
+//==============================================
 
   @override
   Widget build(BuildContext context) {
