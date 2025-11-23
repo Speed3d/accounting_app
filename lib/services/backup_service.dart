@@ -16,6 +16,11 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 // import 'package:sqflite/sqflite.dart';
 // import 'package:sqflite_sqlcipher/sqflite.dart';
 
+// ← Hint: استيراد مساعدات جديدة للنسخ الاحتياطي الشامل
+import '../utils/archive_helper.dart';
+import '../data/database_helper.dart';
+import 'database_key_manager.dart';
+
 /// 🧠 كلاس مسؤول عن إنشاء النسخ الاحتياطي واستعادته بشكل آمن ومشفر
 ///
 /// ← Hint: يستخدم هذا الكلاس تشفير AES-256 مع كلمة مرور من المستخدم
@@ -817,6 +822,389 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
     } catch (e) {
       print('❌ خطأ أثناء استعادة النسخة الاحتياطية: $e');
       return e.toString().replaceFirst("Exception: ", "");
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: النسخ الاحتياطي الشامل الجديد (v2.0) - يتضمن الصور!
+  // ← Hint: هيكل النسخة: ZIP مشفر يحتوي على:
+  //    - database.db (قاعدة البيانات)
+  //    - metadata.json (معلومات النسخة)
+  //    - encryption_key.enc (مفتاح التشفير مشفر)
+  //    - images/ (جميع الصور)
+  // ============================================================================
+
+  /// إنشاء نسخة احتياطية شاملة (قاعدة البيانات + الصور + المفاتيح)
+  ///
+  /// [password] - كلمة المرور لتشفير النسخة
+  /// [onProgress] - callback لتتبع التقدم (اختياري)
+  ///
+  /// Returns: Map يحتوي على حالة العملية ومعلومات الملف
+  Future<Map<String, dynamic>> createComprehensiveBackup({
+    required String password,
+    Function(String status, int current, int total)? onProgress,
+  }) async {
+    try {
+      debugPrint('🚀 [BackupService] بدء النسخ الاحتياطي الشامل...');
+
+      // ═══════════════════════════════════════════════════════════
+      // التحقق من كلمة المرور
+      // ═══════════════════════════════════════════════════════════
+
+      if (password.trim().isEmpty) {
+        return {
+          'status': 'error',
+          'message': 'كلمة المرور لا يمكن أن تكون فارغة',
+        };
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // إنشاء مجلد مؤقت للتحضير
+      // ═══════════════════════════════════════════════════════════
+
+      final tempDir = await getTemporaryDirectory();
+      final backupWorkDir = Directory(p.join(tempDir.path, 'backup_${DateTime.now().millisecondsSinceEpoch}'));
+      await backupWorkDir.create(recursive: true);
+
+      debugPrint('📂 [BackupService] مجلد العمل: ${backupWorkDir.path}');
+
+      try {
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 1: نسخ قاعدة البيانات
+        // ═══════════════════════════════════════════════════════════
+
+        onProgress?.call('نسخ قاعدة البيانات...', 1, 5);
+
+        final dbFolder = await getApplicationDocumentsDirectory();
+        final dbFile = File(p.join(dbFolder.path, _dbFileName));
+
+        if (!await dbFile.exists()) {
+          throw Exception('قاعدة البيانات غير موجودة');
+        }
+
+        final dbBackupFile = File(p.join(backupWorkDir.path, 'database.db'));
+        await dbFile.copy(dbBackupFile.path);
+
+        debugPrint('✅ [BackupService] نسخ قاعدة البيانات: ${await dbBackupFile.length()} bytes');
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 2: جمع جميع الصور
+        // ═══════════════════════════════════════════════════════════
+
+        onProgress?.call('جمع الصور...', 2, 5);
+
+        final imagesStats = await _collectAllImages(backupWorkDir);
+
+        debugPrint('✅ [BackupService] تم جمع ${imagesStats['total']} صورة');
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 3: حفظ مفتاح التشفير (مشفر بكلمة المرور)
+        // ═══════════════════════════════════════════════════════════
+
+        onProgress?.call('حفظ مفتاح التشفير...', 3, 5);
+
+        final encryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+        await _saveEncryptionKey(backupWorkDir, encryptionKey, password);
+
+        debugPrint('✅ [BackupService] تم حفظ مفتاح التشفير');
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 4: إنشاء metadata.json
+        // ═══════════════════════════════════════════════════════════
+
+        onProgress?.call('إنشاء Metadata...', 4, 5);
+
+        await _createMetadata(backupWorkDir, imagesStats);
+
+        debugPrint('✅ [BackupService] تم إنشاء Metadata');
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 5: ضغط كل شيء في ZIP
+        // ═══════════════════════════════════════════════════════════
+
+        onProgress?.call('ضغط الملفات...', 5, 5);
+
+        final timestamp = DateTime.now();
+        final backupFileName = 'backup-comprehensive-${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')}-${timestamp.hour.toString().padLeft(2, '0')}-${timestamp.minute.toString().padLeft(2, '0')}.$_backupFileExtension';
+
+        final downloadsDir = await _getDownloadsDirectory();
+        if (downloadsDir == null) {
+          throw Exception('لا يمكن الوصول إلى مجلد التنزيلات');
+        }
+
+        final tempZipFile = File(p.join(tempDir.path, 'temp_backup.zip'));
+
+        // ← Hint: ضغط المجلد بالكامل
+        final compressed = await ArchiveHelper.compressDirectory(
+          sourceDir: backupWorkDir,
+          outputZipFile: tempZipFile,
+        );
+
+        if (!compressed) {
+          throw Exception('فشل ضغط النسخة الاحتياطية');
+        }
+
+        debugPrint('✅ [BackupService] تم ضغط ZIP: ${await tempZipFile.length()} bytes');
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 6: تشفير ملف ZIP
+        // ═══════════════════════════════════════════════════════════
+
+        final zipBytes = await tempZipFile.readAsBytes();
+
+        final salt = enc.IV.fromSecureRandom(_saltLength).bytes;
+        final encryptionKeyDerived = _deriveKeyFromPassword(password, salt);
+        final iv = _deriveIVFromSalt(salt);
+
+        final encrypter = enc.Encrypter(enc.AES(encryptionKeyDerived, mode: enc.AESMode.cbc));
+        final encryptedData = encrypter.encryptBytes(zipBytes, iv: iv);
+
+        // ← Hint: HMAC للتحقق
+        final magicNumber = _magicNumber;
+        final hmacKey = Hmac(sha256, encryptionKeyDerived.bytes);
+        final hmacData = hmacKey.convert([
+          ...magicNumber.codeUnits,
+          ...salt,
+          ...encryptedData.bytes,
+        ]);
+
+        // ← Hint: الملف النهائي
+        final finalFileBytes = Uint8List.fromList([
+          ...magicNumber.codeUnits,
+          ...salt,
+          ...hmacData.bytes,
+          ...encryptedData.bytes,
+        ]);
+
+        // ═══════════════════════════════════════════════════════════
+        // الخطوة 7: حفظ الملف النهائي
+        // ═══════════════════════════════════════════════════════════
+
+        final backupFile = File(p.join(downloadsDir.path, backupFileName));
+        await backupFile.writeAsBytes(finalFileBytes);
+
+        final fileSize = await backupFile.length();
+
+        debugPrint('✅ [BackupService] النسخة الاحتياطية الشاملة جاهزة!');
+        debugPrint('   الملف: ${backupFile.path}');
+        debugPrint('   الحجم: ${_formatBytes(fileSize)}');
+
+        return {
+          'status': 'success',
+          'message': 'تم إنشاء النسخة الاحتياطية الشاملة بنجاح',
+          'filePath': backupFile.path,
+          'fileName': backupFileName,
+          'fileSize': fileSize,
+          'imagesCount': imagesStats['total'],
+          'metadata': imagesStats,
+        };
+
+      } finally {
+        // ← Hint: تنظيف المجلد المؤقت
+        try {
+          if (await backupWorkDir.exists()) {
+            await backupWorkDir.delete(recursive: true);
+          }
+        } catch (e) {
+          debugPrint('⚠️ [BackupService] خطأ في التنظيف: $e');
+        }
+      }
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ [BackupService] خطأ في createComprehensiveBackup: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return {
+        'status': 'error',
+        'message': 'حدث خطأ: ${e.toString()}',
+      };
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: جمع جميع الصور من قاعدة البيانات
+  // ============================================================================
+
+  Future<Map<String, dynamic>> _collectAllImages(Directory backupDir) async {
+    try {
+      final imagesDir = Directory(p.join(backupDir.path, 'images'));
+      await imagesDir.create(recursive: true);
+
+      int totalImages = 0;
+      final stats = <String, int>{};
+
+      // ← Hint: الحصول على قاعدة البيانات
+      final db = await DatabaseHelper.instance.database;
+
+      // ═══════════════════════════════════════════════════════════
+      // الفئات التي تحتوي على صور
+      // ═══════════════════════════════════════════════════════════
+
+      final categories = {
+        'users': 'TB_Users',
+        'suppliers': 'TB_Suppliers',
+        'customers': 'TB_Customers',
+        'products': 'TB_Products',
+        'employees': 'TB_Employees',
+        'company': 'TB_App_Settings',
+      };
+
+      for (final entry in categories.entries) {
+        final categoryName = entry.key;
+        final tableName = entry.value;
+
+        try {
+          // ← Hint: إنشاء مجلد للفئة
+          final categoryDir = Directory(p.join(imagesDir.path, categoryName));
+          await categoryDir.create();
+
+          int categoryCount = 0;
+
+          // ← Hint: قراءة جميع السجلات
+          final rows = await db.query(tableName);
+
+          for (final row in rows) {
+            // ← Hint: البحث عن عمود ImagePath
+            final imagePath = row['ImagePath'] as String?;
+
+            if (imagePath != null && imagePath.isNotEmpty) {
+              final imageFile = File(imagePath);
+
+              if (await imageFile.exists()) {
+                // ← Hint: نسخ الصورة
+                final fileName = p.basename(imagePath);
+                final destFile = File(p.join(categoryDir.path, fileName));
+
+                await imageFile.copy(destFile.path);
+
+                categoryCount++;
+                totalImages++;
+              }
+            }
+          }
+
+          stats[categoryName] = categoryCount;
+          debugPrint('  📁 $categoryName: $categoryCount صورة');
+
+        } catch (e) {
+          debugPrint('  ⚠️ خطأ في $categoryName: $e');
+          stats[categoryName] = 0;
+        }
+      }
+
+      return {
+        'total': totalImages,
+        ...stats,
+      };
+
+    } catch (e) {
+      debugPrint('❌ خطأ في _collectAllImages: $e');
+      return {'total': 0};
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: حفظ مفتاح التشفير (مشفر بكلمة المرور)
+  // ============================================================================
+
+  Future<void> _saveEncryptionKey(
+    Directory backupDir,
+    String encryptionKey,
+    String password,
+  ) async {
+    try {
+      // ← Hint: تشفير المفتاح بكلمة مرور المستخدم
+      final salt = enc.IV.fromSecureRandom(_saltLength).bytes;
+      final derivedKey = _deriveKeyFromPassword(password, salt);
+      final iv = _deriveIVFromSalt(salt);
+
+      final encrypter = enc.Encrypter(enc.AES(derivedKey, mode: enc.AESMode.cbc));
+      final encrypted = encrypter.encrypt(encryptionKey, iv: iv);
+
+      // ← Hint: حفظ: salt + encrypted key
+      final keyData = {
+        'salt': base64Encode(salt),
+        'key': encrypted.base64,
+        'version': '2.0',
+      };
+
+      final keyFile = File(p.join(backupDir.path, 'encryption_key.enc'));
+      await keyFile.writeAsString(jsonEncode(keyData));
+
+    } catch (e) {
+      debugPrint('⚠️ خطأ في _saveEncryptionKey: $e');
+      // ← Hint: غير حرج - يمكن للمستخدم استعادة المفتاح يدوياً
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: إنشاء ملف metadata.json
+  // ============================================================================
+
+  Future<void> _createMetadata(
+    Directory backupDir,
+    Map<String, dynamic> imagesStats,
+  ) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      // ← Hint: إحصائيات قاعدة البيانات
+      final usersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Users')) ?? 0;
+      final suppliersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Suppliers')) ?? 0;
+      final customersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Customers')) ?? 0;
+      final productsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Products')) ?? 0;
+      final employeesCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Employees')) ?? 0;
+
+      final metadata = {
+        'version': '2.0',
+        'type': 'comprehensive',
+        'created_at': DateTime.now().toIso8601String(),
+        'app_version': '1.0.0', // ← يمكن جلبه من package_info_plus
+        'statistics': {
+          'users': usersCount,
+          'suppliers': suppliersCount,
+          'customers': customersCount,
+          'products': productsCount,
+          'employees': employeesCount,
+          'images_total': imagesStats['total'],
+          'images_by_category': {
+            'users': imagesStats['users'] ?? 0,
+            'suppliers': imagesStats['suppliers'] ?? 0,
+            'customers': imagesStats['customers'] ?? 0,
+            'products': imagesStats['products'] ?? 0,
+            'employees': imagesStats['employees'] ?? 0,
+            'company': imagesStats['company'] ?? 0,
+          },
+        },
+        'encryption': {
+          'database_key_included': true,
+          'algorithm': 'AES-256-CBC',
+          'key_derivation': 'PBKDF2-HMAC-SHA256',
+        },
+      };
+
+      final metadataFile = File(p.join(backupDir.path, 'metadata.json'));
+      await metadataFile.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(metadata),
+      );
+
+    } catch (e) {
+      debugPrint('⚠️ خطأ في _createMetadata: $e');
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: دالة مساعدة لتنسيق حجم الملف
+  // ============================================================================
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    } else {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
     }
   }
 }
