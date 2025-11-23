@@ -13,8 +13,21 @@ import '../services/database_key_manager.dart';
 
 import 'models.dart' as models;
 
+// ============================================================================
+// ← Hint: استثناء مخصص لأخطاء استرداد قاعدة البيانات
+// ============================================================================
 
+class DatabaseRecoveryException implements Exception {
+  final String message;
+  DatabaseRecoveryException(this.message);
+
+  @override
+  String toString() => 'DatabaseRecoveryException: $message';
+}
+
+// ============================================================================
 // Hint: هذا الكلاس هو المسؤول الوحيد عن كل عمليات قاعدة البيانات في التطبيق.
+// ============================================================================
 class DatabaseHelper {
   static const _databaseName = "accounting.db";
 
@@ -38,25 +51,159 @@ class DatabaseHelper {
   }
 
 
+  // ============================================================================
+  // ← Hint: تهيئة قاعدة البيانات - النسخة المحسّنة مع معالجة أخطاء
+  // ============================================================================
+
   _initDatabase() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, _databaseName);
-     // ============================================================================
-     // 🔐 الحصول على مفتاح التشفير
-     // ← Hint: مفتاح فريد لكل جهاز، محفوظ بشكل آمن
-     // ============================================================================
-  
-    final encryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
-    debugPrint('🔐 فتح قاعدة البيانات المشفرة...');
-    
-    return await openDatabase(
-      path, 
-      version: _databaseVersion, 
-      onCreate: _onCreate, 
-      onUpgrade: _onUpgrade,
-      // ← Hint: المفتاح السحري!
-      password: encryptionKey,
-      );
+    try {
+      final documentsDirectory = await getApplicationDocumentsDirectory();
+      final path = join(documentsDirectory.path, _databaseName);
+
+      // ═══════════════════════════════════════════════════════════
+      // 🔐 الحصول على مفتاح التشفير
+      // ← Hint: نظام المفاتيح المحسّن (v2.0)
+      // ═══════════════════════════════════════════════════════════
+
+      debugPrint('📂 [DatabaseHelper] مسار قاعدة البيانات: $path');
+
+      final encryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+      debugPrint('🔐 [DatabaseHelper] تم الحصول على مفتاح التشفير');
+
+      // ═══════════════════════════════════════════════════════════
+      // محاولة فتح قاعدة البيانات
+      // ← Hint: مع معالجة شاملة للأخطاء
+      // ═══════════════════════════════════════════════════════════
+
+      try {
+        debugPrint('🔓 [DatabaseHelper] محاولة فتح قاعدة البيانات...');
+
+        final db = await openDatabase(
+          path,
+          version: _databaseVersion,
+          onCreate: _onCreate,
+          onUpgrade: _onUpgrade,
+          password: encryptionKey,
+        );
+
+        debugPrint('✅ [DatabaseHelper] تم فتح قاعدة البيانات بنجاح');
+        return db;
+
+      } on DatabaseException catch (e) {
+        // ═══════════════════════════════════════════════════════════
+        // معالجة أخطاء قاعدة البيانات
+        // ← Hint: قد يكون السبب: مفتاح خاطئ، قاعدة تالفة، إلخ
+        // ═══════════════════════════════════════════════════════════
+
+        debugPrint('❌ [DatabaseHelper] خطأ في فتح قاعدة البيانات: $e');
+
+        // ← Hint: التحقق من نوع الخطأ
+        if (e.toString().contains('file is not a database') ||
+            e.toString().contains('file is encrypted') ||
+            e.toString().contains('notadb') ||
+            e.toString().contains('unsupported file format')) {
+
+          debugPrint('⚠️ [DatabaseHelper] قاعدة البيانات مشفرة بمفتاح مختلف أو تالفة');
+
+          // ← Hint: محاولة استرداد من نسخة احتياطية
+          final recovered = await _attemptDatabaseRecovery(path, encryptionKey);
+
+          if (recovered != null) {
+            debugPrint('✅ [DatabaseHelper] تم استرداد قاعدة البيانات');
+            return recovered;
+          }
+
+          // ← Hint: إذا فشل الاسترداد، نقترح على المستخدم الخيارات
+          throw DatabaseRecoveryException(
+            'فشل فتح قاعدة البيانات. قد يكون السبب:\n'
+            '1. تغير مفتاح التشفير\n'
+            '2. قاعدة البيانات تالفة\n\n'
+            'الحلول المتاحة:\n'
+            '• استرداد من نسخة احتياطية\n'
+            '• البدء من جديد\n\n'
+            'رمز الخطأ: DB_ENCRYPTION_MISMATCH',
+          );
+        }
+
+        // ← Hint: خطأ آخر غير متوقع
+        rethrow;
+      }
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ [DatabaseHelper] خطأ حرج في _initDatabase: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: محاولة استرداد قاعدة البيانات من نسخة احتياطية
+  // ← Hint: يبحث عن .db.old أو .db.backup
+  // ============================================================================
+
+  Future<Database?> _attemptDatabaseRecovery(String dbPath, String encryptionKey) async {
+    try {
+      debugPrint('🔄 [DatabaseHelper] محاولة استرداد قاعدة البيانات...');
+
+      // ← Hint: قائمة بملفات النسخ الاحتياطية المحتملة
+      final backupPaths = [
+        '$dbPath.old',
+        '$dbPath.backup',
+        '$dbPath-backup',
+      ];
+
+      for (final backupPath in backupPaths) {
+        final backupFile = File(backupPath);
+
+        if (await backupFile.exists()) {
+          debugPrint('📂 [DatabaseHelper] وُجدت نسخة احتياطية: $backupPath');
+
+          try {
+            // ← Hint: محاولة فتح النسخة الاحتياطية
+            final db = await openDatabase(
+              backupPath,
+              version: _databaseVersion,
+              onCreate: _onCreate,
+              onUpgrade: _onUpgrade,
+              password: encryptionKey,
+            );
+
+            // ← Hint: إذا نجحت، ننسخها مكان القاعدة الأصلية
+            await db.close();
+
+            final originalFile = File(dbPath);
+            if (await originalFile.exists()) {
+              await originalFile.delete();
+            }
+
+            await backupFile.copy(dbPath);
+
+            // ← Hint: فتح القاعدة المستردة
+            final restoredDb = await openDatabase(
+              dbPath,
+              version: _databaseVersion,
+              onCreate: _onCreate,
+              onUpgrade: _onUpgrade,
+              password: encryptionKey,
+            );
+
+            debugPrint('✅ [DatabaseHelper] تم الاسترداد من: $backupPath');
+            return restoredDb;
+
+          } catch (e) {
+            debugPrint('⚠️ [DatabaseHelper] فشل الاسترداد من: $backupPath - $e');
+            continue;
+          }
+        }
+      }
+
+      debugPrint('❌ [DatabaseHelper] لم يتم العثور على نسخة احتياطية صالحة');
+      return null;
+
+    } catch (e) {
+      debugPrint('❌ [DatabaseHelper] خطأ في _attemptDatabaseRecovery: $e');
+      return null;
+    }
   }
 
 ///////////////////////////////////////////////////////////////

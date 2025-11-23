@@ -73,7 +73,10 @@ dependencies:
 
   pdf: ^3.11.1
   printing: ^5.13.4
-  
+
+  # ✅ Hint: حزمة لضغط وفك ضغط الملفات (ZIP)
+  # ← مطلوبة للنسخ الاحتياطي الشامل مع الصور
+  archive: ^3.6.1
 
 dev_dependencies:
   flutter_test:
