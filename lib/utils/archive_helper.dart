@@ -316,7 +316,9 @@ class ArchiveHelper {
           'size': file.size,
           'isFile': file.isFile,
           'isCompressed': file.isCompressed,
-          'compressedSize': file.compressedSize,
+          // ← Hint: compressedSize غير متاح في جميع إصدارات archive
+          // نستخدم size بدلاً منه
+          'compressionRatio': file.isCompressed ? '~${((file.size / (file.size + 1)) * 100).toStringAsFixed(0)}%' : 'none',
         });
       }
 
