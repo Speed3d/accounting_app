@@ -1268,6 +1268,34 @@ Future<int> getActiveEmployeesCount() async {
   return Sqflite.firstIntValue(result) ?? 0;
 }
 
+// Hint: دالة لحساب إجمالي المكافآت المدفوعة لجميع الموظفين.
+// تجمع كل قيم Bonuses من جدول TB_Payroll.
+Future<Decimal> getTotalBonuses() async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Bonuses) as Total FROM TB_Payroll'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
+}
+
+// Hint: دالة لحساب إجمالي الخصومات المطبقة على جميع الموظفين.
+// تجمع كل قيم Deductions من جدول TB_Payroll.
+Future<Decimal> getTotalDeductions() async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(Deductions) as Total FROM TB_Payroll'
+  );
+  
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
+}
+
 
 
 
