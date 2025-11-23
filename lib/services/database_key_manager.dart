@@ -41,9 +41,22 @@ class DatabaseKeyManager {
     ),
   );
 
+  // ← Hint: FlutterSecureStorage بدون encryption للمحاكيات (Fallback)
+  // ← Hint: في بعض المحاكيات، encryptedSharedPreferences قد يسبب مشاكل
+  final _secureStorageNoEncryption = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: false, // ← بدون encryption للتوافق
+      resetOnError: false,
+    ),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock,
+    ),
+  );
+
   // ← Hint: مفاتيح التخزين
   static const String _primaryKeyStorageKey = 'db_encryption_key_v2';
   static const String _backupKeyStorageKey = 'db_encryption_key_v2_backup';
+  static const String _noEncKeyStorageKey = 'db_encryption_key_v2_no_enc'; // ← جديد
   static const String _keyVersionKey = 'db_key_version';
   static const String _keyCreatedAtKey = 'db_key_created_at';
 
@@ -116,79 +129,121 @@ class DatabaseKeyManager {
 
   Future<String?> _loadKeyWithFallback() async {
     try {
+      debugPrint('🔍 [KeyManager] بدء البحث عن مفتاح محفوظ...');
+
       // ═══════════════════════════════════════════════════════════
-      // الطبقة 1: Primary Storage
+      // الطبقة 1: Primary Storage (مع encryption)
       // ═══════════════════════════════════════════════════════════
 
-      final primaryKey = await _secureStorage.read(key: _primaryKeyStorageKey);
+      try {
+        final primaryKey = await _secureStorage.read(key: _primaryKeyStorageKey);
+        debugPrint('🔍 [KeyManager] Primary Storage: ${primaryKey != null ? "موجود (${primaryKey.length} chars)" : "فارغ"}');
 
-      if (primaryKey != null && primaryKey.isNotEmpty) {
-        debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Primary Storage');
-
-        // ← Hint: التحقق من صحة المفتاح
-        if (_isValidKey(primaryKey)) {
-          return primaryKey;
-        } else {
-          debugPrint('⚠️ [KeyManager] المفتاح الأساسي غير صالح، محاولة Backup...');
+        if (primaryKey != null && primaryKey.isNotEmpty) {
+          // ← Hint: التحقق من صحة المفتاح
+          if (_isValidKey(primaryKey)) {
+            debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Primary Storage');
+            return primaryKey;
+          } else {
+            debugPrint('⚠️ [KeyManager] المفتاح الأساسي غير صالح، محاولة Backup...');
+          }
         }
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] خطأ في قراءة Primary Storage: $e');
       }
 
       // ═══════════════════════════════════════════════════════════
-      // الطبقة 2: Backup Storage
+      // الطبقة 2: Backup Storage (مع encryption)
       // ═══════════════════════════════════════════════════════════
 
-      final backupKey = await _secureStorage.read(key: _backupKeyStorageKey);
+      try {
+        final backupKey = await _secureStorage.read(key: _backupKeyStorageKey);
+        debugPrint('🔍 [KeyManager] Backup Storage: ${backupKey != null ? "موجود (${backupKey.length} chars)" : "فارغ"}');
 
-      if (backupKey != null && backupKey.isNotEmpty && _isValidKey(backupKey)) {
-        debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Backup Storage');
+        if (backupKey != null && backupKey.isNotEmpty && _isValidKey(backupKey)) {
+          debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Backup Storage');
 
-        // ← Hint: استعادة المفتاح الأساسي من Backup
-        await _secureStorage.write(key: _primaryKeyStorageKey, value: backupKey);
+          // ← Hint: استعادة المفتاح الأساسي من Backup
+          await _secureStorage.write(key: _primaryKeyStorageKey, value: backupKey);
 
-        return backupKey;
+          return backupKey;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] خطأ في قراءة Backup Storage: $e');
       }
 
       // ═══════════════════════════════════════════════════════════
-      // الطبقة 3: Legacy Storage (التوافقية مع النسخة القديمة)
+      // الطبقة 3: No-Encryption Storage (للمحاكيات) 🆕
+      // ← Hint: بعض المحاكيات تفقد بيانات EncryptedSharedPreferences
       // ═══════════════════════════════════════════════════════════
 
-      final legacyKey = await _secureStorage.read(key: _legacyKeyStorageKey);
+      try {
+        final noEncKey = await _secureStorageNoEncryption.read(key: _noEncKeyStorageKey);
+        debugPrint('🔍 [KeyManager] No-Encryption Storage: ${noEncKey != null ? "موجود (${noEncKey.length} chars)" : "فارغ"}');
 
-      if (legacyKey != null && legacyKey.isNotEmpty && _isValidKey(legacyKey)) {
-        debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Legacy Storage (v1)');
-        debugPrint('🔄 [KeyManager] ترحيل المفتاح إلى النظام الجديد...');
+        if (noEncKey != null && noEncKey.isNotEmpty && _isValidKey(noEncKey)) {
+          debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من No-Encryption Storage (Emulator Fix)');
 
-        // ← Hint: ترحيل المفتاح القديم إلى النظام الجديد
-        await _migrateFromLegacyKey(legacyKey);
+          // ← Hint: استعادة المفتاح إلى المخازن الأخرى
+          await _saveKeyWithBackup(noEncKey);
 
-        return legacyKey;
+          return noEncKey;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] خطأ في قراءة No-Encryption Storage: $e');
       }
 
       // ═══════════════════════════════════════════════════════════
-      // الطبقة 4: SharedPreferences (احتياطي إضافي)
+      // الطبقة 4: Legacy Storage (التوافقية مع النسخة القديمة)
+      // ═══════════════════════════════════════════════════════════
+
+      try {
+        final legacyKey = await _secureStorage.read(key: _legacyKeyStorageKey);
+        debugPrint('🔍 [KeyManager] Legacy Storage: ${legacyKey != null ? "موجود (${legacyKey.length} chars)" : "فارغ"}');
+
+        if (legacyKey != null && legacyKey.isNotEmpty && _isValidKey(legacyKey)) {
+          debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من Legacy Storage (v1)');
+          debugPrint('🔄 [KeyManager] ترحيل المفتاح إلى النظام الجديد...');
+
+          // ← Hint: ترحيل المفتاح القديم إلى النظام الجديد
+          await _migrateFromLegacyKey(legacyKey);
+
+          return legacyKey;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] خطأ في قراءة Legacy Storage: $e');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // الطبقة 5: SharedPreferences (احتياطي إضافي)
       // ← Hint: نسخة مشفرة في SharedPreferences
       // ═══════════════════════════════════════════════════════════
 
-      final spKey = await _loadFromSharedPreferences();
+      try {
+        final spKey = await _loadFromSharedPreferences();
+        debugPrint('🔍 [KeyManager] SharedPreferences: ${spKey != null ? "موجود (${spKey.length} chars)" : "فارغ"}');
 
-      if (spKey != null && spKey.isNotEmpty && _isValidKey(spKey)) {
-        debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من SharedPreferences');
+        if (spKey != null && spKey.isNotEmpty && _isValidKey(spKey)) {
+          debugPrint('✅ [KeyManager] مفتاح التشفير: محمّل من SharedPreferences');
 
-        // ← Hint: استعادة المفتاح إلى SecureStorage
-        await _saveKeyWithBackup(spKey);
+          // ← Hint: استعادة المفتاح إلى SecureStorage
+          await _saveKeyWithBackup(spKey);
 
-        return spKey;
+          return spKey;
+        }
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] خطأ في قراءة SharedPreferences: $e');
       }
 
       // ═══════════════════════════════════════════════════════════
       // لم نجد أي مفتاح
       // ═══════════════════════════════════════════════════════════
 
-      debugPrint('⚠️ [KeyManager] لم يتم العثور على مفتاح محفوظ');
+      debugPrint('⚠️ [KeyManager] لم يتم العثور على مفتاح محفوظ في أي من المخازن الـ 5');
       return null;
 
     } catch (e) {
-      debugPrint('⚠️ [KeyManager] خطأ في _loadKeyWithFallback: $e');
+      debugPrint('❌ [KeyManager] خطأ حرج في _loadKeyWithFallback: $e');
       return null;
     }
   }
@@ -203,54 +258,87 @@ class DatabaseKeyManager {
       // ← Hint: الطابع الزمني للمفتاح
       final timestamp = DateTime.now().toIso8601String();
 
-      // ═══════════════════════════════════════════════════════════
-      // حفظ في Primary Storage
-      // ═══════════════════════════════════════════════════════════
-
-      await _secureStorage.write(
-        key: _primaryKeyStorageKey,
-        value: key,
-      );
-
-      debugPrint('✅ [KeyManager] تم حفظ المفتاح في Primary Storage');
+      debugPrint('💾 [KeyManager] بدء حفظ المفتاح في مخازن متعددة...');
 
       // ═══════════════════════════════════════════════════════════
-      // حفظ في Backup Storage
+      // حفظ في Primary Storage (مع encryption)
       // ═══════════════════════════════════════════════════════════
 
-      await _secureStorage.write(
-        key: _backupKeyStorageKey,
-        value: key,
-      );
+      try {
+        await _secureStorage.write(
+          key: _primaryKeyStorageKey,
+          value: key,
+        );
+        debugPrint('✅ [KeyManager] تم حفظ المفتاح في Primary Storage');
+      } catch (e) {
+        debugPrint('❌ [KeyManager] فشل حفظ Primary Storage: $e');
+      }
 
-      debugPrint('✅ [KeyManager] تم حفظ المفتاح في Backup Storage');
+      // ═══════════════════════════════════════════════════════════
+      // حفظ في Backup Storage (مع encryption)
+      // ═══════════════════════════════════════════════════════════
+
+      try {
+        await _secureStorage.write(
+          key: _backupKeyStorageKey,
+          value: key,
+        );
+        debugPrint('✅ [KeyManager] تم حفظ المفتاح في Backup Storage');
+      } catch (e) {
+        debugPrint('❌ [KeyManager] فشل حفظ Backup Storage: $e');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // حفظ في No-Encryption Storage (للمحاكيات) 🆕
+      // ← Hint: إصلاح مشكلة المحاكيات مع EncryptedSharedPreferences
+      // ═══════════════════════════════════════════════════════════
+
+      try {
+        await _secureStorageNoEncryption.write(
+          key: _noEncKeyStorageKey,
+          value: key,
+        );
+        debugPrint('✅ [KeyManager] تم حفظ المفتاح في No-Encryption Storage (Emulator Fix)');
+      } catch (e) {
+        debugPrint('❌ [KeyManager] فشل حفظ No-Encryption Storage: $e');
+      }
 
       // ═══════════════════════════════════════════════════════════
       // حفظ Metadata
       // ═══════════════════════════════════════════════════════════
 
-      await _secureStorage.write(
-        key: _keyVersionKey,
-        value: '2.0',
-      );
+      try {
+        await _secureStorage.write(
+          key: _keyVersionKey,
+          value: '2.0',
+        );
 
-      await _secureStorage.write(
-        key: _keyCreatedAtKey,
-        value: timestamp,
-      );
+        await _secureStorage.write(
+          key: _keyCreatedAtKey,
+          value: timestamp,
+        );
+        debugPrint('✅ [KeyManager] تم حفظ Metadata');
+      } catch (e) {
+        debugPrint('⚠️ [KeyManager] فشل حفظ Metadata: $e');
+      }
 
       // ═══════════════════════════════════════════════════════════
       // حفظ في SharedPreferences (احتياطي إضافي)
       // ← Hint: نسخة مشفرة بسيطة
       // ═══════════════════════════════════════════════════════════
 
-      await _saveToSharedPreferences(key);
+      try {
+        await _saveToSharedPreferences(key);
+        debugPrint('✅ [KeyManager] تم حفظ المفتاح في SharedPreferences');
+      } catch (e) {
+        debugPrint('❌ [KeyManager] فشل حفظ SharedPreferences: $e');
+      }
 
-      debugPrint('✅ [KeyManager] تم حفظ المفتاح في SharedPreferences');
+      debugPrint('✅ [KeyManager] اكتمل حفظ المفتاح في جميع المخازن المتاحة');
 
     } catch (e) {
-      debugPrint('⚠️ [KeyManager] خطأ في _saveKeyWithBackup: $e');
-      // ← Hint: لا نرمي Exception هنا لأننا حفظنا في Primary على الأقل
+      debugPrint('❌ [KeyManager] خطأ حرج في _saveKeyWithBackup: $e');
+      // ← Hint: لا نرمي Exception هنا لأننا حاولنا الحفظ في مخازن متعددة
     }
   }
 
