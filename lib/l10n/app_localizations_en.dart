@@ -3014,4 +3014,86 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get productImageNote =>
       'Image is optional. You can add it now or later.';
+
+  // ============================================================================
+  // Comprehensive Cash Flow Report Translations
+  // ============================================================================
+
+  @override
+  String get comprehensiveCashFlowReport => 'Comprehensive Cash Flow Report';
+
+  @override
+  String get timePeriod => 'Time Period';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get to => 'To';
+
+  @override
+  String get allTime => 'All Time';
+
+  @override
+  String get now => 'Now';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get noDataAvailable => 'No Data Available';
+
+  @override
+  String get totalRevenue => 'Total Revenue';
+
+  @override
+  String get totalExpenses => 'Total Expenses';
+
+  @override
+  String get netCashFlow => 'Net Cash Flow';
+
+  @override
+  String get profitMargin => 'Profit Margin';
+
+  @override
+  String get revenue => 'Revenue';
+
+  @override
+  String get cashSales => 'Cash Sales';
+
+  @override
+  String get customerPayments => 'Customer Payments';
+
+  @override
+  String get salesReturns => 'Sales Returns';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get expenses => 'Expenses';
+
+  @override
+  String get generalExpenses => 'General Expenses';
+
+  @override
+  String get salaries => 'Salaries';
+
+  @override
+  String get advances => 'Advances';
+
+  @override
+  String get bonuses => 'Bonuses';
+
+  @override
+  String get profitWithdrawals => 'Profit Withdrawals';
 }

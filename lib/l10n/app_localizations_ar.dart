@@ -2988,4 +2988,86 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get productImageNote =>
       'الصورة اختيارية. يمكنك إضافتها الآن أو لاحقاً.';
+
+  // ============================================================================
+  // Comprehensive Cash Flow Report Translations
+  // ============================================================================
+
+  @override
+  String get comprehensiveCashFlowReport => 'تقرير التدفقات النقدية الشامل';
+
+  @override
+  String get timePeriod => 'الفترة الزمنية';
+
+  @override
+  String get from => 'من';
+
+  @override
+  String get to => 'إلى';
+
+  @override
+  String get allTime => 'كل الفترة';
+
+  @override
+  String get now => 'الآن';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get thisWeek => 'هذا الأسبوع';
+
+  @override
+  String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get noDataAvailable => 'لا توجد بيانات متاحة';
+
+  @override
+  String get totalRevenue => 'إجمالي الإيرادات';
+
+  @override
+  String get totalExpenses => 'إجمالي المصروفات';
+
+  @override
+  String get netCashFlow => 'صافي التدفق النقدي';
+
+  @override
+  String get profitMargin => 'هامش الربح';
+
+  @override
+  String get revenue => 'الإيرادات';
+
+  @override
+  String get cashSales => 'المبيعات النقدية';
+
+  @override
+  String get customerPayments => 'دفعات الزبائن';
+
+  @override
+  String get salesReturns => 'مرتجعات المبيعات';
+
+  @override
+  String get total => 'الإجمالي';
+
+  @override
+  String get expenses => 'المصروفات';
+
+  @override
+  String get generalExpenses => 'المصاريف العامة';
+
+  @override
+  String get salaries => 'الرواتب';
+
+  @override
+  String get advances => 'السلف';
+
+  @override
+  String get bonuses => 'المكافآت';
+
+  @override
+  String get profitWithdrawals => 'سحوبات الأرباح';
 }

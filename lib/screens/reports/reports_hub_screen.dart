@@ -8,6 +8,7 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../sales/cash_sales_history_screen.dart';
 import 'cash_flow_report_screen.dart';
+import 'comprehensive_cash_flow_report_screen.dart';
 import 'customer_sales_report_screen.dart';
 import 'employees_report_screen.dart';
 import 'expenses_screen.dart';
@@ -172,6 +173,20 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
           icon: Icons.account_balance_wallet,
           color: AppColors.secondaryLight,
           screen: const CashFlowReportScreen(),
+        ),
+      );
+    }
+
+    // ✅ Hint: تقرير التدفقات النقدية الشامل (جديد)
+    // ✅ Hint: يجمع جميع التدفقات المالية من مصادر مختلفة
+    if (_authService.canViewReports || _authService.isAdmin) {
+      reports.add(
+        ReportItem(
+          title: l10n.comprehensiveCashFlowReport,
+          subtitle: 'تقرير شامل لجميع التدفقات النقدية (إيرادات ومصروفات)',
+          icon: Icons.analytics,
+          color: const Color(0xFF9C27B0), // Purple color
+          screen: const ComprehensiveCashFlowReportScreen(),
         ),
       );
     }

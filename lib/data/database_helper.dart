@@ -273,15 +273,29 @@ class DatabaseHelper {
     // --- إصلاح اسم الجدول ---
     batch.execute('''
       CREATE TABLE TB_Employee_Advances (
-        AdvanceID INTEGER PRIMARY KEY AUTOINCREMENT, 
-        EmployeeID INTEGER NOT NULL, 
-        AdvanceDate TEXT NOT NULL, 
-        AdvanceAmount REAL NOT NULL, 
+        AdvanceID INTEGER PRIMARY KEY AUTOINCREMENT,
+        EmployeeID INTEGER NOT NULL,
+        AdvanceDate TEXT NOT NULL,
+        AdvanceAmount REAL NOT NULL,
         RepaymentStatus TEXT NOT NULL, Notes TEXT
       )
     ''');
-  
-    
+
+    // ← Hint: جدول المكافآت للموظفين (Employee Bonuses)
+    // ← Hint: يحتوي على جميع المكافآت والحوافز الممنوحة للموظفين
+    batch.execute('''
+      CREATE TABLE TB_Employee_Bonuses (
+        BonusID INTEGER PRIMARY KEY AUTOINCREMENT,
+        EmployeeID INTEGER NOT NULL,
+        BonusDate TEXT NOT NULL,
+        BonusAmount REAL NOT NULL,
+        BonusReason TEXT,
+        Notes TEXT,
+        FOREIGN KEY (EmployeeID) REFERENCES TB_Employees (EmployeeID)
+      )
+    ''');
+
+
     batch.execute('''
       CREATE TABLE TB_Suppliers (
       SupplierID INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -2196,6 +2210,118 @@ Future<List<Map<String, dynamic>>> getTopCustomersInPeriod({
   args.add(limit);
   
   return await db.rawQuery(sql, args);
+}
+
+// ============================================================================
+// ← Hint: دوال التعامل مع المكافآت (Employee Bonuses)
+// ============================================================================
+
+/// إضافة مكافأة جديدة لموظف
+///
+/// ← Hint: تستخدم لتسجيل مكافأة/حافز للموظف
+/// ← Hint: يجب التأكد من وجود الموظف قبل الإضافة
+Future<int> insertBonus(Map<String, dynamic> bonus) async {
+  final db = await instance.database;
+  return await db.insert('TB_Employee_Bonuses', bonus);
+}
+
+/// جلب جميع المكافآت لموظف معين
+///
+/// ← Hint: تجلب جميع المكافآت الخاصة بموظف محدد مرتبة حسب التاريخ
+Future<List<Map<String, dynamic>>> getBonusesForEmployee(int employeeId) async {
+  final db = await instance.database;
+  return await db.query(
+    'TB_Employee_Bonuses',
+    where: 'EmployeeID = ?',
+    whereArgs: [employeeId],
+    orderBy: 'BonusDate DESC',
+  );
+}
+
+/// جلب جميع المكافآت في فترة زمنية محددة
+///
+/// ← Hint: تستخدم في التقارير المالية لحساب إجمالي المكافآت في فترة معينة
+Future<List<Map<String, dynamic>>> getBonusesInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+}) async {
+  final db = await instance.database;
+
+  String sql = '''
+    SELECT
+      B.*,
+      E.FullName as EmployeeName
+    FROM TB_Employee_Bonuses B
+    INNER JOIN TB_Employees E ON B.EmployeeID = E.EmployeeID
+    WHERE 1=1
+  ''';
+
+  final List<dynamic> args = [];
+
+  if (startDate != null) {
+    sql += ' AND B.BonusDate >= ?';
+    args.add(startDate.toIso8601String());
+  }
+
+  if (endDate != null) {
+    sql += ' AND B.BonusDate <= ?';
+    args.add(endDate.toIso8601String());
+  }
+
+  sql += ' ORDER BY B.BonusDate DESC';
+
+  return await db.rawQuery(sql, args);
+}
+
+/// حساب إجمالي المكافآت في فترة زمنية
+///
+/// ← Hint: تستخدم في التقارير لعرض إجمالي المكافآت المصروفة
+Future<double> getTotalBonusesInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+}) async {
+  final db = await instance.database;
+
+  String sql = 'SELECT SUM(BonusAmount) as total FROM TB_Employee_Bonuses WHERE 1=1';
+  final List<dynamic> args = [];
+
+  if (startDate != null) {
+    sql += ' AND BonusDate >= ?';
+    args.add(startDate.toIso8601String());
+  }
+
+  if (endDate != null) {
+    sql += ' AND BonusDate <= ?';
+    args.add(endDate.toIso8601String());
+  }
+
+  final result = await db.rawQuery(sql, args);
+  return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
+}
+
+/// حذف مكافأة
+///
+/// ← Hint: تستخدم لحذف مكافأة في حال الخطأ في الإدخال
+Future<int> deleteBonus(int bonusId) async {
+  final db = await instance.database;
+  return await db.delete(
+    'TB_Employee_Bonuses',
+    where: 'BonusID = ?',
+    whereArgs: [bonusId],
+  );
+}
+
+/// تحديث مكافأة
+///
+/// ← Hint: تستخدم لتعديل بيانات مكافأة موجودة
+Future<int> updateBonus(int bonusId, Map<String, dynamic> bonus) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_Employee_Bonuses',
+    bonus,
+    where: 'BonusID = ?',
+    whereArgs: [bonusId],
+  );
 }
 
 
