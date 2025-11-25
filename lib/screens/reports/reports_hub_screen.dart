@@ -112,6 +112,20 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     final l10n = AppLocalizations.of(context)!;
     final reports = <ReportItem>[];
 
+    // ✅ Hint: تقرير التدفقات النقدية الشامل (جديد)
+    // ✅ Hint: يجمع جميع التدفقات المالية من مصادر مختلفة
+    if (_authService.canViewReports || _authService.isAdmin) {
+      reports.add(
+        ReportItem(
+          title: l10n.comprehensiveCashFlowReport,
+          subtitle: 'تقرير شامل لجميع التدفقات النقدية ( إيرادات ومصروفات )',
+          icon: Icons.analytics,
+          color: const Color(0xFF9C27B0), // Purple color
+          screen: const ComprehensiveCashFlowReportScreen(),
+        ),
+      );
+    }
+
     // --- تقرير الأرباح العام ---
     if (_authService.canViewReports || _authService.isAdmin) {
       reports.add(
@@ -173,20 +187,6 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
           icon: Icons.account_balance_wallet,
           color: AppColors.secondaryLight,
           screen: const CashFlowReportScreen(),
-        ),
-      );
-    }
-
-    // ✅ Hint: تقرير التدفقات النقدية الشامل (جديد)
-    // ✅ Hint: يجمع جميع التدفقات المالية من مصادر مختلفة
-    if (_authService.canViewReports || _authService.isAdmin) {
-      reports.add(
-        ReportItem(
-          title: l10n.comprehensiveCashFlowReport,
-          subtitle: 'تقرير شامل لجميع التدفقات النقدية (إيرادات ومصروفات)',
-          icon: Icons.analytics,
-          color: const Color(0xFF9C27B0), // Purple color
-          screen: const ComprehensiveCashFlowReportScreen(),
         ),
       );
     }
