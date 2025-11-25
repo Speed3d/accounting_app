@@ -237,8 +237,11 @@ class BackupService {
     try {
       print("🔹 استخراج المستخدمين من النسخة الاحتياطية...");
 
+      // ← Hint: تنظيف كلمة المرور من المسافات
+      final cleanPassword = password.trim();
+
       // ← Hint: التحقق من كلمة المرور ليست فارغة
-      if (password.trim().isEmpty) {
+      if (cleanPassword.isEmpty) {
         return null;
       }
 
@@ -293,7 +296,7 @@ final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
 
 print("🔹 التحقق من سلامة الملف...");
 
-final decryptionKey = _deriveKeyFromPassword(password, salt);
+final decryptionKey = _deriveKeyFromPassword(cleanPassword, salt);
 final hmacKey = Hmac(sha256, decryptionKey.bytes);
 final calculatedHMAC = hmacKey.convert([
   ...magicNumber.codeUnits,
@@ -484,8 +487,11 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       print("🔹 بدء عملية الاستعادة الذكية...");
       print("🔹 خيار الدمج: $userMergeOption");
 
+      // ← Hint: تنظيف كلمة المرور من المسافات
+      final cleanPassword = password.trim();
+
       // ← Hint: التحقق من كلمة المرور
-      if (password.trim().isEmpty) {
+      if (cleanPassword.isEmpty) {
         return {
           'status': 'error',
           'message': 'كلمة المرور لا يمكن أن تكون فارغة',
@@ -543,7 +549,7 @@ final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
 
 print("🔹 التحقق من سلامة الملف...");
 
-final decryptionKey = _deriveKeyFromPassword(password, salt);
+final decryptionKey = _deriveKeyFromPassword(cleanPassword, salt);
 final hmacKey = Hmac(sha256, decryptionKey.bytes);
 final calculatedHMAC = hmacKey.convert([
   ...magicNumber.codeUnits,
@@ -851,12 +857,14 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
   // ==========================================================
   /// [password] كلمة المرور التي سيستخدمها المستخدم لحماية النسخة
   Future<Map<String, dynamic>> createAndShareBackup(String password) async {
-    
+
     try {
       print("🔹 بدء إنشاء النسخة الاحتياطية...");
 
-      // ← Hint: التحقق من أن كلمة المرور ليست فارغة
-      if (password.trim().isEmpty) {
+      // ← Hint: تنظيف كلمة المرور من المسافات
+      final cleanPassword = password.trim();
+
+      if (cleanPassword.isEmpty) {
         return {
           'status': 'error',
           'message': 'كلمة المرور لا يمكن أن تكون فارغة',
@@ -920,7 +928,7 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
 
       // 🔸 اشتقاق مفتاح التشفير من كلمة المرور والـ Salt
       print("🔹 اشتقاق مفتاح التشفير من كلمة المرور...");
-      final encryptionKey = _deriveKeyFromPassword(password, salt);
+      final encryptionKey = _deriveKeyFromPassword(cleanPassword, salt);
       final iv = _deriveIVFromSalt(salt);
 
       // 🔸 إنشاء أداة التشفير باستخدام AES-256
@@ -1043,8 +1051,11 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
     try {
       print("🔹 بدء عملية استعادة النسخة الاحتياطية...");
 
+      // ← Hint: تنظيف كلمة المرور من المسافات
+      final cleanPassword = password.trim();
+
       // ← Hint: التحقق من أن كلمة المرور ليست فارغة
-      if (password.trim().isEmpty) {
+      if (cleanPassword.isEmpty) {
         return 'كلمة المرور لا يمكن أن تكون فارغة';
       }
 
@@ -1120,7 +1131,7 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
     print("🔹 التحقق من سلامة الملف...");
 
     // ← Hint: حساب HMAC المتوقع
-    final decryptionKey = _deriveKeyFromPassword(password, salt);
+    final decryptionKey = _deriveKeyFromPassword(cleanPassword, salt);
     final hmacKey = Hmac(sha256, decryptionKey.bytes);
     final calculatedHMAC = hmacKey.convert([
       ...magicNumber.codeUnits,
@@ -1334,7 +1345,10 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       // التحقق من كلمة المرور
       // ═══════════════════════════════════════════════════════════
 
-      if (password.trim().isEmpty) {
+      // ← Hint: تنظيف كلمة المرور من المسافات
+      final cleanPassword = password.trim();
+
+      if (cleanPassword.isEmpty) {
         return {
           'status': 'error',
           'message': 'كلمة المرور لا يمكن أن تكون فارغة',
@@ -1387,7 +1401,7 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
         onProgress?.call('حفظ مفتاح التشفير...', 3, 5);
 
         final encryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
-        await _saveEncryptionKey(backupWorkDir, encryptionKey, password);
+        await _saveEncryptionKey(backupWorkDir, encryptionKey, cleanPassword);
 
         debugPrint('✅ [BackupService] تم حفظ مفتاح التشفير');
 
@@ -1436,7 +1450,7 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
         final zipBytes = await tempZipFile.readAsBytes();
 
         final salt = enc.IV.fromSecureRandom(_saltLength).bytes;
-        final encryptionKeyDerived = _deriveKeyFromPassword(password, salt);
+        final encryptionKeyDerived = _deriveKeyFromPassword(cleanPassword, salt);
         final iv = _deriveIVFromSalt(salt);
 
         final encrypter = enc.Encrypter(enc.AES(encryptionKeyDerived, mode: enc.AESMode.cbc));
