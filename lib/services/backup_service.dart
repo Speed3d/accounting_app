@@ -1829,7 +1829,8 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       await tempZipFile.writeAsBytes(zipBytes);
 
       // استخراج ZIP
-      final extracted = await ArchiveHelper.extractDirectory(
+      // final extracted = await ArchiveHelper.extractDirectory(
+      final extracted = await ArchiveHelper.extractZip(
         zipFile: tempZipFile,
         outputDir: tempRestoreDir,
       );

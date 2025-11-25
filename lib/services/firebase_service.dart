@@ -601,7 +601,7 @@ class FirebaseService {
   }
 
   int getTrialPeriodDays() {
-    return _remoteConfig?.getInt('trial_period_days') ?? 14;
+    return _remoteConfig?.getInt('trial_period_days') ?? 2;
   }
 
   List<String> getNtpServers() {
