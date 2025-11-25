@@ -1539,10 +1539,10 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       final categories = {
         'users': 'TB_Users',
         'suppliers': 'TB_Suppliers',
-        'customers': 'TB_Customers',
-        'products': 'TB_Products',
+        'customers': 'Debt_Customer',
+        'products': 'Store_Products',
         'employees': 'TB_Employees',
-        'company': 'TB_App_Settings',
+        'company': 'TB_Settings',
       };
 
       for (final entry in categories.entries) {
@@ -1647,8 +1647,8 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       // ← Hint: إحصائيات قاعدة البيانات
       final usersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Users')) ?? 0;
       final suppliersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Suppliers')) ?? 0;
-      final customersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Customers')) ?? 0;
-      final productsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Products')) ?? 0;
+      final customersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM Debt_Customer')) ?? 0;
+      final productsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM Store_Products')) ?? 0;
       final employeesCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Employees')) ?? 0;
 
       final metadata = {
@@ -1829,7 +1829,6 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       await tempZipFile.writeAsBytes(zipBytes);
 
       // استخراج ZIP
-      // final extracted = await ArchiveHelper.extractDirectory(
       final extracted = await ArchiveHelper.extractZip(
         zipFile: tempZipFile,
         outputDir: tempRestoreDir,
@@ -2093,10 +2092,10 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
         final categories = {
           'users': 'TB_Users',
           'suppliers': 'TB_Suppliers',
-          'customers': 'TB_Customers',
-          'products': 'TB_Products',
+          'customers': 'Debt_Customer',
+          'products': 'Store_Products',
           'employees': 'TB_Employees',
-          'company': 'TB_App_Settings',
+          'company': 'TB_Settings',
         };
 
         for (final entry in categories.entries) {

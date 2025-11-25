@@ -110,13 +110,22 @@ class DatabaseHelper {
 
         debugPrint('❌ [DatabaseHelper] خطأ في فتح قاعدة البيانات: $e');
 
-        // ← Hint: التحقق من نوع الخطأ
-        if (e.toString().contains('file is not a database') ||
-            e.toString().contains('file is encrypted') ||
-            e.toString().contains('notadb') ||
-            e.toString().contains('unsupported file format')) {
+        // ← Hint: التحقق من نوع الخطأ - رسائل خطأ SQLCipher الشائعة
+        final errorString = e.toString().toLowerCase();
+
+        if (errorString.contains('file is not a database') ||
+            errorString.contains('file is encrypted') ||
+            errorString.contains('notadb') ||
+            errorString.contains('unsupported file format') ||
+            errorString.contains('cipher') ||
+            errorString.contains('decrypt') ||
+            errorString.contains('invalid key') ||
+            errorString.contains('wrong password') ||
+            errorString.contains('database disk image is malformed') ||
+            errorString.contains('sqlite_notadb')) {
 
           debugPrint('⚠️ [DatabaseHelper] قاعدة البيانات مشفرة بمفتاح مختلف أو تالفة');
+          debugPrint('   الخطأ: $errorString');
 
           // ============================================================================
           // 🔥 الحل الجذري: حذف القاعدة الفاسدة وإنشاء واحدة جديدة
