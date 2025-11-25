@@ -2274,7 +2274,138 @@
   "productOutOfStock": "Product is out of stock",
   "selectSaleDate": "Select Sale Date",
   "saleDate": "Sale Date",
-  "today": "Today"
+  "today": "Today",
+
+    "comprehensiveCashFlowReport": "Comprehensive Cash Flow Report",
+  "@comprehensiveCashFlowReport": {
+    "description": "Title for comprehensive cash flow report"
+  },
+  
+  "timePeriod": "Time Period",
+  "@timePeriod": {
+    "description": "Header for time period selection section"
+  },
+  
+  "from": "From",
+  "@from": {
+    "description": "From (start date)"
+  },
+  
+  "to": "To",
+  "@to": {
+    "description": "To (end date)"
+  },
+  
+  "allTime": "All Time",
+  "@allTime": {
+    "description": "Option to show all data without date filter"
+  },
+  
+  "now": "Now",
+  "@now": {
+    "description": "Current time"
+  },
+  
+  "today": "Today",
+  "@today": {
+    "description": "Current day"
+  },
+  
+  "thisWeek": "This Week",
+  "@thisWeek": {
+    "description": "Current week"
+  },
+  
+  "thisMonth": "This Month",
+  "@thisMonth": {
+    "description": "Current month"
+  },
+  
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh data button"
+  },
+  
+  "noDataAvailable": "No Data Available",
+  "@noDataAvailable": {
+    "description": "Message when no data is available"
+  },
+  
+  "totalRevenue": "Total Revenue",
+  "@totalRevenue": {
+    "description": "Total revenue in the selected period"
+  },
+  
+  "totalExpenses": "Total Expenses",
+  "@totalExpenses": {
+    "description": "Total expenses in the selected period"
+  },
+  
+  "netCashFlow": "Net Cash Flow",
+  "@netCashFlow": {
+    "description": "Net cash flow (revenue - expenses)"
+  },
+  
+  "profitMargin": "Profit Margin",
+  "@profitMargin": {
+    "description": "Profit margin percentage"
+  },
+  
+  "revenue": "Revenue",
+  "@revenue": {
+    "description": "Revenue section"
+  },
+  
+  "cashSales": "Cash Sales",
+  "@cashSales": {
+    "description": "Cash sales from invoices"
+  },
+  
+  "customerPayments": "Customer Payments",
+  "@customerPayments": {
+    "description": "Customer payments on debts"
+  },
+  
+  "salesReturns": "Sales Returns",
+  "@salesReturns": {
+    "description": "Amounts returned from sales"
+  },
+  
+  "total": "Total",
+  "@total": {
+    "description": "Grand total"
+  },
+  
+  "expenses": "Expenses",
+  "@expenses": {
+    "description": "Expenses section"
+  },
+  
+  "generalExpenses": "General Expenses",
+  "@generalExpenses": {
+    "description": "General business expenses"
+  },
+  
+  "salaries": "Salaries",
+  "@salaries": {
+    "description": "Employee salaries"
+  },
+  
+  "advances": "Advances",
+  "@advances": {
+    "description": "Employee advances"
+  },
+  
+  "bonuses": "Bonuses",
+  "@bonuses": {
+    "description": "Employee bonuses and incentives"
+  },
+  
+  "profitWithdrawals": "Profit Withdrawals",
+  "@profitWithdrawals": {
+    "description": "Profit withdrawals by partners"
+  }
+
 
 
 }

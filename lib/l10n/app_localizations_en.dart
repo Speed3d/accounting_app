@@ -308,7 +308,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payrollSavedSuccess => 'Payroll saved successfully!';
 
   @override
-  String get bonuses => 'Bonuses & incentives';
+  String get bonuses => 'Bonuses';
 
   @override
   String get deductions => 'Deductions';
@@ -3015,10 +3015,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productImageNote =>
       'Image is optional. You can add it now or later.';
 
-  // ============================================================================
-  // Comprehensive Cash Flow Report Translations
-  // ============================================================================
-
   @override
   String get comprehensiveCashFlowReport => 'Comprehensive Cash Flow Report';
 
@@ -3038,16 +3034,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get now => 'Now';
 
   @override
-  String get today => 'Today';
-
-  @override
   String get thisWeek => 'This Week';
-
-  @override
-  String get thisMonth => 'This Month';
-
-  @override
-  String get refresh => 'Refresh';
 
   @override
   String get noDataAvailable => 'No Data Available';
@@ -3068,19 +3055,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get revenue => 'Revenue';
 
   @override
-  String get cashSales => 'Cash Sales';
-
-  @override
   String get customerPayments => 'Customer Payments';
 
   @override
   String get salesReturns => 'Sales Returns';
-
-  @override
-  String get total => 'Total';
-
-  @override
-  String get expenses => 'Expenses';
 
   @override
   String get generalExpenses => 'General Expenses';
@@ -3090,9 +3068,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get advances => 'Advances';
-
-  @override
-  String get bonuses => 'Bonuses';
 
   @override
   String get profitWithdrawals => 'Profit Withdrawals';

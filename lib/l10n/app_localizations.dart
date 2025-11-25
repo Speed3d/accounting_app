@@ -674,10 +674,10 @@ abstract class AppLocalizations {
   /// **'Payroll saved successfully!'**
   String get payrollSavedSuccess;
 
-  /// No description provided for @bonuses.
+  /// Employee bonuses and incentives
   ///
   /// In en, this message translates to:
-  /// **'Bonuses & incentives'**
+  /// **'Bonuses'**
   String get bonuses;
 
   /// No description provided for @deductions.
@@ -1856,7 +1856,7 @@ abstract class AppLocalizations {
   /// **'product'**
   String get product;
 
-  /// No description provided for @total.
+  /// Grand total
   ///
   /// In en, this message translates to:
   /// **'Total'**
@@ -2198,7 +2198,7 @@ abstract class AppLocalizations {
   /// **'For: {name}'**
   String withdrawalForLabel(String name);
 
-  /// No description provided for @refresh.
+  /// Refresh data button
   ///
   /// In en, this message translates to:
   /// **'Refresh'**
@@ -2552,13 +2552,13 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
-  /// No description provided for @today.
+  /// Current day
   ///
   /// In en, this message translates to:
   /// **'Today'**
   String get today;
 
-  /// No description provided for @thisMonth.
+  /// Current month
   ///
   /// In en, this message translates to:
   /// **'This Month'**
@@ -3050,13 +3050,13 @@ abstract class AppLocalizations {
   /// **'Employee Reports'**
   String get employeeReports;
 
-  /// No description provided for @expenses.
+  /// Expenses section
   ///
   /// In en, this message translates to:
   /// **'Expenses'**
   String get expenses;
 
-  /// No description provided for @cashSales.
+  /// Cash sales from invoices
   ///
   /// In en, this message translates to:
   /// **'Cash Sales'**
@@ -5606,161 +5606,115 @@ abstract class AppLocalizations {
   /// **'Image is optional. You can add it now or later.'**
   String get productImageNote;
 
-  // ============================================================================
-  // Comprehensive Cash Flow Report
-  // ============================================================================
-
-  /// No description provided for @comprehensiveCashFlowReport.
+  /// Title for comprehensive cash flow report
   ///
   /// In en, this message translates to:
   /// **'Comprehensive Cash Flow Report'**
   String get comprehensiveCashFlowReport;
 
-  /// No description provided for @timePeriod.
+  /// Header for time period selection section
   ///
   /// In en, this message translates to:
   /// **'Time Period'**
   String get timePeriod;
 
-  /// No description provided for @from.
+  /// From (start date)
   ///
   /// In en, this message translates to:
   /// **'From'**
   String get from;
 
-  /// No description provided for @to.
+  /// To (end date)
   ///
   /// In en, this message translates to:
   /// **'To'**
   String get to;
 
-  /// No description provided for @allTime.
+  /// Option to show all data without date filter
   ///
   /// In en, this message translates to:
   /// **'All Time'**
   String get allTime;
 
-  /// No description provided for @now.
+  /// Current time
   ///
   /// In en, this message translates to:
   /// **'Now'**
   String get now;
 
-  /// No description provided for @today.
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get today;
-
-  /// No description provided for @thisWeek.
+  /// Current week
   ///
   /// In en, this message translates to:
   /// **'This Week'**
   String get thisWeek;
 
-  /// No description provided for @thisMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'This Month'**
-  String get thisMonth;
-
-  /// No description provided for @refresh.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get refresh;
-
-  /// No description provided for @noDataAvailable.
+  /// Message when no data is available
   ///
   /// In en, this message translates to:
   /// **'No Data Available'**
   String get noDataAvailable;
 
-  /// No description provided for @totalRevenue.
+  /// Total revenue in the selected period
   ///
   /// In en, this message translates to:
   /// **'Total Revenue'**
   String get totalRevenue;
 
-  /// No description provided for @totalExpenses.
+  /// Total expenses in the selected period
   ///
   /// In en, this message translates to:
   /// **'Total Expenses'**
   String get totalExpenses;
 
-  /// No description provided for @netCashFlow.
+  /// Net cash flow (revenue - expenses)
   ///
   /// In en, this message translates to:
   /// **'Net Cash Flow'**
   String get netCashFlow;
 
-  /// No description provided for @profitMargin.
+  /// Profit margin percentage
   ///
   /// In en, this message translates to:
   /// **'Profit Margin'**
   String get profitMargin;
 
-  /// No description provided for @revenue.
+  /// Revenue section
   ///
   /// In en, this message translates to:
   /// **'Revenue'**
   String get revenue;
 
-  /// No description provided for @cashSales.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash Sales'**
-  String get cashSales;
-
-  /// No description provided for @customerPayments.
+  /// Customer payments on debts
   ///
   /// In en, this message translates to:
   /// **'Customer Payments'**
   String get customerPayments;
 
-  /// No description provided for @salesReturns.
+  /// Amounts returned from sales
   ///
   /// In en, this message translates to:
   /// **'Sales Returns'**
   String get salesReturns;
 
-  /// No description provided for @total.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get total;
-
-  /// No description provided for @expenses.
-  ///
-  /// In en, this message translates to:
-  /// **'Expenses'**
-  String get expenses;
-
-  /// No description provided for @generalExpenses.
+  /// General business expenses
   ///
   /// In en, this message translates to:
   /// **'General Expenses'**
   String get generalExpenses;
 
-  /// No description provided for @salaries.
+  /// Employee salaries
   ///
   /// In en, this message translates to:
   /// **'Salaries'**
   String get salaries;
 
-  /// No description provided for @advances.
+  /// Employee advances
   ///
   /// In en, this message translates to:
   /// **'Advances'**
   String get advances;
 
-  /// No description provided for @bonuses.
-  ///
-  /// In en, this message translates to:
-  /// **'Bonuses'**
-  String get bonuses;
-
-  /// No description provided for @profitWithdrawals.
+  /// Profit withdrawals by partners
   ///
   /// In en, this message translates to:
   /// **'Profit Withdrawals'**

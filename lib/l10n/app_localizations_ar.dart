@@ -307,7 +307,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payrollSavedSuccess => 'تم تسجيل الراتب بنجاح!';
 
   @override
-  String get bonuses => 'المكافآت والحوافز';
+  String get bonuses => 'المكافآت';
 
   @override
   String get deductions => 'الخصومات';
@@ -1618,7 +1618,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employeeReports => 'تقارير الموظفين';
 
   @override
-  String get expenses => 'المصاريف';
+  String get expenses => 'المصروفات';
 
   @override
   String get cashSales => 'المبيعات النقدية';
@@ -2989,10 +2989,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get productImageNote =>
       'الصورة اختيارية. يمكنك إضافتها الآن أو لاحقاً.';
 
-  // ============================================================================
-  // Comprehensive Cash Flow Report Translations
-  // ============================================================================
-
   @override
   String get comprehensiveCashFlowReport => 'تقرير التدفقات النقدية الشامل';
 
@@ -3012,16 +3008,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get now => 'الآن';
 
   @override
-  String get today => 'اليوم';
-
-  @override
   String get thisWeek => 'هذا الأسبوع';
-
-  @override
-  String get thisMonth => 'هذا الشهر';
-
-  @override
-  String get refresh => 'تحديث';
 
   @override
   String get noDataAvailable => 'لا توجد بيانات متاحة';
@@ -3042,19 +3029,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get revenue => 'الإيرادات';
 
   @override
-  String get cashSales => 'المبيعات النقدية';
-
-  @override
   String get customerPayments => 'دفعات الزبائن';
 
   @override
   String get salesReturns => 'مرتجعات المبيعات';
-
-  @override
-  String get total => 'الإجمالي';
-
-  @override
-  String get expenses => 'المصروفات';
 
   @override
   String get generalExpenses => 'المصاريف العامة';
@@ -3064,9 +3042,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get advances => 'السلف';
-
-  @override
-  String get bonuses => 'المكافآت';
 
   @override
   String get profitWithdrawals => 'سحوبات الأرباح';

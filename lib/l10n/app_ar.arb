@@ -2213,7 +2213,138 @@
   "confirm": "تأكيد",
   "@confirm": {
     "description": "نص زر التأكيد"
+  },
+
+    "comprehensiveCashFlowReport": "تقرير التدفقات النقدية الشامل",
+  "@comprehensiveCashFlowReport": {
+    "description": "عنوان تقرير التدفقات النقدية الشامل"
+  },
+  
+  "timePeriod": "الفترة الزمنية",
+  "@timePeriod": {
+    "description": "عنوان قسم اختيار الفترة الزمنية"
+  },
+  
+  "from": "من",
+  "@from": {
+    "description": "من (تاريخ البداية)"
+  },
+  
+  "to": "إلى",
+  "@to": {
+    "description": "إلى (تاريخ النهاية)"
+  },
+  
+  "allTime": "كل الفترة",
+  "@allTime": {
+    "description": "خيار لعرض جميع البيانات بدون تحديد فترة"
+  },
+  
+  "now": "الآن",
+  "@now": {
+    "description": "الوقت الحالي"
+  },
+  
+  "today": "اليوم",
+  "@today": {
+    "description": "اليوم الحالي"
+  },
+  
+  "thisWeek": "هذا الأسبوع",
+  "@thisWeek": {
+    "description": "الأسبوع الحالي"
+  },
+  
+  "thisMonth": "هذا الشهر",
+  "@thisMonth": {
+    "description": "الشهر الحالي"
+  },
+  
+  "refresh": "تحديث",
+  "@refresh": {
+    "description": "زر تحديث البيانات"
+  },
+  
+  "noDataAvailable": "لا توجد بيانات متاحة",
+  "@noDataAvailable": {
+    "description": "رسالة عند عدم وجود بيانات"
+  },
+  
+  "totalRevenue": "إجمالي الإيرادات",
+  "@totalRevenue": {
+    "description": "إجمالي الإيرادات في الفترة المحددة"
+  },
+  
+  "totalExpenses": "إجمالي المصروفات",
+  "@totalExpenses": {
+    "description": "إجمالي المصروفات في الفترة المحددة"
+  },
+  
+  "netCashFlow": "صافي التدفق النقدي",
+  "@netCashFlow": {
+    "description": "صافي التدفق النقدي (الإيرادات - المصروفات)"
+  },
+  
+  "profitMargin": "هامش الربح",
+  "@profitMargin": {
+    "description": "نسبة هامش الربح المئوية"
+  },
+  
+  "revenue": "الإيرادات",
+  "@revenue": {
+    "description": "قسم الإيرادات"
+  },
+  
+  "cashSales": "المبيعات النقدية",
+  "@cashSales": {
+    "description": "المبيعات النقدية من الفواتير"
+  },
+  
+  "customerPayments": "دفعات الزبائن",
+  "@customerPayments": {
+    "description": "دفعات الزبائن على الديون"
+  },
+  
+  "salesReturns": "مرتجعات المبيعات",
+  "@salesReturns": {
+    "description": "المبالغ المرتجعة من المبيعات"
+  },
+  
+  "total": "الإجمالي",
+  "@total": {
+    "description": "الإجمالي الكلي"
+  },
+  
+  "expenses": "المصروفات",
+  "@expenses": {
+    "description": "قسم المصروفات"
+  },
+  
+  "generalExpenses": "المصاريف العامة",
+  "@generalExpenses": {
+    "description": "المصاريف العامة للمشروع"
+  },
+  
+  "salaries": "الرواتب",
+  "@salaries": {
+    "description": "رواتب الموظفين"
+  },
+  
+  "advances": "السلف",
+  "@advances": {
+    "description": "السلف الممنوحة للموظفين"
+  },
+  
+  "bonuses": "المكافآت",
+  "@bonuses": {
+    "description": "المكافآت والحوافز للموظفين"
+  },
+  
+  "profitWithdrawals": "سحوبات الأرباح",
+  "@profitWithdrawals": {
+    "description": "سحوبات الأرباح من قبل الشركاء"
   }
+
 
 
 }
