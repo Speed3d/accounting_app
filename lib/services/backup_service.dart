@@ -214,8 +214,14 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       final tempDbFile = File(tempDbPath);
       await tempDbFile.writeAsBytes(dbBytes);
 
+      // ← Hint: الحصول على مفتاح التشفير لفتح قاعدة البيانات
+      final dbEncryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+
       // ← Hint: فتح قاعدة البيانات المؤقتة وقراءة المستخدمين
-      final tempDb = await openDatabase(tempDbPath);
+      final tempDb = await openDatabase(
+        tempDbPath,
+        password: dbEncryptionKey,
+      );
       
       try {
         final users = await tempDb.query('TB_Users');
@@ -370,13 +376,19 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       // ← Hint: ✅ النقطة المهمة - حفظ المستخدمين الحاليين قبل الاستبدال
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbFolder.path, _dbFileName));
-      
+
       List<Map<String, dynamic>> currentUsers = [];
-      
+
+      // ← Hint: الحصول على مفتاح التشفير لفتح قاعدة البيانات
+      final dbEncryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+
       // ← Hint: قراءة المستخدمين الحاليين إذا كان الخيار ليس 'replace'
       if (userMergeOption != 'replace') {
         if (await dbFile.exists()) {
-          final currentDb = await openDatabase(dbFile.path);
+          final currentDb = await openDatabase(
+            dbFile.path,
+            password: dbEncryptionKey,
+          );
           try {
             currentUsers = await currentDb.query('TB_Users');
             print("🔹 تم حفظ ${currentUsers.length} مستخدم حالي");
@@ -401,8 +413,11 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       if (userMergeOption == 'merge' && currentUsers.isNotEmpty) {
         // ← Hint: دمج المستخدمين - الحفاظ على الصلاحيات الحالية
         print("🔹 بدء دمج المستخدمين...");
-        
-        final restoredDb = await openDatabase(dbFile.path);
+
+        final restoredDb = await openDatabase(
+          dbFile.path,
+          password: dbEncryptionKey,
+        );
         
         try {
           int mergedCount = 0;
@@ -438,8 +453,11 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
       } else if (userMergeOption == 'keep' && currentUsers.isNotEmpty) {
         // ← Hint: الاحتفاظ بالمستخدمين الحاليين - حذف المستخدمين من النسخة المستعادة
         print("🔹 الاحتفاظ بالمستخدمين الحاليين فقط...");
-        
-        final restoredDb = await openDatabase(dbFile.path);
+
+        final restoredDb = await openDatabase(
+          dbFile.path,
+          password: dbEncryptionKey,
+        );
         
         try {
           // ← Hint: حذف جميع المستخدمين من النسخة المستعادة
