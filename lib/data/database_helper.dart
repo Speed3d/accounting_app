@@ -33,7 +33,8 @@ class DatabaseHelper {
 
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
   // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
-  static const _databaseVersion = 1;
+  // Version 2: إضافة جدول TB_Employee_Bonuses
+  static const _databaseVersion = 2;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -473,7 +474,23 @@ class DatabaseHelper {
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     debugPrint('🔄 ترقية قاعدة البيانات من $oldVersion إلى $newVersion');
 
-      }
+    // ترقية من الإصدار 1 إلى 2: إضافة جدول TB_Employee_Bonuses
+    if (oldVersion < 2) {
+      debugPrint('📦 إضافة جدول TB_Employee_Bonuses...');
+      await db.execute('''
+        CREATE TABLE TB_Employee_Bonuses (
+          BonusID INTEGER PRIMARY KEY AUTOINCREMENT,
+          EmployeeID INTEGER NOT NULL,
+          BonusDate TEXT NOT NULL,
+          BonusAmount REAL NOT NULL,
+          BonusReason TEXT,
+          Notes TEXT,
+          FOREIGN KEY (EmployeeID) REFERENCES TB_Employees (EmployeeID)
+        )
+      ''');
+      debugPrint('✅ تم إضافة جدول TB_Employee_Bonuses بنجاح');
+    }
+  }
 
    ///////////////////////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////
