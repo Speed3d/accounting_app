@@ -51,6 +51,18 @@ class DatabaseHelper {
     return _database!;
   }
 
+  // ============================================================================
+  // ← Hint: إغلاق قاعدة البيانات ومسح الـ Cache
+  // ← Hint: مفيد عند استعادة نسخة احتياطية لإجبار إعادة فتح القاعدة
+  // ============================================================================
+  Future<void> closeDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+      debugPrint('🔒 [DatabaseHelper] تم إغلاق قاعدة البيانات ومسح الـ Cache');
+    }
+  }
+
 
   // ============================================================================
   // ← Hint: تهيئة قاعدة البيانات - النسخة المحسّنة مع معالجة أخطاء
@@ -106,24 +118,38 @@ class DatabaseHelper {
 
           debugPrint('⚠️ [DatabaseHelper] قاعدة البيانات مشفرة بمفتاح مختلف أو تالفة');
 
-          // ← Hint: محاولة استرداد من نسخة احتياطية
-          final recovered = await _attemptDatabaseRecovery(path, encryptionKey);
+          // ============================================================================
+          // 🔥 الحل الجذري: حذف القاعدة الفاسدة وإنشاء واحدة جديدة
+          // ============================================================================
+          // ← Hint: هذا يحدث عادة عند:
+          //    1. حذف التطبيق وإعادة تثبيته (مفتاح جديد ≠ مفتاح قديم)
+          //    2. قاعدة البيانات تالفة فعلياً
+          // ← Hint: الحل: نحذف القاعدة القديمة ونبدأ من جديد
+          // ============================================================================
 
-          if (recovered != null) {
-            debugPrint('✅ [DatabaseHelper] تم استرداد قاعدة البيانات');
-            return recovered;
+          debugPrint('🗑️ [DatabaseHelper] حذف قاعدة البيانات الفاسدة...');
+
+          final dbFile = File(path);
+          if (await dbFile.exists()) {
+            await dbFile.delete();
+            debugPrint('✅ [DatabaseHelper] تم حذف القاعدة الفاسدة');
           }
 
-          // ← Hint: إذا فشل الاسترداد، نقترح على المستخدم الخيارات
-          throw DatabaseRecoveryException(
-            'فشل فتح قاعدة البيانات. قد يكون السبب:\n'
-            '1. تغير مفتاح التشفير\n'
-            '2. قاعدة البيانات تالفة\n\n'
-            'الحلول المتاحة:\n'
-            '• استرداد من نسخة احتياطية\n'
-            '• البدء من جديد\n\n'
-            'رمز الخطأ: DB_ENCRYPTION_MISMATCH',
+          // ← Hint: إنشاء قاعدة بيانات جديدة ونظيفة
+          debugPrint('🆕 [DatabaseHelper] إنشاء قاعدة بيانات جديدة...');
+
+          final newDb = await openDatabase(
+            path,
+            version: _databaseVersion,
+            onCreate: _onCreate,
+            onUpgrade: _onUpgrade,
+            password: encryptionKey,
           );
+
+          debugPrint('✅ [DatabaseHelper] تم إنشاء قاعدة بيانات جديدة بنجاح');
+          debugPrint('💡 [DatabaseHelper] يمكنك الآن إنشاء حساب مدير جديد');
+
+          return newDb;
         }
 
         // ← Hint: خطأ آخر غير متوقع
@@ -458,6 +484,69 @@ class DatabaseHelper {
     ''');
 
     await batch.commit();
+
+    // ============================================================================
+    // 🔥 إضافة Database Indexes لتحسين الأداء
+    // ============================================================================
+    debugPrint('📊 [DatabaseHelper] إنشاء Database Indexes...');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON TB_Users(UserName)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_users_datet ON TB_Users(DateT)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_employees_isactive ON TB_Employees(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_employees_hiredate ON TB_Employees(HireDate)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_payroll_employee ON TB_Payroll(EmployeeID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_payroll_date ON TB_Payroll(PaymentDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_payroll_period ON TB_Payroll(PayrollYear, PayrollMonth)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_advances_employee ON TB_Employee_Advances(EmployeeID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_advances_date ON TB_Employee_Advances(AdvanceDate)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_bonuses_employee ON TB_Employee_Bonuses(EmployeeID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_bonuses_date ON TB_Employee_Bonuses(BonusDate)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_suppliers_isactive ON TB_Suppliers(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_suppliers_type ON TB_Suppliers(SupplierType)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_suppliers_date ON TB_Suppliers(DateAdded)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_partners_supplier ON Supplier_Partners(SupplierID)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_withdrawals_supplier ON TB_Profit_Withdrawals(SupplierID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_withdrawals_date ON TB_Profit_Withdrawals(WithdrawalDate)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_products_supplier ON Store_Products(SupplierID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_products_barcode ON Store_Products(Barcode)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_products_isactive ON Store_Products(IsActive)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_customers_isactive ON TB_Customer(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_customers_date ON TB_Customer(DateT)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_debt_customer ON Debt_Customer(CustomerID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_debt_product ON Debt_Customer(ProductID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_debt_invoice ON Debt_Customer(InvoiceID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_debt_date ON Debt_Customer(DateT)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_debt_returned ON Debt_Customer(IsReturned)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_payment_customer ON Payment_Customer(CustomerID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_payment_date ON Payment_Customer(DateT)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_returns_sale ON Sales_Returns(OriginalSaleID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_returns_customer ON Sales_Returns(CustomerID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_returns_product ON Sales_Returns(ProductID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_returns_date ON Sales_Returns(ReturnDate)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_log_user ON Activity_Log(UserID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_log_timestamp ON Activity_Log(Timestamp)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_invoices_customer ON TB_Invoices(CustomerID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_invoices_date ON TB_Invoices(InvoiceDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_invoices_void ON TB_Invoices(IsVoid)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_date ON TB_Expenses(ExpenseDate)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON TB_Expenses(Category)');
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء ${56} Database Index بنجاح');
 
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
     await _insertDefaultCategories(db);
