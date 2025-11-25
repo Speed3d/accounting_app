@@ -1690,6 +1690,481 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
   }
 
   // ============================================================================
+  // ← Hint: 🔄 استعادة نسخة احتياطية شاملة (قاعدة بيانات + صور)
+  // ============================================================================
+
+  /// استعادة نسخة احتياطية شاملة تتضمن قاعدة البيانات والصور
+  ///
+  /// [password] - كلمة المرور المستخدمة عند إنشاء النسخة
+  /// [backupFile] - ملف النسخة الاحتياطية
+  /// [userMergeOption] - خيار دمج المستخدمين ('merge', 'replace', 'keep')
+  /// [onProgress] - callback لتتبع التقدم (اختياري)
+  ///
+  /// Returns: Map يحتوي على حالة العملية والنتائج
+  Future<Map<String, dynamic>> restoreComprehensiveBackup({
+    required String password,
+    required File backupFile,
+    required String userMergeOption,
+    Function(String status, int current, int total)? onProgress,
+  }) async {
+    Directory? tempRestoreDir;
+
+    try {
+      debugPrint('🚀 [BackupService] بدء استعادة النسخة الاحتياطية الشاملة...');
+
+      // ═══════════════════════════════════════════════════════════
+      // التحقق من كلمة المرور
+      // ═══════════════════════════════════════════════════════════
+
+      final cleanPassword = password.trim();
+
+      if (cleanPassword.isEmpty) {
+        return {
+          'status': 'error',
+          'message': 'كلمة المرور لا يمكن أن تكون فارغة',
+        };
+      }
+
+      onProgress?.call('قراءة الملف...', 1, 7);
+
+      // ═══════════════════════════════════════════════════════════
+      // قراءة وفك تشفير الملف
+      // ═══════════════════════════════════════════════════════════
+
+      final fileBytes = await backupFile.readAsBytes();
+      final magicNumber = _magicNumber;
+      final magicNumberSize = magicNumber.codeUnits.length;
+
+      // التحقق من الحد الأدنى للحجم
+      const int hmacLength = 32;
+      final minFileSize = magicNumberSize + _saltLength + hmacLength + 16;
+
+      if (fileBytes.length < minFileSize) {
+        throw Exception('حجم الملف صغير جداً أو الملف تالف.');
+      }
+
+      // استخراج Magic Number
+      final fileMagicNumber = String.fromCharCodes(
+        fileBytes.sublist(0, magicNumberSize),
+      );
+
+      if (fileMagicNumber != magicNumber) {
+        throw Exception('ملف النسخة الاحتياطية غير صالح أو لا يخص هذا التطبيق.');
+      }
+
+      // استخراج Salt
+      final salt = fileBytes.sublist(
+        magicNumberSize,
+        magicNumberSize + _saltLength,
+      );
+
+      // استخراج HMAC والبيانات المشفرة
+      final storedHMAC = fileBytes.sublist(
+        magicNumberSize + _saltLength,
+        magicNumberSize + _saltLength + hmacLength,
+      );
+
+      final encryptedBytes = fileBytes.sublist(
+        magicNumberSize + _saltLength + hmacLength,
+      );
+
+      onProgress?.call('التحقق من سلامة الملف...', 2, 7);
+
+      // التحقق من HMAC
+      final decryptionKey = _deriveKeyFromPassword(cleanPassword, salt);
+      final hmacKey = Hmac(sha256, decryptionKey.bytes);
+      final calculatedHMAC = hmacKey.convert([
+        ...magicNumber.codeUnits,
+        ...salt,
+        ...encryptedBytes,
+      ]);
+
+      bool hmacMatches = true;
+      if (storedHMAC.length != calculatedHMAC.bytes.length) {
+        hmacMatches = false;
+      } else {
+        for (int i = 0; i < storedHMAC.length; i++) {
+          if (storedHMAC[i] != calculatedHMAC.bytes[i]) {
+            hmacMatches = false;
+            break;
+          }
+        }
+      }
+
+      if (!hmacMatches) {
+        throw Exception('الملف تم التلاعب به أو تالف. HMAC غير متطابق.');
+      }
+
+      debugPrint('✅ [BackupService] تم التحقق من سلامة الملف');
+
+      onProgress?.call('فك التشفير...', 3, 7);
+
+      // فك التشفير
+      final iv = _deriveIVFromSalt(salt);
+      final encrypter = enc.Encrypter(enc.AES(decryptionKey, mode: enc.AESMode.cbc));
+
+      Uint8List zipBytes;
+      try {
+        final encryptedData = enc.Encrypted(Uint8List.fromList(encryptedBytes));
+        final decryptedData = encrypter.decryptBytes(encryptedData, iv: iv);
+        zipBytes = Uint8List.fromList(decryptedData);
+      } catch (e) {
+        throw Exception('فشل فك التشفير. تأكد من صحة كلمة المرور.');
+      }
+
+      debugPrint('✅ [BackupService] تم فك التشفير: ${_formatBytes(zipBytes.length)}');
+
+      // ═══════════════════════════════════════════════════════════
+      // استخراج محتويات ZIP
+      // ═══════════════════════════════════════════════════════════
+
+      onProgress?.call('استخراج المحتويات...', 4, 7);
+
+      final tempDir = await getTemporaryDirectory();
+      tempRestoreDir = Directory(p.join(tempDir.path, 'restore_${DateTime.now().millisecondsSinceEpoch}'));
+      await tempRestoreDir.create(recursive: true);
+
+      // حفظ ZIP مؤقتاً
+      final tempZipFile = File(p.join(tempDir.path, 'temp_restore.zip'));
+      await tempZipFile.writeAsBytes(zipBytes);
+
+      // استخراج ZIP
+      final extracted = await ArchiveHelper.extractDirectory(
+        zipFile: tempZipFile,
+        outputDir: tempRestoreDir,
+      );
+
+      if (!extracted) {
+        throw Exception('فشل استخراج محتويات النسخة الاحتياطية');
+      }
+
+      // حذف ZIP المؤقت
+      if (await tempZipFile.exists()) {
+        await tempZipFile.delete();
+      }
+
+      debugPrint('✅ [BackupService] تم استخراج المحتويات');
+
+      // ═══════════════════════════════════════════════════════════
+      // قراءة metadata
+      // ═══════════════════════════════════════════════════════════
+
+      final metadataFile = File(p.join(tempRestoreDir.path, 'metadata.json'));
+      Map<String, dynamic>? metadata;
+
+      if (await metadataFile.exists()) {
+        final metadataContent = await metadataFile.readAsString();
+        metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
+        debugPrint('📊 [BackupService] Metadata: ${metadata['version']}');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // استعادة قاعدة البيانات
+      // ═══════════════════════════════════════════════════════════
+
+      onProgress?.call('استعادة قاعدة البيانات...', 5, 7);
+
+      final restoredDbFile = File(p.join(tempRestoreDir.path, 'database.db'));
+
+      if (!await restoredDbFile.exists()) {
+        throw Exception('ملف قاعدة البيانات غير موجود في النسخة الاحتياطية');
+      }
+
+      final restoredDbBytes = await restoredDbFile.readAsBytes();
+
+      // استخراج مفتاح التشفير
+      final encKeyFile = File(p.join(tempRestoreDir.path, 'encryption_key.enc'));
+      String? restoredDbEncryptionKey;
+
+      if (await encKeyFile.exists()) {
+        try {
+          final encKeyContent = await encKeyFile.readAsString();
+          final encKeyData = jsonDecode(encKeyContent) as Map<String, dynamic>;
+
+          final keySalt = base64Decode(encKeyData['salt'] as String);
+          final encryptedKey = enc.Encrypted.fromBase64(encKeyData['key'] as String);
+
+          final keyDecryptionKey = _deriveKeyFromPassword(cleanPassword, keySalt);
+          final keyIv = _deriveIVFromSalt(keySalt);
+          final keyEncrypter = enc.Encrypter(enc.AES(keyDecryptionKey, mode: enc.AESMode.cbc));
+
+          restoredDbEncryptionKey = keyEncrypter.decrypt(encryptedKey, iv: keyIv);
+          debugPrint('✅ [BackupService] تم استعادة مفتاح التشفير');
+        } catch (e) {
+          debugPrint('⚠️ [BackupService] فشل استعادة مفتاح التشفير: $e');
+        }
+      }
+
+      // الحصول على مفتاح التشفير الحالي
+      final currentDbEncryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+
+      // حفظ المستخدمين الحاليين إذا لزم الأمر
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbFile = File(p.join(dbFolder.path, _dbFileName));
+
+      List<Map<String, dynamic>> currentUsers = [];
+
+      if (userMergeOption != 'replace' && await dbFile.exists()) {
+        Database? currentDb;
+        try {
+          currentDb = await openDatabase(
+            dbFile.path,
+            password: currentDbEncryptionKey,
+            readOnly: true,
+          );
+          currentUsers = await currentDb.query('TB_Users');
+          debugPrint('🔹 [BackupService] تم حفظ ${currentUsers.length} مستخدم حالي');
+        } catch (e) {
+          debugPrint('⚠️ [BackupService] فشل قراءة المستخدمين الحاليين: $e');
+        } finally {
+          if (currentDb != null && currentDb.isOpen) {
+            await currentDb.close();
+          }
+        }
+      }
+
+      // نسخ احتياطية من القاعدة الحالية
+      if (await dbFile.exists()) {
+        final backupPath = '${dbFile.path}.old';
+        await dbFile.copy(backupPath);
+        debugPrint('🔸 [BackupService] تم إنشاء نسخة احتياطية من القاعدة الحالية');
+      }
+
+      // استبدال المفتاح إذا وُجد
+      if (restoredDbEncryptionKey != null) {
+        await DatabaseKeyManager.instance.replaceKey(restoredDbEncryptionKey);
+        debugPrint('✅ [BackupService] تم استبدال المفتاح');
+      }
+
+      // كتابة قاعدة البيانات المستعادة
+      await dbFile.writeAsBytes(restoredDbBytes);
+
+      // إغلاق قاعدة البيانات الحالية لإجبار إعادة فتحها
+      await DatabaseHelper.instance.closeDatabase();
+
+      debugPrint('✅ [BackupService] تم استعادة قاعدة البيانات');
+
+      // التحقق من صحة القاعدة المستعادة
+      final dbEncryptionKey = restoredDbEncryptionKey ?? currentDbEncryptionKey;
+
+      try {
+        final testDb = await openDatabase(
+          dbFile.path,
+          password: dbEncryptionKey,
+          readOnly: true,
+        );
+        await testDb.close();
+        debugPrint('✅ [BackupService] تم التحقق من صحة القاعدة المستعادة');
+      } catch (e) {
+        // استعادة النسخة القديمة
+        debugPrint('❌ [BackupService] فشل فتح القاعدة المستعادة: $e');
+        final backupPath = '${dbFile.path}.old';
+        final backupFileOld = File(backupPath);
+
+        if (await backupFileOld.exists()) {
+          await backupFileOld.copy(dbFile.path);
+          await DatabaseKeyManager.instance.replaceKey(currentDbEncryptionKey);
+          debugPrint('🔄 [BackupService] تم استعادة النسخة الاحتياطية القديمة');
+        }
+
+        throw Exception('فشل استعادة البيانات - الملف تالف أو غير متوافق');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // استعادة الصور
+      // ═══════════════════════════════════════════════════════════
+
+      onProgress?.call('استعادة الصور...', 6, 7);
+
+      final imagesDir = Directory(p.join(tempRestoreDir.path, 'images'));
+      int restoredImagesCount = 0;
+
+      if (await imagesDir.exists()) {
+        final stats = await _restoreAllImages(imagesDir, dbFile, dbEncryptionKey);
+        restoredImagesCount = stats['total'] ?? 0;
+        debugPrint('✅ [BackupService] تم استعادة $restoredImagesCount صورة');
+      } else {
+        debugPrint('ℹ️ [BackupService] لا توجد صور في النسخة الاحتياطية');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // دمج المستخدمين
+      // ═══════════════════════════════════════════════════════════
+
+      onProgress?.call('دمج المستخدمين...', 7, 7);
+
+      int mergedCount = 0;
+      int skippedCount = 0;
+
+      if (userMergeOption == 'merge' && currentUsers.isNotEmpty) {
+        final restoredDb = await openDatabase(
+          dbFile.path,
+          password: dbEncryptionKey,
+        );
+
+        try {
+          for (var user in currentUsers) {
+            try {
+              await restoredDb.insert('TB_Users', user);
+              mergedCount++;
+              debugPrint('  ✅ تم دمج: ${user['UserName']}');
+            } catch (e) {
+              skippedCount++;
+              debugPrint('  ⚠️ تم تخطي (موجود): ${user['UserName']}');
+            }
+          }
+        } finally {
+          await restoredDb.close();
+        }
+      } else if (userMergeOption == 'keep' && currentUsers.isNotEmpty) {
+        final restoredDb = await openDatabase(
+          dbFile.path,
+          password: dbEncryptionKey,
+        );
+
+        try {
+          await restoredDb.delete('TB_Users');
+          for (var user in currentUsers) {
+            await restoredDb.insert('TB_Users', user);
+          }
+          debugPrint('✅ [BackupService] تم الاحتفاظ بـ ${currentUsers.length} مستخدم حالي');
+        } finally {
+          await restoredDb.close();
+        }
+      }
+
+      debugPrint('🎉 [BackupService] اكتملت الاستعادة الشاملة بنجاح!');
+
+      return {
+        'status': 'success',
+        'message': 'تمت الاستعادة بنجاح',
+        'imagesRestored': restoredImagesCount,
+        'merged': mergedCount,
+        'skipped': skippedCount,
+        'metadata': metadata,
+      };
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ [BackupService] خطأ في restoreComprehensiveBackup: $e');
+      debugPrint('Stack trace: $stackTrace');
+
+      return {
+        'status': 'error',
+        'message': e.toString().replaceFirst('Exception: ', ''),
+      };
+
+    } finally {
+      // تنظيف المجلد المؤقت
+      if (tempRestoreDir != null) {
+        try {
+          if (await tempRestoreDir.exists()) {
+            await tempRestoreDir.delete(recursive: true);
+            debugPrint('🧹 [BackupService] تم تنظيف المجلد المؤقت');
+          }
+        } catch (e) {
+          debugPrint('⚠️ [BackupService] خطأ في التنظيف: $e');
+        }
+      }
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: استعادة جميع الصور من النسخة الاحتياطية
+  // ============================================================================
+
+  Future<Map<String, dynamic>> _restoreAllImages(
+    Directory imagesBackupDir,
+    File dbFile,
+    String dbEncryptionKey,
+  ) async {
+    try {
+      int totalRestored = 0;
+      final stats = <String, int>{};
+
+      // فتح قاعدة البيانات لقراءة مسارات الصور
+      final db = await openDatabase(
+        dbFile.path,
+        password: dbEncryptionKey,
+      );
+
+      try {
+        // الفئات التي تحتوي على صور
+        final categories = {
+          'users': 'TB_Users',
+          'suppliers': 'TB_Suppliers',
+          'customers': 'TB_Customers',
+          'products': 'TB_Products',
+          'employees': 'TB_Employees',
+          'company': 'TB_App_Settings',
+        };
+
+        for (final entry in categories.entries) {
+          final categoryName = entry.key;
+          final tableName = entry.value;
+
+          try {
+            final categoryBackupDir = Directory(p.join(imagesBackupDir.path, categoryName));
+
+            if (!await categoryBackupDir.exists()) {
+              stats[categoryName] = 0;
+              continue;
+            }
+
+            int categoryCount = 0;
+
+            // قراءة جميع السجلات من الجدول
+            final rows = await db.query(tableName);
+
+            for (final row in rows) {
+              final imagePath = row['ImagePath'] as String?;
+
+              if (imagePath != null && imagePath.isNotEmpty) {
+                final fileName = p.basename(imagePath);
+                final backupImageFile = File(p.join(categoryBackupDir.path, fileName));
+
+                if (await backupImageFile.exists()) {
+                  // إنشاء المجلد الهدف إذا لم يكن موجوداً
+                  final targetDir = Directory(p.dirname(imagePath));
+                  if (!await targetDir.exists()) {
+                    await targetDir.create(recursive: true);
+                  }
+
+                  // نسخ الصورة
+                  final targetFile = File(imagePath);
+                  await backupImageFile.copy(targetFile.path);
+
+                  categoryCount++;
+                  totalRestored++;
+                }
+              }
+            }
+
+            stats[categoryName] = categoryCount;
+            if (categoryCount > 0) {
+              debugPrint('  📁 $categoryName: $categoryCount صورة');
+            }
+
+          } catch (e) {
+            debugPrint('  ⚠️ خطأ في استعادة صور $categoryName: $e');
+            stats[categoryName] = 0;
+          }
+        }
+      } finally {
+        await db.close();
+      }
+
+      return {
+        'total': totalRestored,
+        ...stats,
+      };
+
+    } catch (e) {
+      debugPrint('❌ [BackupService] خطأ في _restoreAllImages: $e');
+      return {'total': 0};
+    }
+  }
+
+  // ============================================================================
   // ← Hint: دالة مساعدة لتنسيق حجم الملف
   // ============================================================================
 

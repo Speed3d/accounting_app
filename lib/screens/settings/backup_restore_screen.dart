@@ -42,7 +42,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
   // ============= الدوال =============
 
-  /// ← Hint: إنشاء نسخة احتياطية وحفظها في Downloads
+  /// ← Hint: إنشاء نسخة احتياطية شاملة (قاعدة بيانات + صور)
   /// ← Hint: الخطوة 1 - طلب كلمة المرور أولاً
   Future<void> _handleCreateBackup() async {
     final l10n = AppLocalizations.of(context)!;
@@ -59,9 +59,25 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
     setState(() => _isBackingUp = true);
 
+    // ← Hint: متغيرات لتتبع التقدم
+    String currentStatus = '';
+    int currentStep = 0;
+    int totalSteps = 5;
+
     try {
-      // ← Hint: استدعاء الدالة المحدثة مع كلمة المرور
-      final result = await _backupService.createAndShareBackup(password);
+      // ← Hint: استدعاء النسخ الاحتياطي الشامل (قاعدة بيانات + صور)
+      final result = await _backupService.createComprehensiveBackup(
+        password: password,
+        onProgress: (status, current, total) {
+          if (mounted) {
+            setState(() {
+              currentStatus = status;
+              currentStep = current;
+              totalSteps = total;
+            });
+          }
+        },
+      );
 
       if (mounted) {
         setState(() => _isBackingUp = false);
@@ -73,11 +89,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             _lastBackupFileName = result['fileName'];
           });
 
-          // ← Hint: عرض رسالة نجاح مع موقع الملف
+          // ← Hint: عرض رسالة نجاح مع موقع الملف وعدد الصور
           _showSuccessDialog(
             l10n,
             result['filePath'] as String,
             result['fileName'] as String,
+            imagesCount: result['imagesCount'] as int? ?? 0,
           );
         } else {
           // ← Hint: عرض رسالة خطأ
@@ -106,7 +123,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   /// ← Hint: دالة جديدة لعرض نافذة النجاح مع خيار المشاركة
-  void _showSuccessDialog(AppLocalizations l10n, String filePath, String fileName) {
+  void _showSuccessDialog(
+    AppLocalizations l10n,
+    String filePath,
+    String fileName, {
+    int imagesCount = 0,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -136,7 +158,40 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               l10n.backupSuccessContent,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            
+
+            // ← Hint: عرض عدد الصور إذا كان أكبر من 0
+            if (imagesCount > 0) ...[
+              const SizedBox(height: AppConstants.spacingSm),
+              Container(
+                padding: AppConstants.paddingSm,
+                decoration: BoxDecoration(
+                  color: AppColors.info.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
+                  border: Border.all(
+                    color: AppColors.info.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 16,
+                      color: AppColors.info,
+                    ),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    Expanded(
+                      child: Text(
+                        'تم حفظ $imagesCount صورة',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.info,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: AppConstants.spacingLg),
             
             // ← Hint: عرض موقع الملف
@@ -386,15 +441,30 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       return;
     }
 
-    // ============= الخطوة 7: تنفيذ الاستعادة =============
-    print("🔹 الخطوة 7: بدء الاستعادة الفعلية");
+    // ============= الخطوة 7: تنفيذ الاستعادة الشاملة =============
+    print("🔹 الخطوة 7: بدء الاستعادة الفعلية (شاملة مع الصور)");
     setState(() => _isRestoring = true);
 
+    // ← Hint: متغيرات لتتبع التقدم
+    String currentStatus = '';
+    int currentStep = 0;
+    int totalSteps = 7;
+
     try {
-      final result = await _backupService.restoreBackupSmart(
-        password,
-        backupFile,
-        userMergeOption,
+      final result = await _backupService.restoreComprehensiveBackup(
+        password: password,
+        backupFile: backupFile,
+        userMergeOption: userMergeOption,
+        onProgress: (status, current, total) {
+          if (mounted) {
+            setState(() {
+              currentStatus = status;
+              currentStep = current;
+              totalSteps = total;
+            });
+            print("📊 التقدم: $status ($current/$total)");
+          }
+        },
       );
 
       if (!mounted) return;
@@ -404,25 +474,31 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (result['status'] == 'success') {
         // ============= نجحت الاستعادة =============
         print("✅ نجحت الاستعادة");
-        
+
         String successMessage = l10n.restoreSuccessContent;
-        
+        final imagesRestored = result['imagesRestored'] as int? ?? 0;
+
+        // ← Hint: إضافة معلومات عن الصور المستعادة
+        if (imagesRestored > 0) {
+          successMessage += '\n\n📷 تم استعادة $imagesRestored صورة';
+        }
+
         // ← Hint: إضافة معلومات إضافية حسب نوع العملية
         if (userMergeOption == 'merge') {
           final merged = result['merged'] ?? 0;
           final skipped = result['skipped'] ?? 0;
-          
-          if (skipped > 0) {
-            successMessage += '\n\n${l10n.duplicateUsernamesSkipped(skipped)}';
+
+          if (merged > 0 || skipped > 0) {
+            successMessage += '\n\n👥 دمج المستخدمين:';
+            if (merged > 0) successMessage += '\n• تم دمج: $merged';
+            if (skipped > 0) successMessage += '\n• تم تخطي (موجود): $skipped';
           }
-          
-          successMessage = l10n.usersMergedSuccessfully;
         } else if (userMergeOption == 'keep') {
-          successMessage = '${l10n.restoreSuccessContent}\n\n${l10n.permissionsWillBePreserved}';
+          successMessage += '\n\n${l10n.permissionsWillBePreserved}';
         }
 
         await _showRestoreSuccessDialog(l10n, successMessage);
-        
+
       } else {
         // ============= فشلت الاستعادة =============
         print("❌ فشلت الاستعادة: ${result['message']}");
@@ -431,7 +507,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
     } catch (e) {
       print('❌ خطأ غير متوقع: $e');
-      
+
       if (mounted) {
         setState(() => _isRestoring = false);
         _showErrorSnackBar('خطأ: ${e.toString()}');
