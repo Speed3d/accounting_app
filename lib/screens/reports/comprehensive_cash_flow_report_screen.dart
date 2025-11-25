@@ -1,5 +1,6 @@
 // lib/screens/reports/comprehensive_cash_flow_report_screen.dart
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
@@ -180,7 +181,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
           children: [
             Row(
               children: [
-                Icon(Icons.date_range, color: AppColors.primary, size: 20),
+                Icon(Icons.date_range, color: AppColors.primaryLight, size: 20),
                 const SizedBox(width: AppConstants.spacingSm),
                 Text(
                   l10n.timePeriod,
@@ -448,7 +449,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             Text(
               isPercentage
                   ? '${amount.toStringAsFixed(1)}%'
-                  : Helpers.formatCurrency(amount, l10n),
+                  : formatCurrency(Decimal.parse(amount.toString())),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -546,7 +547,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             ),
           ),
           Text(
-            Helpers.formatCurrency(amount.abs(), l10n),
+            formatCurrency(Decimal.parse(amount.abs().toString())),
             style: TextStyle(
               fontSize: isTotal ? 15 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
@@ -645,7 +646,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             ),
           ),
           Text(
-            Helpers.formatCurrency(amount, l10n),
+            formatCurrency(Decimal.parse(amount.toString())),
             style: TextStyle(
               fontSize: isTotal ? 15 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
