@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../services/backup_service.dart';
 import '../../data/database_helper.dart';
 import '../../l10n/app_localizations.dart';
@@ -326,24 +327,33 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   /// ← Hint: دالة جديدة لمشاركة الملف المحفوظ
   Future<void> _handleShareBackup(String filePath) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     try {
-      final success = await _backupService.shareBackupFile(filePath);
-      
-      if (mounted && !success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareFailed),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      final file = File(filePath);
+
+      if (!await file.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('الملف غير موجود'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
       }
+
+      // مشاركة الملف باستخدام share_plus
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'نسخة احتياطية - ${filePath.split('/').last}',
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ: ${e.toString()}'),
+            content: Text('خطأ في المشاركة: ${e.toString()}'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
