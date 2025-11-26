@@ -34,7 +34,8 @@ class DatabaseHelper {
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
   // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
   // Version 2: إضافة جدول TB_Employee_Bonuses
-  static const _databaseVersion = 2;
+  // Version 3: إضافة PartnerID إلى جدول TB_Profit_Withdrawals
+  static const _databaseVersion = 3;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -362,10 +363,12 @@ class DatabaseHelper {
        CREATE TABLE TB_Profit_Withdrawals (
           WithdrawalID INTEGER PRIMARY KEY AUTOINCREMENT,
           SupplierID INTEGER NOT NULL,
+          PartnerID INTEGER,
           PartnerName TEXT,
           WithdrawalAmount REAL NOT NULL,
           WithdrawalDate TEXT NOT NULL,
-          Notes TEXT
+          Notes TEXT,
+          FOREIGN KEY (PartnerID) REFERENCES Supplier_Partners(PartnerID)
         )
       ''');
 
@@ -587,6 +590,19 @@ class DatabaseHelper {
         )
       ''');
       debugPrint('✅ تم إضافة جدول TB_Employee_Bonuses بنجاح');
+    }
+
+    // ترقية من الإصدار 2 إلى 3: إضافة PartnerID إلى جدول TB_Profit_Withdrawals
+    if (oldVersion < 3) {
+      debugPrint('📦 إضافة PartnerID إلى جدول TB_Profit_Withdrawals...');
+
+      // إضافة عمود PartnerID
+      await db.execute('''
+        ALTER TABLE TB_Profit_Withdrawals ADD COLUMN PartnerID INTEGER
+      ''');
+
+      debugPrint('✅ تم إضافة PartnerID بنجاح');
+      debugPrint('💡 ملاحظة: السجلات القديمة ستحتوي على PartnerID = NULL، وسيتم استخدام PartnerName للتوافق');
     }
   }
 
@@ -1732,7 +1748,8 @@ Future<Decimal> getTotalDeductions() async {
   ///
   /// **المعاملات:**
   /// - `supplierId`: معرف المورد
-  /// - `partnerName`: اسم الشريك (null للمورد المفرد)
+  /// - `partnerID`: معرف الشريك (null للمورد المفرد)
+  /// - `partnerName`: اسم الشريك (للتوافق مع السجلات القديمة)
   /// - `sharePercentage`: نسبة الشريك من الأرباح (100 للمورد المفرد)
   /// - `totalProfit`: إجمالي أرباح المورد
   ///
@@ -1740,7 +1757,8 @@ Future<Decimal> getTotalDeductions() async {
   /// المبلغ المتاح للسحب = (نصيب الشريك من الأرباح) - (ما تم سحبه سابقاً)
   Future<Decimal> getAvailableAmountForPartner({
     required int supplierId,
-    required String? partnerName,
+    int? partnerID,
+    String? partnerName,
     required double sharePercentage,
     required Decimal totalProfit,
   }) async {
@@ -1753,16 +1771,22 @@ Future<Decimal> getTotalDeductions() async {
     // 2️⃣ حساب ما تم سحبه سابقاً من نصيب هذا الشريك
     final List<Map<String, dynamic>> result;
 
-    if (partnerName != null) {
-      // للشريك المحدد
+    if (partnerID != null) {
+      // 🆕 استخدام PartnerID (أفضل وأكثر دقة)
       result = await db.rawQuery(
-        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName = ?',
+        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND (PartnerID = ? OR PartnerName = ?)',
+        [supplierId, partnerID, partnerName],
+      );
+    } else if (partnerName != null) {
+      // استخدام PartnerName (للتوافق مع السجلات القديمة)
+      result = await db.rawQuery(
+        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName = ? AND PartnerID IS NULL',
         [supplierId, partnerName],
       );
     } else {
-      // للمورد المفرد (PartnerName = null)
+      // للمورد المفرد (PartnerName = null و PartnerID = null)
       result = await db.rawQuery(
-        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName IS NULL',
+        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName IS NULL AND PartnerID IS NULL',
         [supplierId],
       );
     }
@@ -1781,7 +1805,8 @@ Future<Decimal> getTotalDeductions() async {
   ///
   /// **المعاملات:**
   /// - `supplierId`: معرف المورد
-  /// - `partnerName`: اسم الشريك (null للمورد المفرد)
+  /// - `partnerID`: معرف الشريك (null للمورد المفرد)
+  /// - `partnerName`: اسم الشريك (للتوافق مع السجلات القديمة)
   /// - `withdrawalAmount`: المبلغ المراد سحبه
   /// - `notes`: ملاحظات (اختياري)
   ///
@@ -1789,7 +1814,8 @@ Future<Decimal> getTotalDeductions() async {
   /// - يرمي استثناء إذا كان المبلغ المطلوب أكبر من المتاح للسحب
   Future<int> recordPartnerWithdrawal({
     required int supplierId,
-    required String? partnerName,
+    int? partnerID,
+    String? partnerName,
     required Decimal withdrawalAmount,
     String? notes,
   }) async {
@@ -1803,6 +1829,7 @@ Future<Decimal> getTotalDeductions() async {
     // تسجيل السحب
     final withdrawalData = {
       'SupplierID': supplierId,
+      'PartnerID': partnerID,
       'PartnerName': partnerName,
       'WithdrawalAmount': withdrawalAmount.toDouble(),
       'WithdrawalDate': DateTime.now().toIso8601String(),

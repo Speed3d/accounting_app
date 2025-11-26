@@ -471,6 +471,7 @@ class _SupplierDetailsReportScreenState
               child: ElevatedButton.icon(
                 onPressed: () => _showRecordWithdrawalDialog(
                   l10n,
+                  partnerID: partner.partnerID,
                   partnerName: partner.partnerName,
                   sharePercentage: partner.sharePercentage,
                 ),
@@ -634,7 +635,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 💬 نافذة تسجيل سحب جديد
   // ============================================================================
-  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName, Decimal? sharePercentage}) async {
+  void _showRecordWithdrawalDialog(AppLocalizations l10n, {int? partnerID, String? partnerName, Decimal? sharePercentage}) async {
     // ============================================================================
     // 1️⃣ حساب المبلغ المتاح للسحب
     // ============================================================================
@@ -645,6 +646,7 @@ class _SupplierDetailsReportScreenState
         // للشريك المحدد
         availableAmount = await dbHelper.getAvailableAmountForPartner(
           supplierId: widget.supplierId,
+          partnerID: partnerID,
           partnerName: partnerName,
           sharePercentage: sharePercentage.toDouble(),
           totalProfit: widget.totalProfit,
@@ -653,6 +655,7 @@ class _SupplierDetailsReportScreenState
         // للمورد المفرد
         availableAmount = await dbHelper.getAvailableAmountForPartner(
           supplierId: widget.supplierId,
+          partnerID: null,
           partnerName: null,
           sharePercentage: 100.0,
           totalProfit: widget.totalProfit,
@@ -958,6 +961,7 @@ class _SupplierDetailsReportScreenState
                 // ✅ استخدام الدالة الجديدة
                 await dbHelper.recordPartnerWithdrawal(
                   supplierId: widget.supplierId,
+                  partnerID: partnerID,
                   partnerName: partnerName,
                   withdrawalAmount: withdrawalAmount,
                   notes: notesController.text.trim(),
