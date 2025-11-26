@@ -402,7 +402,7 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       _showManipulationWarning(
         l10n,
-        manipulationResult['message'] ??  'تم رصد تلاعب ',
+        manipulationResult['message'] ?? 'تم رصد تلاعب',
         attemptsRemaining,
       );
     }
@@ -477,7 +477,7 @@ class _SplashScreenState extends State<SplashScreen>
       
       if (mounted) {
         _navigateToScreen(LoginScreen(l10n: AppLocalizations.of(context)!));
-      } //تجربة
+      }
     }
   }
 
