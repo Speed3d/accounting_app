@@ -366,9 +366,7 @@ class _SupplierDetailsReportScreenState
 
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
-            final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
-            final partnerShare = (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
-            return _buildPartnerCard(partner, partnerShare, l10n);
+            return _buildPartnerCard(partner, l10n);
             }).toList(),
 
             const SizedBox(height: AppConstants.spacingXl),
@@ -381,7 +379,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 🧑 بناء بطاقة الشريك الواحد
   // ============================================================================
-  Widget _buildPartnerCard(Partner partner, Decimal partnerShare, AppLocalizations l10n) {
+  Widget _buildPartnerCard(Partner partner, AppLocalizations l10n) {
     ImageProvider? avatarImage;
     try {
       if (partner.imagePath != null && partner.imagePath!.isNotEmpty) {
@@ -455,9 +453,36 @@ class _SupplierDetailsReportScreenState
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'النصيب: ${formatCurrency(partnerShare)}',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      // 🆕 حساب المبلغ المتاح الفعلي
+                      FutureBuilder<Decimal>(
+                        future: dbHelper.getAvailableAmountForPartner(
+                          supplierId: widget.supplierId,
+                          partnerID: partner.partnerID,
+                          partnerName: partner.partnerName,
+                          sharePercentage: partner.sharePercentage.toDouble(),
+                          totalProfit: widget.totalProfit,
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+
+                          final availableAmount = snapshot.data ?? Decimal.zero;
+                          return Text(
+                            'المتاح: ${formatCurrency(availableAmount)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: availableAmount > Decimal.zero
+                                  ? AppColors.success
+                                  : AppColors.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
