@@ -33,7 +33,8 @@ class BackupService {
 
   // 2️⃣ معرف خاص للتحقق من صحة ملف النسخة الاحتياطية
   /// ← Hint: يتم جلبه من Firebase عند الحاجة بدلاً من القيمة الثابتة
-  String get _magicNumber => FirebaseService.instance.getBackupMagicNumber();
+  /// ❌ تم تعطيله - لم يعد مستخدماً في النظام الجديد البسيط
+  // String get _magicNumber => FirebaseService.instance.getBackupMagicNumber();
 
   // 3️⃣ الامتداد الخاص بملف النسخ الاحتياطي
   /// ← Hint: امتداد مخصص لملفاتنا لسهولة التعرف عليها
@@ -2161,6 +2162,361 @@ print("✅ تم التحقق من سلامة الملف بنجاح");
     } catch (e) {
       debugPrint('❌ [BackupService] خطأ في _restoreAllImages: $e');
       return {'total': 0};
+    }
+  }
+
+  // ============================================================================
+  // ← Hint: 🚀 نظام النسخ الاحتياطي البسيط (بدون تشفير، بدون كلمة سر)
+  // ============================================================================
+
+  /// إنشاء نسخة احتياطية بسيطة وموثوقة - بدون تشفير إضافي
+  ///
+  /// ← Hint: لا يستخدم backup_magic_number
+  /// ← Hint: لا يستخدم كلمة سر أو تشفير AES
+  /// ← Hint: فقط يتحقق من activation_secret و time_validation_secret
+  ///
+  /// يحتوي على:
+  /// - قاعدة البيانات SQLite كاملة (مع التشفير الداخلي SQLCipher)
+  /// - جميع الصور منظمة في مجلدات
+  /// - metadata.json بالمعلومات الأساسية
+  Future<Map<String, dynamic>> createSimpleBackup({
+    Function(String status, int current, int total)? onProgress,
+  }) async {
+    try {
+      debugPrint('🎯 [BackupService] بدء إنشاء نسخة احتياطية بسيطة...');
+
+      // 1️⃣ إنشاء مجلد مؤقت للعمل
+      final tempDir = await getTemporaryDirectory();
+      final backupWorkDir = Directory('${tempDir.path}/simple_backup_${DateTime.now().millisecondsSinceEpoch}');
+      if (await backupWorkDir.exists()) {
+        await backupWorkDir.delete(recursive: true);
+      }
+      await backupWorkDir.create(recursive: true);
+
+      onProgress?.call('جاري تحضير المجلدات...', 1, 6);
+
+      // 2️⃣ نسخ قاعدة البيانات
+      debugPrint('📦 [BackupService] نسخ قاعدة البيانات...');
+      onProgress?.call('جاري نسخ قاعدة البيانات...', 2, 6);
+
+      final dbHelper = DatabaseHelper.instance;
+      final db = await dbHelper.database;
+      final dbPath = db.path;
+
+      final dbFile = File(dbPath);
+      final backupDbFile = File('${backupWorkDir.path}/database.db');
+      await dbFile.copy(backupDbFile.path);
+
+      debugPrint('✅ [BackupService] تم نسخ قاعدة البيانات: ${backupDbFile.path}');
+
+      // 3️⃣ نسخ جميع الصور
+      debugPrint('🖼️ [BackupService] جمع جميع الصور...');
+      onProgress?.call('جاري نسخ الصور...', 3, 6);
+
+      final imagesStats = await _collectAllImages(backupWorkDir.path);
+      final totalImages = imagesStats['total'] ?? 0;
+
+      debugPrint('✅ [BackupService] تم نسخ $totalImages صورة');
+
+      // 4️⃣ إنشاء metadata.json
+      debugPrint('📋 [BackupService] إنشاء metadata...');
+      onProgress?.call('جاري إنشاء معلومات النسخة...', 4, 6);
+
+      final metadata = await _createSimpleMetadata(db, totalImages, imagesStats);
+      final metadataFile = File('${backupWorkDir.path}/metadata.json');
+      await metadataFile.writeAsString(jsonEncode(metadata));
+
+      debugPrint('✅ [BackupService] تم إنشاء metadata');
+
+      // 5️⃣ ضغط كل شيء في ZIP
+      debugPrint('🗜️ [BackupService] ضغط النسخة الاحتياطية...');
+      onProgress?.call('جاري ضغط الملفات...', 5, 6);
+
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      final timestamp = DateTime.now().toIso8601String().split('.')[0].replaceAll(':', '-');
+      final zipFileName = 'accounting_backup_$timestamp.zip';
+      final zipFile = File('${downloadsDir.path}/$zipFileName');
+
+      await ArchiveHelper.compressDirectory(
+        sourceDir: backupWorkDir,
+        outputZip: zipFile,
+      );
+
+      final zipSize = await zipFile.length();
+      debugPrint('✅ [BackupService] تم إنشاء ملف ZIP: ${zipFile.path} (${_formatBytes(zipSize)})');
+
+      // 6️⃣ تنظيف المجلد المؤقت
+      await backupWorkDir.delete(recursive: true);
+
+      onProgress?.call('اكتمل!', 6, 6);
+
+      return {
+        'status': 'success',
+        'message': 'تم إنشاء النسخة الاحتياطية بنجاح',
+        'file_path': zipFile.path,
+        'file_size': zipSize,
+        'file_size_formatted': _formatBytes(zipSize),
+        'total_images': totalImages,
+        'metadata': metadata,
+      };
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ [BackupService] خطأ في createSimpleBackup: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return {
+        'status': 'error',
+        'message': 'فشل في إنشاء النسخة الاحتياطية: $e',
+      };
+    }
+  }
+
+  /// استعادة نسخة احتياطية بسيطة مع خيار دمج المستخدمين
+  ///
+  /// ← Hint: لا يستخدم كلمة سر
+  /// ← Hint: يتحقق فقط من activation_secret و time_validation_secret
+  /// ← Hint: يوفر خيار دمج المستخدمين أو استبدالهم
+  ///
+  /// [filePath] مسار ملف ZIP للنسخة الاحتياطية
+  /// [mergeUsers] إذا كان true، يدمج المستخدمين من النسخة القديمة مع الحاليين
+  ///              إذا كان false، يحذف المستخدمين القدامى ويستبدلهم بالجدد
+  Future<Map<String, dynamic>> restoreSimpleBackup({
+    required String filePath,
+    required bool mergeUsers,
+    Function(String status, int current, int total)? onProgress,
+  }) async {
+    Directory? tempRestoreDir;
+
+    try {
+      debugPrint('🎯 [BackupService] بدء استعادة نسخة احتياطية بسيطة...');
+      debugPrint('📂 [BackupService] ملف النسخة: $filePath');
+      debugPrint('👥 [BackupService] دمج المستخدمين: $mergeUsers');
+
+      final zipFile = File(filePath);
+      if (!await zipFile.exists()) {
+        return {
+          'status': 'error',
+          'message': 'ملف النسخة الاحتياطية غير موجود',
+        };
+      }
+
+      onProgress?.call('جاري فك ضغط النسخة...', 1, 7);
+
+      // 1️⃣ فك ضغط ZIP
+      final tempDir = await getTemporaryDirectory();
+      tempRestoreDir = Directory('${tempDir.path}/simple_restore_${DateTime.now().millisecondsSinceEpoch}');
+      if (await tempRestoreDir.exists()) {
+        await tempRestoreDir.delete(recursive: true);
+      }
+      await tempRestoreDir.create(recursive: true);
+
+      debugPrint('📦 [BackupService] فك ضغط الملف...');
+      final extracted = await ArchiveHelper.extractZip(
+        zipFile: zipFile,
+        outputDir: tempRestoreDir,
+      );
+
+      if (!extracted) {
+        return {
+          'status': 'error',
+          'message': 'فشل في فك ضغط ملف النسخة الاحتياطية',
+        };
+      }
+
+      // 2️⃣ قراءة والتحقق من metadata
+      onProgress?.call('جاري التحقق من البيانات...', 2, 7);
+
+      final metadataFile = File('${tempRestoreDir.path}/metadata.json');
+      if (!await metadataFile.exists()) {
+        return {
+          'status': 'error',
+          'message': 'ملف metadata.json غير موجود في النسخة الاحتياطية',
+        };
+      }
+
+      final metadataContent = await metadataFile.readAsString();
+      final metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
+
+      debugPrint('📋 [BackupService] معلومات النسخة: $metadata');
+
+      // 3️⃣ التحقق من activation_secret و time_validation_secret
+      final activationSecret = FirebaseService.instance.getActivationSecret();
+      final timeValidationSecret = FirebaseService.instance.getTimeValidationSecret();
+
+      if (metadata['activation_secret'] != activationSecret) {
+        return {
+          'status': 'error',
+          'message': 'النسخة الاحتياطية من تطبيق آخر (activation_secret غير متطابق)',
+        };
+      }
+
+      if (metadata['time_validation_secret'] != timeValidationSecret) {
+        return {
+          'status': 'error',
+          'message': 'النسخة الاحتياطية منتهية الصلاحية أو من إصدار قديم',
+        };
+      }
+
+      debugPrint('✅ [BackupService] التحقق من الأسرار نجح');
+
+      // 4️⃣ نسخ احتياطي للمستخدمين الحاليين (إذا كان mergeUsers = true)
+      List<Map<String, dynamic>>? currentUsers;
+      if (mergeUsers) {
+        onProgress?.call('جاري حفظ المستخدمين الحاليين...', 3, 7);
+
+        final dbHelper = DatabaseHelper.instance;
+        final db = await dbHelper.database;
+        currentUsers = await db.query('TB_Users');
+        debugPrint('👥 [BackupService] تم حفظ ${currentUsers.length} مستخدمين حاليين');
+      }
+
+      // 5️⃣ إغلاق قاعدة البيانات الحالية
+      onProgress?.call('جاري إغلاق قاعدة البيانات...', 4, 7);
+
+      final dbHelper = DatabaseHelper.instance;
+      await dbHelper.closeDatabase();
+      debugPrint('✅ [BackupService] تم إغلاق قاعدة البيانات');
+
+      // 6️⃣ استبدال قاعدة البيانات
+      onProgress?.call('جاري استعادة قاعدة البيانات...', 5, 7);
+
+      final restoredDbFile = File('${tempRestoreDir.path}/database.db');
+      if (!await restoredDbFile.exists()) {
+        return {
+          'status': 'error',
+          'message': 'ملف قاعدة البيانات غير موجود في النسخة الاحتياطية',
+        };
+      }
+
+      final currentDb = await dbHelper.database;
+      final currentDbPath = currentDb.path;
+      await currentDb.close();
+
+      final currentDbFile = File(currentDbPath);
+      if (await currentDbFile.exists()) {
+        await currentDbFile.delete();
+      }
+
+      await restoredDbFile.copy(currentDbPath);
+      debugPrint('✅ [BackupService] تم استعادة قاعدة البيانات');
+
+      // 7️⃣ دمج المستخدمين (إذا طُلب ذلك)
+      if (mergeUsers && currentUsers != null && currentUsers.isNotEmpty) {
+        onProgress?.call('جاري دمج المستخدمين...', 6, 7);
+
+        final newDb = await dbHelper.database;
+        int mergedCount = 0;
+
+        for (final user in currentUsers) {
+          try {
+            // التحقق من عدم وجود المستخدم (بناءً على الإيميل)
+            final email = user['email'] as String?;
+            if (email != null && email.isNotEmpty) {
+              final existing = await newDb.query(
+                'TB_Users',
+                where: 'email = ?',
+                whereArgs: [email],
+              );
+
+              if (existing.isEmpty) {
+                // المستخدم غير موجود، نضيفه
+                await newDb.insert('TB_Users', user);
+                mergedCount++;
+                debugPrint('✅ [BackupService] تم دمج المستخدم: $email');
+              } else {
+                debugPrint('⏭️ [BackupService] المستخدم موجود مسبقاً: $email');
+              }
+            }
+          } catch (e) {
+            debugPrint('⚠️ [BackupService] خطأ في دمج مستخدم: $e');
+          }
+        }
+
+        debugPrint('✅ [BackupService] تم دمج $mergedCount مستخدم جديد');
+      }
+
+      // 8️⃣ استعادة الصور
+      onProgress?.call('جاري استعادة الصور...', 7, 7);
+
+      final imagesStats = await _restoreAllImages(tempRestoreDir.path);
+      final totalImagesRestored = imagesStats['total'] ?? 0;
+
+      debugPrint('✅ [BackupService] تم استعادة $totalImagesRestored صورة');
+
+      // 9️⃣ تنظيف
+      await tempRestoreDir.delete(recursive: true);
+
+      return {
+        'status': 'success',
+        'message': 'تم استعادة النسخة الاحتياطية بنجاح',
+        'total_images': totalImagesRestored,
+        'merged_users': mergeUsers,
+        'metadata': metadata,
+      };
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ [BackupService] خطأ في restoreSimpleBackup: $e');
+      debugPrint('Stack trace: $stackTrace');
+
+      // تنظيف في حالة الخطأ
+      if (tempRestoreDir != null && await tempRestoreDir.exists()) {
+        await tempRestoreDir.delete(recursive: true);
+      }
+
+      return {
+        'status': 'error',
+        'message': 'فشل في استعادة النسخة الاحتياطية: $e',
+      };
+    }
+  }
+
+  /// إنشاء metadata بسيط بدون backup_magic_number
+  Future<Map<String, dynamic>> _createSimpleMetadata(
+    Database db,
+    int totalImages,
+    Map<String, dynamic> imagesStats,
+  ) async {
+    try {
+      // جمع إحصائيات من قاعدة البيانات
+      final users = await db.query('TB_Users');
+      final suppliers = await db.query('TB_Suppliers');
+      final customers = await db.query('Debt_Customer');
+      final products = await db.query('Store_Products');
+      final employees = await db.query('TB_Employees');
+      final settings = await db.query('TB_Settings');
+
+      return {
+        'backup_format': 'simple_v1',
+        'app_version': '1.0.0',
+        'backup_date': DateTime.now().toIso8601String(),
+        'activation_secret': FirebaseService.instance.getActivationSecret(),
+        'time_validation_secret': FirebaseService.instance.getTimeValidationSecret(),
+        'total_images': totalImages,
+        'database_version': 1,
+        'categories': {
+          'users': users.length,
+          'suppliers': suppliers.length,
+          'customers': customers.length,
+          'products': products.length,
+          'employees': employees.length,
+          'company': settings.length,
+        },
+        'images_stats': imagesStats,
+      };
+    } catch (e) {
+      debugPrint('⚠️ [BackupService] خطأ في _createSimpleMetadata: $e');
+      return {
+        'backup_format': 'simple_v1',
+        'app_version': '1.0.0',
+        'backup_date': DateTime.now().toIso8601String(),
+        'activation_secret': FirebaseService.instance.getActivationSecret(),
+        'time_validation_secret': FirebaseService.instance.getTimeValidationSecret(),
+        'total_images': totalImages,
+        'error': e.toString(),
+      };
     }
   }
 

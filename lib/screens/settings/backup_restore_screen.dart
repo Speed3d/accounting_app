@@ -42,32 +42,47 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
   // ============= الدوال =============
 
-  /// ← Hint: إنشاء نسخة احتياطية شاملة (قاعدة بيانات + صور)
-  /// ← Hint: الخطوة 1 - طلب كلمة المرور أولاً
+  /// ← Hint: إنشاء نسخة احتياطية بسيطة (قاعدة بيانات + صور) - بدون كلمة سر
   Future<void> _handleCreateBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // ← Hint: عرض نافذة إدخال كلمة المرور أولاً
-    final password = await _showPasswordDialog(
-      title: l10n.createBackupPasswordTitle,
-      subtitle: l10n.createBackupPasswordSubtitle,
-      isConfirmation: true, // ← Hint: نطلب تأكيد كلمة المرور عند الإنشاء
+    // ← Hint: تأكيد بسيط قبل البدء
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('إنشاء نسخة احتياطية'),
+        content: const Text(
+          'سيتم نسخ:\n'
+          '• جميع البيانات من قاعدة البيانات\n'
+          '• جميع الصور\n'
+          '• جميع المستخدمين والصلاحيات\n\n'
+          'النسخة لن تكون مشفرة بكلمة سر.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('إنشاء النسخة'),
+          ),
+        ],
+      ),
     );
 
-    // ← Hint: إذا ألغى المستخدم إدخال كلمة المرور
-    if (password == null) return;
+    if (confirm != true) return;
 
     setState(() => _isBackingUp = true);
 
     // ← Hint: متغيرات لتتبع التقدم
     String currentStatus = '';
     int currentStep = 0;
-    int totalSteps = 5;
+    int totalSteps = 6;
 
     try {
-      // ← Hint: استدعاء النسخ الاحتياطي الشامل (قاعدة بيانات + صور)
-      final result = await _backupService.createComprehensiveBackup(
-        password: password,
+      // ← Hint: استدعاء النسخ الاحتياطي البسيط (قاعدة بيانات + صور)
+      final result = await _backupService.createSimpleBackup(
         onProgress: (status, current, total) {
           if (mounted) {
             setState(() {
@@ -84,17 +99,21 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
         if (result['status'] == 'success') {
           // ← Hint: حفظ معلومات الملف المنشأ
+          final filePath = result['file_path'] as String;
+          final fileName = filePath.split('/').last;
+
           setState(() {
-            _lastBackupFilePath = result['filePath'];
-            _lastBackupFileName = result['fileName'];
+            _lastBackupFilePath = filePath;
+            _lastBackupFileName = fileName;
           });
 
           // ← Hint: عرض رسالة نجاح مع موقع الملف وعدد الصور
-          _showSuccessDialog(
+          _showSimpleSuccessDialog(
             l10n,
-            result['filePath'] as String,
-            result['fileName'] as String,
-            imagesCount: result['imagesCount'] as int? ?? 0,
+            filePath,
+            fileName,
+            result['total_images'] as int? ?? 0,
+            result['file_size_formatted'] as String? ?? '',
           );
         } else {
           // ← Hint: عرض رسالة خطأ
@@ -333,8 +352,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
-  /// ← Hint: ✅ الإصلاح 3 - تحسين ترتيب الاستعادة
-  /// ← Hint: الترتيب الجديد: اختيار الملف → كلمة المرور → المعاينة → التأكيد → التنفيذ
+  /// ← Hint: استعادة نسخة احتياطية بسيطة مع خيار دمج المستخدمين - بدون كلمة سر
   Future<void> _handleRestoreBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -342,8 +360,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     print("🔹 الخطوة 1: اختيار الملف");
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['accbak'],
-      dialogTitle: l10n.selectBackupFile,
+      allowedExtensions: ['zip'],
+      dialogTitle: 'اختر ملف النسخة الاحتياطية',
     );
 
     if (result == null || result.files.single.path == null) {
@@ -351,98 +369,63 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       return;
     }
 
-    final backupFile = File(result.files.single.path!);
-    print("✅ تم اختيار الملف: ${backupFile.path}");
+    final backupFilePath = result.files.single.path!;
+    print("✅ تم اختيار الملف: $backupFilePath");
 
-    // ============= الخطوة 2: طلب كلمة المرور =============
-    print("🔹 الخطوة 2: طلب كلمة المرور");
-    final password = await _showPasswordDialog(
-      title: l10n.enterBackupPassword,
-      subtitle: l10n.restoreBackupPasswordSubtitle,
-      isConfirmation: false,
-    );
+    // ============= الخطوة 2: عرض خيارات الاستعادة =============
+    print("🔹 الخطوة 2: عرض خيارات الاستعادة");
 
-    if (password == null) {
-      print("ℹ️ تم إلغاء إدخال كلمة المرور");
+    final mergeUsers = await _showSimpleRestoreOptionsDialog();
+
+    if (mergeUsers == null) {
+      print("ℹ️ تم إلغاء عملية الاستعادة");
       return;
     }
 
-    // ============= الخطوة 3: استخراج المستخدمين من النسخة =============
-    print("🔹 الخطوة 3: استخراج المستخدمين للمعاينة");
-    
-    // ← Hint: عرض مؤشر تحميل أثناء فك التشفير
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: AppConstants.spacingLg),
-              Expanded(child: Text(l10n.verifyingPassword)),
-            ],
-          ),
+    print("✅ الخيار المختار: ${mergeUsers ? 'دمج المستخدمين' : 'استبدال المستخدمين'}");
+
+    // ============= الخطوة 3: تأكيد نهائي =============
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('⚠️ تأكيد الاستعادة'),
+        content: Text(
+          mergeUsers
+              ? 'سيتم:\n'
+                  '• استعادة جميع البيانات والصور\n'
+                  '• دمج المستخدمين من النسخة مع المستخدمين الحاليين\n'
+                  '• الاحتفاظ بالصلاحيات\n\n'
+                  'هل تريد المتابعة؟'
+              : 'سيتم:\n'
+                  '• حذف جميع البيانات الحالية\n'
+                  '• استبدالها بالبيانات من النسخة الاحتياطية\n'
+                  '• استبدال المستخدمين\n\n'
+                  '⚠️ هذا الإجراء لا يمكن التراجع عنه!\n\n'
+                  'هل تريد المتابعة؟',
         ),
-      );
-    }
-
-    // ← Hint: محاولة استخراج المستخدمين من النسخة الاحتياطية
-    final backupUsers = await _backupService.extractUsersFromBackup(
-      backupFile,
-      password,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('تأكيد الاستعادة'),
+          ),
+        ],
+      ),
     );
 
-    if (!mounted) return;
-
-    // ← Hint: إغلاق مؤشر التحميل
-    Navigator.of(context).pop();
-
-    // ← Hint: التحقق من نجاح فك التشفير
-    if (backupUsers == null) {
-      _showErrorSnackBar(l10n.incorrectPassword);
-      return;
-    }
-
-    print("✅ تم استخراج ${backupUsers.length} مستخدم من النسخة");
-
-    // ============= الخطوة 4: الحصول على المستخدمين الحاليين =============
-    print("🔹 الخطوة 4: فحص المستخدمين الحاليين");
-    final currentUsersCount = await dbHelper.getUserCount();
-    print("ℹ️ عدد المستخدمين الحاليين: $currentUsersCount");
-
-    String userMergeOption = 'replace'; // ← Hint: الافتراضي
-
-    // ← Hint: ✅ الإصلاح 2 - سؤال المستخدم عن طريقة الدمج
-    if (currentUsersCount > 0 && backupUsers.isNotEmpty) {
-      print("🔹 الخطوة 5: سؤال المستخدم عن خيار الدمج");
-      
-      final selectedOption = await _showUserMergeDialog(
-        l10n,
-        currentUsersCount,
-        backupUsers.length,
-      );
-
-      if (selectedOption == null) {
-        print("ℹ️ تم إلغاء عملية الاستعادة");
-        return;
-      }
-
-      userMergeOption = selectedOption;
-      print("✅ الخيار المختار: $userMergeOption");
-    }
-
-    // ============= الخطوة 6: طلب التأكيد النهائي =============
-    print("🔹 الخطوة 6: طلب التأكيد النهائي");
-    final finalConfirm = await _showFinalConfirmDialog(l10n, userMergeOption);
-
-    if (finalConfirm != true) {
+    if (confirm != true) {
       print("ℹ️ تم إلغاء التأكيد النهائي");
       return;
     }
 
-    // ============= الخطوة 7: تنفيذ الاستعادة الشاملة =============
-    print("🔹 الخطوة 7: بدء الاستعادة الفعلية (شاملة مع الصور)");
+    // ============= الخطوة 4: تنفيذ الاستعادة =============
+    print("🔹 الخطوة 4: بدء الاستعادة الفعلية");
     setState(() => _isRestoring = true);
 
     // ← Hint: متغيرات لتتبع التقدم
@@ -451,10 +434,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     int totalSteps = 7;
 
     try {
-      final result = await _backupService.restoreComprehensiveBackup(
-        password: password,
-        backupFile: backupFile,
-        userMergeOption: userMergeOption,
+      final result = await _backupService.restoreSimpleBackup(
+        filePath: backupFilePath,
+        mergeUsers: mergeUsers,
         onProgress: (status, current, total) {
           if (mounted) {
             setState(() {
@@ -475,34 +457,25 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         // ============= نجحت الاستعادة =============
         print("✅ نجحت الاستعادة");
 
-        String successMessage = l10n.restoreSuccessContent;
-        final imagesRestored = result['imagesRestored'] as int? ?? 0;
+        final totalImages = result['total_images'] as int? ?? 0;
+        String successMessage = 'تمت استعادة النسخة الاحتياطية بنجاح!\n\n';
 
-        // ← Hint: إضافة معلومات عن الصور المستعادة
-        if (imagesRestored > 0) {
-          successMessage += '\n\n📷 تم استعادة $imagesRestored صورة';
+        if (totalImages > 0) {
+          successMessage += '📷 تم استعادة $totalImages صورة\n';
         }
 
-        // ← Hint: إضافة معلومات إضافية حسب نوع العملية
-        if (userMergeOption == 'merge') {
-          final merged = result['merged'] ?? 0;
-          final skipped = result['skipped'] ?? 0;
-
-          if (merged > 0 || skipped > 0) {
-            successMessage += '\n\n👥 دمج المستخدمين:';
-            if (merged > 0) successMessage += '\n• تم دمج: $merged';
-            if (skipped > 0) successMessage += '\n• تم تخطي (موجود): $skipped';
-          }
-        } else if (userMergeOption == 'keep') {
-          successMessage += '\n\n${l10n.permissionsWillBePreserved}';
+        if (mergeUsers) {
+          successMessage += '👥 تم دمج المستخدمين مع الصلاحيات';
+        } else {
+          successMessage += '👥 تم استبدال المستخدمين';
         }
 
-        await _showRestoreSuccessDialog(l10n, successMessage);
+        await _showSimpleRestoreSuccessDialog(successMessage);
 
       } else {
         // ============= فشلت الاستعادة =============
         print("❌ فشلت الاستعادة: ${result['message']}");
-        _showErrorSnackBar(l10n.restoreFailed(result['message'] ?? 'خطأ غير معروف'));
+        _showErrorSnackBar(result['message'] ?? 'فشل في استعادة النسخة الاحتياطية');
       }
 
     } catch (e) {
@@ -824,6 +797,127 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // ← Hint: دوال مساعدة جديدة للنظام البسيط
+  // ==========================================================================
+
+  /// عرض نافذة نجاح إنشاء النسخة الاحتياطية البسيطة
+  void _showSimpleSuccessDialog(
+    AppLocalizations l10n,
+    String filePath,
+    String fileName,
+    int imagesCount,
+    String fileSize,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 12),
+            Text('تم إنشاء النسخة بنجاح'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('📁 اسم الملف: $fileName'),
+            const SizedBox(height: 8),
+            Text('💾 الحجم: $fileSize'),
+            const SizedBox(height: 8),
+            Text('📷 عدد الصور: $imagesCount'),
+            const SizedBox(height: 8),
+            Text('📂 المسار: $filePath', style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// عرض نافذة خيارات الاستعادة البسيطة
+  Future<bool?> _showSimpleRestoreOptionsDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('خيارات الاستعادة'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'اختر طريقة استعادة المستخدمين:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text('• استعادة البيانات والصور فقط:'),
+            Text('  سيتم حذف المستخدمين القدامى واستبدالهم',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
+            SizedBox(height: 12),
+            Text('• استعادة البيانات والصور + دمج المستخدمين:'),
+            Text('  سيتم الاحتفاظ بالمستخدمين الحاليين ودمج الجدد',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: const Text('استبدال المستخدمين'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text('دمج المستخدمين'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// عرض نافذة نجاح الاستعادة البسيطة
+  Future<void> _showSimpleRestoreSuccessDialog(String message) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 12),
+            Text('نجحت الاستعادة'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              // الخروج من التطبيق لإعادة تحميل البيانات
+              SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+            },
+            child: const Text('إعادة تشغيل التطبيق'),
           ),
         ],
       ),
