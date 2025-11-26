@@ -811,7 +811,7 @@ class _SupplierDetailsReportScreenState
                           Text(
                             formatCurrency(
                               partnerName != null && sharePercentage != null
-                                  ? (widget.totalProfit * sharePercentage / Decimal.fromInt(100))
+                                  ? (widget.totalProfit * sharePercentage / Decimal.fromInt(100)).toDecimal()
                                   : widget.totalProfit
                             ),
                             style: const TextStyle(
