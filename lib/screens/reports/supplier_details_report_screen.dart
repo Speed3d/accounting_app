@@ -634,7 +634,7 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 💬 نافذة تسجيل سحب جديد
   // ============================================================================
-  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName, double? sharePercentage}) async {
+  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName, Decimal? sharePercentage}) async {
     // ============================================================================
     // 1️⃣ حساب المبلغ المتاح للسحب
     // ============================================================================
@@ -646,7 +646,7 @@ class _SupplierDetailsReportScreenState
         availableAmount = await dbHelper.getAvailableAmountForPartner(
           supplierId: widget.supplierId,
           partnerName: partnerName,
-          sharePercentage: sharePercentage,
+          sharePercentage: sharePercentage.toDouble(),
           totalProfit: widget.totalProfit,
         );
       } else {
@@ -811,7 +811,7 @@ class _SupplierDetailsReportScreenState
                           Text(
                             formatCurrency(
                               partnerName != null && sharePercentage != null
-                                  ? (widget.totalProfit * Decimal.parse(sharePercentage.toString()) / Decimal.fromInt(100))
+                                  ? (widget.totalProfit * sharePercentage / Decimal.fromInt(100))
                                   : widget.totalProfit
                             ),
                             style: const TextStyle(
