@@ -9,6 +9,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../utils/archive_helper.dart';
 import '../data/database_helper.dart';
+import 'database_key_manager.dart';
 
 /// 🎯 نظام النسخ الاحتياطي البسيط
 ///
@@ -73,7 +74,10 @@ class BackupService {
       debugPrint('📋 [BackupService] إنشاء metadata...');
       onProgress?.call('جاري إنشاء معلومات النسخة...', 4, 6);
 
-      final metadata = await _createSimpleMetadata(db, totalImages, imagesStats);
+      // ← Hint: الحصول على مفتاح التشفير لحفظه مع النسخة
+      final dbKey = await DatabaseKeyManager.instance.getDatabaseKey();
+
+      final metadata = await _createSimpleMetadata(db, totalImages, imagesStats, dbKey);
       final metadataFile = File('${backupWorkDir.path}/metadata.json');
       await metadataFile.writeAsString(
         const JsonEncoder.withIndent('  ').convert(metadata),
@@ -158,7 +162,7 @@ class BackupService {
         };
       }
 
-      onProgress?.call('جاري فك ضغط النسخة...', 1, 7);
+      onProgress?.call('جاري فك ضغط النسخة...', 1, 8);
 
       // 1️⃣ فك ضغط ZIP
       final tempDir = await getTemporaryDirectory();
@@ -185,7 +189,7 @@ class BackupService {
       }
 
       // 2️⃣ قراءة والتحقق من metadata
-      onProgress?.call('جاري التحقق من البيانات...', 2, 7);
+      onProgress?.call('جاري التحقق من البيانات...', 2, 8);
 
       final metadataFile = File('${tempRestoreDir.path}/metadata.json');
       if (!await metadataFile.exists()) {
@@ -222,10 +226,25 @@ class BackupService {
 
       debugPrint('✅ [BackupService] التحقق من الأسرار نجح');
 
-      // 4️⃣ نسخ احتياطي للمستخدمين الحاليين (إذا كان mergeUsers = true)
+      // 4️⃣ استعادة مفتاح التشفير من النسخة الاحتياطية
+      onProgress?.call('جاري استعادة مفتاح التشفير...', 3, 8);
+
+      final restoredKey = metadata['db_encryption_key'] as String?;
+      if (restoredKey == null || restoredKey.isEmpty) {
+        return {
+          'status': 'error',
+          'message': 'مفتاح التشفير غير موجود في النسخة الاحتياطية',
+        };
+      }
+
+      // ← Hint: استبدال المفتاح الحالي بالمفتاح من النسخة الاحتياطية
+      await DatabaseKeyManager.instance.replaceKey(restoredKey);
+      debugPrint('✅ [BackupService] تم استعادة مفتاح التشفير');
+
+      // 5️⃣ نسخ احتياطي للمستخدمين الحاليين (إذا كان mergeUsers = true)
       List<Map<String, dynamic>>? currentUsers;
       if (mergeUsers) {
-        onProgress?.call('جاري حفظ المستخدمين الحاليين...', 3, 7);
+        onProgress?.call('جاري حفظ المستخدمين الحاليين...', 4, 8);
 
         final dbHelper = DatabaseHelper.instance;
         final db = await dbHelper.database;
@@ -234,15 +253,15 @@ class BackupService {
             '👥 [BackupService] تم حفظ ${currentUsers.length} مستخدمين حاليين');
       }
 
-      // 5️⃣ إغلاق قاعدة البيانات الحالية
-      onProgress?.call('جاري إغلاق قاعدة البيانات...', 4, 7);
+      // 6️⃣ إغلاق قاعدة البيانات الحالية
+      onProgress?.call('جاري إغلاق قاعدة البيانات...', 5, 8);
 
       final dbHelper = DatabaseHelper.instance;
       await dbHelper.closeDatabase();
       debugPrint('✅ [BackupService] تم إغلاق قاعدة البيانات');
 
-      // 6️⃣ استبدال قاعدة البيانات
-      onProgress?.call('جاري استعادة قاعدة البيانات...', 5, 7);
+      // 7️⃣ استبدال قاعدة البيانات
+      onProgress?.call('جاري استعادة قاعدة البيانات...', 6, 8);
 
       final restoredDbFile = File('${tempRestoreDir.path}/database.db');
       if (!await restoredDbFile.exists()) {
@@ -264,9 +283,9 @@ class BackupService {
       await restoredDbFile.copy(currentDbPath);
       debugPrint('✅ [BackupService] تم استعادة قاعدة البيانات');
 
-      // 7️⃣ دمج المستخدمين (إذا طُلب ذلك)
+      // 8️⃣ دمج المستخدمين (إذا طُلب ذلك)
       if (mergeUsers && currentUsers != null && currentUsers.isNotEmpty) {
-        onProgress?.call('جاري دمج المستخدمين...', 6, 7);
+        onProgress?.call('جاري دمج المستخدمين...', 7, 8);
 
         final newDb = await dbHelper.database;
         int mergedCount = 0;
@@ -299,8 +318,8 @@ class BackupService {
         debugPrint('✅ [BackupService] تم دمج $mergedCount مستخدم جديد');
       }
 
-      // 8️⃣ استعادة الصور
-      onProgress?.call('جاري استعادة الصور...', 7, 7);
+      // 9️⃣ استعادة الصور
+      onProgress?.call('جاري استعادة الصور...', 8, 8);
 
       final imagesStats = await _restoreAllImages(tempRestoreDir.path);
       final totalImagesRestored = imagesStats['total'] ?? 0;
@@ -342,6 +361,7 @@ class BackupService {
     Database db,
     int totalImages,
     Map<String, dynamic> imagesStats,
+    String dbEncryptionKey,
   ) async {
     try {
       // جمع إحصائيات من قاعدة البيانات
@@ -359,6 +379,7 @@ class BackupService {
         'activation_secret': FirebaseService.instance.getActivationSecret(),
         'time_validation_secret':
             FirebaseService.instance.getTimeValidationSecret(),
+        'db_encryption_key': dbEncryptionKey, // ← Hint: المفتاح المهم!
         'total_images': totalImages,
         'database_version': 1,
         'categories': {
