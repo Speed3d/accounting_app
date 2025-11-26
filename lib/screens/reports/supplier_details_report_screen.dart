@@ -472,6 +472,7 @@ class _SupplierDetailsReportScreenState
                 onPressed: () => _showRecordWithdrawalDialog(
                   l10n,
                   partnerName: partner.partnerName,
+                  sharePercentage: partner.sharePercentage,
                 ),
                 icon: const Icon(Icons.arrow_downward, size: 11),
                 label: Text(l10n.withdraw),
@@ -633,11 +634,110 @@ class _SupplierDetailsReportScreenState
   // ============================================================================
   // 💬 نافذة تسجيل سحب جديد
   // ============================================================================
-  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName}) {
+  void _showRecordWithdrawalDialog(AppLocalizations l10n, {String? partnerName, double? sharePercentage}) async {
+    // ============================================================================
+    // 1️⃣ حساب المبلغ المتاح للسحب
+    // ============================================================================
+    Decimal availableAmount;
+
+    try {
+      if (partnerName != null && sharePercentage != null) {
+        // للشريك المحدد
+        availableAmount = await dbHelper.getAvailableAmountForPartner(
+          supplierId: widget.supplierId,
+          partnerName: partnerName,
+          sharePercentage: sharePercentage,
+          totalProfit: widget.totalProfit,
+        );
+      } else {
+        // للمورد المفرد
+        availableAmount = await dbHelper.getAvailableAmountForPartner(
+          supplierId: widget.supplierId,
+          partnerName: null,
+          sharePercentage: 100.0,
+          totalProfit: widget.totalProfit,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('خطأ في حساب المبلغ المتاح: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // ============================================================================
+    // 2️⃣ التحقق من وجود رصيد متاح
+    // ============================================================================
+    if (availableAmount <= Decimal.zero) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.warning, color: AppColors.warning, size: 28),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('تنبيه')),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.money_off, size: 64, color: AppColors.error.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text(
+                partnerName != null
+                    ? 'الشريك "$partnerName" قد سحب كامل نصيبه من الأرباح'
+                    : 'تم سحب كامل أرباح المورد',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text('المبلغ المتاح:', style: TextStyle(fontSize: 12)),
+                    Text(
+                      formatCurrency(availableAmount),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('حسناً'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // ============================================================================
+    // 3️⃣ عرض نافذة السحب
+    // ============================================================================
     final formKey = GlobalKey<FormState>();
     final amountController = TextEditingController();
     final notesController = TextEditingController();
-    final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -661,40 +761,94 @@ class _SupplierDetailsReportScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // عرض صافي الربح
+                // ============================================================================
+                // 📊 بطاقة معلومات النصيب
+                // ============================================================================
                 Container(
                   padding: AppConstants.paddingMd,
                   decoration: BoxDecoration(
-                    color: netProfit >= Decimal.zero
-                        ? AppColors.success.withOpacity(0.1)
-                        : AppColors.error.withOpacity(0.1),
+                    color: AppColors.info.withOpacity(0.1),
                     borderRadius: AppConstants.borderRadiusMd,
+                    border: Border.all(color: AppColors.info.withOpacity(0.3)),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Icon(
-                        Icons.account_balance_wallet,
-                        color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      // نسبة الشريك
+                      if (partnerName != null && sharePercentage != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'صافي الربح المتاح',
-                              style: Theme.of(context).textTheme.bodySmall,
+                            Row(
+                              children: [
+                                Icon(Icons.percent, size: 16, color: AppColors.info),
+                                const SizedBox(width: 8),
+                                const Text('نسبة الشريك:'),
+                              ],
                             ),
                             Text(
-                              formatCurrency(netProfit),
-                              style: TextStyle(
+                              '$sharePercentage%',
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: netProfit >= Decimal.zero ? AppColors.success : AppColors.error,
+                                fontSize: 16,
                               ),
                             ),
                           ],
                         ),
+
+                      if (partnerName != null) const SizedBox(height: 8),
+
+                      // نصيب الشريك من الأرباح
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.account_balance_wallet, size: 16, color: AppColors.info),
+                              const SizedBox(width: 8),
+                              const Text('نصيب من الأرباح:'),
+                            ],
+                          ),
+                          Text(
+                            formatCurrency(
+                              partnerName != null && sharePercentage != null
+                                  ? (widget.totalProfit * Decimal.parse(sharePercentage.toString()) / Decimal.fromInt(100))
+                                  : widget.totalProfit
+                            ),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppColors.info,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const Divider(height: 16),
+
+                      // المبلغ المتاح للسحب
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: availableAmount > Decimal.zero ? AppColors.success : AppColors.error,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('المتاح للسحب:'),
+                            ],
+                          ),
+                          Text(
+                            formatCurrency(availableAmount),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: availableAmount > Decimal.zero ? AppColors.success : AppColors.error,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -702,7 +856,9 @@ class _SupplierDetailsReportScreenState
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // حقل المبلغ
+                // ============================================================================
+                // 💰 حقل المبلغ
+                // ============================================================================
                 CustomTextField(
                   controller: amountController,
                   label: l10n.withdrawnAmount,
@@ -714,28 +870,66 @@ class _SupplierDetailsReportScreenState
                       return l10n.amountRequired;
                     }
 
-                final convertedValue = convertArabicNumbersToEnglish(value);
-                   try {
-                    final amount = parseDecimal(convertedValue);
+                    final convertedValue = convertArabicNumbersToEnglish(value);
+                    try {
+                      final amount = parseDecimal(convertedValue);
 
-                    if (amount <= Decimal.zero) {
-                    return l10n.enterValidAmount;
-                    }
+                      if (amount <= Decimal.zero) {
+                        return l10n.enterValidAmount;
+                      }
 
-                    if (amount > netProfit) {
-                    return l10n.amountExceedsProfit;
-                     }
-                   } catch (e) {
+                      // ✅ التحقق الجديد: المبلغ لا يتجاوز المتاح للسحب
+                      if (amount > availableAmount) {
+                        return 'المبلغ يتجاوز المتاح للسحب (${formatCurrency(availableAmount)})';
+                      }
+                    } catch (e) {
                       return l10n.enterValidAmount;
-                  }
+                    }
 
                     return null;
                   },
                 ),
 
+                const SizedBox(height: AppConstants.spacingSm),
+
+                // ============================================================================
+                // ⚡ أزرار سريعة للمبالغ
+                // ============================================================================
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildQuickAmountButton(
+                      context: ctx,
+                      label: '25%',
+                      amount: availableAmount * Decimal.parse('0.25'),
+                      controller: amountController,
+                    ),
+                    _buildQuickAmountButton(
+                      context: ctx,
+                      label: '50%',
+                      amount: availableAmount * Decimal.parse('0.5'),
+                      controller: amountController,
+                    ),
+                    _buildQuickAmountButton(
+                      context: ctx,
+                      label: '75%',
+                      amount: availableAmount * Decimal.parse('0.75'),
+                      controller: amountController,
+                    ),
+                    _buildQuickAmountButton(
+                      context: ctx,
+                      label: 'الكل',
+                      amount: availableAmount,
+                      controller: amountController,
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // حقل الملاحظات
+                // ============================================================================
+                // 📝 حقل الملاحظات
+                // ============================================================================
                 CustomTextField(
                   controller: notesController,
                   label: l10n.notesOptional,
@@ -758,43 +952,50 @@ class _SupplierDetailsReportScreenState
 
               try {
                 final withdrawalAmount = parseDecimal(
-                convertArabicNumbersToEnglish(amountController.text),
+                  convertArabicNumbersToEnglish(amountController.text),
                 );
 
-                final withdrawalData = {
-                  'SupplierID': widget.supplierId,
-                  'PartnerName': partnerName,
-                  'WithdrawalAmount': withdrawalAmount.toDouble(), 
-                  'WithdrawalDate': DateTime.now().toIso8601String(),
-                  'Notes': notesController.text.trim(),
-                };
-
-                await dbHelper.recordProfitWithdrawal(withdrawalData);
+                // ✅ استخدام الدالة الجديدة
+                await dbHelper.recordPartnerWithdrawal(
+                  supplierId: widget.supplierId,
+                  partnerName: partnerName,
+                  withdrawalAmount: withdrawalAmount,
+                  notes: notesController.text.trim(),
+                );
 
                 if (!ctx.mounted) return;
-
                 Navigator.pop(ctx);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(l10n.withdrawalSuccess),
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(l10n.withdrawalSuccess)),
+                      ],
+                    ),
                     backgroundColor: AppColors.success,
                   ),
                 );
 
                 setState(() {
-                  // _currentTotalWithdrawn += Decimal.parse(withdrawalData['WithdrawalAmount'].toString());
                   _currentTotalWithdrawn += withdrawalAmount;
                   _loadData();
                 });
               } catch (e) {
                 if (!ctx.mounted) return;
-
                 Navigator.pop(ctx);
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(l10n.errorOccurred(e.toString())),
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(l10n.errorOccurred(e.toString()))),
+                      ],
+                    ),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -805,6 +1006,28 @@ class _SupplierDetailsReportScreenState
           ),
         ],
       ),
+    );
+  }
+
+  // ============================================================================
+  // 🔘 دالة مساعدة لإنشاء أزرار المبالغ السريعة
+  // ============================================================================
+  Widget _buildQuickAmountButton({
+    required BuildContext context,
+    required String label,
+    required Decimal amount,
+    required TextEditingController controller,
+  }) {
+    return OutlinedButton(
+      onPressed: () {
+        controller.text = amount.toStringAsFixed(2);
+      },
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 

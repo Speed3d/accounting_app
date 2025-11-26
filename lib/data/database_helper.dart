@@ -1724,6 +1724,93 @@ Future<Decimal> getTotalDeductions() async {
     );
   }
 
+  // =================================================================================================
+  // ✅ دوال إضافية للتحقق من شروط السحب للشركاء
+  // =================================================================================================
+
+  /// دالة لحساب المبلغ المتاح للسحب للشريك أو المورد المفرد.
+  ///
+  /// **المعاملات:**
+  /// - `supplierId`: معرف المورد
+  /// - `partnerName`: اسم الشريك (null للمورد المفرد)
+  /// - `sharePercentage`: نسبة الشريك من الأرباح (100 للمورد المفرد)
+  /// - `totalProfit`: إجمالي أرباح المورد
+  ///
+  /// **العائد:**
+  /// المبلغ المتاح للسحب = (نصيب الشريك من الأرباح) - (ما تم سحبه سابقاً)
+  Future<Decimal> getAvailableAmountForPartner({
+    required int supplierId,
+    required String? partnerName,
+    required double sharePercentage,
+    required Decimal totalProfit,
+  }) async {
+    final db = await instance.database;
+
+    // 1️⃣ حساب نصيب الشريك من الأرباح
+    final shareDecimal = Decimal.parse(sharePercentage.toString());
+    final partnerShare = (totalProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
+
+    // 2️⃣ حساب ما تم سحبه سابقاً من نصيب هذا الشريك
+    final List<Map<String, dynamic>> result;
+
+    if (partnerName != null) {
+      // للشريك المحدد
+      result = await db.rawQuery(
+        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName = ?',
+        [supplierId, partnerName],
+      );
+    } else {
+      // للمورد المفرد (PartnerName = null)
+      result = await db.rawQuery(
+        'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName IS NULL',
+        [supplierId],
+      );
+    }
+
+    final totalWithdrawn = result.first['Total'] != null
+        ? Decimal.parse(result.first['Total'].toString())
+        : Decimal.zero;
+
+    // 3️⃣ المبلغ المتاح = النصيب - المسحوب
+    final availableAmount = partnerShare - totalWithdrawn;
+
+    return availableAmount;
+  }
+
+  /// دالة لتسجيل سحب مع التحقق من الشروط.
+  ///
+  /// **المعاملات:**
+  /// - `supplierId`: معرف المورد
+  /// - `partnerName`: اسم الشريك (null للمورد المفرد)
+  /// - `withdrawalAmount`: المبلغ المراد سحبه
+  /// - `notes`: ملاحظات (اختياري)
+  ///
+  /// **الاستثناءات:**
+  /// - يرمي استثناء إذا كان المبلغ المطلوب أكبر من المتاح للسحب
+  Future<int> recordPartnerWithdrawal({
+    required int supplierId,
+    required String? partnerName,
+    required Decimal withdrawalAmount,
+    String? notes,
+  }) async {
+    final db = await instance.database;
+
+    // التحقق: يجب أن يكون المبلغ موجباً
+    if (withdrawalAmount <= Decimal.zero) {
+      throw Exception('المبلغ يجب أن يكون أكبر من صفر');
+    }
+
+    // تسجيل السحب
+    final withdrawalData = {
+      'SupplierID': supplierId,
+      'PartnerName': partnerName,
+      'WithdrawalAmount': withdrawalAmount.toDouble(),
+      'WithdrawalDate': DateTime.now().toIso8601String(),
+      'Notes': notes?.trim(),
+    };
+
+    return await db.insert('TB_Profit_Withdrawals', withdrawalData);
+  }
 
 
   // =================================================================================================
