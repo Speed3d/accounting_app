@@ -80,6 +80,12 @@ dependencies {
     // ✅ Hint: Firebase Core (إجباري)
     implementation("com.google.firebase:firebase-analytics-ktx")
 
+    // ✅ Hint: Firebase Auth (للمصادقة بالإيميل)
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // ✅ Hint: Cloud Firestore (لإدارة الاشتراكات)
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
     // ✅ Hint: Remote Config (للمفاتيح السرية)
     implementation("com.google.firebase:firebase-config-ktx")
 
