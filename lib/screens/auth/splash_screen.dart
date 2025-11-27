@@ -15,9 +15,8 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 
-import 'create_admin_screen.dart';
-import 'login_screen.dart';
-import 'activation_screen.dart';
+import 'login_selection_screen.dart';  // 🆕 بدلاً من login_screen
+import 'register_screen.dart';  // 🆕
 import 'blocked_screen.dart';
 
 /// ===========================================================================
@@ -408,7 +407,7 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  /// منطق التنقل النهائي
+  /// 🆕 منطق التنقل النهائي (النظام الجديد - Email-based)
   Future<void> _handleNavigation(
     DatabaseHelper dbHelper,
     DeviceService deviceService,
@@ -416,67 +415,38 @@ class _SplashScreenState extends State<SplashScreen>
     AppLocalizations l10n,
   ) async {
     try {
-      final appState = await dbHelper.getAppState();
+      debugPrint('🧭 بدء منطق التنقل...');
+
       final userCount = await dbHelper.getUserCount();
-      final deviceFingerprint = await deviceService.getDeviceFingerprint();
+      final hasOwner = await dbHelper.hasOwner();
 
-      // 1. لا يوجد مستخدمين
+      debugPrint('📊 عدد المستخدمين: $userCount | يوجد Owner: $hasOwner');
+
+      // 1️⃣ لا يوجد أي مستخدمين → توجيه للتسجيل
       if (userCount == 0) {
-        if (appState == null) {
-          await dbHelper.initializeAppState();
-        }
-        _navigateToScreen(CreateAdminScreen(l10n: l10n));
+        debugPrint('➡️ لا يوجد مستخدمين → RegisterScreen');
+        _navigateToScreen(const RegisterScreen());
         return;
       }
 
-      // 2. التحقق من التفعيل
-      if (appState == null) {
-        await dbHelper.initializeAppState();
-        _navigateToScreen(LoginScreen(l10n: l10n));
+      // 2️⃣ يوجد مستخدمون لكن لا يوجد Owner → توجيه للتسجيل
+      if (!hasOwner) {
+        debugPrint('➡️ لا يوجد Owner → RegisterScreen');
+        _navigateToScreen(const RegisterScreen());
         return;
       }
 
-      final expiryDateString = appState['activation_expiry_date'];
-      
-      if (expiryDateString != null) {
-        final expiryDate = DateTime.parse(expiryDateString);
-        
-        if (realTime.isBefore(expiryDate)) {
-          _navigateToScreen(LoginScreen(l10n: l10n));
-        } else {
-          _navigateToScreen(
-            ActivationScreen(
-              l10n: l10n,
-              deviceFingerprint: deviceFingerprint,
-            ),
-          );
-        }
-        return;
-      }
-
-      // 3. الفترة التجريبية
-      final firstRunDate = DateTime.parse(appState['first_run_date']);
-      final trialEndsAt = firstRunDate.add(
-        const Duration(days: trialPeriodDays),
-      );
-
-      if (realTime.isAfter(trialEndsAt)) {
-        _navigateToScreen(
-          ActivationScreen(
-            l10n: l10n,
-            deviceFingerprint: deviceFingerprint,
-          ),
-        );
-      } else {
-        _navigateToScreen(LoginScreen(l10n: l10n));
-      }
+      // 3️⃣ ✅ كل شيء تمام → توجيه لشاشة اختيار نوع الدخول
+      debugPrint('➡️ كل شيء طبيعي → LoginSelectionScreen');
+      _navigateToScreen(const LoginSelectionScreen());
 
     } catch (e, stackTrace) {
       debugPrint('❌ خطأ في التنقل: $e');
       FirebaseService.instance.logError(e, stackTrace, reason: 'navigation_error');
-      
+
+      // Fallback: التوجيه لشاشة التسجيل
       if (mounted) {
-        _navigateToScreen(LoginScreen(l10n: AppLocalizations.of(context)!));
+        _navigateToScreen(const RegisterScreen());
       }
     }
   }

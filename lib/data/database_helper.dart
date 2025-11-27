@@ -8,8 +8,7 @@ import 'package:accountant_touch/data/models.dart';
 // import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../services/database_key_manager.dart';
-
-
+import 'database_migrations.dart';  // 🆕 استيراد نظام الـ Migrations
 
 import 'models.dart' as models;
 
@@ -32,9 +31,10 @@ class DatabaseHelper {
   static const _databaseName = "accounting.db";
 
   // --- ✅ الخطوة 1: تحديد الإصدار النهائي ---
-  // بما أننا سنبدأ من جديد، يمكننا اعتباره الإصدار 1 من الهيكل الجديد.
+  // Version 1: الهيكل الأساسي
   // Version 2: إضافة جدول TB_Employee_Bonuses
-  static const _databaseVersion = 2;
+  // Version 3: 🆕 النظام الجديد - Email Auth + Subscriptions
+  static const _databaseVersion = 3;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -588,6 +588,13 @@ class DatabaseHelper {
       ''');
       debugPrint('✅ تم إضافة جدول TB_Employee_Bonuses بنجاح');
     }
+
+    // 🆕 ترقية من الإصدار 2 إلى 3: النظام الجديد - Email Auth + Subscriptions
+    if (oldVersion < 3) {
+      debugPrint('📦 تطبيق Migration إلى v3 (النظام الجديد)...');
+      await DatabaseMigrations.migrateToV2(db);  // migrateToV2 يحتوي على التحديثات لـ v3
+      debugPrint('✅ تم تطبيق Migration إلى v3 بنجاح');
+    }
   }
 
    ///////////////////////////////////////////////////////////////
@@ -756,7 +763,121 @@ class DatabaseHelper {
      final db = await instance.database;
      final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Users'));
      return count ?? 0;
-    }  
+    }
+
+  // ============================================================================
+  // 🆕 دوال جديدة للنظام الجديد - Email-based Authentication
+  // ============================================================================
+
+  /// الحصول على مستخدم عن طريق الإيميل
+  Future<User?> getUserByEmail(String email) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'TB_Users',
+      where: 'Email = ?',
+      whereArgs: [email],
+    );
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  /// الحصول على جميع المستخدمين الفرعيين لمالك معين
+  Future<List<User>> getSubUsersByOwnerEmail(String ownerEmail) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'TB_Users',
+      where: 'OwnerEmail = ? AND UserType = ?',
+      whereArgs: [ownerEmail, 'sub_user'],
+    );
+    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
+  }
+
+  /// التحقق من وجود Owner في قاعدة البيانات
+  Future<bool> hasOwner() async {
+    final db = await instance.database;
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery(
+        "SELECT COUNT(*) FROM TB_Users WHERE UserType = 'owner'",
+      ),
+    );
+    return (count ?? 0) > 0;
+  }
+
+  /// الحصول على جميع Owners
+  Future<List<User>> getAllOwners() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'TB_Users',
+      where: 'UserType = ?',
+      whereArgs: ['owner'],
+    );
+    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
+  }
+
+  /// تحديث آخر تسجيل دخول للمستخدم
+  Future<void> updateUserLastLogin(int userId) async {
+    final db = await instance.database;
+    await db.update(
+      'TB_Users',
+      {'LastLoginAt': DateTime.now().toIso8601String()},
+      where: 'ID = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// حذف/تعطيل مستخدم فرعي
+  Future<void> deactivateSubUser(int userId) async {
+    final db = await instance.database;
+    await db.update(
+      'TB_Users',
+      {'IsActive': 0},
+      where: 'ID = ? AND UserType = ?',
+      whereArgs: [userId, 'sub_user'],
+    );
+  }
+
+  /// تفعيل مستخدم فرعي
+  Future<void> activateSubUser(int userId) async {
+    final db = await instance.database;
+    await db.update(
+      'TB_Users',
+      {'IsActive': 1},
+      where: 'ID = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  // ============================================================================
+  // 🆕 دوال Subscription Cache
+  // ============================================================================
+
+  /// حفظ/تحديث بيانات الاشتراك محلياً
+  Future<void> saveSubscriptionCache(Map<String, dynamic> subscription) async {
+    final db = await instance.database;
+    await db.insert(
+      'TB_Subscription_Cache',
+      subscription,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// الحصول على بيانات الاشتراك المحلية
+  Future<Map<String, dynamic>?> getSubscriptionCache() async {
+    final db = await instance.database;
+    final result = await db.query('TB_Subscription_Cache');
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+  /// مسح بيانات الاشتراك المحلية
+  Future<void> clearSubscriptionCache() async {
+    final db = await instance.database;
+    await db.delete('TB_Subscription_Cache');
+  }  
 
 
   /// =============================================================================

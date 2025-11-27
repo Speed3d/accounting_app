@@ -14,6 +14,14 @@ class User {
   final String dateT;
   final String? imagePath;
 
+  // 🆕 حقول جديدة للنظام الجديد
+  final String? email;           // للـ Owner فقط
+  final String? phone;           // اختياري
+  final String userType;         // 'owner' أو 'sub_user'
+  final String? ownerEmail;      // للـ Sub Users (FK to owner)
+  final String? createdBy;       // Email of creator
+  final String? lastLoginAt;     // آخر تسجيل دخول
+
   // --- الصلاحيات الجديدة ---
   final bool isAdmin;
   final bool canViewSuppliers;
@@ -36,6 +44,15 @@ class User {
     required this.password,
     required this.dateT,
     this.imagePath,
+
+    // 🆕 حقول جديدة في الكونستركتور
+    this.email,
+    this.phone,
+    this.userType = 'sub_user',  // القيمة الافتراضية
+    this.ownerEmail,
+    this.createdBy,
+    this.lastLoginAt,
+
     // --- الصلاحيات في الكونستركتور ---
     this.isAdmin = false,
     this.canViewSuppliers = false,
@@ -60,6 +77,15 @@ class User {
         'Password': password,
         'DateT': dateT,
         'ImagePath': imagePath,
+
+        // 🆕 الحقول الجديدة
+        'Email': email,
+        'Phone': phone,
+        'UserType': userType,
+        'OwnerEmail': ownerEmail,
+        'CreatedBy': createdBy,
+        'LastLoginAt': lastLoginAt,
+
         // --- تحويل الصلاحيات إلى أرقام ---
         'IsAdmin': isAdmin ? 1 : 0,
         'CanViewSuppliers': canViewSuppliers ? 1 : 0,
@@ -84,7 +110,15 @@ class User {
       password: map['Password'],
       dateT: map['DateT'],
       imagePath: map['ImagePath'],
-      
+
+      // 🆕 الحقول الجديدة
+      email: map['Email'],
+      phone: map['Phone'],
+      userType: map['UserType'] ?? 'sub_user',
+      ownerEmail: map['OwnerEmail'],
+      createdBy: map['CreatedBy'],
+      lastLoginAt: map['LastLoginAt'],
+
       // --- ✅ الإصلاح الرئيسي هنا ---
       // Hint: نستخدم `?? 0` كقيمة افتراضية آمنة.
       // إذا كان المفتاح (مثل 'IsAdmin') غير موجود في الـ map، فإنه سيعيد null.
@@ -104,6 +138,10 @@ class User {
       canManageExpenses: (map['CanManageExpenses'] ?? 0) == 1,
       canViewCashSales: (map['CanViewCashSales'] ?? 0) == 1,
     );
+
+  // 🆕 Helper methods
+  bool get isOwner => userType == 'owner';
+  bool get isSubUser => userType == 'sub_user';
 }
 
 //Job title
