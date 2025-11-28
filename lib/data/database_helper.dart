@@ -252,16 +252,24 @@ class DatabaseHelper {
   Future _onCreate(Database db, int version) async {
     var batch = db.batch();
 
-    // --- جدول المستخدمين بالهيكل الجديد ---
+    // --- جدول المستخدمين بالهيكل الجديد (v3: Email-based Auth) ---
     batch.execute('''
       CREATE TABLE TB_Users (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT, 
-        FullName TEXT NOT NULL, 
-        UserName TEXT NOT NULL UNIQUE, 
-        Password TEXT NOT NULL, 
-        DateT TEXT NOT NULL, 
-        ImagePath TEXT, 
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        FullName TEXT NOT NULL,
+        UserName TEXT NOT NULL UNIQUE,
+        Password TEXT NOT NULL,
+        DateT TEXT NOT NULL,
+        ImagePath TEXT,
         IsAdmin INTEGER NOT NULL DEFAULT 0,
+
+        -- 🆕 v3: أعمدة Email-based Authentication
+        Email TEXT,
+        Phone TEXT,
+        UserType TEXT NOT NULL DEFAULT 'sub_user',
+        OwnerEmail TEXT,
+        CreatedBy TEXT,
+        LastLoginAt TEXT,
 
         CanViewSuppliers INTEGER NOT NULL DEFAULT 0,
         CanEditSuppliers INTEGER NOT NULL DEFAULT 0,
@@ -275,6 +283,26 @@ class DatabaseHelper {
         CanViewEmployeesReport INTEGER NOT NULL DEFAULT 0,
         CanManageExpenses INTEGER NOT NULL DEFAULT 0,
         CanViewCashSales INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    // 🆕 v3: إنشاء Indexes للأعمدة الجديدة
+    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON TB_Users(Email)');
+    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_owner_email ON TB_Users(OwnerEmail)');
+    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_type ON TB_Users(UserType)');
+
+    // 🆕 v3: جدول Subscription Cache
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS TB_Subscription_Cache (
+        ID INTEGER PRIMARY KEY CHECK (ID = 1),
+        Email TEXT NOT NULL,
+        Plan TEXT NOT NULL,
+        Status TEXT NOT NULL,
+        StartDate TEXT NOT NULL,
+        EndDate TEXT,
+        MaxDevices INTEGER,
+        LastOnlineCheck TEXT NOT NULL,
+        CachedAt TEXT NOT NULL
       )
     ''');
 
