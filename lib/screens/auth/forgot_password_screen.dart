@@ -142,7 +142,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         prefixIcon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _handleResetPassword(),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'مطلوب';
                           if (!v.contains('@')) return 'صيغة غير صحيحة';

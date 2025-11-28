@@ -204,10 +204,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icons.lock,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.next,
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
+                        suffixIcon: _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        onSuffixIconPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'مطلوب';
                           if (v.length < 6) return '6 أحرف على الأقل';
@@ -224,11 +222,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icons.lock_outline,
                         obscureText: _obscureConfirmPassword,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _handleRegister(),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                        ),
+                        suffixIcon: _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                        onSuffixIconPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'مطلوب';
                           if (v != _passwordController.text) return 'غير متطابقة';

@@ -340,19 +340,14 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
                         prefixIcon: Icons.lock,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _handleLogin(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
+                        suffixIcon: _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        onSuffixIconPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'يرجى إدخال كلمة المرور';
