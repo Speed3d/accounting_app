@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import 'login_selection_screen.dart';
 
 /// ============================================================================
 /// شاشة تسجيل حساب جديد (Owner Registration)
@@ -239,6 +240,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: _handleRegister,
                         isLoading: _isLoading,
                         type: ButtonType.primary,
+                        size: ButtonSize.large,
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingMd),
+
+                      // فاصل
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
+                            child: Text(
+                              'أو',
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingMd),
+
+                      // زر تسجيل الدخول
+                      CustomButton(
+                        text: 'لدي حساب - تسجيل الدخول',
+                        icon: Icons.login,
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginSelectionScreen(),
+                            ),
+                          );
+                        },
+                        type: ButtonType.secondary,
                         size: ButtonSize.large,
                       ),
                     ],

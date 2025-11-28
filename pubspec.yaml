@@ -14,19 +14,19 @@ dependencies:
 
     # ==================== Firebase ====================
   # ← Hint: Firebase Core - إجباري لكل مشروع Firebase
-  firebase_core: ^2.24.2
-  
-  # ← Hint: Remote Config - لتخزين المفاتيح السرية عن بُعد
-  firebase_remote_config: ^4.3.8
-  
-  # ← Hint: Crashlytics - لتتبع الأخطاء ومحاولات القرصنة
-  firebase_crashlytics: ^3.4.9
-  
-  # ← Hint: Cloud Firestore - لتخزين بيانات الاشتراكات
-  cloud_firestore: ^4.13.6
+  firebase_core: ^3.8.1
 
-  # ← Hint: Firebase Authentication - للمصادقة بالإيميل
-  firebase_auth: ^4.15.3
+  # ← Hint: Remote Config - لتخزين المفاتيح السرية عن بُعد
+  firebase_remote_config: ^5.1.8
+
+  # ← Hint: Crashlytics - لتتبع الأخطاء ومحاولات القرصنة
+  firebase_crashlytics: ^4.1.8
+
+  # ← Hint: Cloud Firestore - لتخزين بيانات الاشتراكات
+  cloud_firestore: ^5.5.2
+
+  # ← Hint: Firebase Authentication - للمصادقة بالإيميل (تم تحديثها لإصلاح خطأ PigeonUserDetails)
+  firebase_auth: ^5.3.3
 
   # ← Hint: Cloud Functions - للتحقق من جهة الخادم (اختياري - للمستقبل)
   # cloud_functions: ^4.5.7
