@@ -1,7 +1,7 @@
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Delete
 
-extra["kotlin_version"] = "2.0.21"
+extra["kotlin_version"] = "2.1.0"
 
 // ← Hint: هذا الملف الرئيسي لإعدادات Gradle على مستوى المشروع
 
