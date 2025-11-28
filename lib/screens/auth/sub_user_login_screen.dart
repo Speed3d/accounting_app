@@ -1,5 +1,6 @@
 // lib/screens/auth/sub_user_login_screen.dart
 
+import 'package:accountant_touch/layouts/main_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
@@ -9,7 +10,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import '../main_screen.dart';
 
 /// ============================================================================
 /// شاشة تسجيل دخول الموظف (Sub User) - محلي فقط
