@@ -1,7 +1,7 @@
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Delete
 
-extra["kotlin_version"] = "2.0.20"
+extra["kotlin_version"] = "2.0.21"
 
 // ← Hint: هذا الملف الرئيسي لإعدادات Gradle على مستوى المشروع
 
@@ -12,8 +12,8 @@ buildscript {
     }
 
     dependencies {
-        // ✅ Android Gradle Plugin متوافق مع Gradle 8.7 + Flutter SDK
-        classpath("com.android.tools.build:gradle:8.5.2")
+        // ✅ Android Gradle Plugin (الحد الأدنى 8.6.0 للتوافق مع Dependencies الحديثة)
+        classpath("com.android.tools.build:gradle:8.7.3")
 
         // ✅ Hint: إضافة Google Services plugin للاتصال بـ Firebase
         classpath("com.google.gms:google-services:4.4.4")
