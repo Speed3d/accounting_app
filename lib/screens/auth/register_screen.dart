@@ -1,7 +1,9 @@
 // lib/screens/auth/register_screen.dart
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import '../../services/firebase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
@@ -49,22 +51,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       debugPrint('📝 إنشاء حساب جديد: $email');
 
-      // إنشاء حساب في Firebase
+      // 1️⃣ إنشاء حساب في Firebase Authentication
       final userCredential = await firebase_auth.FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // تحديث الاسم
+      // 2️⃣ تحديث الاسم في Firebase Profile
       await userCredential.user?.updateDisplayName(fullName);
 
-      debugPrint('✅ تم إنشاء الحساب بنجاح');
+      debugPrint('✅ تم إنشاء الحساب في Firebase Auth بنجاح');
+
+      // 3️⃣ Hint: التحقق من flag التفعيل التلقائي في Remote Config
+      // (يمكن تغييره لاحقاً من Firebase Console بدون تحديث التطبيق)
+      // ملاحظة: في البداية القيمة الافتراضية false، قم بتفعيلها من Firebase Console
+      final autoActivate = FirebaseService.instance.remoteConfig
+              .getBool('auto_activate_trial');
+
+      debugPrint('🔍 auto_activate_trial = $autoActivate');
+
+      if (autoActivate) {
+        // 4️⃣ Hint: التفعيل التلقائي - إنشاء subscription في Firestore
+        // (يعمل على Spark Plan المجاني - لا يحتاج Cloud Functions)
+        debugPrint('🚀 إنشاء اشتراك تجريبي تلقائياً...');
+
+        await _createTrialSubscription(
+          email: email,
+          displayName: fullName,
+        );
+
+        debugPrint('✅ تم إنشاء الاشتراك التجريبي بنجاح');
+      } else {
+        debugPrint('ℹ️ التفعيل التلقائي معطل - يحتاج تفعيل يدوي');
+      }
 
       if (!mounted) return;
 
-      // عرض رسالة نجاح
-      _showSuccessDialog();
+      // 5️⃣ عرض رسالة نجاح مع/بدون تفعيل
+      _showSuccessDialog(autoActivated: autoActivate);
     } on firebase_auth.FirebaseAuthException catch (e) {
       String message = 'حدث خطأ في التسجيل';
 
@@ -76,19 +101,81 @@ class _RegisterScreenState extends State<RegisterScreen> {
           message = 'صيغة الإيميل غير صحيحة';
           break;
         case 'weak-password':
-          message = 'كلمة المرور ضعيفة';
+          message = 'كلمة المرور ضعيفة جداً';
+          break;
+        case 'network-request-failed':
+          message = 'خطأ في الاتصال بالإنترنت';
           break;
       }
 
       if (mounted) _showErrorDialog(message);
     } catch (e) {
+      debugPrint('❌ خطأ عام: $e');
       if (mounted) _showErrorDialog('خطأ: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessDialog() {
+  /// Hint: دالة مساعدة لإنشاء اشتراك تجريبي تلقائياً في Firestore
+  /// (يعمل فقط على Spark Plan - لا يحتاج Blaze Plan)
+  Future<void> _createTrialSubscription({
+    required String email,
+    required String displayName,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+
+    // Hint: حساب تاريخ الانتهاء (+14 يوم من الآن)
+    final now = DateTime.now();
+    final endDate = now.add(const Duration(days: 14));
+
+    // Hint: بنية subscription كاملة (متوافقة مع SubscriptionService)
+    await firestore.collection('subscriptions').doc(email).set({
+      'email': email,
+      'displayName': displayName,
+
+      // Hint: معلومات الخطة
+      'plan': 'trial',
+      'status': 'active',
+      'isActive': true,
+
+      // Hint: التواريخ (Firestore Timestamp للدقة)
+      'startDate': Timestamp.fromDate(now),
+      'endDate': Timestamp.fromDate(endDate),
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+
+      // Hint: إعدادات الأجهزة (Professional: 3 أجهزة للتجربة)
+      'maxDevices': 3,
+      'currentDevices': [], // Hint: سيمتلئ عند تسجيل الدخول
+
+      // Hint: المميزات المتاحة في الفترة التجريبية
+      'features': {
+        'canCreateSubUsers': true,
+        'maxSubUsers': 10,
+        'canExportData': true,
+        'canUseAdvancedReports': true,
+        'supportPriority': 'standard',
+      },
+
+      // Hint: سجل الدفعات (فارغ للتجربة المجانية)
+      'paymentHistory': [
+        {
+          'amount': 0,
+          'currency': 'USD',
+          'method': 'auto_trial',
+          'paidAt': Timestamp.fromDate(now),
+          'receiptUrl': null,
+        }
+      ],
+
+      'notes': 'تفعيل تجريبي تلقائي - 14 يوم',
+    });
+  }
+
+  /// Hint: عرض رسالة نجاح مع التعامل الصحيح للـ Navigation
+  /// (تجنب الشاشة السوداء بعد الإنشاء)
+  void _showSuccessDialog({required bool autoActivated}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -100,15 +187,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const Text('نجح'),
           ],
         ),
-        content: const Text(
-          'تم إنشاء الحساب بنجاح!\n\n'
-          'يرجى التواصل مع المطور لتفعيل الاشتراك.',
+        content: Text(
+          autoActivated
+              ? 'تم إنشاء الحساب بنجاح!\n\n'
+                  '✅ تم تفعيل الاشتراك التجريبي لمدة 14 يوم.\n\n'
+                  'يمكنك الآن تسجيل الدخول والبدء باستخدام التطبيق.'
+              : 'تم إنشاء الحساب بنجاح!\n\n'
+                  'يرجى التواصل مع المطور لتفعيل الاشتراك.',
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // إغلاق Dialog
-              Navigator.pop(context); // العودة لشاشة الدخول
+              Navigator.pop(context); // Hint: إغلاق Dialog
+
+              // Hint: الانتقال لشاشة تسجيل الدخول مع حذف كل navigation stack
+              // (يمنع الشاشة السوداء ويضمن navigation صحيح)
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const LoginSelectionScreen(),
+                ),
+                (route) => false, // Hint: حذف كل الشاشات السابقة
+              );
             },
             child: const Text('حسناً'),
           ),
