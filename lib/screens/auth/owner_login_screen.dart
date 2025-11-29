@@ -115,22 +115,37 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
       debugPrint('✅ تم حفظ الاشتراك محلياً');
 
       // 5️⃣ البحث عن/إنشاء المستخدم المحلي
+      // Hint: نبحث أولاً بالـ Email (الأساس في النظام الجديد)
       User? localUser = await DatabaseHelper.instance.getUserByEmail(email);
 
       if (localUser == null) {
         // إنشاء مستخدم جديد محلياً
         debugPrint('📝 إنشاء مستخدم محلي جديد...');
 
+        // Hint: نستخدم Email كـ username للـ owners لتفادي تكرار الأسماء
+        // (Email دائماً فريد، بينما email.split('@')[0] قد يتكرر)
+        String uniqueUsername = email; // استخدام Email كامل
+
+        // Hint: للتوافق مع قاعدة البيانات (UserName UNIQUE)،
+        // نتحقق أولاً إذا كان موجوداً (احتياطي إضافي)
+        final existingUser = await DatabaseHelper.instance.getUserByUsername(uniqueUsername);
+        if (existingUser != null) {
+          // Hint: حالة نادرة جداً - username موجود لكن email مختلف
+          // (لا يجب أن يحدث هذا، لكن للأمان نضيف timestamp)
+          uniqueUsername = '${email}_${DateTime.now().millisecondsSinceEpoch}';
+          debugPrint('⚠️ Username مكرر، استخدام: $uniqueUsername');
+        }
+
         final newUser = User(
           fullName: userCredential.user!.displayName ?? 'Owner',
-          userName: email.split('@')[0], // username من الإيميل
+          userName: uniqueUsername, // Hint: username فريد (email أو email+timestamp)
           password: BCrypt.hashpw(password, BCrypt.gensalt()),
           dateT: DateTime.now().toIso8601String(),
           email: email,
           userType: 'owner',
-          isAdmin: true, // المالك admin دائماً
+          isAdmin: true, // Hint: المالك admin دائماً
 
-          // جميع الصلاحيات = true للمالك
+          // Hint: جميع الصلاحيات = true للمالك (full access)
           canViewSuppliers: true,
           canEditSuppliers: true,
           canViewProducts: true,
@@ -150,12 +165,13 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
 
         debugPrint('✅ تم إنشاء المستخدم المحلي');
       } else {
-        // تحديث آخر تسجيل دخول
+        // Hint: المستخدم موجود - نحدث آخر تسجيل دخول فقط
         await DatabaseHelper.instance.updateUserLastLogin(localUser.id!);
         debugPrint('✅ تم تحديث آخر تسجيل دخول');
       }
 
       // 6️⃣ حفظ الجلسة
+      // Hint: AuthService يحفظ session للمستخدم الحالي
       AuthService().login(localUser!);
 
       debugPrint('✅ تم حفظ الجلسة');
@@ -163,6 +179,7 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
       // 7️⃣ الانتقال للشاشة الرئيسية
       if (!mounted) return;
 
+      // Hint: pushAndRemoveUntil يحذف كل الشاشات السابقة من navigation stack
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const MainScreen()),
