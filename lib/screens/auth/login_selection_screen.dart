@@ -1,5 +1,6 @@
 // lib/screens/auth/login_selection_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -15,9 +16,18 @@ import 'sub_user_login_screen.dart';
 /// - السماح للمستخدم بتحديد نوع الحساب للدخول
 /// - Owner: تسجيل دخول بالإيميل (Firebase Auth)
 /// - Sub User: تسجيل دخول بـ Username (محلي)
+/// 🆕 - عرض معلومات الشركة (الاسم والشعار) من TB_Settings إن وُجدت
 /// ============================================================================
 class LoginSelectionScreen extends StatelessWidget {
-  const LoginSelectionScreen({super.key});
+  // Hint: معلومات الشركة (اختيارية) - يتم تمريرها من SplashScreen
+  final String? companyName;
+  final String? companyLogoPath;
+
+  const LoginSelectionScreen({
+    super.key,
+    this.companyName,
+    this.companyLogoPath,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,32 +52,21 @@ class LoginSelectionScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // الشعار/الأيقونة
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.account_balance,
-                      size: 70,
-                      color: AppColors.primaryLight,
-                    ),
-                  ),
+                  // 🆕 Hint: شعار الشركة (من TB_Settings) أو الأيقونة الافتراضية
+                  _buildCompanyLogo(),
 
                   const SizedBox(height: AppConstants.spacingXl),
 
-                  // اسم التطبيق
+                  // 🆕 Hint: اسم الشركة (من TB_Settings) أو الاسم الافتراضي
                   Text(
-                    'Accountant Touch',
+                    companyName ?? 'Accountant Touch',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: isDark
                               ? AppColors.textPrimaryDark
                               : AppColors.textPrimaryLight,
                         ),
+                    textAlign: TextAlign.center,
                   ),
 
                   const SizedBox(height: AppConstants.spacingSm),
@@ -199,6 +198,56 @@ class LoginSelectionScreen extends StatelessWidget {
       },
       type: ButtonType.secondary,
       size: ButtonSize.large,
+    );
+  }
+
+  // ==========================================================================
+  // 🆕 بناء شعار الشركة
+  // ==========================================================================
+  /// Hint: يعرض شعار الشركة من TB_Settings إن وُجد، وإلا يعرض أيقونة افتراضية
+  Widget _buildCompanyLogo() {
+    // Hint: التحقق من وجود مسار الشعار وأن الملف موجود فعلياً
+    final bool hasLogo = companyLogoPath != null &&
+                         companyLogoPath!.isNotEmpty &&
+                         File(companyLogoPath!).existsSync();
+
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        // Hint: خلفية بيضاء للوضع المظلم، شفافة للوضع الفاتح
+        color: hasLogo ? Colors.white : AppColors.primaryLight.withOpacity(0.1),
+        shape: BoxShape.circle,
+        // Hint: ظل خفيف لإبراز الشعار
+        boxShadow: hasLogo ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ] : null,
+      ),
+      // Hint: ClipOval للتأكد من أن الصورة دائرية حتى لو كانت مربعة
+      child: ClipOval(
+        child: hasLogo
+            ? Image.file(
+                File(companyLogoPath!),
+                fit: BoxFit.cover, // Hint: تغطية كامل المساحة
+                errorBuilder: (context, error, stackTrace) {
+                  // Hint: في حالة فشل تحميل الصورة، نعرض الأيقونة الافتراضية
+                  return Icon(
+                    Icons.account_balance,
+                    size: 70,
+                    color: AppColors.primaryLight,
+                  );
+                },
+              )
+            : Icon(
+                Icons.account_balance,
+                size: 70,
+                color: AppColors.primaryLight,
+              ),
+      ),
     );
   }
 }

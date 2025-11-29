@@ -437,8 +437,12 @@ class _SplashScreenState extends State<SplashScreen>
       }
 
       // 3️⃣ ✅ كل شيء تمام → توجيه لشاشة اختيار نوع الدخول
+      // 🆕 Hint: تمرير معلومات الشركة من TB_Settings إلى LoginSelectionScreen
       debugPrint('➡️ كل شيء طبيعي → LoginSelectionScreen');
-      _navigateToScreen(const LoginSelectionScreen());
+      _navigateToScreen(LoginSelectionScreen(
+        companyName: _companyName.isNotEmpty ? _companyName : null,
+        companyLogoPath: _companyLogo?.path,
+      ));
 
     } catch (e, stackTrace) {
       debugPrint('❌ خطأ في التنقل: $e');
