@@ -66,8 +66,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // 3️⃣ Hint: التحقق من flag التفعيل التلقائي في Remote Config
       // (يمكن تغييره لاحقاً من Firebase Console بدون تحديث التطبيق)
       // ملاحظة: في البداية القيمة الافتراضية false، قم بتفعيلها من Firebase Console
+      //
+      // Hint: نستخدم ?. لأن remoteConfig يمكن أن يكون null
+      // وإذا كان null، نستخدم false كـ fallback (آمن دائماً)
       final autoActivate = FirebaseService.instance.remoteConfig
-              .getBool('auto_activate_trial');
+              ?.getBool('auto_activate_trial') ?? false;
 
       debugPrint('🔍 auto_activate_trial = $autoActivate');
 
