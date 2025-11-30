@@ -153,8 +153,8 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
           final userId = await DatabaseHelper.instance.insertUser(newUser);
           debugPrint('✅ تم إنشاء Owner محلي - ID: $userId');
 
-          // Hint: جلب المستخدم مرة أخرى للتأكد
-          localUser = await DatabaseHelper.instance.getUserById(userId);
+          // Hint: جلب المستخدم مرة أخرى للتأكد (نستخدم Email لأنه فريد)
+          localUser = await DatabaseHelper.instance.getUserByEmail(email);
         } catch (e) {
           // Hint: إذا فشل الإنشاء (مثلاً UNIQUE constraint)، نبحث مرة أخرى
           debugPrint('⚠️ فشل إنشاء User، محاولة البحث مرة أخرى: $e');
