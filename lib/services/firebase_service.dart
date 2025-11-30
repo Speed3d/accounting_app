@@ -147,6 +147,7 @@ class FirebaseService {
         
         // ========== Features Flags ==========
         'feature_biometric': true,
+        'auto_activate_trial': false,  // Hint: معطل افتراضياً للأمان (يُفعّل من Firebase Console)
         'feature_backup_v2': true,
         'feature_online_validation': false,
       });

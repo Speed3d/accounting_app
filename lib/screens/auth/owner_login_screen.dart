@@ -109,7 +109,7 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
         endDate: subscriptionStatus.endDate,
         isActive: true,
         maxDevices: subscriptionStatus.features?['maxDevices'],
-        features: subscriptionStatus.features!,
+        features: subscriptionStatus.features ?? {}, // Hint: fallback لـ empty map
       );
 
       debugPrint('✅ تم حفظ الاشتراك محلياً');
@@ -119,31 +119,20 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
       User? localUser = await DatabaseHelper.instance.getUserByEmail(email);
 
       if (localUser == null) {
-        // إنشاء مستخدم جديد محلياً
-        debugPrint('📝 إنشاء مستخدم محلي جديد...');
+        // Hint: Owner لا يوجد محلياً - يجب إنشاؤه
+        // (هذا يحدث فقط في حالات نادرة: مثلاً database حُذفت لكن Firebase Auth موجود)
+        debugPrint('📝 Owner غير موجود محلياً - إنشاء جديد...');
 
-        // Hint: نستخدم Email كـ username للـ owners لتفادي تكرار الأسماء
-        // (Email دائماً فريد، بينما email.split('@')[0] قد يتكرر)
-        String uniqueUsername = email; // استخدام Email كامل
-
-        // Hint: للتوافق مع قاعدة البيانات (UserName UNIQUE)،
-        // نتحقق أولاً إذا كان موجوداً (احتياطي إضافي)
-        final existingUser = await DatabaseHelper.instance.getUserByUsername(uniqueUsername);
-        if (existingUser != null) {
-          // Hint: حالة نادرة جداً - username موجود لكن email مختلف
-          // (لا يجب أن يحدث هذا، لكن للأمان نضيف timestamp)
-          uniqueUsername = '${email}_${DateTime.now().millisecondsSinceEpoch}';
-          debugPrint('⚠️ Username مكرر، استخدام: $uniqueUsername');
-        }
-
+        // Hint: نستخدم Email مباشرة كـ username (فريد دائماً)
+        // لا نضيف timestamp لأن Email فريد في Firebase Auth
         final newUser = User(
           fullName: userCredential.user!.displayName ?? 'Owner',
-          userName: uniqueUsername, // Hint: username فريد (email أو email+timestamp)
+          userName: email,  // Hint: Email كـ username (بدون تعديل!)
           password: BCrypt.hashpw(password, BCrypt.gensalt()),
           dateT: DateTime.now().toIso8601String(),
           email: email,
-          userType: 'owner',
-          isAdmin: true, // Hint: المالك admin دائماً
+          userType: 'owner',  // ⭐ مهم: يجعل hasOwner = true
+          isAdmin: true,
 
           // Hint: جميع الصلاحيات = true للمالك (full access)
           canViewSuppliers: true,
@@ -160,12 +149,25 @@ class _OwnerLoginScreenState extends State<OwnerLoginScreen> {
           canViewCashSales: true,
         );
 
-        await DatabaseHelper.instance.insertUser(newUser);
-        localUser = await DatabaseHelper.instance.getUserByEmail(email);
+        try {
+          final userId = await DatabaseHelper.instance.insertUser(newUser);
+          debugPrint('✅ تم إنشاء Owner محلي - ID: $userId');
 
-        debugPrint('✅ تم إنشاء المستخدم المحلي');
+          // Hint: جلب المستخدم مرة أخرى للتأكد
+          localUser = await DatabaseHelper.instance.getUserById(userId);
+        } catch (e) {
+          // Hint: إذا فشل الإنشاء (مثلاً UNIQUE constraint)، نبحث مرة أخرى
+          debugPrint('⚠️ فشل إنشاء User، محاولة البحث مرة أخرى: $e');
+          localUser = await DatabaseHelper.instance.getUserByEmail(email);
+
+          if (localUser == null) {
+            // Hint: حالة حرجة - لا يمكن إنشاء أو إيجاد المستخدم
+            throw Exception('فشل إنشاء/إيجاد المستخدم المحلي');
+          }
+        }
       } else {
-        // Hint: المستخدم موجود - نحدث آخر تسجيل دخول فقط
+        // Hint: Owner موجود بالفعل - فقط تحديث LastLoginAt
+        debugPrint('✅ Owner موجود محلياً: ${localUser.userName}');
         await DatabaseHelper.instance.updateUserLastLogin(localUser.id!);
         debugPrint('✅ تم تحديث آخر تسجيل دخول');
       }

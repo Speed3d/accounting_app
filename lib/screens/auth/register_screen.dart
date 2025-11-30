@@ -3,6 +3,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
+import 'package:bcrypt/bcrypt.dart';
+
+import '../../data/database_helper.dart';
+import '../../data/models.dart';
 import '../../services/firebase_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -63,7 +67,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       debugPrint('✅ تم إنشاء الحساب في Firebase Auth بنجاح');
 
-      // 3️⃣ Hint: التحقق من flag التفعيل التلقائي في Remote Config
+      // 3️⃣ Hint: إنشاء Owner محلي في SQLite
+      // (مهم جداً! بدون هذا، hasOwner سيكون false دائماً)
+      debugPrint('📝 إنشاء مستخدم Owner محلي في قاعدة البيانات...');
+
+      final newOwner = User(
+        fullName: fullName,
+        userName: email,  // Hint: استخدام Email كـ username (فريد دائماً)
+        password: BCrypt.hashpw(password, BCrypt.gensalt()),
+        dateT: DateTime.now().toIso8601String(),
+        email: email,
+        userType: 'owner',  // ⭐ مهم جداً! هذا ما يجعل hasOwner = true
+        isAdmin: true,
+
+        // Hint: Owner لديه جميع الصلاحيات افتراضياً (full access)
+        canViewSuppliers: true,
+        canEditSuppliers: true,
+        canViewProducts: true,
+        canEditProducts: true,
+        canViewCustomers: true,
+        canEditCustomers: true,
+        canViewReports: true,
+        canManageEmployees: true,
+        canViewSettings: true,
+        canViewEmployeesReport: true,
+        canManageExpenses: true,
+        canViewCashSales: true,
+      );
+
+      final userId = await DatabaseHelper.instance.insertUser(newOwner);
+      debugPrint('✅ تم إنشاء Owner محلي بنجاح - ID: $userId');
+
+      // 4️⃣ Hint: التحقق من flag التفعيل التلقائي في Remote Config
       // (يمكن تغييره لاحقاً من Firebase Console بدون تحديث التطبيق)
       // ملاحظة: في البداية القيمة الافتراضية false، قم بتفعيلها من Firebase Console
       //
@@ -75,16 +110,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       debugPrint('🔍 auto_activate_trial = $autoActivate');
 
       if (autoActivate) {
-        // 4️⃣ Hint: التفعيل التلقائي - إنشاء subscription في Firestore
+        // 5️⃣ Hint: التفعيل التلقائي - إنشاء subscription في Firestore
         // (يعمل على Spark Plan المجاني - لا يحتاج Cloud Functions)
         debugPrint('🚀 إنشاء اشتراك تجريبي تلقائياً...');
 
-        await _createTrialSubscription(
-          email: email,
-          displayName: fullName,
-        );
-
-        debugPrint('✅ تم إنشاء الاشتراك التجريبي بنجاح');
+        try {
+          await _createTrialSubscription(
+            email: email,
+            displayName: fullName,
+          );
+          debugPrint('✅ تم إنشاء الاشتراك التجريبي بنجاح');
+        } catch (firestoreError) {
+          // Hint: إذا فشل Firestore (مثلاً: permission denied)، لا نوقف التسجيل
+          // التطبيق يعمل محلياً، Firestore اختياري
+          debugPrint('⚠️ فشل إنشاء الاشتراك في Firestore: $firestoreError');
+          debugPrint('ℹ️ التطبيق سيعمل محلياً بدون اشتراك سحابي');
+        }
       } else {
         debugPrint('ℹ️ التفعيل التلقائي معطل - يحتاج تفعيل يدوي');
       }
