@@ -9,7 +9,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -32,7 +31,7 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
   // ============= متغيرات النموذج =============
   final _formKey = GlobalKey<FormState>();
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
 
   // Controllers
   final _nameController = TextEditingController();
@@ -137,8 +136,6 @@ class _AddEditEmployeeScreenState extends State<AddEditEmployeeScreen> {
       // تسجيل النشاط
       await dbHelper.logActivity(
         action,
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
 
       if (mounted) {

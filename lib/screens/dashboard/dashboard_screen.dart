@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../utils/helpers.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
+
+// ← Hint: تم إزالة AuthService - لا حاجة له في Dashboard
 
 /// 📊 لوحة القيادة (Dashboard)
 /// الغرض: عرض جميع الإحصائيات والتنبيهات الذكية
@@ -25,7 +26,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAliveClientMixin {
   final dbHelper = DatabaseHelper.instance;
-  final authService = AuthService();
+  // ← Hint: تم إزالة AuthService
 
   // ✅ Hint: للحفاظ على حالة الصفحة عند التبديل بين التابات
   @override

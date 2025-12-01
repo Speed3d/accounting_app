@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../utils/decimal_extensions.dart';
 import '../../l10n/app_localizations.dart';
@@ -48,7 +47,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   
   // ============= الخدمات =============
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   
   // ============= متغيرات الحالة =============
   File? _imageFile;
@@ -262,8 +261,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       
       await dbHelper.logActivity(
         action,
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
       
       if (mounted) {

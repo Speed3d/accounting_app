@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -29,7 +28,7 @@ class InvoiceDetailsScreen extends StatefulWidget {
 
 class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   late Future<List<CustomerDebt>> _salesFuture;
   bool _hasChanged = false;
 
@@ -127,8 +126,6 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
       await dbHelper.updateInvoiceStatus(widget.invoiceId, l10n.invoiceStatusModified);
       await dbHelper.logActivity(
         l10n.returnActivityLog(widget.invoiceId.toString(), sale.details),
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
       
       setState(() {

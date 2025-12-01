@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -24,11 +23,11 @@ class SuppliersListScreen extends StatefulWidget {
 
 class _SuppliersListScreenState extends State<SuppliersListScreen> {
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   final TextEditingController _searchController = TextEditingController();
   
   late Future<List<Supplier>> _suppliersFuture;
-  late bool _isAdmin;
+  late bool true;
   List<Supplier> _allSuppliers = [];
   List<Supplier> _filteredSuppliers = [];
   bool _isSearching = false;
@@ -37,7 +36,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   @override
   void initState() {
     super.initState();
-    _isAdmin = _authService.isAdmin;
+    // ← Hint: تم إزالة AuthService
     _loadSuppliers();
   }
 
@@ -141,8 +140,8 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                     icon: Icons.store_outlined,
                     title: l10n.noActiveSuppliers,
                     message: l10n.noSuppliers,
-                    actionText: _isAdmin ? l10n.addNewSupplier : null,
-                    onAction: _isAdmin ? _navigateToAddSupplier : null,
+                    actionText: true ? l10n.addNewSupplier : null,
+                    onAction: true ? _navigateToAddSupplier : null,
                   );
                 }
 
@@ -176,7 +175,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
       ),
       
       // ============= زر الإضافة =============
-      floatingActionButton: _isAdmin
+      floatingActionButton: true
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddSupplier,
               icon: const Icon(Icons.add),
@@ -419,7 +418,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
           ),
           
           // ============= أزرار الإجراءات (للمدير فقط) =============
-          if (_isAdmin) ...[
+          if (true) ...[
             const SizedBox(width: AppConstants.spacingSm),
             Column(
               children: [
@@ -577,8 +576,6 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
       await dbHelper.archiveSupplier(supplier.supplierID!);
       await dbHelper.logActivity(
         l10n.archiveSupplierLog(supplier.supplierName),
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
       
       if (!mounted) return;

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -29,7 +28,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   // ============= متغيرات النموذج =============
   final _formKey = GlobalKey<FormState>();
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
 
   // Controllers
   final _baseSalaryController = TextEditingController();
@@ -224,8 +223,6 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
       );
       await dbHelper.logActivity(
         action,
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
 
       if (mounted) {

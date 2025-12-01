@@ -1,17 +1,20 @@
 // lib/screens/auth/lock_screen.dart
 
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // 🆕 Firebase Auth
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../services/app_lock_service.dart';
-import '../../services/auth_service.dart';
 import '../../services/biometric_service.dart';
+import '../../services/session_service.dart'; // 🆕 SessionService
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import 'login_screen.dart';
+import '../auth/splash_screen.dart'; // ← Hint: استبدال LoginScreen بـ SplashScreen
+
+// ← Hint: تم إزالة AuthService - استخدام Firebase Auth بدلاً منه
 
 /// 🔒 شاشة القفل
 class LockScreen extends StatefulWidget {
@@ -99,7 +102,7 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   // ==========================================================================
-  // ← Hint: التحقق من كلمة المرور
+  // ← Hint: التحقق من كلمة المرور - النظام الجديد (Firebase Re-Authentication)
   // ==========================================================================
   Future<void> _handleUnlock() async {
     final l10n = AppLocalizations.of(context)!;
@@ -114,21 +117,43 @@ class _LockScreenState extends State<LockScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final authService = AuthService();
+      // ← Hint: الحصول على المستخدم الحالي من Firebase
+      final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      final email = await SessionService.instance.getEmail();
       final password = _passwordController.text;
 
-      final isValid = authService.verifyPassword(password);
+      if (user == null || email == null) {
+        throw Exception(l10n.sessionExpired);
+      }
 
-      if (isValid) {
-        // ← Hint: نجح التحقق
-        await AppLockService.instance.unlockApp();
-        
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
-      } else {
-        // ← Hint: فشل التحقق
+      // ← Hint: التحقق من كلمة المرور عبر Firebase Re-Authentication
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+
+      // ← Hint: نجح التحقق
+      await AppLockService.instance.unlockApp();
+
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      // ← Hint: فشل التحقق (كلمة مرور خاطئة)
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
         _handleFailedAttempt(l10n);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${l10n.error}: ${e.message}'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -258,7 +283,7 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   // ==========================================================================
-  // ← Hint: تسجيل الخروج
+  // ← Hint: تسجيل الخروج - النظام الجديد (Firebase Auth + SessionService)
   // ==========================================================================
   Future<void> _handleLogout() async {
     final l10n = AppLocalizations.of(context)!;
@@ -286,16 +311,38 @@ class _LockScreenState extends State<LockScreen> {
 
     if (confirm != true || !mounted) return;
 
-    AuthService().logout();
-    await AppLockService.instance.reset();
+    try {
+      // ← Hint: 1. تسجيل الخروج من Firebase Auth
+      await firebase_auth.FirebaseAuth.instance.signOut();
 
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => LoginScreen(l10n: l10n),
-        ),
-        (route) => false,
-      );
+      // ← Hint: 2. مسح الجلسة المحلية
+      await SessionService.instance.clearSession();
+
+      // ← Hint: 3. إعادة تعيين App Lock
+      await AppLockService.instance.reset();
+
+      debugPrint('✅ تم تسجيل الخروج بنجاح من Lock Screen');
+
+      if (mounted) {
+        // ← Hint: 4. العودة لشاشة البداية
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const SplashScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ خطأ في تسجيل الخروج: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.error}: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

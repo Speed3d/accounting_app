@@ -1,7 +1,6 @@
 // lib/screens/HomeScreen/home_screen.dart
 
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -11,8 +10,9 @@ import '../products/products_list_screen.dart';
 import '../reports/reports_hub_screen.dart';
 import '../sales/direct_sale_screen.dart';
 import '../suppliers/suppliers_list_screen.dart';
-import '../users/users_list_screen.dart';
 import '../settings/settings_screen.dart';
+
+// ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
 
 /// الصفحة الرئيسية (Home Screen) - بدون Layout
 class HomeScreen extends StatefulWidget {
@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService - لا حاجة لفحص الصلاحيات
 
   @override
   Widget build(BuildContext context) {
@@ -84,83 +84,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ← Hint: تم إزالة فحوصات الصلاحيات - كل مستخدم يمكنه الوصول لكل الصفحات
   List<Map<String, dynamic>> _getMenuItems(AppLocalizations l10n) {
-    final items = <Map<String, dynamic>>[];
+    return [
+      // ← Hint: تم حذف صفحة Users - لا حاجة لها في النظام الجديد
 
-    if (_authService.isAdmin) {
-      items.add({
-        'title': l10n.users,
-        'icon': Icons.people_alt,
-        'color': AppColors.info,
-        'page': const UsersListScreen(), 
-      });
-    }
-
-    if (_authService.canViewSuppliers) {
-      items.add({
+      {
         'title': l10n.suppliers,
         'icon': Icons.local_shipping,
         'color': AppColors.warning,
-        'page': const SuppliersListScreen(), 
-      });
-    }
-
-    if (_authService.canViewProducts) {
-      items.add({
+        'page': const SuppliersListScreen(),
+      },
+      {
         'title': l10n.products,
         'icon': Icons.inventory_2,
         'color': AppColors.primaryLight,
-        'page': const ProductsListScreen(), 
-      });
-    }
-
-    if (_authService.canManageEmployees) {
-      items.add({
+        'page': const ProductsListScreen(),
+      },
+      {
         'title': l10n.employees,
         'icon': Icons.badge,
         'color': AppColors.secondaryLight,
-        'page': const EmployeesListScreen(), 
-      });
-    }
-
-    if (_authService.canViewCustomers) {
-      items.add({
+        'page': const EmployeesListScreen(),
+      },
+      {
         'title': l10n.customers,
         'icon': Icons.groups,
         'color': AppColors.success,
         'page': const CustomersListScreen(),
-      });
-    }
-
-    if (_authService.canViewCustomers) {
-      items.add({
+      },
+      {
         'title': l10n.directselling,
         'icon': Icons.point_of_sale,
         'color': AppColors.profit,
-        'page': const DirectSaleScreen(), 
-      });
-    }
-
-    // إضافة زر التقارير بشكل صحيح 
-    if (_authService.canViewReports || _authService.isAdmin) {
-      items.add({
+        'page': const DirectSaleScreen(),
+      },
+      {
         'title': l10n.reports,
         'icon': Icons.assessment,
         'color': AppColors.income,
-        'page': const ReportsHubScreen(), 
-      });
-    }
-
-    if (_authService.canViewSettings) {
-      items.add({
+        'page': const ReportsHubScreen(),
+      },
+      {
         'title': l10n.settings,
         'icon': Icons.settings,
         'color': Colors.grey,
-        'page': const SettingsScreen(), 
-      });
-    }
-
-    return items;
+        'page': const SettingsScreen(),
+      },
+    ];
   }
 
   Widget _buildMenuItem({

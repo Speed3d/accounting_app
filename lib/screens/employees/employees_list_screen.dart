@@ -5,7 +5,6 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -27,7 +26,7 @@ class EmployeesListScreen extends StatefulWidget {
 class _EmployeesListScreenState extends State<EmployeesListScreen> {
   // ============= المتغيرات =============
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   late Future<List<Employee>> _employeesFuture;
   final _searchController = TextEditingController();
   List<Employee> _allEmployees = [];
@@ -195,10 +194,10 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               title: l10n.noEmployees,
               message: l10n.startByAddingEmployee,
               // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
-              actionText: _authService.canManageEmployees 
+              actionText: true 
                   ? l10n.addEmployee 
                   : null,
-              onAction: _authService.canManageEmployees 
+              onAction: true 
                   ? _navigateToAddEmployee 
                   : null,
             );
@@ -225,7 +224,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
       ),
 
       // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
-      floatingActionButton: _authService.canManageEmployees
+      floatingActionButton: true
           ? FloatingActionButton.extended(
               onPressed: _navigateToAddEmployee,
               icon: const Icon(Icons.add),

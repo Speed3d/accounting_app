@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -56,7 +55,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   final _dbHelper = DatabaseHelper.instance;
   
   /// Hint: خدمة المصادقة للصلاحيات
-  final _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   
   /// Hint: بيانات الزبون الحالية (قد تتغير بعد العمليات)
   late Customer _currentCustomer;
@@ -247,8 +246,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
     
     await _dbHelper.logActivity(
       l10n.newSaleActivityLog(_currentCustomer.customerName, formatCurrency(totalSaleAmount)),
-      userId: _authService.currentUser?.id,
-      userName: _authService.currentUser?.fullName,
     );
     
     if (mounted) {
@@ -384,8 +381,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         // تسجيل النشاط
         await _dbHelper.logActivity(
           l10n.paymentActivityLog(_currentCustomer.customerName, formatCurrency(amount)),
-          userId: _authService.currentUser?.id,
-          userName: _authService.currentUser?.fullName,
         );
         
         if (mounted) {
@@ -452,8 +447,6 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         // تسجيل النشاط
         await _dbHelper.logActivity(
           l10n.returnActivityLog(sale.details, _currentCustomer.customerName),
-          userId: _authService.currentUser?.id,
-          userName: _authService.currentUser?.fullName,
         );
         
         if (mounted) {
@@ -765,7 +758,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           ),
           
           // === زر الإرجاع (للمدير فقط) ===
-          if (!isReturned && _authService.isAdmin) ...[
+          if (!isReturned) ...[
             const SizedBox(height: AppConstants.spacingMd),
             const Divider(height: 1),
             const SizedBox(height: AppConstants.spacingSm),

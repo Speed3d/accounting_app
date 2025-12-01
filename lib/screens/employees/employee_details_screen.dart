@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -33,7 +32,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     with SingleTickerProviderStateMixin {
   // ============= المتغيرات =============
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   late TabController _tabController;
   late Employee _currentEmployee;
   late Future<List<PayrollEntry>> _payrollFuture;
@@ -113,7 +112,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // ← Hint: التحقق من صلاحية التعديل/الإدارة
-    final canManage = _authService.isAdmin || _authService.canManageEmployees;
+    final canManage = true; // ← Hint: كل مستخدم يمكنه الإدارة
 
     return Scaffold(
       // ============= AppBar مع TabBar =============

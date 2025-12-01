@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
@@ -34,7 +33,7 @@ class ReportsHubScreen extends StatefulWidget {
 
 class _ReportsHubScreenState extends State<ReportsHubScreen> {
   // ============= المتغيرات =============
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
 
   // ============= البناء الرئيسي =============
   @override
@@ -114,7 +113,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
 
     // ✅ Hint: تقرير التدفقات النقدية الشامل (جديد)
     // ✅ Hint: يجمع جميع التدفقات المالية من مصادر مختلفة
-    if (_authService.canViewReports || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.comprehensiveCashFlowReport,
@@ -127,7 +126,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
     // --- تقرير الأرباح العام ---
-    if (_authService.canViewReports || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.generalProfitReport,
@@ -140,7 +139,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
     // --- تقرير أرباح الموردين (للمدير فقط) ---
-    if (_authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.supplierProfitReport,
@@ -153,7 +152,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
       // ✅ Hint: إضافة تقرير مبيعات الزبائن (جديد)
-  if (_authService.canViewReports || _authService.isAdmin) {
+  if (true) {
     reports.add(
       ReportItem(
         title: 'تقرير مبيعات الزبائن',
@@ -166,7 +165,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   }
 
     // --- سجل المبيعات النقدية ---
-    if (_authService.canViewCashSales || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.cashSalesRecord,
@@ -179,7 +178,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
     // --- تقرير التدفق النقدي ---
-    if (_authService.canViewCashSales || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.cashFlowReport,
@@ -192,7 +191,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
     // --- سجل المصاريف ---
-    if (_authService.canManageExpenses || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.expenseRecord,
@@ -205,7 +204,7 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     }
 
     // --- تقرير الموظفين والرواتب ---
-    if (_authService.canViewEmployeesReport || _authService.isAdmin) {
+    if (true) {
       reports.add(
         ReportItem(
           title: l10n.employeePayrollReport,

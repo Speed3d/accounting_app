@@ -12,7 +12,6 @@ import 'package:printing/printing.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -23,6 +22,8 @@ import '../../widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../products/barcode_scanner_screen.dart';
+
+// ← Hint: تم إزالة AuthService - لا حاجة له في Direct Sale
 
 /// 🚀 شاشة البيع السريع - مع دعم عرض صور المنتجات
 /// ← Hint: تتيح بيع نقدي مباشر مع طباعة فاتورة
@@ -35,7 +36,7 @@ class DirectSaleScreen extends StatefulWidget {
 
 class _DirectSaleScreenState extends State<DirectSaleScreen> {
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   final List<CartItem> _cartItems = [];
   late Future<List<Product>> _productsFuture;
   bool _isProcessingSale = false;

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -139,7 +138,7 @@ class _ArchivedItemsList extends StatefulWidget {
 class _ArchivedItemsListState extends State<_ArchivedItemsList> {
   
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   late Future<List<dynamic>> _archivedItemsFuture;
   
 
@@ -225,8 +224,6 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
       await dbHelper.logActivity(
         // 'استعادة العنصر: $name',
         l10n.restoreConfirm(name),
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
 
       if (mounted) {

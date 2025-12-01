@@ -9,7 +9,6 @@ import 'package:path/path.dart' as p;
 // ============= استيراد الملفات =============
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -47,7 +46,7 @@ class _AddEditCustomerScreenState extends State<AddEditCustomerScreen> {
   
   // ============= الخدمات =============
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   
   // ============= متغيرات الحالة =============
   File? _imageFile;                    // الصورة المختارة
@@ -183,8 +182,6 @@ class _AddEditCustomerScreenState extends State<AddEditCustomerScreen> {
       // تسجيل النشاط
       await dbHelper.logActivity(
         action,
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
       
       if (mounted) {

@@ -9,7 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
@@ -30,7 +29,7 @@ class AddEditSupplierScreen extends StatefulWidget {
 class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   
   // Controllers
   final _nameController = TextEditingController();
@@ -999,8 +998,6 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
       // تسجيل النشاط
       await dbHelper.logActivity(
         action,
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
       
       if (!mounted) return;

@@ -5,7 +5,6 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -16,16 +15,17 @@ import '../../widgets/status_badge.dart';
 import 'add_edit_customer_screen.dart';
 import 'customer_details_screen.dart';
 
+// ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
+
 /// =================================================================================================
 /// 📋 شاشة قائمة الزبائن - Customers List Screen
 /// =================================================================================================
 /// الوظيفة: عرض قائمة بجميع الزبائن النشطين مع إمكانية البحث والتعديل والأرشفة
-/// 
+///
 /// المميزات:
 /// - ✅ عرض قائمة الزبائن مع صورهم وأرصدتهم
 /// - ✅ تمييز الرصيد (دائن/مدين/متوازن) بألوان مختلفة
 /// - ✅ إمكانية البحث عن زبون معين
-/// - ✅ صلاحيات مخصصة (عرض/تعديل) حسب نوع المستخدم
 /// - ✅ أرشفة الزبائن (مع منع أرشفة من لديه ديون)
 /// =================================================================================================
 class CustomersListScreen extends StatefulWidget {
@@ -39,12 +39,11 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   // =================================================================================================
   // 📦 المتغيرات الأساسية
   // =================================================================================================
-  
+
   /// Hint: نسخة وحيدة من قاعدة البيانات للوصول للزبائن
   final _dbHelper = DatabaseHelper.instance;
-  
-  /// Hint: خدمة المصادقة للتحقق من صلاحيات المستخدم
-  final _authService = AuthService();
+
+  // ← Hint: تم إزالة AuthService - كل مستخدم يملك كامل الصلاحيات
   
   /// Hint: قائمة الزبائن التي سيتم عرضها (مع دعم البحث)
   List<Customer> _allCustomers = [];
@@ -182,11 +181,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         await _dbHelper.archiveCustomer(customer.customerID!);
         
         // Hint: تسجيل الإجراء في سجل النشاطات
+        // ← Hint: لا حاجة لـ userId و userName - يتم جلبهم تلقائياً من SessionService
         await _dbHelper.logActivity(
-          // 'أرشفة الزبون: ${customer.customerName}',
           l10n.archiveConfirmContent(customer.customerName),
-          userId: _authService.currentUser?.id,
-          userName: _authService.currentUser?.fullName,
         );
         
         // Hint: إعادة تحميل القائمة لإخفاء الزبون المؤرشف
@@ -238,13 +235,12 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
     body: _buildBody(l10n),
     
     // === زر الإضافة العائم ===
-    floatingActionButton: (_authService.canEditCustomers || _authService.isAdmin)
-        ? FloatingActionButton(
-            onPressed: _navigateToAddCustomer,
-            child: const Icon(Icons.add),
-            tooltip: l10n.addCustomer,
-          )
-        : null,
+    // ← Hint: كل مستخدم يمكنه الإضافة - لا حاجة لفحص الصلاحيات
+    floatingActionButton: FloatingActionButton(
+      onPressed: _navigateToAddCustomer,
+      child: const Icon(Icons.add),
+      tooltip: l10n.addCustomer,
+    ),
   );
 }
   
@@ -269,12 +265,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         icon: Icons.people_outline,
         title: l10n.noActiveCustomers,
         message: l10n.startfirstcustomer,
-        actionText: (_authService.canEditCustomers || _authService.isAdmin) 
-            ? l10n.addCustomer 
-            : null,
-        onAction: (_authService.canEditCustomers || _authService.isAdmin) 
-            ? _navigateToAddCustomer 
-            : null,
+        actionText: l10n.addCustomer,
+        onAction: _navigateToAddCustomer,
       );
     }
     
@@ -394,10 +386,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
           ),
           
           // === أزرار الإجراءات ===
-          if (_authService.canEditCustomers || _authService.isAdmin) ...[
-            const SizedBox(width: AppConstants.spacingSm),
-            _buildActionButtons(customer),
-          ],
+          // ← Hint: كل مستخدم يمكنه التعديل والأرشفة
+          const SizedBox(width: AppConstants.spacingSm),
+          _buildActionButtons(customer),
         ],
       ),
     );
@@ -448,15 +439,15 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
           onPressed: () => _navigateToEditCustomer(customer),
           tooltip: l10n.edit,
         ),
-        
+
         // زر الأرشفة
-        if (_authService.isAdmin)
-          IconButton(
-            icon: const Icon(Icons.archive_outlined, size: 20),
-            color: AppColors.error,
-            onPressed: () => _handleArchiveCustomer(customer),
-            tooltip: l10n.archive,
-          ),
+        // ← Hint: كل مستخدم يمكنه الأرشفة
+        IconButton(
+          icon: const Icon(Icons.archive_outlined, size: 20),
+          color: AppColors.error,
+          onPressed: () => _handleArchiveCustomer(customer),
+          tooltip: l10n.archive,
+        ),
       ],
     );
   }

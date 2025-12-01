@@ -5,7 +5,6 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
-import '../../services/auth_service.dart';
 import '../../utils/helpers.dart';
 import '../../utils/decimal_extensions.dart';
 import '../../l10n/app_localizations.dart';
@@ -14,6 +13,8 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
+
+// ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
 
 /// ===========================================================================
 /// 📦 شاشة قائمة المنتجات - صفحة فرعية
@@ -30,20 +31,18 @@ class ProductsListScreen extends StatefulWidget {
 class _ProductsListScreenState extends State<ProductsListScreen> {
   // ============= المتغيرات =============
   final dbHelper = DatabaseHelper.instance;
-  final AuthService _authService = AuthService();
+  // ← Hint: تم إزالة AuthService
   late Future<List<Product>> _productsFuture;
   final _searchController = TextEditingController();
-  
+
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
-  bool _isAdmin = false;
   String? _selectedFilter; // null = الكل، 'low' = منخفضة
 
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
-    _isAdmin = _authService.isAdmin;
     _reloadProducts();
   }
 
@@ -160,10 +159,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
     try {
       await dbHelper.archiveProduct(product.productID!);
+      // ← Hint: لا حاجة لـ userId و userName - يتم جلبهم تلقائياً من SessionService
       await dbHelper.logActivity(
         l10n.archiveProductAction(product.productName),
-        userId: _authService.currentUser?.id,
-        userName: _authService.currentUser?.fullName,
       );
 
       if (mounted) {
@@ -276,8 +274,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               icon: Icons.inventory_2_outlined,
               title: l10n.noActiveProducts,
               message: l10n.startByAddingProduct,
-              actionText: _isAdmin ? l10n.addProduct : null,
-              onAction: _isAdmin ? _navigateToAddProduct : null,
+              actionText: l10n.addProduct,
+              onAction: _navigateToAddProduct,
             );
           }
 
@@ -295,14 +293,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         },
       ),
 
-      floatingActionButton: _isAdmin
-          ? FloatingActionButton.extended(
-              onPressed: _navigateToAddProduct,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addProduct),
-              tooltip: l10n.addNewProduct,
-            )
-          : null,
+      // ← Hint: كل مستخدم يمكنه الإضافة
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _navigateToAddProduct,
+        icon: const Icon(Icons.add),
+        label: Text(l10n.addProduct),
+        tooltip: l10n.addNewProduct,
+      ),
     );
   }
 
@@ -553,21 +550,20 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                   ),
                 ),
 
-                // Hint: أزرار الإجراءات (للمسؤول فقط)
-                if (_isAdmin) ...[
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    color: AppColors.info,
-                    tooltip: l10n.edit,
-                    onPressed: () => _navigateToEditProduct(product),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.archive_outlined),
-                    color: AppColors.error,
-                    tooltip: l10n.archive,
-                    onPressed: () => _handleArchiveProduct(product),
-                  ),
-                ],
+                // Hint: أزرار الإجراءات
+                // ← Hint: كل مستخدم يمكنه التعديل والأرشفة
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  color: AppColors.info,
+                  tooltip: l10n.edit,
+                  onPressed: () => _navigateToEditProduct(product),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.archive_outlined),
+                  color: AppColors.error,
+                  tooltip: l10n.archive,
+                  onPressed: () => _handleArchiveProduct(product),
+                ),
               ],
             ),
           ),
