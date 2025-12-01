@@ -5,6 +5,7 @@ import 'package:accountant_touch/screens/settings/about_screen.dart';
 import 'package:accountant_touch/screens/settings/app_lock_settings_screen.dart'; // ← Hint: إضافة استيراد إعدادات القفل
 import 'package:accountant_touch/screens/settings/backup_restore_screen.dart';
 import 'package:accountant_touch/screens/settings/company_info_screen.dart';
+import 'package:accountant_touch/screens/settings/profile_settings_screen.dart'; // 🆕 إعدادات الملف الشخصي
 import 'package:accountant_touch/services/biometric_service.dart';
 import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/firebase_service.dart'; // ← Hint: لاختبار Crashlytics
@@ -51,6 +52,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: AppConstants.screenPadding,
         children: [
           const SizedBox(height: AppConstants.spacingMd),
+
+          // ============================================================
+          // 👤 قسم الملف الشخصي (جديد)
+          // ← Hint: يحتوي على تعديل الاسم وكلمة المرور
+          // ============================================================
+          _buildSectionHeader(
+            context,
+            title: 'الحساب',
+            icon: Icons.person_outline,
+            isDark: isDark,
+          ),
+          const SizedBox(height: AppConstants.spacingSm),
+
+          _SettingsCard(
+            child: _SettingsLinkTile(
+              title: 'الملف الشخصي',
+              subtitle: 'تعديل الاسم وكلمة المرور',
+              icon: Icons.badge_outlined,
+              iconColor: AppColors.primaryLight,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: AppConstants.spacingLg),
 
           // ============================================================
           // 🎨 قسم المظهر
