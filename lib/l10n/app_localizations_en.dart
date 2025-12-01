@@ -3071,4 +3071,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profitWithdrawals => 'Profit Withdrawals';
+
+  @override
+  String get sessionExpired => 'session Expired';
 }

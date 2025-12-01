@@ -3045,4 +3045,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profitWithdrawals => 'سحوبات الأرباح';
+
+  @override
+  String get sessionExpired => 'انتهت الجلسة';
 }

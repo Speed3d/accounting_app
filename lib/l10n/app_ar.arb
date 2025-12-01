@@ -2343,7 +2343,9 @@
   "profitWithdrawals": "سحوبات الأرباح",
   "@profitWithdrawals": {
     "description": "سحوبات الأرباح من قبل الشركاء"
-  }
+  },
+
+  "sessionExpired": "انتهت الجلسة"
 
 
 

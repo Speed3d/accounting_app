@@ -2404,7 +2404,9 @@
   "profitWithdrawals": "Profit Withdrawals",
   "@profitWithdrawals": {
     "description": "Profit withdrawals by partners"
-  }
+  },
+
+  "sessionExpired": "session Expired"
 
 
 

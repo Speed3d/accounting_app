@@ -5719,6 +5719,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profit Withdrawals'**
   String get profitWithdrawals;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'session Expired'**
+  String get sessionExpired;
 }
 
 class _AppLocalizationsDelegate
