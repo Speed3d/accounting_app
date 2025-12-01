@@ -16,74 +16,19 @@ class DatabaseMigrations {
   // ==========================================================================
   // Migration من v1 إلى v2
   // ==========================================================================
-  /// التحديثات في v2:
-  /// 1. إضافة حقول جديدة لجدول TB_Users (Email, Phone, UserType, etc.)
-  /// 2. إنشاء جدول TB_Subscription_Cache
-  /// 3. إضافة Indexes للأداء
+  /// ← Hint: التحديثات في v2 (تم تبسيطها بعد حذف TB_Users):
+  /// 1. إنشاء جدول TB_Subscription_Cache فقط
+  /// ← Hint: تم حذف جميع الـ migrations المتعلقة بـ TB_Users - النظام الجديد يستخدم Firebase فقط
   static Future<void> migrateToV2(Database db) async {
     debugPrint('🔄 بدء Migration من v1 إلى v2...');
 
     try {
       // ========================================================================
-      // 1️⃣ تعديل جدول TB_Users - إضافة الأعمدة الجديدة
+      // ← Hint: تم حذف تعديلات TB_Users - Firebase Auth يدير المستخدمين
       // ========================================================================
 
-      debugPrint('  ├─ إضافة أعمدة جديدة لجدول TB_Users...');
-
-      // Email - للـ Owner فقط
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN Email TEXT',
-      );
-
-      // Phone - اختياري
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN Phone TEXT',
-      );
-
-      // UserType - 'owner' أو 'sub_user'
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN UserType TEXT NOT NULL DEFAULT "sub_user"',
-      );
-
-      // OwnerEmail - للـ Sub Users (FK to owner)
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN OwnerEmail TEXT',
-      );
-
-      // CreatedBy - Email of creator
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN CreatedBy TEXT',
-      );
-
-      // LastLoginAt - آخر تسجيل دخول
-      await db.execute(
-        'ALTER TABLE TB_Users ADD COLUMN LastLoginAt TEXT',
-      );
-
-      debugPrint('  ├─ ✅ تم إضافة الأعمدة الجديدة بنجاح');
-
       // ========================================================================
-      // 2️⃣ إنشاء Indexes للأداء
-      // ========================================================================
-
-      debugPrint('  ├─ إنشاء Indexes...');
-
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_users_email ON TB_Users(Email)',
-      );
-
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_users_owner_email ON TB_Users(OwnerEmail)',
-      );
-
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_users_type ON TB_Users(UserType)',
-      );
-
-      debugPrint('  ├─ ✅ تم إنشاء Indexes بنجاح');
-
-      // ========================================================================
-      // 3️⃣ إنشاء جدول TB_Subscription_Cache
+      // 1️⃣ إنشاء جدول TB_Subscription_Cache
       // ========================================================================
 
       debugPrint('  ├─ إنشاء جدول TB_Subscription_Cache...');
@@ -112,34 +57,8 @@ class DatabaseMigrations {
       debugPrint('  ├─ ✅ تم إنشاء جدول TB_Subscription_Cache بنجاح');
 
       // ========================================================================
-      // 4️⃣ تحديث المستخدمين الموجودين (إذا وُجدوا)
+      // ← Hint: تم حذف قسم تحديث المستخدمين - لا حاجة له بعد إزالة TB_Users
       // ========================================================================
-
-      debugPrint('  ├─ تحديث المستخدمين الموجودين...');
-
-      // جعل جميع المستخدمين الموجودين admin owners (للتوافقية)
-      final existingUsers = await db.query('TB_Users');
-
-      if (existingUsers.isNotEmpty) {
-        debugPrint('  ├─ وُجد ${existingUsers.length} مستخدمين موجودين');
-        debugPrint('  ├─ تحويلهم إلى owners...');
-
-        for (var user in existingUsers) {
-          // إذا كان المستخدم admin، نجعله owner
-          if ((user['IsAdmin'] as int?) == 1) {
-            await db.update(
-              'TB_Users',
-              {'UserType': 'owner'},
-              where: 'ID = ?',
-              whereArgs: [user['ID']],
-            );
-          }
-        }
-
-        debugPrint('  ├─ ✅ تم تحديث المستخدمين الموجودين');
-      } else {
-        debugPrint('  ├─ لا يوجد مستخدمين موجودين');
-      }
 
       debugPrint('✅ Migration إلى v2 اكتمل بنجاح');
 

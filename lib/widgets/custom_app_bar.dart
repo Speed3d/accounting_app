@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../data/database_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/theme_provider.dart';
-import '../services/auth_service.dart';
+import '../services/session_service.dart'; // 🆕 استبدال AuthService بـ SessionService
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -163,88 +163,112 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
-  /// ✅ بناء معلومات المستخدم مع صورته الحقيقية
+  /// ✅ بناء معلومات المستخدم (النظام الجديد - SessionService)
+  /// ← Hint: استخدام FutureBuilder للحصول على البيانات من SessionService
   Widget _buildUserInfo(BuildContext context, bool isDark) {
-    final authService = AuthService();
-    final user = authService.currentUser;
     final l10n = AppLocalizations.of(context)!;
-    
-    // ✅ التحقق من وجود صورة المستخدم
-    final hasUserImage = user?.imagePath != null && 
-                         user!.imagePath!.isNotEmpty && 
-                         File(user.imagePath!).existsSync();
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // اسم المستخدم - بحجم أصغر
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
+
+    return FutureBuilder<Map<String, String?>>(
+      future: _getUserInfo(),
+      builder: (context, snapshot) {
+        final displayName = snapshot.data?['displayName'] ?? l10n.user;
+        final photoURL = snapshot.data?['photoURL'];
+
+        // ← Hint: لا توجد صور محلية بعد الآن - فقط من Firebase Storage
+        final hasUserImage = photoURL != null && photoURL.isNotEmpty;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                user?.fullName ?? l10n.user,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textPrimaryDark : Colors.white,
+              // اسم المستخدم - بحجم أصغر
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppColors.textPrimaryDark : Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    l10n.systemAdmin, // ← Hint: كل مستخدم admin في النظام الجديد
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : Colors.white.withOpacity(0.8),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+
+              const SizedBox(width: AppConstants.spacingSm),
+
+              // ✅ صورة المستخدم من Firebase Storage
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 2,
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                user?.isAdmin == true ? l10n.systemAdmin : l10n.user,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: isDark 
-                      ? AppColors.textSecondaryDark 
-                      : Colors.white.withOpacity(0.8),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          
-          const SizedBox(width: AppConstants.spacingSm),
-          
-          // ✅ صورة المستخدم الحقيقية - بحجم أصغر
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: ClipOval(
-              child: hasUserImage
-                  ? Image.file(
-                      File(user!.imagePath!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
+                child: ClipOval(
+                  child: hasUserImage
+                      ? Image.network(
+                          photoURL!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.person,
+                              color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                              size: 20,
+                            );
+                          },
+                        )
+                      : Icon(
                           Icons.person,
                           color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
                           size: 20,
-                        );
-                      },
-                    )
-                  : Icon(
-                      Icons.person,
-                      color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                      size: 20,
-                    ),
-            ),
+                        ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  /// ← Hint: دالة مساعدة للحصول على معلومات المستخدم من SessionService
+  Future<Map<String, String?>> _getUserInfo() async {
+    try {
+      final displayName = await SessionService.instance.getDisplayName();
+      final photoURL = await SessionService.instance.getPhotoURL();
+
+      return {
+        'displayName': displayName ?? '',
+        'photoURL': photoURL,
+      };
+    } catch (e) {
+      debugPrint('⚠️ خطأ في الحصول على معلومات المستخدم: $e');
+      return {
+        'displayName': '',
+        'photoURL': null,
+      };
+    }
   }
 }

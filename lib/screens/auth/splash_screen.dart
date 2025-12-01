@@ -11,12 +11,13 @@ import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/time_validation_service.dart';
+import '../../services/session_service.dart'; // 🆕 SessionService
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 
-import 'login_selection_screen.dart';  // 🆕 بدلاً من login_screen
-import 'register_screen.dart';  // 🆕
+import 'login_screen.dart';  // 🆕 LoginScreen الجديد المبسط
+import 'register_screen.dart';
 import 'blocked_screen.dart';
 
 /// ===========================================================================
@@ -407,7 +408,13 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  /// 🆕 منطق التنقل النهائي (النظام الجديد - Email-based)
+  /// 🆕 منطق التنقل النهائي (النظام الجديد - Firebase-First Architecture)
+  ///
+  /// ← Hint: النظام الجديد المبسط:
+  /// ← 1. فحص SessionService (هل يوجد Email محفوظ؟)
+  /// ← 2. لا يوجد → RegisterScreen (مستخدم جديد)
+  /// ← 3. يوجد → LoginScreen (تسجيل دخول)
+  /// ← Hint: لا حاجة لفحص TB_Users - Firebase Auth هو المصدر الوحيد
   Future<void> _handleNavigation(
     DatabaseHelper dbHelper,
     DeviceService deviceService,
@@ -415,31 +422,33 @@ class _SplashScreenState extends State<SplashScreen>
     AppLocalizations l10n,
   ) async {
     try {
-      debugPrint('🧭 بدء منطق التنقل...');
+      debugPrint('🧭 بدء منطق التنقل (النظام الجديد - Firebase-First)...');
 
-      final userCount = await dbHelper.getUserCount();
-      final hasOwner = await dbHelper.hasOwner();
+      // ═══════════════════════════════════════════════════════════════════
+      // 1️⃣ فحص SessionService - هل يوجد جلسة محفوظة؟
+      // ═══════════════════════════════════════════════════════════════════
 
-      debugPrint('📊 عدد المستخدمين: $userCount | يوجد Owner: $hasOwner');
+      final hasSession = await SessionService.instance.hasActiveSession();
 
-      // 1️⃣ لا يوجد أي مستخدمين → توجيه للتسجيل
-      if (userCount == 0) {
-        debugPrint('➡️ لا يوجد مستخدمين → RegisterScreen');
+      if (!hasSession) {
+        // ← Hint: لا يوجد جلسة → مستخدم جديد → RegisterScreen
+        debugPrint('➡️ لا يوجد جلسة محفوظة → RegisterScreen');
         _navigateToScreen(const RegisterScreen());
         return;
       }
 
-      // 2️⃣ يوجد مستخدمون لكن لا يوجد Owner → توجيه للتسجيل
-      if (!hasOwner) {
-        debugPrint('➡️ لا يوجد Owner → RegisterScreen');
-        _navigateToScreen(const RegisterScreen());
-        return;
-      }
+      // ═══════════════════════════════════════════════════════════════════
+      // 2️⃣ يوجد جلسة → طباعة معلومات الجلسة (للتشخيص)
+      // ═══════════════════════════════════════════════════════════════════
 
-      // 3️⃣ ✅ كل شيء تمام → توجيه لشاشة اختيار نوع الدخول
-      // 🆕 Hint: تمرير معلومات الشركة من TB_Settings إلى LoginSelectionScreen
-      debugPrint('➡️ كل شيء طبيعي → LoginSelectionScreen');
-      _navigateToScreen(LoginSelectionScreen(
+      await SessionService.instance.debugPrintSession();
+
+      // ═══════════════════════════════════════════════════════════════════
+      // 3️⃣ التوجيه إلى LoginScreen
+      // ═══════════════════════════════════════════════════════════════════
+
+      debugPrint('➡️ يوجد جلسة محفوظة → LoginScreen');
+      _navigateToScreen(LoginScreen(
         companyName: _companyName.isNotEmpty ? _companyName : null,
         companyLogoPath: _companyLogo?.path,
       ));
@@ -448,7 +457,7 @@ class _SplashScreenState extends State<SplashScreen>
       debugPrint('❌ خطأ في التنقل: $e');
       FirebaseService.instance.logError(e, stackTrace, reason: 'navigation_error');
 
-      // Fallback: التوجيه لشاشة التسجيل
+      // ← Hint: Fallback آمن - التوجيه لشاشة التسجيل
       if (mounted) {
         _navigateToScreen(const RegisterScreen());
       }

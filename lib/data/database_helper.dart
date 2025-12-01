@@ -252,44 +252,8 @@ class DatabaseHelper {
   Future _onCreate(Database db, int version) async {
     var batch = db.batch();
 
-    // --- جدول المستخدمين بالهيكل الجديد (v3: Email-based Auth) ---
-    batch.execute('''
-      CREATE TABLE TB_Users (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        FullName TEXT NOT NULL,
-        UserName TEXT NOT NULL UNIQUE,
-        Password TEXT NOT NULL,
-        DateT TEXT NOT NULL,
-        ImagePath TEXT,
-        IsAdmin INTEGER NOT NULL DEFAULT 0,
-
-        -- 🆕 v3: أعمدة Email-based Authentication
-        Email TEXT,
-        Phone TEXT,
-        UserType TEXT NOT NULL DEFAULT 'sub_user',
-        OwnerEmail TEXT,
-        CreatedBy TEXT,
-        LastLoginAt TEXT,
-
-        CanViewSuppliers INTEGER NOT NULL DEFAULT 0,
-        CanEditSuppliers INTEGER NOT NULL DEFAULT 0,
-        CanViewProducts INTEGER NOT NULL DEFAULT 0,
-        CanEditProducts INTEGER NOT NULL DEFAULT 0,
-        CanViewCustomers INTEGER NOT NULL DEFAULT 0,
-        CanEditCustomers INTEGER NOT NULL DEFAULT 0,
-        CanViewReports INTEGER NOT NULL DEFAULT 0,
-        CanManageEmployees INTEGER NOT NULL DEFAULT 0,
-        CanViewSettings INTEGER NOT NULL DEFAULT 0,
-        CanViewEmployeesReport INTEGER NOT NULL DEFAULT 0,
-        CanManageExpenses INTEGER NOT NULL DEFAULT 0,
-        CanViewCashSales INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    // 🆕 v3: إنشاء Indexes للأعمدة الجديدة
-    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON TB_Users(Email)');
-    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_owner_email ON TB_Users(OwnerEmail)');
-    batch.execute('CREATE INDEX IF NOT EXISTS idx_users_type ON TB_Users(UserType)');
+    // ← Hint: تم حذف جدول TB_Users - النظام الجديد يستخدم Firebase Auth فقط
+    // ← Hint: لا حاجة لتخزين بيانات المستخدمين محلياً، كل شيء يدار عبر Firebase Authentication & Firestore
 
     // 🆕 v3: جدول Subscription Cache
     batch.execute('''
@@ -527,8 +491,7 @@ class DatabaseHelper {
     // ============================================================================
     debugPrint('📊 [DatabaseHelper] إنشاء Database Indexes...');
 
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON TB_Users(UserName)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_users_datet ON TB_Users(DateT)');
+    // ← Hint: تم حذف Users Indexes - لا حاجة لها بعد إزالة TB_Users
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_employees_isactive ON TB_Employees(IsActive)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_employees_hiredate ON TB_Employees(HireDate)');
@@ -755,127 +718,25 @@ class DatabaseHelper {
     await db.insert('Activity_Log', {'UserID': userId, 'UserName': userName, 'Action': action, 'Timestamp': DateTime.now().toIso8601String()});
   }
 
-  Future<User?> getFirstUser() async {
-    final db = await instance.database;
-    final maps = await db.query('TB_Users', limit: 1);
-    if (maps.isNotEmpty) return User.fromMap(maps.first);
-    return null;
-  }
-
-  Future<int> insertUser(User user) async => await (await instance.database).insert('TB_Users', user.toMap());
-  Future<int> updateUser(User user) async => await (await instance.database).update('TB_Users', user.toMap(), where: 'ID = ?', whereArgs: [user.id]);
-  Future<int> deleteUser(int id) async => await (await instance.database).delete('TB_Users', where: 'ID = ?', whereArgs: [id]);
-
-  Future<List<User>> getAllUsers() async {
-    final maps = await (await instance.database).query('TB_Users');
-    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
-  }
-
-     /// --- Hint: دالة لجلب مستخدم معين عن طريق اسم المستخدم الخاص به ---
-     Future<models.User?> getUserByUsername(String username) async {
-      final db = await instance.database;
-      final maps = await db.query(
-      'TB_Users',
-       where: 'UserName = ?',
-       whereArgs: [username],
-      );
-      if (maps.isNotEmpty) {
-       return models.User.fromMap(maps.first);
-      }
-       return null;
-      }
-
-    /// --- Hint: دالة لحساب عدد المستخدمين في قاعدة البيانات ---
-    /// هذه الدالة هي أساس منطق بدء التشغيل الذكي.
-    Future<int> getUserCount() async {
-     final db = await instance.database;
-     final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM TB_Users'));
-     return count ?? 0;
-    }
-
   // ============================================================================
-  // 🆕 دوال جديدة للنظام الجديد - Email-based Authentication
+  // ← Hint: تم حذف جميع دوال TB_Users - النظام الجديد يستخدم Firebase Auth
   // ============================================================================
-
-  /// الحصول على مستخدم عن طريق الإيميل
-  Future<User?> getUserByEmail(String email) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'TB_Users',
-      where: 'Email = ?',
-      whereArgs: [email],
-    );
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    }
-    return null;
-  }
-
-  /// الحصول على جميع المستخدمين الفرعيين لمالك معين
-  Future<List<User>> getSubUsersByOwnerEmail(String ownerEmail) async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'TB_Users',
-      where: 'OwnerEmail = ? AND UserType = ?',
-      whereArgs: [ownerEmail, 'sub_user'],
-    );
-    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
-  }
-
-  /// التحقق من وجود Owner في قاعدة البيانات
-  Future<bool> hasOwner() async {
-    final db = await instance.database;
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery(
-        "SELECT COUNT(*) FROM TB_Users WHERE UserType = 'owner'",
-      ),
-    );
-    return (count ?? 0) > 0;
-  }
-
-  /// الحصول على جميع Owners
-  Future<List<User>> getAllOwners() async {
-    final db = await instance.database;
-    final maps = await db.query(
-      'TB_Users',
-      where: 'UserType = ?',
-      whereArgs: ['owner'],
-    );
-    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
-  }
-
-  /// تحديث آخر تسجيل دخول للمستخدم
-  Future<void> updateUserLastLogin(int userId) async {
-    final db = await instance.database;
-    await db.update(
-      'TB_Users',
-      {'LastLoginAt': DateTime.now().toIso8601String()},
-      where: 'ID = ?',
-      whereArgs: [userId],
-    );
-  }
-
-  /// حذف/تعطيل مستخدم فرعي
-  Future<void> deactivateSubUser(int userId) async {
-    final db = await instance.database;
-    await db.update(
-      'TB_Users',
-      {'IsActive': 0},
-      where: 'ID = ? AND UserType = ?',
-      whereArgs: [userId, 'sub_user'],
-    );
-  }
-
-  /// تفعيل مستخدم فرعي
-  Future<void> activateSubUser(int userId) async {
-    final db = await instance.database;
-    await db.update(
-      'TB_Users',
-      {'IsActive': 1},
-      where: 'ID = ?',
-      whereArgs: [userId],
-    );
-  }
+  // ← تم حذف الدوال التالية:
+  // ← - getFirstUser() → Firebase Auth يدير المستخدم الحالي
+  // ← - insertUser() → Firebase Auth يدير التسجيل
+  // ← - updateUser() → Firestore يدير بيانات المستخدم
+  // ← - deleteUser() → Firebase Auth يدير حذف الحسابات
+  // ← - getAllUsers() → Firestore يدير قائمة المستخدمين
+  // ← - getUserByUsername() → Firebase Auth يستخدم Email بدلاً من Username
+  // ← - getUserCount() → غير مطلوب، Firebase يدير العد
+  // ← - getUserByEmail() → Firebase Auth يوفر هذه الوظيفة
+  // ← - getSubUsersByOwnerEmail() → Firestore Queries تدير هذا
+  // ← - hasOwner() → Firestore/RemoteConfig يوفران هذه المعلومة
+  // ← - getAllOwners() → Firestore Queries
+  // ← - updateUserLastLogin() → Firebase Analytics/Firestore
+  // ← - deactivateSubUser() → Firestore
+  // ← - activateSubUser() → Firestore
+  // ============================================================================
 
   // ============================================================================
   // 🆕 دوال Subscription Cache

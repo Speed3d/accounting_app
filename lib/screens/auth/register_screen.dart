@@ -3,16 +3,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
-import 'package:bcrypt/bcrypt.dart';
 
-import '../../data/database_helper.dart';
-import '../../data/models.dart';
 import '../../services/firebase_service.dart';
+import '../../services/session_service.dart'; // 🆕 SessionService
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import 'login_selection_screen.dart';
+import '../main_screen.dart'; // 🆕 التوجيه مباشرة للشاشة الرئيسية
 
 /// ============================================================================
 /// شاشة تسجيل حساب جديد (Owner Registration)
@@ -67,36 +65,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       debugPrint('✅ تم إنشاء الحساب في Firebase Auth بنجاح');
 
-      // 3️⃣ Hint: إنشاء Owner محلي في SQLite
-      // (مهم جداً! بدون هذا، hasOwner سيكون false دائماً)
-      debugPrint('📝 إنشاء مستخدم Owner محلي في قاعدة البيانات...');
+      // 3️⃣ Hint: حفظ الجلسة في SessionService
+      // ← Hint: النظام الجديد - لا نحفظ Users في SQLite!
+      // ← Hint: كل شيء يُدار عبر Firebase Auth + SessionService
+      debugPrint('📝 حفظ الجلسة محلياً في SessionService...');
 
-      final newOwner = User(
-        fullName: fullName,
-        userName: email,  // Hint: استخدام Email كـ username (فريد دائماً)
-        password: BCrypt.hashpw(password, BCrypt.gensalt()),
-        dateT: DateTime.now().toIso8601String(),
+      await SessionService.instance.saveSession(
         email: email,
-        userType: 'owner',  // ⭐ مهم جداً! هذا ما يجعل hasOwner = true
-        isAdmin: true,
-
-        // Hint: Owner لديه جميع الصلاحيات افتراضياً (full access)
-        canViewSuppliers: true,
-        canEditSuppliers: true,
-        canViewProducts: true,
-        canEditProducts: true,
-        canViewCustomers: true,
-        canEditCustomers: true,
-        canViewReports: true,
-        canManageEmployees: true,
-        canViewSettings: true,
-        canViewEmployeesReport: true,
-        canManageExpenses: true,
-        canViewCashSales: true,
+        displayName: fullName,
+        photoURL: userCredential.user?.photoURL,
       );
 
-      final userId = await DatabaseHelper.instance.insertUser(newOwner);
-      debugPrint('✅ تم إنشاء Owner محلي بنجاح - ID: $userId');
+      debugPrint('✅ تم حفظ الجلسة بنجاح');
 
       // 4️⃣ Hint: التحقق من flag التفعيل التلقائي في Remote Config
       // (يمكن تغييره لاحقاً من Firebase Console بدون تحديث التطبيق)
@@ -217,8 +197,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  /// Hint: عرض رسالة نجاح مع التعامل الصحيح للـ Navigation
-  /// (تجنب الشاشة السوداء بعد الإنشاء)
+  /// ← Hint: عرض رسالة نجاح والانتقال للشاشة الرئيسية
+  /// ← Hint: النظام الجديد: الانتقال مباشرة لـ MainScreen (لا login screen!)
   void _showSuccessDialog({required bool autoActivated}) {
     showDialog(
       context: context,
@@ -235,26 +215,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
           autoActivated
               ? 'تم إنشاء الحساب بنجاح!\n\n'
                   '✅ تم تفعيل الاشتراك التجريبي لمدة 14 يوم.\n\n'
-                  'يمكنك الآن تسجيل الدخول والبدء باستخدام التطبيق.'
+                  'سيتم توجيهك للشاشة الرئيسية الآن.'
               : 'تم إنشاء الحساب بنجاح!\n\n'
-                  'يرجى التواصل مع المطور لتفعيل الاشتراك.',
+                  'يرجى التواصل مع المطور لتفعيل الاشتراك.\n\n'
+                  'سيتم توجيهك للشاشة الرئيسية الآن.',
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Hint: إغلاق Dialog
+              Navigator.pop(context); // ← Hint: إغلاق Dialog
 
-              // Hint: الانتقال لشاشة تسجيل الدخول مع حذف كل navigation stack
-              // (يمنع الشاشة السوداء ويضمن navigation صحيح)
+              // ← Hint: التوجيه مباشرة لـ MainScreen (حذف كل navigation stack)
+              // ← Hint: المستخدم مسجل دخول بالفعل (Firebase Auth + SessionService)
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const LoginSelectionScreen(),
+                  builder: (_) => const MainScreen(),
                 ),
-                (route) => false, // Hint: حذف كل الشاشات السابقة
+                (route) => false, // ← Hint: حذف كل الشاشات السابقة
               );
             },
-            child: const Text('حسناً'),
+            child: const Text('ابدأ الآن'),
           ),
         ],
       ),

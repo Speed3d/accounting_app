@@ -1,471 +1,389 @@
 // lib/screens/auth/login_screen.dart
-import 'dart:io';
-import 'package:accountant_touch/layouts/main_screen.dart';
-import 'package:accountant_touch/services/biometric_service.dart'; // ✅ Hint: إضافة BiometricService
+
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
-import 'package:bcrypt/bcrypt.dart';
-import '../../data/database_helper.dart';
-import '../../services/auth_service.dart';
-import '../../l10n/app_localizations.dart';
+
+import '../../services/session_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-/// ===========================================================================
-/// شاشة تسجيل الدخول (Login Screen)
-/// ===========================================================================
+import '../main_screen.dart';
+import 'register_screen.dart';
+
+/// ============================================================================
+/// شاشة تسجيل الدخول - النظام الجديد المبسط
+/// ============================================================================
+///
+/// ← Hint: النظام الجديد - Firebase Auth فقط (لا database queries!)
+/// ← Hint: تسجيل دخول بالإيميل والباسوورد
+/// ← Hint: حفظ الجلسة في SessionService بعد النجاح
+/// ← Hint: التوجيه مباشرة لـ MainScreen (لا login_selection!)
+///
+/// ============================================================================
 class LoginScreen extends StatefulWidget {
-final AppLocalizations l10n;
-const LoginScreen({
-super.key,
-required this.l10n,
-});
-@override
-State<LoginScreen> createState() => _LoginScreenState();
+  final String? companyName;
+  final String? companyLogoPath;
+
+  const LoginScreen({
+    super.key,
+    this.companyName,
+    this.companyLogoPath,
+  });
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 }
+
 class _LoginScreenState extends State<LoginScreen> {
-// ============= متغيرات النموذج =============
-final _formKey = GlobalKey<FormState>();
-final _usernameController = TextEditingController();
-final _passwordController = TextEditingController();
-// ============= متغيرات الحالة =============
-bool _isPasswordVisible = false;
-bool _isLoading = false;
-bool _isBiometricLoading = false; // ✅ Hint: حالة التحميل لزر البصمة
-// ============= متغيرات معلومات الشركة =============
-String _companyName = '';
-String _companyDescription = '';
-File? _companyLogo;
-// ============= قاعدة البيانات =============
-final dbHelper = DatabaseHelper.instance;
-@override
-void initState() {
-super.initState();
-_loadSettings();
-}
-Future<void> _loadSettings() async {
-final l10n = widget.l10n;
-try {
-  final settings = await dbHelper.getAppSettings();
-  
-  if (mounted) {
-    setState(() {
-      _companyName = settings['companyName'] ?? l10n.accountingProgram;
-      _companyDescription = settings['companyDescription'] ?? '';
-      
-      final logoPath = settings['companyLogoPath'];
-      if (logoPath != null && logoPath.isNotEmpty) {
-        _companyLogo = File(logoPath);
-      }
-    });
-  }
-} catch (e) {
-  debugPrint('❌ خطأ في تحميل إعدادات الشركة: $e');
-}
-}
-@override
-void dispose() {
-_usernameController.dispose();
-_passwordController.dispose();
-super.dispose();
-}
-// ===========================================================================
-// معالجة تسجيل الدخول
-// ===========================================================================
-Future<void> _handleLogin() async {
-final l10n = widget.l10n;
-if (!_formKey.currentState!.validate()) return;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-setState(() => _isLoading = true);
-
-try {
-  final authService = AuthService();
-  final username = _usernameController.text.trim();
-  final password = _passwordController.text;
-
-  final user = await dbHelper.getUserByUsername(username);
-  
-  if (user == null) {
-    throw Exception(l10n.invalidCredentials);
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  final isPasswordCorrect = BCrypt.checkpw(password, user.password);
-  
-  if (!isPasswordCorrect) {
-    throw Exception(l10n.invalidCredentials);
-  }
+  /// ← Hint: دالة تسجيل الدخول - Firebase Auth + SessionService فقط
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  authService.login(user);
+    setState(() => _isLoading = true);
 
-  if (!mounted) return;
+    try {
+      final email = _emailController.text.trim().toLowerCase();
+      final password = _passwordController.text;
 
-  Navigator.of(context).pushReplacement(
-    MaterialPageRoute(
-      builder: (context) => const MainScreen(),
-    ),
-  );
+      debugPrint('🔐 محاولة تسجيل الدخول: $email');
 
-} catch (e) {
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          e.toString().replaceFirst('Exception: ', ''),
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppConstants.borderRadiusMd,
-        ),
-      ),
-    );
-  }
-} finally {
-  if (mounted) {
-    setState(() => _isLoading = false);
-  }
-}
-}
-// ===========================================================================
-// ✅ Hint: معالجة تسجيل الدخول بالبصمة (دالة جديدة)
-// ===========================================================================
-Future<void> _handleBiometricLogin() async {
-final l10n = widget.l10n;
-// ✅ Hint: بدء التحميل
-setState(() => _isBiometricLoading = true);
-
-try {
-  // ✅ Hint: محاولة التحقق من البصمة
-  final result = await BiometricService.instance.authenticateWithBiometric();
-
-  if (!mounted) return;
-
-  if (result['success'] == true) {
-    // ✅ Hint: نجح التحقق من البصمة - نسجل الدخول تلقائياً
-    
-    // ✅ Hint: جلب أول مستخدم من قاعدة البيانات (المدير عادةً)
-    // يمكنك تعديل هذا المنطق حسب احتياجك
-    final user = await dbHelper.getFirstUser();
-    
-    if (user != null) {
-      // ✅ Hint: تسجيل الدخول
-      AuthService().login(user);
-      
-      if (!mounted) return;
-      
-      // ✅ Hint: الانتقال للصفحة الرئيسية
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const MainScreen(),
-        ),
+      // 1️⃣ Hint: تسجيل الدخول عبر Firebase Authentication
+      final userCredential = await firebase_auth.FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-    } else {
-      // ✅ Hint: لا يوجد مستخدمين في قاعدة البيانات!
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.noUsersFound),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+
+      debugPrint('✅ تم تسجيل الدخول في Firebase Auth بنجاح');
+
+      // 2️⃣ Hint: حفظ الجلسة في SessionService
+      // ← Hint: نستخدم البيانات من Firebase User مباشرة
+      await SessionService.instance.saveSession(
+        email: email,
+        displayName: userCredential.user?.displayName ?? '',
+        photoURL: userCredential.user?.photoURL,
+      );
+
+      debugPrint('✅ تم حفظ الجلسة بنجاح');
+
+      if (!mounted) return;
+
+      // 3️⃣ Hint: التوجيه مباشرة للشاشة الرئيسية
+      // ← Hint: حذف كل navigation stack - المستخدم مسجل دخول بالفعل
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false, // ← Hint: حذف كل الشاشات السابقة
+      );
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      String message = 'حدث خطأ في تسجيل الدخول';
+
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'لا يوجد حساب بهذا الإيميل';
+          break;
+        case 'wrong-password':
+          message = 'كلمة المرور غير صحيحة';
+          break;
+        case 'invalid-email':
+          message = 'صيغة الإيميل غير صحيحة';
+          break;
+        case 'user-disabled':
+          message = 'هذا الحساب معطل';
+          break;
+        case 'network-request-failed':
+          message = 'خطأ في الاتصال بالإنترنت';
+          break;
+        case 'too-many-requests':
+          message = 'محاولات كثيرة - حاول لاحقاً';
+          break;
       }
+
+      debugPrint('❌ خطأ Firebase Auth: ${e.code} - ${e.message}');
+      if (mounted) _showErrorDialog(message);
+    } catch (e) {
+      debugPrint('❌ خطأ عام: $e');
+      if (mounted) _showErrorDialog('خطأ: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } else {
-    // ✅ Hint: فشل التحقق من البصمة
-    final isEmulatorError = result['isEmulatorError'] == true;
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+  }
+
+  /// ← Hint: نسيت كلمة المرور - إرسال رابط الاستعادة عبر Firebase
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showErrorDialog('الرجاء إدخال البريد الإلكتروني أولاً');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      _showErrorDialog('صيغة البريد الإلكتروني غير صحيحة');
+      return;
+    }
+
+    try {
+      debugPrint('📧 إرسال رابط استعادة كلمة المرور لـ: $email');
+
+      await firebase_auth.FirebaseAuth.instance.sendPasswordResetEmail(
+        email: email.toLowerCase(),
+      );
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
             children: [
-              Text(
-                result['message'],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              if (isEmulatorError) ...[
-                const SizedBox(height: 4),
-                Text(
-                  l10n.tryOnRealDevice, // ✅ Hint: سنضيفها في الترجمة
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
+              Icon(Icons.mark_email_read, color: AppColors.success),
+              const SizedBox(width: AppConstants.spacingSm),
+              const Text('تم الإرسال'),
             ],
           ),
-          backgroundColor: isEmulatorError ? AppColors.warning : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
+          content: Text(
+            'تم إرسال رابط استعادة كلمة المرور إلى:\n$email\n\n'
+            'الرجاء التحقق من بريدك الإلكتروني.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('حسناً'),
+            ),
+          ],
         ),
       );
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      String message = 'حدث خطأ في إرسال الرابط';
+
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'لا يوجد حساب بهذا الإيميل';
+          break;
+        case 'invalid-email':
+          message = 'صيغة الإيميل غير صحيحة';
+          break;
+        case 'network-request-failed':
+          message = 'خطأ في الاتصال بالإنترنت';
+          break;
+      }
+
+      if (mounted) _showErrorDialog(message);
     }
   }
-} catch (e) {
-  debugPrint('❌ خطأ في تسجيل الدخول بالبصمة: $e');
-  
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${l10n.error}: ${e.toString()}'),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: AppColors.error),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('خطأ'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('حسناً'),
+          ),
+        ],
       ),
     );
   }
-} finally {
-  // ✅ Hint: إيقاف التحميل
-  if (mounted) {
-    setState(() => _isBiometricLoading = false);
-  }
-}
-}
-@override
-Widget build(BuildContext context) {
-final l10n = widget.l10n;
-final isDark = Theme.of(context).brightness == Brightness.dark;
-return Scaffold(
-  body: Container(
-    width: double.infinity,
-    height: double.infinity,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: isDark 
-          ? AppColors.gradientDark 
-          : AppColors.gradientLight,
-      ),
-    ),
-    
-    child: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.isMobile 
-              ? AppConstants.spacingLg 
-              : AppConstants.spacingXl,
-            vertical: AppConstants.spacingXl,
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('تسجيل الدخول')),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: isDark ? AppColors.gradientDark : AppColors.gradientLight,
           ),
-          child: _buildLoginForm(l10n, isDark),
         ),
-      ),
-    ),
-  ),
-);
-}
-Widget _buildLoginForm(AppLocalizations l10n, bool isDark) {
-return Container(
-constraints: const BoxConstraints(maxWidth: 450),
-padding: AppConstants.paddingXl,
-decoration: BoxDecoration(
-color: isDark
-? AppColors.cardDark.withOpacity(0.5)
-: Colors.white.withOpacity(0.9),
-borderRadius: AppConstants.borderRadiusXl,
-border: Border.all(
-color: isDark
-? AppColors.borderDark.withOpacity(0.5)
-: AppColors.borderLight,
-width: 1,
-),
-boxShadow: [
-BoxShadow(
-color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-blurRadius: 30,
-offset: const Offset(0, 15),
-),
-],
-),
-child: Form(
-key: _formKey,
-child: Column(
-mainAxisSize: MainAxisSize.min,
-crossAxisAlignment: CrossAxisAlignment.stretch,
-children: [
-_buildCompanyLogo(),
-        const SizedBox(height: AppConstants.spacingXl),
-        
-        _buildCompanyInfo(l10n, isDark),
-        
-        const SizedBox(height: AppConstants.spacingXl),
-        
-        CustomTextField(
-          controller: _usernameController,
-          label: l10n.username,
-          hint: l10n.username,
-          prefixIcon: Icons.person_outline,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.next,
-          validator: (value) => 
-            (value?.isEmpty ?? true) 
-              ? l10n.pleaseEnterUsername 
-              : null,
-        ),
-        
-        const SizedBox(height: AppConstants.spacingMd),
-        
-        CustomTextField(
-          controller: _passwordController,
-          label: l10n.password,
-          hint: l10n.password,
-          prefixIcon: Icons.lock_outline,
-          obscureText: !_isPasswordVisible,
-          textInputAction: TextInputAction.done,
-          suffixIcon: _isPasswordVisible 
-            ? Icons.visibility_off 
-            : Icons.visibility,
-          onSuffixIconTap: () {
-            setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            });
-          },
-          validator: (value) => 
-            (value?.isEmpty ?? true) 
-              ? l10n.pleaseEnterPassword 
-              : null,
-        ),
-        
-        const SizedBox(height: AppConstants.spacingXl),
-        
-        // ============= زر تسجيل الدخول الأساسي =============
-        CustomButton(
-          text: l10n.login,
-          icon: Icons.login,
-          onPressed: _handleLogin,
-          isLoading: _isLoading,
-          type: ButtonType.primary,
-          size: ButtonSize.large,
-        ),
-        
-        // ============= ✅ زر تسجيل الدخول بالبصمة (جديد) =============
-        // ✅ Hint: يظهر فقط إذا كانت البصمة مُفعّلة
-        if (BiometricService.instance.isBiometricEnabled) ...[
-          const SizedBox(height: AppConstants.spacingMd),
-          
-          // ✅ Hint: فاصل مع نص "أو"
-          Row(
-            children: [
-              Expanded(
-                child: Divider(
-                  color: isDark 
-                    ? AppColors.borderDark 
-                    : AppColors.borderLight,
-                  thickness: 1,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spacingMd,
-                ),
-                child: Text(
-                  l10n.or,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isDark 
-                      ? AppColors.textSecondaryDark 
-                      : AppColors.textSecondaryLight,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppConstants.spacingLg),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // شعار الشركة أو أيقونة افتراضية
+                      if (widget.companyLogoPath != null)
+                        Image.asset(
+                          widget.companyLogoPath!,
+                          height: 100,
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.account_circle,
+                            size: 100,
+                            color: AppColors.primaryLight,
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.account_circle,
+                          size: 100,
+                          color: AppColors.primaryLight,
+                        ),
+
+                      const SizedBox(height: AppConstants.spacingXl),
+
+                      // اسم الشركة أو عنوان افتراضي
+                      Text(
+                        widget.companyName ?? 'تسجيل الدخول',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingSm),
+
+                      Text(
+                        'مرحباً بعودتك',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color
+                                  ?.withOpacity(0.7),
+                            ),
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingXl),
+
+                      // البريد الإلكتروني
+                      CustomTextField(
+                        controller: _emailController,
+                        label: 'البريد الإلكتروني',
+                        hint: 'example@company.com',
+                        prefixIcon: Icons.email,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'مطلوب';
+                          if (!v.contains('@')) return 'صيغة غير صحيحة';
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingMd),
+
+                      // كلمة المرور
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: 'كلمة المرور',
+                        hint: '••••••••',
+                        prefixIcon: Icons.lock,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        suffixIcon: _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        onSuffixIconPressed: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'مطلوب';
+                          return null;
+                        },
+                        onFieldSubmitted: (_) => _handleLogin(),
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingSm),
+
+                      // نسيت كلمة المرور
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: _handleForgotPassword,
+                          child: const Text('نسيت كلمة المرور؟'),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingLg),
+
+                      // زر تسجيل الدخول
+                      CustomButton(
+                        text: 'تسجيل الدخول',
+                        icon: Icons.login,
+                        onPressed: _handleLogin,
+                        isLoading: _isLoading,
+                        type: ButtonType.primary,
+                        size: ButtonSize.large,
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingMd),
+
+                      // فاصل
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppConstants.spacingSm),
+                            child: Text(
+                              'أو',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color,
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingMd),
+
+                      // زر إنشاء حساب جديد
+                      CustomButton(
+                        text: 'ليس لدي حساب - إنشاء حساب',
+                        icon: Icons.person_add,
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                        type: ButtonType.secondary,
+                        size: ButtonSize.large,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Expanded(
-                child: Divider(
-                  color: isDark 
-                    ? AppColors.borderDark 
-                    : AppColors.borderLight,
-                  thickness: 1,
-                ),
-              ),
-            ],
+            ),
           ),
-          
-          const SizedBox(height: AppConstants.spacingMd),
-          
-          // ✅ Hint: الزر نفسه
-          CustomButton(
-            text: l10n.loginWithBiometric,
-            icon: Icons.fingerprint,
-            onPressed: _handleBiometricLogin,
-            isLoading: _isBiometricLoading,
-            type: ButtonType.secondary,
-            size: ButtonSize.large,
-          ),
-        ],
-      ],
-    ),
-  ),
-);
-}
-Widget _buildCompanyLogo() {
-final bool hasLogo = _companyLogo != null && _companyLogo!.existsSync();
-return Center(
-  child: Container(
-    width: 100,
-    height: 100,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      shape: BoxShape.circle,
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 15,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
-    child: ClipOval(
-      child: hasLogo
-        ? Image.file(
-            _companyLogo!,
-            fit: BoxFit.cover,
-          )
-        : Icon(
-            Icons.store,
-            size: 50,
-            color: AppColors.primaryLight.withOpacity(0.7),
-          ),
-    ),
-  ),
-);
-}
-Widget _buildCompanyInfo(AppLocalizations l10n, bool isDark) {
-return Column(
-children: [
-Text(
-l10n.loginTo,
-textAlign: TextAlign.center,
-style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-color: isDark
-? AppColors.textSecondaryDark
-: AppColors.textSecondaryLight,
-),
-),
-    const SizedBox(height: AppConstants.spacingXs),
-    
-    Text(
-      _companyName,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: isDark 
-          ? AppColors.textPrimaryDark 
-          : AppColors.textPrimaryLight,
-      ),
-    ),
-    
-    if (_companyDescription.isNotEmpty) ...[
-      const SizedBox(height: AppConstants.spacingXs),
-      Text(
-        _companyDescription,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: isDark 
-            ? AppColors.textSecondaryDark 
-            : AppColors.textSecondaryLight,
         ),
       ),
-    ],
-  ],
-);
-}
+    );
+  }
 }

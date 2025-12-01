@@ -1,5 +1,6 @@
 // lib/widgets/custom_drawer.dart
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // 🆕 Firebase Auth
 import 'package:accountant_touch/l10n/app_localizations.dart';
 import 'package:accountant_touch/screens/customers/customers_list_screen.dart';
 import 'package:accountant_touch/screens/employees/employees_list_screen.dart';
@@ -16,7 +17,7 @@ import '../screens/auth/splash_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
 import '../screens/test_pdf_screen.dart';
-import '../services/auth_service.dart';
+import '../services/session_service.dart'; // 🆕 استبدال AuthService بـ SessionService
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -29,7 +30,8 @@ class CustomDrawer extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final authService = AuthService();
+
+    // ← Hint: النظام الجديد - لا توجد صلاحيات محلية (كل مستخدم = owner/admin)
 
     return Drawer(
       child: Column(
@@ -58,14 +60,14 @@ class CustomDrawer extends StatelessWidget {
                       ),
                     );
                   },
-                ),   
-                
-                if (authService.canViewCashSales || authService.isAdmin)
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.receipt_long,
-                    title: l10n.invoices, 
-                    onTap: () {
+                ),
+
+                // ← Hint: إزالة فحص الصلاحيات - كل مستخدم يمكنه الوصول
+                _buildMenuItem(
+                  context,
+                  icon: Icons.receipt_long,
+                  title: l10n.invoices,
+                  onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
@@ -114,151 +116,131 @@ class CustomDrawer extends StatelessWidget {
             // ),
                 // const Divider(),
 
-                
+
                 // ============= قسم العملاء والموردين =============
-                if (authService.canViewCustomers || 
-                    authService.canViewSuppliers || 
-                    authService.isAdmin) ...[
-                  _buildSection(context, l10n.customersAndSuppliers, isDark), 
-                  
-                  if (authService.canViewCustomers || authService.isAdmin)
-                    _buildMenuItem(
+                // ← Hint: إزالة فحص الصلاحيات - كل القوائم مفتوحة للجميع
+                _buildSection(context, l10n.customersAndSuppliers, isDark),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.people,
+                  title: l10n.customers,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
                       context,
-                      icon: Icons.people,
-                      title: l10n.customers, 
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CustomersListScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  
-                  if (authService.canViewSuppliers || authService.isAdmin)
-                    _buildMenuItem(
+                      MaterialPageRoute(
+                        builder: (context) => const CustomersListScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.local_shipping,
+                  title: l10n.suppliers,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
                       context,
-                      icon: Icons.local_shipping,
-                      title: l10n.suppliers, 
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SuppliersListScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  
-                  const Divider(),
-                ],
-                
+                      MaterialPageRoute(
+                        builder: (context) => const SuppliersListScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                const Divider(),
+
                 // ============= قسم المخزون =============
-                if (authService.canViewProducts || authService.isAdmin) ...[
-                  _buildSection(context, l10n.inventory, isDark), 
-                  
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.inventory_2,
-                    title: l10n.products, 
-                    onTap: () {
-                      Navigator.pop(context);
+                _buildSection(context, l10n.inventory, isDark),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.inventory_2,
+                  title: l10n.products,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProductsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                const Divider(),
+
+                // ============= قسم الموظفين =============
+                _buildSection(context, l10n.employees, isDark),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.badge,
+                  title: l10n.employeeManagement,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmployeesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                const Divider(),
+
+                // ============= قسم التقارير =============
+                _buildSection(context, l10n.reports, isDark),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.assessment,
+                  title: l10n.reportsCenter,
+                  onTap: () {
+                    Navigator.pop(context);
+
+                    try {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProductsListScreen(),
+                          builder: (context) => const ReportsHubScreen(),
                         ),
                       );
-                    },
-                  ),
-                  
-                  const Divider(),
-                ],
-                
-                // ============= قسم الموظفين =============
-                if (authService.canManageEmployees || 
-                    authService.canViewEmployeesReport || 
-                    authService.isAdmin) ...[
-                  _buildSection(context, l10n.employees, isDark), 
-                  
-                  if (authService.canManageEmployees || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.badge,
-                      title: l10n.employeeManagement, 
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EmployeesListScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  
-                  const Divider(),
-                ],
-                
-                // ============= قسم التقارير =============
-                if (authService.canViewReports || 
-                    authService.canManageExpenses || 
-                    authService.isAdmin) ...[
-                  _buildSection(context, l10n.reports, isDark), 
-                  
-                  if (authService.canViewReports || authService.isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.assessment,
-                      title: l10n.reportsCenter, 
-                      onTap: () {
-                        Navigator.pop(context);
-                        
-                        try {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ReportsHubScreen(),
-                            ),
-                          );
-                        } catch (e) {
-                          debugPrint('❌ خطأ في فتح التقارير: $e');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.errorOpeningReports), 
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  
-                  const Divider(),
-                ],
-                
+                    } catch (e) {
+                      debugPrint('❌ خطأ في فتح التقارير: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.errorOpeningReports),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  },
+                ),
+
+                const Divider(),
+
                 // ============= قسم النظام =============
-                if (authService.canViewSettings || authService.isAdmin) ...[
-                  _buildSection(context, l10n.system, isDark), 
-                  
-                  if (authService.canViewSettings || authService.isAdmin)
-                    _buildMenuItem(
+                _buildSection(context, l10n.system, isDark),
+
+                _buildMenuItem(
+                  context,
+                  icon: Icons.settings,
+                  title: l10n.settings,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
                       context,
-                      icon: Icons.settings,
-                      title: l10n.settings, 
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                ],
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
                 
                 // ✅ مسافة إضافية قبل Footer لرفع الأزرار للأعلى
                 const SizedBox(height: AppConstants.spacingXl),
@@ -275,16 +257,21 @@ class CustomDrawer extends StatelessWidget {
   }
 
   // ============================================================
-  // ✅ 📋 بناء رأس القائمة الجانبية (مُحسّن ومصغّر)
+  // ✅ 📋 بناء رأس القائمة الجانبية (النظام الجديد - SessionService)
+  // ← Hint: النظام الجديد يستخدم FutureBuilder للحصول على البيانات من SessionService
   // ============================================================
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    final user = AuthService().currentUser;
-    
-    // ✅ التحقق من وجود صورة المستخدم
-    final hasUserImage = user?.imagePath != null && 
-                         user!.imagePath!.isNotEmpty && 
-                         File(user.imagePath!).existsSync();
+
+    return FutureBuilder<Map<String, String?>>(
+      future: _getUserInfo(),
+      builder: (context, snapshot) {
+        final email = snapshot.data?['email'] ?? '';
+        final displayName = snapshot.data?['displayName'] ?? l10n.user;
+        final photoURL = snapshot.data?['photoURL'];
+
+        // ← Hint: لا توجد صور محلية بعد الآن - فقط من Firebase Storage
+        final hasUserImage = photoURL != null && photoURL.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -326,94 +313,118 @@ class CustomDrawer extends StatelessWidget {
                   ),
                 ],
               ),
-              child: ClipOval(
-                child: hasUserImage
-                    ? Image.file(
-                        File(user!.imagePath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.person,
-                            size: 30,
-                            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                          );
-                        },
-                      )
-                    : Icon(
-                        Icons.person,
-                        size: 30,
-                        color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: AppConstants.spacingMd), // تقليل المسافة
-
-            // ✅ اسم المستخدم (حجم أصغر)
-            Text(
-              user?.fullName ?? l10n.user,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16, // تقليل من 18 إلى 16
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            const SizedBox(height: 2), // تقليل المسافة
-
-            // ✅ اسم المستخدم (Username)
-            Text(
-              user?.userName ?? l10n.undefined,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 12, // تقليل من 13 إلى 12
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            const SizedBox(height: AppConstants.spacingSm),
-
-            // ✅ شارة الصلاحية (مصغّرة)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 3, // تقليل من 4 إلى 3
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: AppConstants.borderRadiusFull,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
+                child: ClipOval(
+                  child: hasUserImage
+                      ? Image.network(
+                          photoURL!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.person,
+                              size: 30,
+                              color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                            );
+                          },
+                        )
+                      : Icon(
+                          Icons.person,
+                          size: 30,
+                          color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                        ),
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    user?.isAdmin == true ? Icons.admin_panel_settings : Icons.person,
-                    color: Colors.white,
-                    size: 12, // تقليل من 14 إلى 12
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    user?.isAdmin == true ? l10n.systemAdmin : l10n.user,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11, // تقليل من 12 إلى 11
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // ✅ اسم المستخدم (حجم أصغر)
+              Text(
+                displayName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+
+              const SizedBox(height: 2),
+
+              // ✅ البريد الإلكتروني (Email)
+              Text(
+                email,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // ✅ شارة الصلاحية (Admin دائماً في النظام الجديد)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: AppConstants.borderRadiusFull,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.admin_panel_settings,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.systemAdmin,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      );
+      },
     );
+  }
+
+  /// ← Hint: دالة مساعدة للحصول على معلومات المستخدم من SessionService
+  Future<Map<String, String?>> _getUserInfo() async {
+    try {
+      final email = await SessionService.instance.getEmail();
+      final displayName = await SessionService.instance.getDisplayName();
+      final photoURL = await SessionService.instance.getPhotoURL();
+
+      return {
+        'email': email ?? '',
+        'displayName': displayName ?? '',
+        'photoURL': photoURL,
+      };
+    } catch (e) {
+      debugPrint('⚠️ خطأ في الحصول على معلومات المستخدم: $e');
+      return {
+        'email': '',
+        'displayName': '',
+        'photoURL': null,
+      };
+    }
   }
 
   /// بناء عنوان القسم
@@ -530,30 +541,45 @@ class CustomDrawer extends StatelessWidget {
   }
 
   /// حوار تأكيد تسجيل الخروج
+  /// ← Hint: النظام الجديد يستخدم Firebase Auth + SessionService
   void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.logout), 
-        content: Text(l10n.logoutConfirmation), 
+        title: Text(l10n.logout),
+        content: Text(l10n.logoutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel), 
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
-              AuthService().logout();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const SplashScreen()),
-                (route) => false,
-              );
+            onPressed: () async {
+              try {
+                // ← Hint: 1. تسجيل الخروج من Firebase Auth
+                await firebase_auth.FirebaseAuth.instance.signOut();
+
+                // ← Hint: 2. مسح الجلسة المحلية
+                await SessionService.instance.clearSession();
+
+                debugPrint('✅ تم تسجيل الخروج بنجاح');
+
+                if (context.mounted) {
+                  // ← Hint: 3. العودة لشاشة البداية
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SplashScreen()),
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                debugPrint('❌ خطأ في تسجيل الخروج: $e');
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: Text(l10n.logout), 
+            child: Text(l10n.logout),
           ),
         ],
       ),
