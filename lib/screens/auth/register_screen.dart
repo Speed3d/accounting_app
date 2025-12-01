@@ -11,6 +11,7 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../main_screen.dart'; // 🆕 التوجيه مباشرة للشاشة الرئيسية
+import 'login_screen.dart'; // 🆕 شاشة تسجيل الدخول
 
 /// ============================================================================
 /// شاشة تسجيل حساب جديد (Owner Registration)
@@ -397,7 +398,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const LoginSelectionScreen(),
+                              builder: (_) => const LoginScreen(),
                             ),
                           );
                         },

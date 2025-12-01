@@ -310,7 +310,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (v == null || v.isEmpty) return 'مطلوب';
                           return null;
                         },
-                        onFieldSubmitted: (_) => _handleLogin(),
                       ),
 
                       const SizedBox(height: AppConstants.spacingSm),

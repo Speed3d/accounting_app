@@ -25,9 +25,9 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
   final dbHelper = DatabaseHelper.instance;
   // ← Hint: تم إزالة AuthService
   final TextEditingController _searchController = TextEditingController();
-  
+
   late Future<List<Supplier>> _suppliersFuture;
-  late bool true;
+  // ← Hint: لا حاجة لمتغير isAdmin - كل مستخدم admin في النظام الجديد
   List<Supplier> _allSuppliers = [];
   List<Supplier> _filteredSuppliers = [];
   bool _isSearching = false;
