@@ -739,40 +739,36 @@ class _SupplierDetailsReportScreenState
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 // زر التعديل
-                SizedBox(
-                  height: 32,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showEditWithdrawalDialog(
-                      l10n,
-                      withdrawal: withdrawal,
-                    ),
-                    icon: const Icon(Icons.edit, size: 14),
-                    label: const Text('تعديل'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.info,
-                      side: BorderSide(color: AppColors.info.withOpacity(0.5)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    ),
+                OutlinedButton.icon(
+                  onPressed: () => _showEditWithdrawalDialog(
+                    l10n,
+                    withdrawal: withdrawal,
+                  ),
+                  icon: const Icon(Icons.edit, size: 14),
+                  label: const Text('تعديل'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.info,
+                    side: BorderSide(color: AppColors.info.withOpacity(0.5)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    minimumSize: const Size(80, 32),
                   ),
                 ),
                 const SizedBox(width: 8),
                 // زر الحذف
-                SizedBox(
-                  height: 32,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showDeleteWithdrawalConfirmation(
-                      l10n,
-                      withdrawalId: withdrawalId,
-                      amount: amount,
-                      partnerName: partnerName,
-                    ),
-                    icon: const Icon(Icons.delete, size: 14),
-                    label: const Text('حذف'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: BorderSide(color: AppColors.error.withOpacity(0.5)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    ),
+                OutlinedButton.icon(
+                  onPressed: () => _showDeleteWithdrawalConfirmation(
+                    l10n,
+                    withdrawalId: withdrawalId,
+                    amount: amount,
+                    partnerName: partnerName,
+                  ),
+                  icon: const Icon(Icons.delete, size: 14),
+                  label: const Text('حذف'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: BorderSide(color: AppColors.error.withOpacity(0.5)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    minimumSize: const Size(80, 32),
                   ),
                 ),
               ],
