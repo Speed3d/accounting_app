@@ -95,7 +95,7 @@ class _SupplierDetailsReportScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toDouble().toString());
 
     return Scaffold(
       // ============================================================================
@@ -377,7 +377,7 @@ class _SupplierDetailsReportScreenState
               final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
               debugPrint('🔍 [Partner: ${partner.partnerName}] shareDecimal: $shareDecimal (type: ${shareDecimal.runtimeType})');
 
-              final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString());
+              final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString());
               debugPrint('🔍 [Partner: ${partner.partnerName}] partnerShare: $partnerShare (type: ${partnerShare.runtimeType})');
 
               return _buildPartnerCard(partner, partnerShare, l10n);
@@ -424,7 +424,7 @@ class _SupplierDetailsReportScreenState
           final partnerWithdrawn = snapshot.data ?? Decimal.zero;
           debugPrint('🔍 [Balance Calc] Partner: ${partner.partnerName}, withdrawn: $partnerWithdrawn');
 
-          final availableBalance = Decimal.parse((partnerShare - partnerWithdrawn).toString());
+          final availableBalance = Decimal.parse((partnerShare - partnerWithdrawn).toDouble().toString());
           debugPrint('🔍 [Balance Calc] Partner: ${partner.partnerName}, availableBalance: $availableBalance (type: ${availableBalance.runtimeType})');
 
         return CustomCard(
@@ -799,7 +799,7 @@ class _SupplierDetailsReportScreenState
     DateTime selectedDate = DateTime.now();
 
     // Hint: حساب الرصيد المتاح للشريك/المورد المحدد
-    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toDouble().toString());
     debugPrint('🔍 [Withdrawal Dialog] netProfit: $netProfit (type: ${netProfit.runtimeType})');
     debugPrint('🔍 [Withdrawal Dialog] partnerName: $partnerName, sharePercentage: $sharePercentage');
 
@@ -807,12 +807,12 @@ class _SupplierDetailsReportScreenState
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
       // للشركاء: حساب الرصيد المتاح الخاص بالشريك
-      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toString());
+      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
       );
-      availableBalance = Decimal.parse((partnerTotalShare - partnerWithdrawn).toString());
+      availableBalance = Decimal.parse((partnerTotalShare - partnerWithdrawn).toDouble().toString());
       debugPrint('🔍 [Partner Withdrawal] partnerTotalShare: $partnerTotalShare, withdrawn: $partnerWithdrawn, available: $availableBalance');
     } else {
       // للموردين الفرديين: الرصيد المتاح هو صافي الربح الإجمالي مطروحاً منه مسحوبات المورد
@@ -820,7 +820,7 @@ class _SupplierDetailsReportScreenState
         widget.supplierId,
         null, // null = مورد فردي
       );
-      availableBalance = Decimal.parse((netProfit - supplierWithdrawn).toString());
+      availableBalance = Decimal.parse((netProfit - supplierWithdrawn).toDouble().toString());
       debugPrint('🔍 [Individual Supplier] netProfit: $netProfit, withdrawn: $supplierWithdrawn, available: $availableBalance (type: ${availableBalance.runtimeType})');
     }
 
@@ -1030,7 +1030,7 @@ class _SupplierDetailsReportScreenState
                   );
 
                   setState(() {
-                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn + withdrawalAmount).toString());
+                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn + withdrawalAmount).toDouble().toString());
                     _loadData();
                   });
                 } catch (e) {
@@ -1075,7 +1075,7 @@ class _SupplierDetailsReportScreenState
     DateTime selectedDate = currentDate;
 
     // Hint: حساب الرصيد المتاح مع الأخذ بعين الاعتبار المبلغ الحالي
-    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toDouble().toString());
 
     // Hint: نحتاج لمعرفة نسبة الشريك لحساب رصيده
     Decimal? sharePercentage;
@@ -1093,19 +1093,19 @@ class _SupplierDetailsReportScreenState
 
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
-      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toString());
+      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
       );
       // Hint: نضيف المبلغ الحالي للرصيد المتاح (لأننا سنستبدله)
-      availableBalance = Decimal.parse((partnerTotalShare - partnerWithdrawn + currentAmount).toString());
+      availableBalance = Decimal.parse((partnerTotalShare - partnerWithdrawn + currentAmount).toDouble().toString());
     } else {
       final supplierWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         null,
       );
-      availableBalance = Decimal.parse((netProfit - supplierWithdrawn + currentAmount).toString());
+      availableBalance = Decimal.parse((netProfit - supplierWithdrawn + currentAmount).toDouble().toString());
     }
 
     if (!mounted) return;
@@ -1310,7 +1310,7 @@ class _SupplierDetailsReportScreenState
 
                   // Hint: إعادة حساب المسحوب الكلي بعد التعديل
                   setState(() {
-                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - currentAmount + newAmount).toString());
+                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - currentAmount + newAmount).toDouble().toString());
                     _loadData();
                   });
                 } catch (e) {
@@ -1441,7 +1441,7 @@ class _SupplierDetailsReportScreenState
 
                 // Hint: إعادة حساب المسحوب الكلي بعد الحذف
                 setState(() {
-                  _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - amount).toString());
+                  _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - amount).toDouble().toString());
                   _loadData();
                 });
               } catch (e) {
@@ -1481,7 +1481,7 @@ class _SupplierDetailsReportScreenState
       // 1️⃣ جلب البيانات
       final partners = await _partnersFuture ?? [];
       final withdrawals = await _withdrawalsFuture ?? [];
-      final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
+      final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toDouble().toString());
       
       // 2️⃣ تحويل بيانات الشركاء
       final partnersData = partners.map((p) {
@@ -1489,7 +1489,7 @@ class _SupplierDetailsReportScreenState
          return {
               'partnerName': p.partnerName,
               'sharePercentage': p.sharePercentage,
-              'partnerShare': Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString()),
+              'partnerShare': Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString()),
                };
         }).toList();
       
