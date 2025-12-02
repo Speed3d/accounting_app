@@ -372,7 +372,7 @@ class _SupplierDetailsReportScreenState
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
             final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
-            final partnerShare = (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal();
+            final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString());
             return _buildPartnerCard(partner, partnerShare, l10n);
             }).toList(),
 
