@@ -1735,6 +1735,103 @@ Future<Decimal> getTotalDeductions() async {
   }
 
 
+  // =================================================================================================
+  // ✅✅✅ دوال جديدة لإدارة مسحوبات الشركاء بشكل دقيق ✅✅✅
+  // =================================================================================================
+
+  /// Hint: دالة لجلب إجمالي المبالغ المسحوبة لشريك معين في مورد معين.
+  /// ← تستخدم لحساب كم سحب هذا الشريك من أرباحه حتى الآن.
+  /// ← partnerName يمكن أن يكون null للموردين الفرديين (بدون شركاء).
+  Future<Decimal> getTotalWithdrawnForPartner(int supplierId, String? partnerName) async {
+    final db = await instance.database;
+
+    // Hint: إذا كان partnerName هو null، نحسب المسحوب للمورد نفسه (بدون شركاء)
+    // وإذا كان له قيمة، نحسب المسحوب للشريك المحدد
+    final result = await db.rawQuery(
+      partnerName == null
+          ? 'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName IS NULL'
+          : 'SELECT SUM(WithdrawalAmount) as Total FROM TB_Profit_Withdrawals WHERE SupplierID = ? AND PartnerName = ?',
+      partnerName == null ? [supplierId] : [supplierId, partnerName],
+    );
+
+    if (result.first['Total'] != null) {
+      return Decimal.parse(result.first['Total'].toString());
+    }
+    return Decimal.zero;
+  }
+
+
+  /// Hint: دالة لحساب الرصيد المتاح للسحب لشريك معين.
+  /// ← netProfit: صافي الربح الإجمالي للمورد (بعد طرح كل المسحوبات)
+  /// ← sharePercentage: نسبة الشريك من الأرباح (مثلاً 55.5)
+  /// ← partnerName: اسم الشريك (أو null للمورد الفردي)
+  ///
+  /// الحساب: (netProfit × sharePercentage ÷ 100) - totalWithdrawnForThisPartner
+  Future<Decimal> getPartnerAvailableBalance({
+    required int supplierId,
+    required Decimal totalProfit,
+    required Decimal totalWithdrawnForSupplier,
+    required Decimal sharePercentage,
+    String? partnerName,
+  }) async {
+    // 1️⃣ حساب صافي الربح الإجمالي
+    final netProfit = totalProfit - totalWithdrawnForSupplier;
+
+    // 2️⃣ حساب نصيب هذا الشريك من صافي الربح
+    final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100));
+
+    // 3️⃣ حساب كم سحب هذا الشريك بالفعل
+    final partnerWithdrawn = await getTotalWithdrawnForPartner(supplierId, partnerName);
+
+    // 4️⃣ الرصيد المتاح = نصيبه - ما سحبه
+    final availableBalance = partnerTotalShare - partnerWithdrawn;
+
+    return availableBalance;
+  }
+
+
+  /// Hint: دالة لتعديل سجل سحب أرباح موجود.
+  /// ← withdrawalId: معرّف السحب المراد تعديله
+  /// ← updatedData: البيانات الجديدة (يجب أن تحتوي على WithdrawalAmount و WithdrawalDate و Notes على الأقل)
+  ///
+  /// ⚠️ مهم: قبل استدعاء هذه الدالة، يجب التحقق من:
+  ///   - أن المبلغ الجديد لا يتجاوز الرصيد المتاح للشريك
+  ///   - إعادة حساب الرصيد بعد التعديل
+  Future<int> updateProfitWithdrawal(int withdrawalId, Map<String, dynamic> updatedData) async {
+    final db = await instance.database;
+
+    // ✅ تحويل Decimal إلى double للتخزين
+    final dataToStore = Map<String, dynamic>.from(updatedData);
+    if (dataToStore['WithdrawalAmount'] is Decimal) {
+      dataToStore['WithdrawalAmount'] = (dataToStore['WithdrawalAmount'] as Decimal).toDouble();
+    }
+
+    return await db.update(
+      'TB_Profit_Withdrawals',
+      dataToStore,
+      where: 'WithdrawalID = ?',
+      whereArgs: [withdrawalId],
+    );
+  }
+
+
+  /// Hint: دالة لحذف سجل سحب أرباح.
+  /// ← withdrawalId: معرّف السحب المراد حذفه
+  ///
+  /// ⚠️ مهم: بعد الحذف، يجب:
+  ///   - إعادة حساب إجمالي المسحوب للمورد/الشريك
+  ///   - تحديث الرصيد المتاح في الواجهة
+  Future<int> deleteProfitWithdrawal(int withdrawalId) async {
+    final db = await instance.database;
+
+    return await db.delete(
+      'TB_Profit_Withdrawals',
+      where: 'WithdrawalID = ?',
+      whereArgs: [withdrawalId],
+    );
+  }
+
+
 
   // =================================================================================================
   // ✅  إضافة الدوال الجديدة الخاصة بالمصاريف
