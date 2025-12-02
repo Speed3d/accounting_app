@@ -377,7 +377,8 @@ class _SupplierDetailsReportScreenState
               final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
               debugPrint('🔍 [Partner: ${partner.partnerName}] shareDecimal: $shareDecimal (type: ${shareDecimal.runtimeType})');
 
-              final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString());
+              // Hint: نحسب نصيب الشريك من الربح الأصلي (قبل أي مسحوبات)
+              final partnerShare = Decimal.parse((widget.totalProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString());
               debugPrint('🔍 [Partner: ${partner.partnerName}] partnerShare: $partnerShare (type: ${partnerShare.runtimeType})');
 
               return _buildPartnerCard(partner, partnerShare, l10n);
@@ -806,8 +807,8 @@ class _SupplierDetailsReportScreenState
     // Hint: إذا كان شريك، نحسب رصيده المحدد، وإلا نستخدم صافي الربح الإجمالي
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
-      // للشركاء: حساب الرصيد المتاح الخاص بالشريك
-      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
+      // للشركاء: حساب الرصيد المتاح الخاص بالشريك من الربح الأصلي
+      final partnerTotalShare = Decimal.parse((widget.totalProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
@@ -1093,7 +1094,8 @@ class _SupplierDetailsReportScreenState
 
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
-      final partnerTotalShare = Decimal.parse((netProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
+      // Hint: نحسب نصيب الشريك من الربح الأصلي (قبل أي مسحوبات)
+      final partnerTotalShare = Decimal.parse((widget.totalProfit * sharePercentage / Decimal.fromInt(100)).toDouble().toString());
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
@@ -1486,10 +1488,11 @@ class _SupplierDetailsReportScreenState
       // 2️⃣ تحويل بيانات الشركاء
       final partnersData = partners.map((p) {
          final shareDecimal = Decimal.parse(p.sharePercentage.toString());
+         // Hint: نحسب نصيب كل شريك من الربح الأصلي (قبل أي مسحوبات)
          return {
               'partnerName': p.partnerName,
               'sharePercentage': p.sharePercentage,
-              'partnerShare': Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString()),
+              'partnerShare': Decimal.parse((widget.totalProfit * shareDecimal / Decimal.fromInt(100)).toDouble().toString()),
                };
         }).toList();
       
