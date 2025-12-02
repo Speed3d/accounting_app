@@ -407,7 +407,7 @@ class _SupplierDetailsReportScreenState
       future: dbHelper.getTotalWithdrawnForPartner(widget.supplierId, partner.partnerName),
       builder: (context, snapshot) {
         final partnerWithdrawn = snapshot.data ?? Decimal.zero;
-        final availableBalance = partnerShare - partnerWithdrawn;
+        final availableBalance = (partnerShare - partnerWithdrawn).toDecimal();
 
         return CustomCard(
           margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
@@ -780,19 +780,19 @@ class _SupplierDetailsReportScreenState
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
       // للشركاء: حساب الرصيد المتاح الخاص بالشريك
-      final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100));
+      final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100)).toDecimal();
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
       );
-      availableBalance = partnerTotalShare - partnerWithdrawn;
+      availableBalance = (partnerTotalShare - partnerWithdrawn).toDecimal();
     } else {
       // للموردين الفرديين: الرصيد المتاح هو صافي الربح الإجمالي مطروحاً منه مسحوبات المورد
       final supplierWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         null, // null = مورد فردي
       );
-      availableBalance = netProfit - supplierWithdrawn;
+      availableBalance = (netProfit - supplierWithdrawn).toDecimal();
     }
 
     if (!mounted) return;
@@ -1062,19 +1062,19 @@ class _SupplierDetailsReportScreenState
 
     Decimal availableBalance;
     if (sharePercentage != null && partnerName != null) {
-      final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100));
+      final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100)).toDecimal();
       final partnerWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         partnerName,
       );
       // Hint: نضيف المبلغ الحالي للرصيد المتاح (لأننا سنستبدله)
-      availableBalance = partnerTotalShare - partnerWithdrawn + currentAmount;
+      availableBalance = (partnerTotalShare - partnerWithdrawn + currentAmount).toDecimal();
     } else {
       final supplierWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
         widget.supplierId,
         null,
       );
-      availableBalance = netProfit - supplierWithdrawn + currentAmount;
+      availableBalance = (netProfit - supplierWithdrawn + currentAmount).toDecimal();
     }
 
     if (!mounted) return;

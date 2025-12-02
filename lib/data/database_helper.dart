@@ -1778,13 +1778,13 @@ Future<Decimal> getTotalDeductions() async {
     final netProfit = totalProfit - totalWithdrawnForSupplier;
 
     // 2️⃣ حساب نصيب هذا الشريك من صافي الربح
-    final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100));
+    final partnerTotalShare = (netProfit * sharePercentage / Decimal.fromInt(100)).toDecimal();
 
     // 3️⃣ حساب كم سحب هذا الشريك بالفعل
     final partnerWithdrawn = await getTotalWithdrawnForPartner(supplierId, partnerName);
 
     // 4️⃣ الرصيد المتاح = نصيبه - ما سحبه
-    final availableBalance = partnerTotalShare - partnerWithdrawn;
+    final availableBalance = (partnerTotalShare - partnerWithdrawn).toDecimal();
 
     return availableBalance;
   }
