@@ -166,8 +166,10 @@ class _SupplierProfitReportScreenState extends State<SupplierProfitReportScreen>
     bool isDark,
     AppLocalizations l10n,
   ) {
-    final netProfit = data.totalProfit - data.totalWithdrawn;
-    
+    debugPrint('🔍 [Supplier Card] ${data.supplierName}: totalProfit=${data.totalProfit}, totalWithdrawn=${data.totalWithdrawn}');
+    final netProfit = Decimal.parse((data.totalProfit - data.totalWithdrawn).toString());
+    debugPrint('🔍 [Supplier Card] ${data.supplierName}: netProfit=$netProfit (type: ${netProfit.runtimeType})');
+
     final supplierColor = isPartnership(data.supplierType)
         ? AppColors.secondaryLight 
         : AppColors.info;
