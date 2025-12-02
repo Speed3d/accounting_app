@@ -95,7 +95,7 @@ class _SupplierDetailsReportScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
 
     return Scaffold(
       // ============================================================================
@@ -258,6 +258,8 @@ class _SupplierDetailsReportScreenState
   // 👥 بناء قسم توزيع الأرباح على الشركاء
   // ============================================================================
   Widget _buildPartnersProfitSection(Decimal netProfit, AppLocalizations l10n) {
+    debugPrint('🔍 [Partners Section] netProfit type: ${netProfit.runtimeType}, value: $netProfit');
+
     if (_partnersFuture == null) {
       return const SizedBox.shrink();
     }
@@ -371,9 +373,19 @@ class _SupplierDetailsReportScreenState
 
             // --- قائمة الشركاء ---
             ...partners.map((partner) {
-            final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
-            final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString());
-            return _buildPartnerCard(partner, partnerShare, l10n);
+            try {
+              final shareDecimal = Decimal.parse(partner.sharePercentage.toString());
+              debugPrint('🔍 [Partner: ${partner.partnerName}] shareDecimal: $shareDecimal (type: ${shareDecimal.runtimeType})');
+
+              final partnerShare = Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString());
+              debugPrint('🔍 [Partner: ${partner.partnerName}] partnerShare: $partnerShare (type: ${partnerShare.runtimeType})');
+
+              return _buildPartnerCard(partner, partnerShare, l10n);
+            } catch (e, stackTrace) {
+              debugPrint('❌ [ERROR] في حساب نصيب الشريك ${partner.partnerName}: $e');
+              debugPrint('❌ Stack Trace: $stackTrace');
+              rethrow;
+            }
             }).toList(),
 
             const SizedBox(height: AppConstants.spacingXl),
@@ -389,6 +401,8 @@ class _SupplierDetailsReportScreenState
   // Hint: تم تحديث هذه الدالة لعرض رصيد الشريك المتاح بدقة
   // ← partnerShare: نصيب الشريك من صافي الربح الإجمالي
   Widget _buildPartnerCard(Partner partner, Decimal partnerShare, AppLocalizations l10n) {
+    debugPrint('🔍 [Build Card] Partner: ${partner.partnerName}, partnerShare: $partnerShare (type: ${partnerShare.runtimeType})');
+
     ImageProvider? avatarImage;
     try {
       if (partner.imagePath != null && partner.imagePath!.isNotEmpty) {
@@ -406,8 +420,12 @@ class _SupplierDetailsReportScreenState
     return FutureBuilder<Decimal>(
       future: dbHelper.getTotalWithdrawnForPartner(widget.supplierId, partner.partnerName),
       builder: (context, snapshot) {
-        final partnerWithdrawn = snapshot.data ?? Decimal.zero;
-        final availableBalance = Decimal.parse((partnerShare - partnerWithdrawn).toString());
+        try {
+          final partnerWithdrawn = snapshot.data ?? Decimal.zero;
+          debugPrint('🔍 [Balance Calc] Partner: ${partner.partnerName}, withdrawn: $partnerWithdrawn');
+
+          final availableBalance = Decimal.parse((partnerShare - partnerWithdrawn).toString());
+          debugPrint('🔍 [Balance Calc] Partner: ${partner.partnerName}, availableBalance: $availableBalance (type: ${availableBalance.runtimeType})');
 
         return CustomCard(
           margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
@@ -557,6 +575,17 @@ class _SupplierDetailsReportScreenState
             ),
           ),
         );
+        } catch (e, stackTrace) {
+          debugPrint('❌ [ERROR] في بناء بطاقة الشريك ${partner.partnerName}: $e');
+          debugPrint('❌ Stack Trace: $stackTrace');
+          return CustomCard(
+            margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+            child: Padding(
+              padding: AppConstants.paddingMd,
+              child: Text('❌ خطأ في عرض بيانات الشريك: $e', style: const TextStyle(color: AppColors.error)),
+            ),
+          );
+        }
       },
     );
   }
@@ -774,7 +803,9 @@ class _SupplierDetailsReportScreenState
     DateTime selectedDate = DateTime.now();
 
     // Hint: حساب الرصيد المتاح للشريك/المورد المحدد
-    final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
+    debugPrint('🔍 [Withdrawal Dialog] netProfit: $netProfit (type: ${netProfit.runtimeType})');
+    debugPrint('🔍 [Withdrawal Dialog] partnerName: $partnerName, sharePercentage: $sharePercentage');
 
     // Hint: إذا كان شريك، نحسب رصيده المحدد، وإلا نستخدم صافي الربح الإجمالي
     Decimal availableBalance;
@@ -786,6 +817,7 @@ class _SupplierDetailsReportScreenState
         partnerName,
       );
       availableBalance = Decimal.parse((partnerTotalShare - partnerWithdrawn).toString());
+      debugPrint('🔍 [Partner Withdrawal] partnerTotalShare: $partnerTotalShare, withdrawn: $partnerWithdrawn, available: $availableBalance');
     } else {
       // للموردين الفرديين: الرصيد المتاح هو صافي الربح الإجمالي مطروحاً منه مسحوبات المورد
       final supplierWithdrawn = await dbHelper.getTotalWithdrawnForPartner(
@@ -793,7 +825,10 @@ class _SupplierDetailsReportScreenState
         null, // null = مورد فردي
       );
       availableBalance = Decimal.parse((netProfit - supplierWithdrawn).toString());
+      debugPrint('🔍 [Individual Supplier] netProfit: $netProfit, withdrawn: $supplierWithdrawn, available: $availableBalance (type: ${availableBalance.runtimeType})');
     }
+
+    debugPrint('✅ [Final] availableBalance: $availableBalance (type: ${availableBalance.runtimeType})');
 
     if (!mounted) return;
 
@@ -999,7 +1034,7 @@ class _SupplierDetailsReportScreenState
                   );
 
                   setState(() {
-                    _currentTotalWithdrawn += withdrawalAmount;
+                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn + withdrawalAmount).toString());
                     _loadData();
                   });
                 } catch (e) {
@@ -1044,7 +1079,7 @@ class _SupplierDetailsReportScreenState
     DateTime selectedDate = currentDate;
 
     // Hint: حساب الرصيد المتاح مع الأخذ بعين الاعتبار المبلغ الحالي
-    final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+    final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
 
     // Hint: نحتاج لمعرفة نسبة الشريك لحساب رصيده
     Decimal? sharePercentage;
@@ -1279,7 +1314,7 @@ class _SupplierDetailsReportScreenState
 
                   // Hint: إعادة حساب المسحوب الكلي بعد التعديل
                   setState(() {
-                    _currentTotalWithdrawn = _currentTotalWithdrawn - currentAmount + newAmount;
+                    _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - currentAmount + newAmount).toString());
                     _loadData();
                   });
                 } catch (e) {
@@ -1410,7 +1445,7 @@ class _SupplierDetailsReportScreenState
 
                 // Hint: إعادة حساب المسحوب الكلي بعد الحذف
                 setState(() {
-                  _currentTotalWithdrawn -= amount;
+                  _currentTotalWithdrawn = Decimal.parse((_currentTotalWithdrawn - amount).toString());
                   _loadData();
                 });
               } catch (e) {
@@ -1450,7 +1485,7 @@ class _SupplierDetailsReportScreenState
       // 1️⃣ جلب البيانات
       final partners = await _partnersFuture ?? [];
       final withdrawals = await _withdrawalsFuture ?? [];
-      final netProfit = widget.totalProfit - _currentTotalWithdrawn;
+      final netProfit = Decimal.parse((widget.totalProfit - _currentTotalWithdrawn).toString());
       
       // 2️⃣ تحويل بيانات الشركاء
       final partnersData = partners.map((p) {
@@ -1458,8 +1493,7 @@ class _SupplierDetailsReportScreenState
          return {
               'partnerName': p.partnerName,
               'sharePercentage': p.sharePercentage,
-              // 'partnerShare': (netProfit * shareDecimal / Decimal.fromInt(100)).toDecimal(),
-              'partnerShare': netProfit * shareDecimal / Decimal.fromInt(100),
+              'partnerShare': Decimal.parse((netProfit * shareDecimal / Decimal.fromInt(100)).toString()),
                };
         }).toList();
       
