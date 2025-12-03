@@ -54,7 +54,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   bool _isLoading = false;
   Supplier? _selectedSupplier;
   late Future<List<Supplier>> _suppliersFuture;
-  
+  // ← Hint: متغيرات جديدة للوحدات والتصنيفات
+  ProductUnit? _selectedUnit;
+  ProductCategory? _selectedCategory;
+  late Future<List<ProductUnit>> _unitsFuture;
+  late Future<List<ProductCategory>> _categoriesFuture;
+
   // ============= Getters =============
   bool get _isEditMode => widget.product != null;
 
@@ -65,7 +70,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   void initState() {
     super.initState();
     _suppliersFuture = dbHelper.getAllSuppliers();
-    
+    // ← Hint: تحميل الوحدات والتصنيفات
+    _unitsFuture = dbHelper.getProductUnits();
+    _categoriesFuture = dbHelper.getProductCategories();
+
     if (_isEditMode) {
       final product = widget.product!;
       _nameController.text = product.productName;
@@ -75,14 +83,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _costPriceController.text = product.costPrice.toString();
       _sellingPriceController.text = product.sellingPrice.toString();
       _barcodeController.text = product.barcode ?? '';
-      
+
       if (product.imagePath != null && product.imagePath!.isNotEmpty) {
         final imageFile = File(product.imagePath!);
         if (imageFile.existsSync()) {
           _imageFile = imageFile;
         }
       }
-      
+
       _suppliersFuture.then((suppliers) {
         if (suppliers.isNotEmpty) {
           try {
@@ -90,6 +98,29 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               (s) => s.supplierID == product.supplierID,
             );
             setState(() => _selectedSupplier = foundSupplier);
+          } catch (_) {}
+        }
+      });
+
+      // ← Hint: تعيين الوحدة والتصنيف في وضع التعديل
+      _unitsFuture.then((units) {
+        if (units.isNotEmpty && product.unitID != null) {
+          try {
+            final foundUnit = units.firstWhere(
+              (u) => u.unitID == product.unitID,
+            );
+            setState(() => _selectedUnit = foundUnit);
+          } catch (_) {}
+        }
+      });
+
+      _categoriesFuture.then((categories) {
+        if (categories.isNotEmpty && product.categoryID != null) {
+          try {
+            final foundCategory = categories.firstWhere(
+              (c) => c.categoryID == product.categoryID,
+            );
+            setState(() => _selectedCategory = foundCategory);
           } catch (_) {}
         }
       });
@@ -179,7 +210,29 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       );
       return;
     }
-    
+
+    // ← Hint: التحقق من اختيار الوحدة
+    if (_selectedUnit == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('الرجاء اختيار الوحدة'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // ← Hint: التحقق من اختيار التصنيف
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('الرجاء اختيار التصنيف'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     
     try {
@@ -233,12 +286,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           sellingPrice: sellingPrice, // Hint: Decimal مباشرة
           supplierID: _selectedSupplier!.supplierID!,
           imagePath: _imageFile?.path,
+          // ← Hint: إضافة الوحدة والتصنيف
+          unitID: _selectedUnit!.unitID,
+          categoryID: _selectedCategory!.categoryID,
         );
-        
+
         await dbHelper.updateProduct(updatedProduct);
         action = '${l10n.editProduct}: ${updatedProduct.productName}';
         successMessage = l10n.productUpdatedSuccess;
-        
+
       } else {
         // ============= وضع الإضافة =============
         final newProduct = Product(
@@ -252,8 +308,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           sellingPrice: sellingPrice, // Hint: Decimal مباشرة
           supplierID: _selectedSupplier!.supplierID!,
           imagePath: _imageFile?.path,
+          // ← Hint: إضافة الوحدة والتصنيف
+          unitID: _selectedUnit!.unitID,
+          categoryID: _selectedCategory!.categoryID,
         );
-        
+
         await dbHelper.insertProduct(newProduct);
         action = '${l10n.addProduct}: ${newProduct.productName}';
         successMessage = l10n.productAddedSuccess;
@@ -319,9 +378,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: AppConstants.spacingXl),
             
             _buildSupplierSection(l10n),
-            
+
             const SizedBox(height: AppConstants.spacingXl),
-            
+
+            // ← Hint: قسم الوحدات والتصنيفات
+            _buildUnitsAndCategoriesSection(l10n),
+
+            const SizedBox(height: AppConstants.spacingXl),
+
             _buildProductInfoSection(l10n),
             
             const SizedBox(height: AppConstants.spacingXl),
@@ -1029,6 +1093,347 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // ===========================================================================
+  // ← Hint: بناء قسم الوحدات والتصنيفات
+  // ===========================================================================
+  Widget _buildUnitsAndCategoriesSection(AppLocalizations l10n) {
+    return CustomCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
+                ),
+                child: const Icon(
+                  Icons.category,
+                  color: AppColors.warning,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppConstants.spacingSm),
+              const Text(
+                'الوحدات والتصنيفات',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppConstants.spacingLg),
+
+          // ← Hint: Dropdown الوحدة
+          _buildUnitDropdown(l10n),
+
+          const SizedBox(height: AppConstants.spacingMd),
+
+          // ← Hint: Dropdown التصنيف
+          _buildCategoryDropdown(l10n),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // ← Hint: بناء Dropdown الوحدات
+  // ===========================================================================
+  Widget _buildUnitDropdown(AppLocalizations l10n) {
+    return FutureBuilder<List<ProductUnit>>(
+      future: _unitsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 1.5,
+              ),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.error,
+                width: 1.5,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.error, color: AppColors.error),
+                SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    'خطأ في تحميل الوحدات',
+                    style: TextStyle(color: AppColors.error),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.warning,
+                width: 1.5,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning, color: AppColors.warning),
+                SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    'لا توجد وحدات',
+                    style: TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final units = snapshot.data!;
+        final isValueInList = _selectedUnit != null &&
+            units.any((u) => u.unitID == _selectedUnit!.unitID);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: AppConstants.borderRadiusMd,
+            border: Border.all(
+              color: Theme.of(context).dividerColor,
+              width: 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spacingMd,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<ProductUnit>(
+              value: isValueInList ? _selectedUnit : null,
+              hint: const Row(
+                children: [
+                  Icon(
+                    Icons.straighten,
+                    size: 20,
+                  ),
+                  SizedBox(width: AppConstants.spacingSm),
+                  Text('اختر الوحدة'),
+                ],
+              ),
+              isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down),
+              items: units
+                  .map(
+                    (unit) => DropdownMenuItem<ProductUnit>(
+                      value: unit,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withOpacity(0.1),
+                              borderRadius: AppConstants.borderRadiusSm,
+                            ),
+                            child: const Icon(
+                              Icons.straighten,
+                              size: 16,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                          const SizedBox(width: AppConstants.spacingSm),
+                          Expanded(
+                            child: Text(
+                              unit.unitNameAr,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() => _selectedUnit = value);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ===========================================================================
+  // ← Hint: بناء Dropdown التصنيفات
+  // ===========================================================================
+  Widget _buildCategoryDropdown(AppLocalizations l10n) {
+    return FutureBuilder<List<ProductCategory>>(
+      future: _categoriesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !_isEditMode) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 1.5,
+              ),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.error,
+                width: 1.5,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.error, color: AppColors.error),
+                SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    'خطأ في تحميل التصنيفات',
+                    style: TextStyle(color: AppColors.error),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            padding: AppConstants.paddingMd,
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.1),
+              borderRadius: AppConstants.borderRadiusMd,
+              border: Border.all(
+                color: AppColors.warning,
+                width: 1.5,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning, color: AppColors.warning),
+                SizedBox(width: AppConstants.spacingSm),
+                Expanded(
+                  child: Text(
+                    'لا توجد تصنيفات',
+                    style: TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final categories = snapshot.data!;
+        final isValueInList = _selectedCategory != null &&
+            categories.any((c) => c.categoryID == _selectedCategory!.categoryID);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: AppConstants.borderRadiusMd,
+            border: Border.all(
+              color: Theme.of(context).dividerColor,
+              width: 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spacingMd,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<ProductCategory>(
+              value: isValueInList ? _selectedCategory : null,
+              hint: const Row(
+                children: [
+                  Icon(
+                    Icons.category,
+                    size: 20,
+                  ),
+                  SizedBox(width: AppConstants.spacingSm),
+                  Text('اختر التصنيف'),
+                ],
+              ),
+              isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down),
+              items: categories
+                  .map(
+                    (category) => DropdownMenuItem<ProductCategory>(
+                      value: category,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.info.withOpacity(0.1),
+                              borderRadius: AppConstants.borderRadiusSm,
+                            ),
+                            child: const Icon(
+                              Icons.category,
+                              size: 16,
+                              color: AppColors.info,
+                            ),
+                          ),
+                          const SizedBox(width: AppConstants.spacingSm),
+                          Expanded(
+                            child: Text(
+                              category.categoryNameAr,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() => _selectedCategory = value);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

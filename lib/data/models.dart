@@ -454,12 +454,91 @@ class Partner {
      notes: notes ?? this.notes);
 }
 
+// ============================================================================
+// ← Hint: نموذج وحدة المنتج (Product Unit)
+// ← Hint: يستخدم لتحديد وحدات القياس المختلفة للمنتجات (قطعة، كيلو، متر، إلخ)
+// ============================================================================
+class ProductUnit {
+  final int? unitID;
+  final String unitName;
+  final String unitNameAr;
+  final bool isActive;
+
+  ProductUnit({
+    this.unitID,
+    required this.unitName,
+    required this.unitNameAr,
+    this.isActive = true,
+  });
+
+  // ← Hint: تحويل الموديل إلى Map للحفظ في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+        'UnitID': unitID,
+        'UnitName': unitName,
+        'UnitNameAr': unitNameAr,
+        'IsActive': isActive ? 1 : 0,
+      };
+
+  // ← Hint: إنشاء موديل من Map القادم من قاعدة البيانات
+  factory ProductUnit.fromMap(Map<String, dynamic> map) => ProductUnit(
+        unitID: map['UnitID'],
+        unitName: map['UnitName'],
+        unitNameAr: map['UnitNameAr'],
+        isActive: map['IsActive'] == 1,
+      );
+}
+
+// ============================================================================
+// ← Hint: نموذج تصنيف المنتج (Product Category)
+// ← Hint: يستخدم لتصنيف المنتجات (كهربائيات، ملابس، إلكترونيات، إلخ)
+// ============================================================================
+class ProductCategory {
+  final int? categoryID;
+  final String categoryName;
+  final String categoryNameAr;
+  final String? iconName;
+  final String? colorCode;
+  final bool isActive;
+
+  ProductCategory({
+    this.categoryID,
+    required this.categoryName,
+    required this.categoryNameAr,
+    this.iconName,
+    this.colorCode,
+    this.isActive = true,
+  });
+
+  // ← Hint: تحويل الموديل إلى Map للحفظ في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+        'CategoryID': categoryID,
+        'CategoryName': categoryName,
+        'CategoryNameAr': categoryNameAr,
+        'IconName': iconName,
+        'ColorCode': colorCode,
+        'IsActive': isActive ? 1 : 0,
+      };
+
+  // ← Hint: إنشاء موديل من Map القادم من قاعدة البيانات
+  factory ProductCategory.fromMap(Map<String, dynamic> map) => ProductCategory(
+        categoryID: map['CategoryID'],
+        categoryName: map['CategoryName'],
+        categoryNameAr: map['CategoryNameAr'],
+        iconName: map['IconName'],
+        colorCode: map['ColorCode'],
+        isActive: map['IsActive'] == 1,
+      );
+}
+
+// ============================================================================
 // --- نموذج المنتج ---
+// ← Hint: محدث ليشمل UnitID و CategoryID
+// ============================================================================
 class Product {
   final int? productID;
   final String productName;
   final String? productDetails;
-  final String? barcode; 
+  final String? barcode;
   final int quantity;
   final Decimal costPrice;
   final Decimal sellingPrice;
@@ -467,46 +546,62 @@ class Product {
   final bool isActive;
   String? supplierName;
   final String? imagePath;
+  // ← Hint: حقول جديدة للوحدة والتصنيف
+  final int? unitID;
+  final int? categoryID;
+  // ← Hint: أسماء إضافية للعرض (اختيارية)
+  String? unitName;
+  String? categoryName;
 
   Product({
-    this.productID, required 
-    this.productName, 
-    this.productDetails, required 
-    this.barcode, required
-    this.quantity, required 
-    this.costPrice, required 
-    this.sellingPrice, required 
-    this.supplierID, 
-    this.supplierName, 
+    this.productID,
+    required this.productName,
+    this.productDetails,
+    required this.barcode,
+    required this.quantity,
+    required this.costPrice,
+    required this.sellingPrice,
+    required this.supplierID,
+    this.supplierName,
     this.isActive = true,
     this.imagePath,
+    this.unitID,
+    this.categoryID,
+    this.unitName,
+    this.categoryName,
     });
 
   Map<String, dynamic> toMap() => {
-    'ProductID': productID, 
+    'ProductID': productID,
     'ProductName': productName,
-    'ProductDetails': productDetails, 
+    'ProductDetails': productDetails,
     'Barcode': barcode,
-    'Quantity': quantity, 
-    'CostPrice': costPrice.toDouble(), 
-    'SellingPrice': sellingPrice.toDouble(), 
-    'SupplierID': supplierID, 
+    'Quantity': quantity,
+    'CostPrice': costPrice.toDouble(),
+    'SellingPrice': sellingPrice.toDouble(),
+    'SupplierID': supplierID,
     'IsActive': isActive ? 1 : 0,
     'ImagePath': imagePath,
+    'UnitID': unitID,
+    'CategoryID': categoryID,
     };
 
   factory Product.fromMap(Map<String, dynamic> map) => Product(
-    productID: map['ProductID'], 
-    productName: map['ProductName'], 
-    productDetails: map['ProductDetails'], 
+    productID: map['ProductID'],
+    productName: map['ProductName'],
+    productDetails: map['ProductDetails'],
     barcode: map['Barcode'],
-    quantity: map['Quantity'], 
-    costPrice: map.getDecimal('CostPrice'), 
-    sellingPrice: map.getDecimal('SellingPrice'), 
-    supplierID: map['SupplierID'], 
-    supplierName: map['SupplierName'], 
+    quantity: map['Quantity'],
+    costPrice: map.getDecimal('CostPrice'),
+    sellingPrice: map.getDecimal('SellingPrice'),
+    supplierID: map['SupplierID'],
+    supplierName: map['SupplierName'],
     isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
     imagePath: map['ImagePath'],
+    unitID: map['UnitID'],
+    categoryID: map['CategoryID'],
+    unitName: map['UnitName'],
+    categoryName: map['CategoryName'],
     );
 }
 

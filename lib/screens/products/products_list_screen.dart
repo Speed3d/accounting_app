@@ -578,12 +578,12 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             padding: AppConstants.paddingMd,
             child: Row(
               children: [
-                // Hint: الكمية (int - بدون تغيير)
+                // Hint: ← الكمية مع الوحدة
                 Expanded(
                   child: _buildInfoItem(
                     icon: Icons.inventory_outlined,
                     label: l10n.quantity,
-                    value: product.quantity.toString(),
+                    value: '${product.quantity} ${product.unitName ?? ""}',
                     color: stockColor,
                   ),
                 ),
