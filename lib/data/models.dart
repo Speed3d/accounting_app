@@ -296,6 +296,48 @@ class EmployeeAdvance {
       );
 }
 
+// ============================================================================
+// ← Hint: نموذج مكافأة الموظف (Employee Bonus/Reward)
+// ← Hint: يستخدم لتسجيل المكافآت والحوافز الممنوحة للموظفين
+// ============================================================================
+class EmployeeBonus {
+  final int? bonusID;
+  final int employeeID;
+  final String bonusDate;
+  final Decimal bonusAmount;
+  final String? bonusReason; // سبب المكافأة (اختياري)
+  final String? notes;
+
+  EmployeeBonus({
+    this.bonusID,
+    required this.employeeID,
+    required this.bonusDate,
+    required this.bonusAmount,
+    this.bonusReason,
+    this.notes,
+  });
+
+  // ← Hint: تحويل الموديل إلى Map للحفظ في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+        'BonusID': bonusID,
+        'EmployeeID': employeeID,
+        'BonusDate': bonusDate,
+        'BonusAmount': bonusAmount.toDouble(),
+        'BonusReason': bonusReason,
+        'Notes': notes,
+      };
+
+  // ← Hint: إنشاء موديل من Map القادم من قاعدة البيانات
+  factory EmployeeBonus.fromMap(Map<String, dynamic> map) => EmployeeBonus(
+        bonusID: map['BonusID'],
+        employeeID: map['EmployeeID'],
+        bonusDate: map['BonusDate'],
+        bonusAmount: map.getDecimal('BonusAmount'),
+        bonusReason: map['BonusReason'],
+        notes: map['Notes'],
+      );
+}
+
 
 // --- نموذج المورد ---
 class Supplier {

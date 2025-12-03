@@ -37,12 +37,13 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   late Employee _currentEmployee;
   late Future<List<PayrollEntry>> _payrollFuture;
   late Future<List<EmployeeAdvance>> _advancesFuture;
+  late Future<List<EmployeeBonus>> _bonusesFuture; // ← Hint: تاب المكافآت الجديد
 
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this); // ← Hint: تغيير من 2 إلى 3 تابات
     _currentEmployee = widget.employee;
     _reloadData();
   }
@@ -54,6 +55,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   }
 
   /// إعادة تحميل البيانات
+  /// ← Hint: يتم استدعاؤها عند التهيئة وبعد كل عملية إضافة/تعديل/حذف
   void _reloadData() {
     setState(() {
       _payrollFuture = dbHelper.getPayrollForEmployee(
@@ -62,6 +64,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       _advancesFuture = dbHelper.getAdvancesForEmployee(
         _currentEmployee.employeeID!,
       );
+      _bonusesFuture = dbHelper.getBonusesForEmployee(
+        _currentEmployee.employeeID!,
+      ); // ← Hint: تحميل المكافآت
     });
 
     // تحديث بيانات الموظف
@@ -156,6 +161,11 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   icon: const Icon(Icons.request_quote_outlined, size: 20),
                   text: l10n.advancesHistory,
                 ),
+                // ← Hint: تاب المكافآت الجديد
+                const Tab(
+                  icon: Icon(Icons.card_giftcard_outlined, size: 20),
+                  text: 'المكافآت',
+                ),
               ],
             ),
           ),
@@ -175,6 +185,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               children: [
                 _buildPayrollTab(l10n, canManage),
                 _buildAdvancesTab(l10n, canManage),
+                _buildBonusesTab(l10n, canManage), // ← Hint: تاب المكافآت الجديد
               ],
             ),
           ),
@@ -824,6 +835,536 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         ],
       ),
     );
+  }
+
+  // ============================================================
+  // 🎁 تبويب سجل المكافآت
+  // ← Hint: تاب جديد لعرض وإدارة مكافآت الموظف
+  // ============================================================
+  Widget _buildBonusesTab(AppLocalizations l10n, bool canManage) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: FutureBuilder<List<EmployeeBonus>>(
+        future: _bonusesFuture,
+        builder: (context, snapshot) {
+          // حالة التحميل
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LoadingState(message: l10n.loadingMessage);
+          }
+
+          // حالة الخطأ
+          if (snapshot.hasError) {
+            return ErrorState(
+              message: snapshot.error.toString(),
+              onRetry: _reloadData,
+            );
+          }
+
+          // حالة الفراغ
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return EmptyState(
+              icon: Icons.card_giftcard_outlined,
+              title: 'لا توجد مكافآت',
+              message: 'لم يتم منح أي مكافآت لهذا الموظف بعد',
+              actionText: canManage ? 'منح مكافأة' : null,
+              onAction: canManage ? _showAddBonusDialog : null,
+            );
+          }
+
+          // عرض القائمة
+          final bonuses = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppConstants.spacingMd),
+            itemCount: bonuses.length,
+            itemBuilder: (context, index) {
+              final bonus = bonuses[index];
+              return _buildBonusCard(bonus, l10n, canManage);
+            },
+          );
+        },
+      ),
+
+      // ← Hint: زر الإضافة يظهر فقط لمن لديه صلاحية الإدارة
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              onPressed: _showAddBonusDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('منح مكافأة'),
+              tooltip: 'إضافة مكافأة جديدة',
+            )
+          : null,
+    );
+  }
+
+  /// ← Hint: بناء بطاقة مكافأة مع أزرار تعديل وحذف
+  Widget _buildBonusCard(EmployeeBonus bonus, AppLocalizations l10n, bool canManage) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // أيقونة
+                Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingMd),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.card_giftcard,
+                    color: AppColors.success,
+                    size: 28,
+                  ),
+                ),
+
+                const SizedBox(width: AppConstants.spacingMd),
+
+                // المعلومات
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // المبلغ
+                      Text(
+                        formatCurrency(bonus.bonusAmount),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingXs),
+
+                      // التاريخ
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateFormat('yyyy-MM-dd').format(DateTime.parse(bonus.bonusDate)),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+
+                      // السبب إن وُجد
+                      if (bonus.bonusReason != null && bonus.bonusReason!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: isDark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondaryLight,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                bonus.bonusReason!,
+                                style: Theme.of(context).textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // ← Hint: أزرار التعديل والحذف
+            if (canManage) ...[
+              const Divider(height: AppConstants.spacingLg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _showEditBonusDialog(bonus),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('تعديل'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.info,
+                      minimumSize: const Size(80, 32),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  OutlinedButton.icon(
+                    onPressed: () => _showDeleteBonusDialog(bonus),
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('حذف'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      minimumSize: const Size(80, 32),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🎁 دوال إدارة المكافآت (Add/Edit/Delete)
+  // ============================================================
+
+  /// ← Hint: عرض dialog لإضافة مكافأة جديدة
+  Future<void> _showAddBonusDialog() async {
+    final amountController = TextEditingController();
+    final reasonController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.card_giftcard, color: AppColors.success),
+                  SizedBox(width: AppConstants.spacingSm),
+                  Text('منح مكافأة'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // المبلغ
+                    TextField(
+                      controller: amountController,
+                      decoration: const InputDecoration(
+                        labelText: 'المبلغ *',
+                        prefixIcon: Icon(Icons.attach_money),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // التاريخ
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (pickedDate != null) {
+                          setState(() => selectedDate = pickedDate);
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'التاريخ',
+                          prefixIcon: Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // السبب
+                    TextField(
+                      controller: reasonController,
+                      decoration: const InputDecoration(
+                        labelText: 'السبب (اختياري)',
+                        prefixIcon: Icon(Icons.info_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // الملاحظات
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'ملاحظات (اختياري)',
+                        prefixIcon: Icon(Icons.note),
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (amountController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('يرجى إدخال المبلغ')),
+                      );
+                      return;
+                    }
+
+                    final amount = parseDecimal(
+                      convertArabicNumbersToEnglish(amountController.text),
+                    );
+
+                    if (amount <= Decimal.zero) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('يجب أن يكون المبلغ أكبر من صفر')),
+                      );
+                      return;
+                    }
+
+                    final bonus = EmployeeBonus(
+                      employeeID: _currentEmployee.employeeID!,
+                      bonusDate: selectedDate.toIso8601String(),
+                      bonusAmount: amount,
+                      bonusReason: reasonController.text.isNotEmpty
+                          ? reasonController.text
+                          : null,
+                      notes: notesController.text.isNotEmpty
+                          ? notesController.text
+                          : null,
+                    );
+
+                    try {
+                      await dbHelper.recordNewBonus(bonus);
+                      Navigator.pop(ctx, true);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('خطأ: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('حفظ'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم منح المكافأة بنجاح')),
+      );
+    }
+  }
+
+  /// ← Hint: عرض dialog لتعديل مكافأة
+  Future<void> _showEditBonusDialog(EmployeeBonus bonus) async {
+    final amountController = TextEditingController(
+      text: bonus.bonusAmount.toString(),
+    );
+    final reasonController = TextEditingController(
+      text: bonus.bonusReason ?? '',
+    );
+    final notesController = TextEditingController(
+      text: bonus.notes ?? '',
+    );
+    DateTime selectedDate = DateTime.parse(bonus.bonusDate);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.edit, color: AppColors.info),
+                  SizedBox(width: AppConstants.spacingSm),
+                  Text('تعديل المكافأة'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: amountController,
+                      decoration: const InputDecoration(
+                        labelText: 'المبلغ *',
+                        prefixIcon: Icon(Icons.attach_money),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: AppConstants.spacingMd),
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (pickedDate != null) {
+                          setState(() => selectedDate = pickedDate);
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'التاريخ',
+                          prefixIcon: Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(DateFormat('yyyy-MM-dd').format(selectedDate)),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.spacingMd),
+                    TextField(
+                      controller: reasonController,
+                      decoration: const InputDecoration(
+                        labelText: 'السبب (اختياري)',
+                        prefixIcon: Icon(Icons.info_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.spacingMd),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'ملاحظات (اختياري)',
+                        prefixIcon: Icon(Icons.note),
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (amountController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('يرجى إدخال المبلغ')),
+                      );
+                      return;
+                    }
+
+                    final amount = parseDecimal(
+                      convertArabicNumbersToEnglish(amountController.text),
+                    );
+
+                    if (amount <= Decimal.zero) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('يجب أن يكون المبلغ أكبر من صفر')),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await dbHelper.editBonus(
+                        bonusID: bonus.bonusID!,
+                        newDate: selectedDate.toIso8601String(),
+                        newAmount: amount,
+                        newReason: reasonController.text.isNotEmpty
+                            ? reasonController.text
+                            : null,
+                        newNotes: notesController.text.isNotEmpty
+                            ? notesController.text
+                            : null,
+                      );
+                      Navigator.pop(ctx, true);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('خطأ: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('حفظ'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تعديل المكافأة بنجاح')),
+      );
+    }
+  }
+
+  /// ← Hint: عرض dialog لحذف مكافأة
+  Future<void> _showDeleteBonusDialog(EmployeeBonus bonus) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: AppColors.error),
+            SizedBox(width: AppConstants.spacingSm),
+            Text('تأكيد الحذف'),
+          ],
+        ),
+        content: Text(
+          'هل أنت متأكد من حذف هذه المكافأة؟\nالمبلغ: ${formatCurrency(bonus.bonusAmount)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await dbHelper.deleteBonus(bonus.bonusID!);
+                Navigator.pop(ctx, true);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('خطأ: $e')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حذف المكافأة بنجاح')),
+      );
+    }
   }
 
   // ============================================================

@@ -1380,11 +1380,320 @@ Future<Decimal> getTotalNetSalariesPaid() async {
   final result = await db.rawQuery(
     'SELECT SUM(NetSalary) as Total FROM TB_Payroll'
   );
-  
+
   if (result.first['Total'] != null) {
     return Decimal.parse(result.first['Total'].toString());
   }
   return Decimal.zero;
+}
+
+// ============================================================================
+// ← Hint: دوال المكافآت (Employee Bonuses)
+// ============================================================================
+
+// ← Hint: جلب جميع المكافآت لموظف معين
+Future<List<EmployeeBonus>> getBonusesForEmployee(int employeeId) async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Employee_Bonuses',
+    where: 'EmployeeID = ?',
+    whereArgs: [employeeId],
+    orderBy: 'BonusDate DESC',
+  );
+  return List.generate(maps.length, (i) => EmployeeBonus.fromMap(maps[i]));
+}
+
+// ← Hint: تسجيل مكافأة جديدة لموظف
+// ← Hint: يستخدم Transaction لضمان تحديث الصندوق والمكافأة معاً
+Future<void> recordNewBonus(EmployeeBonus bonus) async {
+  final db = await instance.database;
+  await db.transaction((txn) async {
+    // إضافة المكافأة
+    await txn.insert('TB_Employee_Bonuses', bonus.toMap());
+
+    // خصم المبلغ من الصندوق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount - ?',
+      [bonus.bonusAmount.toDouble()],
+    );
+  });
+}
+
+// ← Hint: تعديل مكافأة موجودة
+// ← Hint: يحسب الفرق بين المبلغ القديم والجديد ويحدث الصندوق
+Future<void> editBonus({
+  required int bonusID,
+  required String newDate,
+  required Decimal newAmount,
+  String? newReason,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب المكافأة القديمة
+    final oldBonusMaps = await txn.query(
+      'TB_Employee_Bonuses',
+      where: 'BonusID = ?',
+      whereArgs: [bonusID],
+    );
+
+    if (oldBonusMaps.isEmpty) return;
+
+    final oldAmount = Decimal.parse(oldBonusMaps.first['BonusAmount'].toString());
+    final difference = newAmount - oldAmount;
+
+    // تحديث المكافأة
+    await txn.update(
+      'TB_Employee_Bonuses',
+      {
+        'BonusDate': newDate,
+        'BonusAmount': newAmount.toDouble(),
+        'BonusReason': newReason,
+        'Notes': newNotes,
+      },
+      where: 'BonusID = ?',
+      whereArgs: [bonusID],
+    );
+
+    // تحديث الصندوق بالفرق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount - ?',
+      [difference.toDouble()],
+    );
+  });
+}
+
+// ← Hint: حذف مكافأة
+// ← Hint: يعيد المبلغ إلى الصندوق
+Future<void> deleteBonus(int bonusID) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب المكافأة للحصول على المبلغ
+    final bonusMaps = await txn.query(
+      'TB_Employee_Bonuses',
+      where: 'BonusID = ?',
+      whereArgs: [bonusID],
+    );
+
+    if (bonusMaps.isEmpty) return;
+
+    final amount = Decimal.parse(bonusMaps.first['BonusAmount'].toString());
+
+    // حذف المكافأة
+    await txn.delete(
+      'TB_Employee_Bonuses',
+      where: 'BonusID = ?',
+      whereArgs: [bonusID],
+    );
+
+    // إرجاع المبلغ للصندوق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount + ?',
+      [amount.toDouble()],
+    );
+  });
+}
+
+// ============================================================================
+// ← Hint: دوال تعديل وحذف الرواتب (Payroll Edit/Delete)
+// ============================================================================
+
+// ← Hint: تعديل راتب موجود
+// ← Hint: يحسب الفرق ويحدث الصندوق ورصيد الموظف
+Future<void> editPayroll({
+  required int payrollID,
+  required String newDate,
+  required Decimal newBaseSalary,
+  required Decimal newBonuses,
+  required Decimal newDeductions,
+  required Decimal newAdvanceDeduction,
+  required Decimal newNetSalary,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب الراتب القديم
+    final oldPayrollMaps = await txn.query(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    if (oldPayrollMaps.isEmpty) return;
+
+    final oldNetSalary = Decimal.parse(oldPayrollMaps.first['NetSalary'].toString());
+    final oldAdvanceDeduction = Decimal.parse(oldPayrollMaps.first['AdvanceDeduction'].toString());
+    final employeeID = oldPayrollMaps.first['EmployeeID'] as int;
+
+    final netSalaryDifference = newNetSalary - oldNetSalary;
+    final advanceDifference = newAdvanceDeduction - oldAdvanceDeduction;
+
+    // تحديث الراتب
+    await txn.update(
+      'TB_Payroll',
+      {
+        'PaymentDate': newDate,
+        'BaseSalary': newBaseSalary.toDouble(),
+        'Bonuses': newBonuses.toDouble(),
+        'Deductions': newDeductions.toDouble(),
+        'AdvanceDeduction': newAdvanceDeduction.toDouble(),
+        'NetSalary': newNetSalary.toDouble(),
+        'Notes': newNotes,
+      },
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    // تحديث الصندوق بفرق الراتب الصافي
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount - ?',
+      [netSalaryDifference.toDouble()],
+    );
+
+    // تحديث رصيد الموظف بفرق خصم السلفة
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [advanceDifference.toDouble()],
+    );
+  });
+}
+
+// ← Hint: حذف راتب
+// ← Hint: يعيد المبلغ للصندوق ويعيد رصيد السلفة للموظف
+Future<void> deletePayroll(int payrollID) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب الراتب
+    final payrollMaps = await txn.query(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    if (payrollMaps.isEmpty) return;
+
+    final netSalary = Decimal.parse(payrollMaps.first['NetSalary'].toString());
+    final advanceDeduction = Decimal.parse(payrollMaps.first['AdvanceDeduction'].toString());
+    final employeeID = payrollMaps.first['EmployeeID'] as int;
+
+    // حذف الراتب
+    await txn.delete(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    // إرجاع الراتب الصافي للصندوق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount + ?',
+      [netSalary.toDouble()],
+    );
+
+    // إرجاع خصم السلفة لرصيد الموظف
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [advanceDeduction.toDouble()],
+    );
+  });
+}
+
+// ============================================================================
+// ← Hint: دوال تعديل وحذف السلف (Advances Edit/Delete)
+// ============================================================================
+
+// ← Hint: تعديل سلفة موجودة
+// ← Hint: يحسب الفرق ويحدث الصندوق ورصيد الموظف
+Future<void> editAdvance({
+  required int advanceID,
+  required String newDate,
+  required Decimal newAmount,
+  required String newStatus,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب السلفة القديمة
+    final oldAdvanceMaps = await txn.query(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (oldAdvanceMaps.isEmpty) return;
+
+    final oldAmount = Decimal.parse(oldAdvanceMaps.first['AdvanceAmount'].toString());
+    final employeeID = oldAdvanceMaps.first['EmployeeID'] as int;
+    final difference = newAmount - oldAmount;
+
+    // تحديث السلفة
+    await txn.update(
+      'TB_Employee_Advances',
+      {
+        'AdvanceDate': newDate,
+        'AdvanceAmount': newAmount.toDouble(),
+        'RepaymentStatus': newStatus,
+        'Notes': newNotes,
+      },
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    // تحديث الصندوق بالفرق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount - ?',
+      [difference.toDouble()],
+    );
+
+    // تحديث رصيد الموظف بالفرق
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [difference.toDouble()],
+    );
+  });
+}
+
+// ← Hint: حذف سلفة
+// ← Hint: يعيد المبلغ للصندوق ويخصمه من رصيد الموظف
+Future<void> deleteAdvance(int advanceID) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب السلفة
+    final advanceMaps = await txn.query(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (advanceMaps.isEmpty) return;
+
+    final amount = Decimal.parse(advanceMaps.first['AdvanceAmount'].toString());
+    final employeeID = advanceMaps.first['EmployeeID'] as int;
+
+    // حذف السلفة
+    await txn.delete(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    // إرجاع المبلغ للصندوق
+    await txn.rawUpdate(
+      'UPDATE TB_Drawer SET CashAmount = CashAmount + ?',
+      [amount.toDouble()],
+    );
+
+    // خصم من رصيد الموظف
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance - ?',
+      [amount.toDouble()],
+    );
+  });
 }
 
 // Hint: دالة لحساب إجمالي رصيد السلف المستحقة على جميع الموظفين.
