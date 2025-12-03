@@ -1123,7 +1123,7 @@ Widget _buildAlertCard({
                         reservedSize: 50,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            formatCurrencyWithoutSymbol(value),
+                            formatCurrencyWithoutSymbol(Decimal.parse(value.toString())),
                             style: Theme.of(context).textTheme.bodySmall,
                           );
                         },
