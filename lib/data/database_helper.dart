@@ -2909,19 +2909,6 @@ Future<int> insertBonus(Map<String, dynamic> bonus) async {
   return await db.insert('TB_Employee_Bonuses', bonus);
 }
 
-/// جلب جميع المكافآت لموظف معين
-///
-/// ← Hint: تجلب جميع المكافآت الخاصة بموظف محدد مرتبة حسب التاريخ
-Future<List<Map<String, dynamic>>> getBonusesForEmployee(int employeeId) async {
-  final db = await instance.database;
-  return await db.query(
-    'TB_Employee_Bonuses',
-    where: 'EmployeeID = ?',
-    whereArgs: [employeeId],
-    orderBy: 'BonusDate DESC',
-  );
-}
-
 /// جلب جميع المكافآت في فترة زمنية محددة
 ///
 /// ← Hint: تستخدم في التقارير المالية لحساب إجمالي المكافآت في فترة معينة
@@ -2981,31 +2968,6 @@ Future<double> getTotalBonusesInPeriod({
 
   final result = await db.rawQuery(sql, args);
   return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
-}
-
-/// حذف مكافأة
-///
-/// ← Hint: تستخدم لحذف مكافأة في حال الخطأ في الإدخال
-Future<int> deleteBonus(int bonusId) async {
-  final db = await instance.database;
-  return await db.delete(
-    'TB_Employee_Bonuses',
-    where: 'BonusID = ?',
-    whereArgs: [bonusId],
-  );
-}
-
-/// تحديث مكافأة
-///
-/// ← Hint: تستخدم لتعديل بيانات مكافأة موجودة
-Future<int> updateBonus(int bonusId, Map<String, dynamic> bonus) async {
-  final db = await instance.database;
-  return await db.update(
-    'TB_Employee_Bonuses',
-    bonus,
-    where: 'BonusID = ?',
-    whereArgs: [bonusId],
-  );
 }
 
 // ============================================================================
