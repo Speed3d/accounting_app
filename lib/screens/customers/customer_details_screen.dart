@@ -275,90 +275,148 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   // =================================================================================================
   // 💰 تسجيل دفعة - Record New Payment
   // =================================================================================================
-  
+
   /// Hint: فتح مربع حوار لتسجيل دفعة جديدة
   Future<void> _recordNewPayment() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     final paymentController = TextEditingController();
     final commentsController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    
+
+    // Hint: التاريخ الافتراضي هو اليوم
+    DateTime selectedDate = DateTime.now();
+
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.newPayment),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // === حقل المبلغ المدفوع ===
-              CustomTextField(
-                controller: paymentController,
-                label: l10n.paidAmount,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                prefixIcon: Icons.attach_money,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.amountRequired;
-                  }
-                  
-               try {
-                final amount = parseDecimal(convertArabicNumbersToEnglish(value));
-                   if (amount <= Decimal.zero) {
-                return l10n.enterValidAmount;
-                   }
+      builder: (ctx) {
+        // Hint: استخدام StatefulBuilder لتحديث التاريخ في الحوار
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.newPayment),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // === حقل المبلغ المدفوع ===
+                    CustomTextField(
+                      controller: paymentController,
+                      label: l10n.paidAmount,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      prefixIcon: Icons.attach_money,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.amountRequired;
+                        }
 
-                  if (amount > _currentCustomer.remaining) {
-                return l10n.amountExceedsDebt;
-                   }
-                } catch (e) {
-               return l10n.enterValidAmount;
-                }
-                  
-                  return null;
-                },
+                        try {
+                          final amount = parseDecimal(convertArabicNumbersToEnglish(value));
+                          if (amount <= Decimal.zero) {
+                            return l10n.enterValidAmount;
+                          }
+
+                          if (amount > _currentCustomer.remaining) {
+                            return l10n.amountExceedsDebt;
+                          }
+                        } catch (e) {
+                          return l10n.enterValidAmount;
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // === حقل اختيار التاريخ ===
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+
+                        if (pickedDate != null) {
+                          setState(() {
+                            selectedDate = pickedDate;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppConstants.spacingMd),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: AppConstants.borderRadiusMd,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: AppConstants.spacingMd),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.date,
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                  Text(
+                                    DateFormat('yyyy-MM-dd').format(selectedDate),
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // === حقل الملاحظات ===
+                    CustomTextField(
+                      controller: commentsController,
+                      label: l10n.notesOptional,
+                      prefixIcon: Icons.note,
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
-              
-              const SizedBox(height: AppConstants.spacingMd),
-              
-              // === حقل الملاحظات ===
-              CustomTextField(
-                controller: commentsController,
-                label: l10n.notesOptional,
-                prefixIcon: Icons.note,
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(ctx).pop(true);
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      Navigator.of(ctx).pop(true);
+                    }
+                  },
+                  child: Text(l10n.save),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    
+
     // Hint: إذا تم التأكيد، نقوم بحفظ الدفعة
     if (result == true && mounted) {
       try {
         final amount = parseDecimal(
           convertArabicNumbersToEnglish(paymentController.text),
         );
-        
+
         final db = await _dbHelper.database;
-        
+
         // === استخدام Transaction ===
         await db.transaction((txn) async {
           // إدراج سجل الدفعة
@@ -366,23 +424,23 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
             customerID: _currentCustomer.customerID!,
             customerName: _currentCustomer.customerName,
             payment: amount,
-            dateT: DateTime.now().toIso8601String(),
+            dateT: selectedDate.toIso8601String(),  // Hint: استخدام التاريخ المختار
             comments: commentsController.text,
           );
           await txn.insert('Payment_Customer', newPayment.toMap());
-          
+
           // تحديث رصيد الزبون
           await txn.rawUpdate(
             'UPDATE TB_Customer SET Payment = Payment + ?, Remaining = Remaining - ? WHERE CustomerID = ?',
             [amount.toDouble(), amount.toDouble(), _currentCustomer.customerID],
           );
         });
-        
+
         // تسجيل النشاط
         await _dbHelper.logActivity(
           l10n.paymentActivityLog(_currentCustomer.customerName, formatCurrency(amount)),
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -391,7 +449,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
               behavior: SnackBarBehavior.floating,
             ),
           );
-          
+
           _reloadData();
         }
       } catch (e) {
@@ -407,7 +465,289 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       }
     }
   }
-  
+
+  // =================================================================================================
+  // ✏️ تعديل دفعة - Edit Payment
+  // =================================================================================================
+
+  /// Hint: فتح مربع حوار لتعديل دفعة موجودة
+  Future<void> _editPayment(CustomerPayment payment) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final paymentController = TextEditingController(text: payment.payment.toString());
+    final commentsController = TextEditingController(text: payment.comments ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    // Hint: التاريخ الحالي للدفعة
+    DateTime selectedDate = DateTime.parse(payment.dateT);
+    final oldAmount = payment.payment;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(l10n.edit),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // === حقل المبلغ المدفوع ===
+                    CustomTextField(
+                      controller: paymentController,
+                      label: l10n.paidAmount,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      prefixIcon: Icons.attach_money,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.amountRequired;
+                        }
+
+                        try {
+                          final amount = parseDecimal(convertArabicNumbersToEnglish(value));
+                          if (amount <= Decimal.zero) {
+                            return l10n.enterValidAmount;
+                          }
+
+                          // Hint: الرصيد المتاح = الرصيد الحالي + المبلغ القديم
+                          final availableBalance = _currentCustomer.remaining + oldAmount;
+                          if (amount > availableBalance) {
+                            return l10n.amountExceedsDebt;
+                          }
+                        } catch (e) {
+                          return l10n.enterValidAmount;
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // === حقل اختيار التاريخ ===
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+
+                        if (pickedDate != null) {
+                          setState(() {
+                            selectedDate = pickedDate;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppConstants.spacingMd),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: AppConstants.borderRadiusMd,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: Colors.grey),
+                            const SizedBox(width: AppConstants.spacingMd),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.date,
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                  Text(
+                                    DateFormat('yyyy-MM-dd').format(selectedDate),
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingMd),
+
+                    // === حقل الملاحظات ===
+                    CustomTextField(
+                      controller: commentsController,
+                      label: l10n.notesOptional,
+                      prefixIcon: Icons.note,
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      Navigator.of(ctx).pop(true);
+                    }
+                  },
+                  child: Text(l10n.save),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    // Hint: إذا تم التأكيد، نقوم بتحديث الدفعة
+    if (result == true && mounted) {
+      try {
+        final newAmount = parseDecimal(
+          convertArabicNumbersToEnglish(paymentController.text),
+        );
+
+        final db = await _dbHelper.database;
+
+        // Hint: الفرق بين المبلغ الجديد والقديم
+        final difference = newAmount - oldAmount;
+
+        // === استخدام Transaction ===
+        await db.transaction((txn) async {
+          // تحديث سجل الدفعة
+          await txn.update(
+            'Payment_Customer',
+            {
+              'Payment': newAmount.toDouble(),
+              'DateT': selectedDate.toIso8601String(),
+              'Comments': commentsController.text,
+            },
+            where: 'PaymentID = ?',
+            whereArgs: [payment.paymentID],
+          );
+
+          // تحديث رصيد الزبون
+          await txn.rawUpdate(
+            'UPDATE TB_Customer SET Payment = Payment + ?, Remaining = Remaining - ? WHERE CustomerID = ?',
+            [difference.toDouble(), difference.toDouble(), _currentCustomer.customerID],
+          );
+        });
+
+        // تسجيل النشاط
+        await _dbHelper.logActivity(
+          'تعديل دفعة للزبون ${_currentCustomer.customerName}: ${formatCurrency(newAmount)}',
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('تم تعديل الدفعة بنجاح'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          _reloadData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('خطأ في تعديل الدفعة: ${e.toString()}'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // =================================================================================================
+  // 🗑️ حذف دفعة - Delete Payment
+  // =================================================================================================
+
+  /// Hint: حذف دفعة مع التأكيد
+  Future<void> _deletePayment(CustomerPayment payment) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // === عرض مربع حوار التأكيد ===
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف هذه الدفعة بمبلغ ${formatCurrency(payment.payment)}؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    // === تنفيذ الحذف إذا تم التأكيد ===
+    if (confirm == true && mounted) {
+      try {
+        final db = await _dbHelper.database;
+
+        // === استخدام Transaction ===
+        await db.transaction((txn) async {
+          // حذف سجل الدفعة
+          await txn.delete(
+            'Payment_Customer',
+            where: 'PaymentID = ?',
+            whereArgs: [payment.paymentID],
+          );
+
+          // تحديث رصيد الزبون (إرجاع المبلغ المحذوف)
+          await txn.rawUpdate(
+            'UPDATE TB_Customer SET Payment = Payment - ?, Remaining = Remaining + ? WHERE CustomerID = ?',
+            [payment.payment.toDouble(), payment.payment.toDouble(), _currentCustomer.customerID],
+          );
+        });
+
+        // تسجيل النشاط
+        await _dbHelper.logActivity(
+          'حذف دفعة للزبون ${_currentCustomer.customerName}: ${formatCurrency(payment.payment)}',
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('تم حذف الدفعة بنجاح'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          _reloadData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('خطأ في حذف الدفعة: ${e.toString()}'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   // =================================================================================================
   // ↩️ إرجاع منتج - Return Sale
   // =================================================================================================
@@ -833,82 +1173,132 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
     final dateTime = DateTime.parse(payment.dateT);
     final formattedDate = DateFormat('yyyy-MM-dd – hh:mm a').format(dateTime);
     final hasComments = payment.comments != null && payment.comments!.isNotEmpty;
-    
+
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // === الأيقونة ===
-          Container(
-            padding: const EdgeInsets.all(AppConstants.spacingSm),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusSm,
-            ),
-            child: const Icon(
-              Icons.attach_money,
-              color: AppColors.success,
-              size: 20,
-            ),
-          ),
-          
-          const SizedBox(width: AppConstants.spacingMd),
-          
-          // === المعلومات ===
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  formatCurrency(payment.payment),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.bold,
-                      ),
+          Row(
+            children: [
+              // === الأيقونة ===
+              Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusSm,
                 ),
-                const SizedBox(height: AppConstants.spacingXs),
-                Text(
-                  formattedDate,
-                  style: Theme.of(context).textTheme.bodySmall,
+                child: const Icon(
+                  Icons.attach_money,
+                  color: AppColors.success,
+                  size: 20,
                 ),
-                
-                // === الملاحظات (إن وجدت) ===
-                if (hasComments) ...[
-                  const SizedBox(height: AppConstants.spacingXs),
-                  Text(
-                    '📝 ${payment.comments}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          
-          // === زر عرض الملاحظات (إن وجدت) ===
-          if (hasComments)
-            IconButton(
-              icon: const Icon(Icons.comment_outlined),
-              color: Theme.of(context).colorScheme.primary,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.notesOptional),
-                    content: Text(payment.comments!),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: Text(l10n.close),
+              ),
+
+              const SizedBox(width: AppConstants.spacingMd),
+
+              // === المعلومات ===
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      formatCurrency(payment.payment),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: AppConstants.spacingXs),
+                    Text(
+                      formattedDate,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+
+                    // === الملاحظات (إن وجدت) ===
+                    if (hasComments) ...[
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        '📝 ${payment.comments}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // === أزرار التعديل والحذف ===
+          const SizedBox(height: AppConstants.spacingMd),
+          const Divider(height: 1),
+          const SizedBox(height: AppConstants.spacingSm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // === زر التعديل ===
+              OutlinedButton.icon(
+                onPressed: () => _editPayment(payment),
+                icon: const Icon(Icons.edit, size: 16),
+                label: Text(l10n.edit),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.info,
+                  side: BorderSide(color: AppColors.info.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: const Size(80, 32),
+                ),
+              ),
+
+              const SizedBox(width: AppConstants.spacingSm),
+
+              // === زر الحذف ===
+              OutlinedButton.icon(
+                onPressed: () => _deletePayment(payment),
+                icon: const Icon(Icons.delete, size: 16),
+                label: const Text('حذف'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: BorderSide(color: AppColors.error.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: const Size(80, 32),
+                ),
+              ),
+
+              // === زر عرض الملاحظات (إن وجدت) ===
+              if (hasComments) ...[
+                const SizedBox(width: AppConstants.spacingSm),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(l10n.notesOptional),
+                        content: Text(payment.comments!),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: Text(l10n.close),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.comment_outlined, size: 16),
+                  label: const Text('ملاحظات'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: const Size(80, 32),
                   ),
-                );
-              },
-            ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
