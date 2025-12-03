@@ -39,19 +39,34 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   // ← Hint: تم إزالة AuthService
   final List<CartItem> _cartItems = [];
   late Future<List<Product>> _productsFuture;
+  late Future<List<ProductCategory>> _categoriesFuture;
   bool _isProcessingSale = false;
+  // ← Hint: فلتر التصنيفات - null تعني "الكل"
+  int? _selectedCategoryID;
 
   @override
   void initState() {
     super.initState();
     // ← Hint: تحميل المنتجات التي لديها كمية أكبر من 0 فقط
     _productsFuture = _loadAvailableProducts();
+    // ← Hint: تحميل التصنيفات للفلتر
+    _categoriesFuture = dbHelper.getProductCategories(activeOnly: true);
   }
 
   // ← Hint: دالة لتحميل المنتجات المتوفرة فقط (الكمية > 0)
+  // ← Hint: مع الفلترة حسب التصنيف المختار
   Future<List<Product>> _loadAvailableProducts() async {
     final allProducts = await dbHelper.getAllProductsWithSupplierName();
-    return allProducts.where((product) => product.quantity > 0).toList();
+    var availableProducts = allProducts.where((product) => product.quantity > 0).toList();
+
+    // ← Hint: تطبيق فلتر التصنيف إذا تم اختياره
+    if (_selectedCategoryID != null) {
+      availableProducts = availableProducts
+          .where((product) => product.categoryID == _selectedCategoryID)
+          .toList();
+    }
+
+    return availableProducts;
   }
 
   // ============= دالة إتمام البيع =============
@@ -766,14 +781,135 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
 
           final products = snapshot.data!;
 
-          return ListView.builder(
-            padding: AppConstants.screenPadding,
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return _buildProductCard(products[index], isDark, l10n);
-            },
+          return Column(
+            children: [
+              // ← Hint: شريط فلتر التصنيفات
+              _buildCategoryFilter(l10n, isDark),
+
+              // ← Hint: قائمة المنتجات
+              Expanded(
+                child: ListView.builder(
+                  padding: AppConstants.screenPadding,
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    return _buildProductCard(products[index], isDark, l10n);
+                  },
+                ),
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🏷️ بناء شريط فلتر التصنيفات
+  // ============================================================
+  /// ← Hint: يعرض التصنيفات أفقياً للفلترة السريعة
+  Widget _buildCategoryFilter(AppLocalizations l10n, bool isDark) {
+    return FutureBuilder<List<ProductCategory>>(
+      future: _categoriesFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final categories = snapshot.data!;
+
+        return Container(
+          height: 60,
+          padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingSm),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            border: Border(
+              bottom: BorderSide(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
+              ),
+            ),
+          ),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd),
+            children: [
+              // ← Hint: زر "الكل" لإلغاء الفلتر
+              _buildCategoryChip(
+                label: 'الكل',
+                isSelected: _selectedCategoryID == null,
+                onTap: () {
+                  setState(() {
+                    _selectedCategoryID = null;
+                    _productsFuture = _loadAvailableProducts();
+                  });
+                },
+                isDark: isDark,
+              ),
+
+              const SizedBox(width: AppConstants.spacingSm),
+
+              // ← Hint: أزرار التصنيفات
+              ...categories.map((category) => Padding(
+                    padding: const EdgeInsets.only(right: AppConstants.spacingSm),
+                    child: _buildCategoryChip(
+                      label: category.categoryNameAr,
+                      isSelected: _selectedCategoryID == category.categoryID,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryID = category.categoryID;
+                          _productsFuture = _loadAvailableProducts();
+                        });
+                      },
+                      isDark: isDark,
+                    ),
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// ← Hint: بناء زر تصنيف (Chip)
+  Widget _buildCategoryChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spacingMd,
+          vertical: AppConstants.spacingSm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+              : (isDark ? AppColors.backgroundDark : AppColors.backgroundLight),
+          borderRadius: AppConstants.borderRadiusFull,
+          border: Border.all(
+            color: isSelected
+                ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                : (isDark ? AppColors.borderDark : AppColors.borderLight),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : (isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimaryLight),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
     );
   }
