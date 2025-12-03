@@ -448,7 +448,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
 
     final cashSales = revenue['cashSales'] as double;
     final customerPayments = revenue['customerPayments'] as double;
-    final salesReturns = revenue['salesReturns'] as double;
     final total = revenue['total'] as double;
 
     return CustomCard(
@@ -476,7 +475,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             // --- Revenue Items ---
             _buildRevenueItem(l10n.cashSales, cashSales, Icons.point_of_sale, l10n),
             _buildRevenueItem(l10n.customerPayments, customerPayments, Icons.payments, l10n),
-            _buildRevenueItem(l10n.salesReturns, -salesReturns, Icons.keyboard_return, l10n, isNegative: true),
 
             const Divider(height: AppConstants.spacingLg),
 

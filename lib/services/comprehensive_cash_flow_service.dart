@@ -52,9 +52,8 @@ class ComprehensiveCashFlowService {
 
     final cashSales = await _getCashSalesInPeriod(startDate, endDate);
     final customerPayments = await _getCustomerPaymentsInPeriod(startDate, endDate);
-    final salesReturns = await _getSalesReturnsInPeriod(startDate, endDate);
 
-    final totalRevenue = cashSales + customerPayments - salesReturns;
+    final totalRevenue = cashSales + customerPayments;
 
     // ═══════════════════════════════════════════════════════════
     // جمع بيانات المصروفات (Expenses)
@@ -81,7 +80,6 @@ class ComprehensiveCashFlowService {
 
     final cashSalesDetails = await _getCashSalesDetails(startDate, endDate);
     final customerPaymentsDetails = await _getCustomerPaymentsDetails(startDate, endDate);
-    final salesReturnsDetails = await _getSalesReturnsDetails(startDate, endDate);
     final expensesDetails = await _getExpensesDetails(startDate, endDate);
     final salariesDetails = await _getSalariesDetails(startDate, endDate);
     final advancesDetails = await _getAdvancesDetails(startDate, endDate);
@@ -104,12 +102,10 @@ class ComprehensiveCashFlowService {
       'revenue': {
         'cashSales': cashSales,
         'customerPayments': customerPayments,
-        'salesReturns': salesReturns,
         'total': totalRevenue,
         'details': {
           'cashSales': cashSalesDetails,
           'customerPayments': customerPaymentsDetails,
-          'salesReturns': salesReturnsDetails,
         },
       },
 
