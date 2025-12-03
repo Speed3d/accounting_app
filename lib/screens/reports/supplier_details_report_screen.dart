@@ -153,19 +153,22 @@ class _SupplierDetailsReportScreenState
       ),
 
       // ============================================================================
-      // 🎯 زر السحب العائم
+      // 🎯 زر السحب العائم (للموردين الفرديين فقط)
       // ============================================================================
       // Hint: للموردين الفرديين (بدون شركاء)، نمرر sharePercentage = null
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showRecordWithdrawalDialog(
-          l10n,
-          partnerName: null, // للمورد نفسه
-          sharePercentage: null, // null = مورد فردي (100%)
-        ),
-        icon: const Icon(Icons.arrow_downward),
-        label: Text(l10n.recordWithdrawal),
-        backgroundColor: AppColors.primaryLight,
-      ),
+      // Hint: للشراكات، نخفي الزر ونسمح بالسحب من بطاقة كل شريك
+      floatingActionButton: !isPartnership(widget.supplierType)
+          ? FloatingActionButton.extended(
+              onPressed: () => _showRecordWithdrawalDialog(
+                l10n,
+                partnerName: null, // للمورد نفسه
+                sharePercentage: null, // null = مورد فردي (100%)
+              ),
+              icon: const Icon(Icons.arrow_downward),
+              label: Text(l10n.recordWithdrawal),
+              backgroundColor: AppColors.primaryLight,
+            )
+          : null, // للشراكات، نخفي الزر
     );
   }
 
