@@ -345,7 +345,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
     final totalRevenue = summary['totalRevenue'] as double;
     final totalExpenses = summary['totalExpenses'] as double;
     final netCashFlow = summary['netCashFlow'] as double;
-    final profitMargin = summary['profitMargin'] as double;
 
     return Column(
       children: [
@@ -376,32 +375,13 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
           ],
         ),
         const SizedBox(height: AppConstants.spacingMd),
-        Row(
-          children: [
-            // --- Net Cash Flow ---
-            Expanded(
-              child: _buildSummaryCard(
-                title: l10n.netCashFlow,
-                amount: netCashFlow,
-                icon: Icons.account_balance_wallet,
-                color: netCashFlow >= 0 ? AppColors.success : AppColors.error,
-                l10n: l10n,
-              ),
-            ),
-            const SizedBox(width: AppConstants.spacingMd),
-
-            // --- Profit Margin ---
-            Expanded(
-              child: _buildSummaryCard(
-                title: l10n.profitMargin,
-                amount: profitMargin,
-                icon: Icons.percent,
-                color: AppColors.info,
-                isPercentage: true,
-                l10n: l10n,
-              ),
-            ),
-          ],
+        // --- Net Cash Flow ---
+        _buildSummaryCard(
+          title: l10n.netCashFlow,
+          amount: netCashFlow,
+          icon: Icons.account_balance_wallet,
+          color: netCashFlow >= 0 ? AppColors.success : AppColors.error,
+          l10n: l10n,
         ),
       ],
     );
@@ -413,7 +393,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
     required IconData icon,
     required Color color,
     required AppLocalizations l10n,
-    bool isPercentage = false,
   }) {
     return CustomCard(
       child: Padding(
@@ -447,9 +426,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             ),
             const SizedBox(height: AppConstants.spacingSm),
             Text(
-              isPercentage
-                  ? '${amount.toStringAsFixed(1)}%'
-                  : formatCurrency(Decimal.parse(amount.toString())),
+              formatCurrency(Decimal.parse(amount.toString())),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -573,7 +550,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
     final generalExpenses = expenses['generalExpenses'] as double;
     final salaries = expenses['salaries'] as double;
     final advances = expenses['advances'] as double;
-    final bonuses = expenses['bonuses'] as double;
     final profitWithdrawals = expenses['profitWithdrawals'] as double;
     final total = expenses['total'] as double;
 
@@ -603,7 +579,6 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             _buildExpenseItem(l10n.generalExpenses, generalExpenses, Icons.receipt_long, l10n),
             _buildExpenseItem(l10n.salaries, salaries, Icons.work, l10n),
             _buildExpenseItem(l10n.advances, advances, Icons.money, l10n),
-            _buildExpenseItem(l10n.bonuses, bonuses, Icons.card_giftcard, l10n),
             _buildExpenseItem(l10n.profitWithdrawals, profitWithdrawals, Icons.account_balance, l10n),
 
             const Divider(height: AppConstants.spacingLg),

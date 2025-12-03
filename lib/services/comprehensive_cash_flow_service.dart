@@ -59,14 +59,14 @@ class ComprehensiveCashFlowService {
     // ═══════════════════════════════════════════════════════════
     // جمع بيانات المصروفات (Expenses)
     // ═══════════════════════════════════════════════════════════
+    // Hint: المكافآت مُضمنة في الرواتب (NetSalary)، لذلك لا نحسبها بشكل منفصل
 
     final generalExpenses = await _getGeneralExpensesInPeriod(startDate, endDate);
     final salaries = await _getSalariesInPeriod(startDate, endDate);
     final advances = await _getAdvancesInPeriod(startDate, endDate);
-    final bonuses = await _getBonusesInPeriod(startDate, endDate);
     final profitWithdrawals = await _getProfitWithdrawalsInPeriod(startDate, endDate);
 
-    final totalExpenses = generalExpenses + salaries + advances + bonuses + profitWithdrawals;
+    final totalExpenses = generalExpenses + salaries + advances + profitWithdrawals;
 
     // ═══════════════════════════════════════════════════════════
     // حسابات صافي التدفق النقدي
@@ -85,7 +85,6 @@ class ComprehensiveCashFlowService {
     final expensesDetails = await _getExpensesDetails(startDate, endDate);
     final salariesDetails = await _getSalariesDetails(startDate, endDate);
     final advancesDetails = await _getAdvancesDetails(startDate, endDate);
-    final bonusesDetails = await _getBonusesDetails(startDate, endDate);
     final withdrawalsDetails = await _getWithdrawalsDetails(startDate, endDate);
 
     // ═══════════════════════════════════════════════════════════
@@ -119,14 +118,12 @@ class ComprehensiveCashFlowService {
         'generalExpenses': generalExpenses,
         'salaries': salaries,
         'advances': advances,
-        'bonuses': bonuses,
         'profitWithdrawals': profitWithdrawals,
         'total': totalExpenses,
         'details': {
           'generalExpenses': expensesDetails,
           'salaries': salariesDetails,
           'advances': advancesDetails,
-          'bonuses': bonusesDetails,
           'profitWithdrawals': withdrawalsDetails,
         },
       },
@@ -542,7 +539,6 @@ class ComprehensiveCashFlowService {
       'generalExpenses': expenses['generalExpenses'] as double,
       'salaries': expenses['salaries'] as double,
       'advances': expenses['advances'] as double,
-      'bonuses': expenses['bonuses'] as double,
       'profitWithdrawals': expenses['profitWithdrawals'] as double,
     };
   }
