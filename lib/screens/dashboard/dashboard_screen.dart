@@ -201,7 +201,7 @@ Future<void> _loadDashboardData() async {
                   const SizedBox(height: AppConstants.spacingXl),
 
                   // ============= القسم 7: رسم المبيعات الشهرية =============
-                  // _buildMonthlySalesChart(l10n, isDark),
+                  _buildMonthlySalesChart(l10n, isDark),
 
                   const SizedBox(height: AppConstants.spacingXl),
 
@@ -1078,114 +1078,116 @@ Widget _buildAlertCard({
     );
   }
 
-  // // ==========================================================================
-  // // 📈 القسم 7: رسم المبيعات الشهرية
-  // // ==========================================================================
-  // Widget _buildMonthlySalesChart(AppLocalizations l10n, bool isDark) {
-  //   if (_monthlySales.isEmpty) {
-  //     return const SizedBox.shrink();
-  //   }
+  // ==========================================================================
+  // 📈 القسم 7: رسم المبيعات الشهرية
+  // ==========================================================================
+  Widget _buildMonthlySalesChart(AppLocalizations l10n, bool isDark) {
+    if (_monthlySales.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         l10n.monthlySalesChart,
-  //         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //       ),
-  //       const SizedBox(height: AppConstants.spacingMd),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.monthlySalesChart,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: AppConstants.spacingMd),
 
-  //       CustomCard(
-  //         child: SizedBox(
-  //           height: 250,
-  //           child: LineChart(
-  //             LineChartData(
-  //               gridData: FlGridData(
-  //                 show: true,
-  //                 drawVerticalLine: false,
-  //                 horizontalInterval: 1,
-  //                 getDrawingHorizontalLine: (value) {
-  //                   return FlLine(
-  //                     color: isDark
-  //                         ? AppColors.borderDark.withOpacity(0.3)
-  //                         : AppColors.borderLight.withOpacity(0.3),
-  //                     strokeWidth: 1,
-  //                   );
-  //                 },
-  //               ),
-  //               titlesData: FlTitlesData(
-  //                 leftTitles: AxisTitles(
-  //                   sideTitles: SideTitles(
-  //                     showTitles: true,
-  //                     reservedSize: 50,
-  //                     getTitlesWidget: (value, meta) {
-  //                       return Text(
-  //                         formatCurrencyWithoutSymbol(value),
-  //                         style: Theme.of(context).textTheme.bodySmall,
-  //                       );
-  //                     },
-  //                   ),
-  //                 ),
-  //                 bottomTitles: AxisTitles(
-  //                   sideTitles: SideTitles(
-  //                     showTitles: true,
-  //                     reservedSize: 30,
-  //                     getTitlesWidget: (value, meta) {
-  //                       final index = value.toInt();
-  //                       if (index < 0 || index >= _monthlySales.length) {
-  //                         return const Text('');
-  //                       }
-  //                       final monthStr = _monthlySales[index]['Month'] as String;
-  //                       final month = monthStr.split('-').last;
-  //                       return Text(
-  //                         month,
-  //                         style: Theme.of(context).textTheme.bodySmall,
-  //                       );
-  //                     },
-  //                   ),
-  //                 ),
-  //                 rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //                 topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  //               ),
-  //               borderData: FlBorderData(show: false),
-  //               lineBarsData: [
-  //                 LineChartBarData(
-  //                   spots: _monthlySales.asMap().entries.map((entry) {
-  //                     final index = entry.key;
-  //                     final data = entry.value;
-  //                     final sales = (data['TotalSales'] as num).toDouble();
-  //                     return FlSpot(index.toDouble(), sales);
-  //                   }).toList(),
-  //                   isCurved: true,
-  //                   color: AppColors.success,
-  //                   barWidth: 3,
-  //                   isStrokeCapRound: true,
-  //                   dotData: FlDotData(
-  //                     show: true,
-  //                     getDotPainter: (spot, percent, barData, index) {
-  //                       return FlDotCirclePainter(
-  //                         radius: 4,
-  //                         color: AppColors.success,
-  //                         strokeWidth: 2,
-  //                         strokeColor: Colors.white,
-  //                       );
-  //                     },
-  //                   ),
-  //                   belowBarData: BarAreaData(
-  //                     show: true,
-  //                     color: AppColors.success.withOpacity(0.1),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+        CustomCard(
+          child: SizedBox(
+            height: 250,
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.spacingMd),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: isDark
+                            ? AppColors.borderDark.withOpacity(0.3)
+                            : AppColors.borderLight.withOpacity(0.3),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            formatCurrencyWithoutSymbol(value),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= _monthlySales.length) {
+                            return const Text('');
+                          }
+                          final monthStr = _monthlySales[index]['Month'] as String;
+                          final month = monthStr.split('-').last;
+                          return Text(
+                            month,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          );
+                        },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: _monthlySales.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final data = entry.value;
+                        final sales = (data['TotalSales'] as num?)?.toDouble() ?? 0.0;
+                        return FlSpot(index.toDouble(), sales);
+                      }).toList(),
+                      isCurved: true,
+                      color: AppColors.success,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: AppColors.success,
+                            strokeWidth: 2,
+                            strokeColor: Colors.white,
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: AppColors.success.withOpacity(0.1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   // ==========================================================================
   // 📊 القسم 8: رسم توزيع الأرباح حسب الموردين
@@ -1363,7 +1365,7 @@ Widget _buildAlertCard({
               final customer = _overdueCustomers[index];
               final name = customer['CustomerName'] as String;
               final remaining = customer.getDecimal('Remaining');
-              final days = (customer['DaysSinceLastTransaction'] as num?)?.toInt() ?? 0;
+              final days = (customer['DaysSinceLastPayment'] as num?)?.toInt() ?? 0;
 
               return ListTile(
                 leading: CircleAvatar(
@@ -1763,7 +1765,7 @@ Widget _buildOverdueCustomersListInSheet(AppLocalizations l10n, bool isDark) {
               final customer = _overdueCustomers[index];
               final customerName = customer['CustomerName'] as String;
               final remaining = customer.getDecimal('Remaining');
-              final daysSince = (customer['DaysSinceLastTransaction'] as num?)
+              final daysSince = (customer['DaysSinceLastPayment'] as num?)
                       ?.toInt() ??
                   0;
               final phone = customer['Phone'] as String?;

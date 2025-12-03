@@ -2040,31 +2040,41 @@ Future<Decimal> getTotalDeductions() async {
   }
 
   /// ✅ Hint: جلب العملاء المتأخرين عن السداد
-  /// daysThreshold: عدد الأيام منذ آخر معاملة (افتراضياً 30 يوم)
+  /// daysThreshold: عدد الأيام بين آخر شراء وآخر تسديد (افتراضياً 30 يوم)
+  /// يقوم بمقارنة تاريخ آخر شراء مع تاريخ آخر تسديد
   Future<List<Map<String, dynamic>>> getOverdueCustomers({int daysThreshold = 30}) async {
     final db = await instance.database;
-    
-    // ✅ Hint: حساب التاريخ الحد (قبل X يوم من الآن)
-    final cutoffDate = DateTime.now().subtract(Duration(days: daysThreshold)).toIso8601String();
-    
+
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         C.CustomerID,
         C.CustomerName,
         C.Remaining,
         C.Phone,
-        MAX(D.DateT) as LastTransactionDate,
-        julianday('now') - julianday(MAX(D.DateT)) as DaysSinceLastTransaction
+        MAX(D.DateT) as LastPurchaseDate,
+        MAX(P.DateT) as LastPaymentDate,
+        julianday('now') - julianday(MAX(D.DateT)) as DaysSinceLastPurchase,
+        CASE
+          WHEN MAX(P.DateT) IS NULL THEN julianday('now') - julianday(MAX(D.DateT))
+          ELSE julianday(MAX(D.DateT)) - julianday(MAX(P.DateT))
+        END as DaysSinceLastPayment
       FROM TB_Customer C
       LEFT JOIN Debt_Customer D ON C.CustomerID = D.CustomerID
-      WHERE C.Remaining > 0 
+      LEFT JOIN Payment_Customer P ON C.CustomerID = P.CustomerID
+      WHERE C.Remaining > 0
         AND C.IsActive = 1
         AND C.CustomerName != ?
       GROUP BY C.CustomerID
-      HAVING MAX(D.DateT) < ?
+      HAVING (
+        -- إما لم يدفع أبداً ومضى على آخر شراء أكثر من الحد المسموح
+        (MAX(P.DateT) IS NULL AND julianday('now') - julianday(MAX(D.DateT)) >= ?)
+        OR
+        -- أو آخر شراء أحدث من آخر دفعة بأكثر من الحد المسموح
+        (MAX(P.DateT) IS NOT NULL AND julianday(MAX(D.DateT)) - julianday(MAX(P.DateT)) >= ?)
+      )
       ORDER BY C.Remaining DESC
-    ''', [cashCustomerInternalName, cutoffDate]);
-    
+    ''', [cashCustomerInternalName, daysThreshold, daysThreshold]);
+
     return result;
   }
 
