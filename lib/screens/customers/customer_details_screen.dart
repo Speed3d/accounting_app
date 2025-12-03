@@ -626,8 +626,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
               'DateT': selectedDate.toIso8601String(),
               'Comments': commentsController.text,
             },
-            where: 'PaymentID = ?',
-            whereArgs: [payment.paymentID],
+            where: 'ID = ?',
+            whereArgs: [payment.id],
           );
 
           // تحديث رصيد الزبون
@@ -707,8 +707,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           // حذف سجل الدفعة
           await txn.delete(
             'Payment_Customer',
-            where: 'PaymentID = ?',
-            whereArgs: [payment.paymentID],
+            where: 'ID = ?',
+            whereArgs: [payment.id],
           );
 
           // تحديث رصيد الزبون (إرجاع المبلغ المحذوف)
