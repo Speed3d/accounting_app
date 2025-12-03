@@ -211,11 +211,12 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                     l10n.pdfHeaderQty,
                     l10n.pdfHeaderProduct,
                   ],
+                  // ← Hint: عرض الكمية مع اسم الوحدة في الفاتورة المطبوعة
                   data: _cartItems
                       .map((item) => [
                             formatCurrency(item.product.sellingPrice.multiplyByInt(item.quantity)),
                             formatCurrency(item.product.sellingPrice),
-                            item.quantity.toString(),
+                            '${item.quantity}${item.product.unitName != null ? ' ${item.product.unitName}' : ''}',
                             item.product.productName,
                           ])
                       .toList(),
@@ -369,7 +370,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                           final item = _cartItems[index];
                           return ListTile(
                             title: Text(item.product.productName),
-                            subtitle: Text('${l10n.quantity}: ${item.quantity}'),
+                            // ← Hint: عرض الكمية مع اسم الوحدة
+                            subtitle: Text('${l10n.quantity}: ${item.quantity}${item.product.unitName != null ? ' ${item.product.unitName}' : ''}'),
                             trailing: Text(
                         // formatCurrency(item.quantity * item.product.sellingPrice), 
                           // هذا سابقا اذا كانت الصيغة double
@@ -435,10 +437,11 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
       builder: (context) {
         return AlertDialog(
           title: Text(item.product.productName),
+          // ← Hint: عرض الكمية المتوفرة مع الوحدة في الـ hint
           content: CustomTextField(
             controller: quantityController,
             label: l10n.quantity,
-            hint: "${l10n.available}: ${item.product.quantity}",
+            hint: "${l10n.available}: ${item.product.quantity}${item.product.unitName != null ? ' ${item.product.unitName}' : ''}",
             keyboardType: TextInputType.number,
             prefixIcon: Icons.shopping_basket,
           ),
@@ -537,8 +540,9 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                           : AppColors.textHintLight,
                     ),
                     const SizedBox(width: 4),
+                    // ← Hint: عرض الكمية مع اسم الوحدة
                     Text(
-                      '${l10n.available}: ${product.quantity}',
+                      '${l10n.available}: ${product.quantity}${product.unitName != null ? ' ${product.unitName}' : ''}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(width: AppConstants.spacingMd),
