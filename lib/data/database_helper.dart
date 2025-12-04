@@ -1531,64 +1531,6 @@ Future<Decimal> getTotalNetSalariesPaid() async {
 }
 
 // ============================================================================
-// ← Hint: دوال المكافآت (Employee Bonuses)
-// ============================================================================
-
-// ← Hint: جلب جميع المكافآت لموظف معين
-Future<List<EmployeeBonus>> getBonusesForEmployee(int employeeId) async {
-  final db = await instance.database;
-  final maps = await db.query(
-    'TB_Employee_Bonuses',
-    where: 'EmployeeID = ?',
-    whereArgs: [employeeId],
-    orderBy: 'BonusDate DESC',
-  );
-  return List.generate(maps.length, (i) => EmployeeBonus.fromMap(maps[i]));
-}
-
-// ← Hint: تسجيل مكافأة جديدة لموظف
-// ← Hint: إضافة مكافأة جديدة للموظف
-Future<void> recordNewBonus(EmployeeBonus bonus) async {
-  final db = await instance.database;
-  // ← Hint: إضافة المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
-  await db.insert('TB_Employee_Bonuses', bonus.toMap());
-}
-
-// ← Hint: تعديل مكافأة موجودة
-Future<void> editBonus({
-  required int bonusID,
-  required String newDate,
-  required Decimal newAmount,
-  String? newReason,
-  String? newNotes,
-}) async {
-  final db = await instance.database;
-  // ← Hint: تحديث المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
-  await db.update(
-    'TB_Employee_Bonuses',
-    {
-      'BonusDate': newDate,
-      'BonusAmount': newAmount.toDouble(),
-      'BonusReason': newReason,
-      'Notes': newNotes,
-    },
-    where: 'BonusID = ?',
-    whereArgs: [bonusID],
-  );
-}
-
-// ← Hint: حذف مكافأة
-Future<void> deleteBonus(int bonusID) async {
-  final db = await instance.database;
-  // ← Hint: حذف المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
-  await db.delete(
-    'TB_Employee_Bonuses',
-    where: 'BonusID = ?',
-    whereArgs: [bonusID],
-  );
-}
-
-// ============================================================================
 // ← Hint: دوال تعديل وحذف الرواتب (Payroll Edit/Delete)
 // ============================================================================
 

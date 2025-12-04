@@ -185,7 +185,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     borderRadius: AppConstants.borderRadiusMd,
                   ),
                   child: Icon(
-                    _getIconFromName(category.iconName),
+                    _getIconFromName(category.icon),
                     color: isActive ? AppColors.success : AppColors.textSecondaryLight,
                     size: 28,
                   ),
@@ -200,7 +200,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     children: [
                       // الاسم بالعربي
                       Text(
-                        category.categoryNameAr,
+                        category.categoryName,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -210,7 +210,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
                       // الاسم بالإنجليزي
                       Text(
-                        category.categoryName,
+                        category.categoryNameEn ?? '',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -371,7 +371,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     children: [
                       // الاسم بالعربي
                       Text(
-                        unit.unitNameAr,
+                        unit.unitName,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -381,7 +381,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
                       // الاسم بالإنجليزي
                       Text(
-                        unit.unitName,
+                        unit.unitNameEn ?? '',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -490,7 +490,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     TextField(
                       controller: nameEnController,
                       decoration: const InputDecoration(
-                        labelText: 'الاسم بالإنجليزي *',
+                        labelText: 'الاسم بالإنجليزي',
                         prefixIcon: Icon(Icons.text_fields),
                         border: OutlineInputBorder(),
                       ),
@@ -530,19 +530,19 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (nameArController.text.isEmpty || nameEnController.text.isEmpty) {
+                    if (nameArController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('يرجى إدخال جميع الحقول المطلوبة')),
+                        const SnackBar(content: Text('يرجى إدخال الاسم بالعربي')),
                       );
                       return;
                     }
 
                     try {
-                      await dbHelper.insertProductCategory(
+                      await dbHelper.addProductCategory(
                         ProductCategory(
-                          categoryName: nameEnController.text,
-                          categoryNameAr: nameArController.text,
-                          iconName: selectedIcon,
+                          categoryName: nameArController.text,
+                          categoryNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
+                          icon: selectedIcon,
                           isActive: true,
                         ),
                       );
@@ -572,9 +572,9 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
   /// عرض dialog لتعديل تصنيف
   Future<void> _showEditCategoryDialog(ProductCategory category) async {
-    final nameArController = TextEditingController(text: category.categoryNameAr);
-    final nameEnController = TextEditingController(text: category.categoryName);
-    String selectedIcon = category.iconName ?? 'category';
+    final nameArController = TextEditingController(text: category.categoryName);
+    final nameEnController = TextEditingController(text: category.categoryNameEn ?? '');
+    String selectedIcon = category.icon ?? 'category';
 
     final result = await showDialog<bool>(
       context: context,
@@ -650,11 +650,11 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     }
 
                     try {
-                      await dbHelper.updateProductCategory(
+                      await dbHelper.editProductCategory(
                         category.copyWith(
-                          categoryName: nameEnController.text,
-                          categoryNameAr: nameArController.text,
-                          iconName: selectedIcon,
+                          categoryName: nameArController.text,
+                          categoryNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
+                          icon: selectedIcon,
                         ),
                       );
                       Navigator.pop(ctx, true);
@@ -684,7 +684,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   /// تبديل حالة تفعيل التصنيف
   Future<void> _toggleCategoryStatus(ProductCategory category) async {
     try {
-      await dbHelper.updateProductCategory(
+      await dbHelper.editProductCategory(
         category.copyWith(isActive: !category.isActive),
       );
       _reloadData();
@@ -755,18 +755,18 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameArController.text.isEmpty || nameEnController.text.isEmpty) {
+                if (nameArController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('يرجى إدخال جميع الحقول المطلوبة')),
+                    const SnackBar(content: Text('يرجى إدخال الاسم بالعربي')),
                   );
                   return;
                 }
 
                 try {
-                  await dbHelper.insertProductUnit(
+                  await dbHelper.addProductUnit(
                     ProductUnit(
-                      unitName: nameEnController.text,
-                      unitNameAr: nameArController.text,
+                      unitName: nameArController.text,
+                      unitNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
                       isActive: true,
                     ),
                   );
@@ -794,8 +794,8 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
   /// عرض dialog لتعديل وحدة
   Future<void> _showEditUnitDialog(ProductUnit unit) async {
-    final nameArController = TextEditingController(text: unit.unitNameAr);
-    final nameEnController = TextEditingController(text: unit.unitName);
+    final nameArController = TextEditingController(text: unit.unitName);
+    final nameEnController = TextEditingController(text: unit.unitNameEn ?? '');
 
     final result = await showDialog<bool>(
       context: context,
@@ -845,10 +845,10 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                 }
 
                 try {
-                  await dbHelper.updateProductUnit(
+                  await dbHelper.editProductUnit(
                     unit.copyWith(
-                      unitName: nameEnController.text,
-                      unitNameAr: nameArController.text,
+                      unitName: nameArController.text,
+                      unitNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
                     ),
                   );
                   Navigator.pop(ctx, true);
@@ -876,7 +876,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   /// تبديل حالة تفعيل الوحدة
   Future<void> _toggleUnitStatus(ProductUnit unit) async {
     try {
-      await dbHelper.updateProductUnit(
+      await dbHelper.editProductUnit(
         unit.copyWith(isActive: !unit.isActive),
       );
       _reloadData();
