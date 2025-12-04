@@ -413,11 +413,13 @@ class Partner {
 }
 
 // --- نموذج المنتج ---
+// Hint: نموذج المنتج - يمثل جدول Store_Products
+// Hint: v4 - أضفنا categoryID و unit لدعم نظام التصنيفات والوحدات
 class Product {
   final int? productID;
   final String productName;
   final String? productDetails;
-  final String? barcode; 
+  final String? barcode;
   final int quantity;
   final Decimal costPrice;
   final Decimal sellingPrice;
@@ -426,45 +428,66 @@ class Product {
   String? supplierName;
   final String? imagePath;
 
+  // 🆕 v4: حقول التصنيف والوحدة
+  final int? categoryID;        // Hint: معرف التصنيف (FK إلى TB_Product_Categories)
+  final String? unit;           // Hint: الوحدة (حبة، كرتون، كيلو، إلخ)
+  String? categoryName;         // Hint: اسم التصنيف (يتم جلبه من JOIN)
+
   Product({
-    this.productID, required 
-    this.productName, 
-    this.productDetails, required 
+    this.productID, required
+    this.productName,
+    this.productDetails, required
     this.barcode, required
-    this.quantity, required 
-    this.costPrice, required 
-    this.sellingPrice, required 
-    this.supplierID, 
-    this.supplierName, 
+    this.quantity, required
+    this.costPrice, required
+    this.sellingPrice, required
+    this.supplierID,
+    this.supplierName,
     this.isActive = true,
     this.imagePath,
+
+    // 🆕 v4: في الكونستركتور
+    this.categoryID,
+    this.unit,
+    this.categoryName,
     });
 
+  // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
   Map<String, dynamic> toMap() => {
-    'ProductID': productID, 
+    'ProductID': productID,
     'ProductName': productName,
-    'ProductDetails': productDetails, 
+    'ProductDetails': productDetails,
     'Barcode': barcode,
-    'Quantity': quantity, 
-    'CostPrice': costPrice.toDouble(), 
-    'SellingPrice': sellingPrice.toDouble(), 
-    'SupplierID': supplierID, 
+    'Quantity': quantity,
+    'CostPrice': costPrice.toDouble(),
+    'SellingPrice': sellingPrice.toDouble(),
+    'SupplierID': supplierID,
     'IsActive': isActive ? 1 : 0,
     'ImagePath': imagePath,
+
+    // 🆕 v4: الحقول الجديدة في toMap
+    'CategoryID': categoryID,
+    'Unit': unit,
     };
 
+  // Hint: إنشاء كائن Product من Map (من قاعدة البيانات)
   factory Product.fromMap(Map<String, dynamic> map) => Product(
-    productID: map['ProductID'], 
-    productName: map['ProductName'], 
-    productDetails: map['ProductDetails'], 
+    productID: map['ProductID'],
+    productName: map['ProductName'],
+    productDetails: map['ProductDetails'],
     barcode: map['Barcode'],
-    quantity: map['Quantity'], 
-    costPrice: map.getDecimal('CostPrice'), 
-    sellingPrice: map.getDecimal('SellingPrice'), 
-    supplierID: map['SupplierID'], 
-    supplierName: map['SupplierName'], 
+    quantity: map['Quantity'],
+    costPrice: map.getDecimal('CostPrice'),
+    sellingPrice: map.getDecimal('SellingPrice'),
+    supplierID: map['SupplierID'],
+    supplierName: map['SupplierName'],
     isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
     imagePath: map['ImagePath'],
+
+    // 🆕 v4: قراءة الحقول الجديدة من Map
+    categoryID: map['CategoryID'],
+    unit: map['Unit'],
+    categoryName: map['CategoryName'], // Hint: من JOIN مع جدول التصنيفات
     );
 }
 
@@ -666,6 +689,7 @@ class SalesReturn {
 }
 
 // --- نموذج سجل النشاط ---
+// Hint: يسجل جميع الإجراءات التي يقوم بها المستخدمون في التطبيق
 class ActivityLog {
   final int? logID;
   final int? userID;
@@ -674,4 +698,149 @@ class ActivityLog {
   final String timestamp;
 
   ActivityLog({this.logID, this.userID, this.userName, required this.action, required this.timestamp});
+}
+
+// ============================================================================
+// 🆕 v4: نماذج التصنيفات والوحدات
+// ============================================================================
+
+// --- نموذج تصنيف المنتجات ---
+// Hint: يمثل جدول TB_Product_Categories
+// Hint: يستخدم لتنظيم المنتجات في فئات (إلكترونيات، أثاث، ملابس، إلخ)
+class ProductCategory {
+  final int? categoryID;
+  final String categoryName;
+  final String? categoryNameEn;
+  final String? description;
+  final String? icon;           // Hint: اسم أيقونة Material Icons
+  final String? colorCode;      // Hint: كود اللون بصيغة HEX (مثل #2196F3)
+  final bool isActive;
+  final int displayOrder;       // Hint: ترتيب العرض (الأصغر يظهر أولاً)
+  final String? createdAt;
+
+  ProductCategory({
+    this.categoryID,
+    required this.categoryName,
+    this.categoryNameEn,
+    this.description,
+    this.icon,
+    this.colorCode,
+    this.isActive = true,
+    this.displayOrder = 0,
+    this.createdAt,
+  });
+
+  // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+    'CategoryID': categoryID,
+    'CategoryName': categoryName,
+    'CategoryNameEn': categoryNameEn,
+    'Description': description,
+    'Icon': icon,
+    'ColorCode': colorCode,
+    'IsActive': isActive ? 1 : 0,
+    'DisplayOrder': displayOrder,
+    'CreatedAt': createdAt,
+  };
+
+  // Hint: إنشاء كائن ProductCategory من Map (من قاعدة البيانات)
+  factory ProductCategory.fromMap(Map<String, dynamic> map) => ProductCategory(
+    categoryID: map['CategoryID'],
+    categoryName: map['CategoryName'],
+    categoryNameEn: map['CategoryNameEn'],
+    description: map['Description'],
+    icon: map['Icon'],
+    colorCode: map['ColorCode'],
+    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
+    displayOrder: map['DisplayOrder'] ?? 0,
+    createdAt: map['CreatedAt'],
+  );
+
+  // Hint: نسخة معدلة من الكائن (copyWith pattern)
+  // Hint: مفيد عند تحديث بعض الحقول فقط دون تغيير الباقي
+  ProductCategory copyWith({
+    int? categoryID,
+    String? categoryName,
+    String? categoryNameEn,
+    String? description,
+    String? icon,
+    String? colorCode,
+    bool? isActive,
+    int? displayOrder,
+    String? createdAt,
+  }) => ProductCategory(
+    categoryID: categoryID ?? this.categoryID,
+    categoryName: categoryName ?? this.categoryName,
+    categoryNameEn: categoryNameEn ?? this.categoryNameEn,
+    description: description ?? this.description,
+    icon: icon ?? this.icon,
+    colorCode: colorCode ?? this.colorCode,
+    isActive: isActive ?? this.isActive,
+    displayOrder: displayOrder ?? this.displayOrder,
+    createdAt: createdAt ?? this.createdAt,
+  );
+}
+
+// --- نموذج وحدة القياس ---
+// Hint: يمثل جدول TB_Product_Units
+// Hint: يستخدم لتحديد وحدة قياس المنتج (حبة، كيلو، لتر، إلخ)
+class ProductUnit {
+  final int? unitID;
+  final String unitName;
+  final String? unitNameEn;
+  final String? unitSymbol;     // Hint: رمز الوحدة (كغ، ل، م، إلخ)
+  final bool isActive;
+  final int displayOrder;       // Hint: ترتيب العرض (الأصغر يظهر أولاً)
+  final String? createdAt;
+
+  ProductUnit({
+    this.unitID,
+    required this.unitName,
+    this.unitNameEn,
+    this.unitSymbol,
+    this.isActive = true,
+    this.displayOrder = 0,
+    this.createdAt,
+  });
+
+  // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+    'UnitID': unitID,
+    'UnitName': unitName,
+    'UnitNameEn': unitNameEn,
+    'UnitSymbol': unitSymbol,
+    'IsActive': isActive ? 1 : 0,
+    'DisplayOrder': displayOrder,
+    'CreatedAt': createdAt,
+  };
+
+  // Hint: إنشاء كائن ProductUnit من Map (من قاعدة البيانات)
+  factory ProductUnit.fromMap(Map<String, dynamic> map) => ProductUnit(
+    unitID: map['UnitID'],
+    unitName: map['UnitName'],
+    unitNameEn: map['UnitNameEn'],
+    unitSymbol: map['UnitSymbol'],
+    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
+    displayOrder: map['DisplayOrder'] ?? 0,
+    createdAt: map['CreatedAt'],
+  );
+
+  // Hint: نسخة معدلة من الكائن (copyWith pattern)
+  ProductUnit copyWith({
+    int? unitID,
+    String? unitName,
+    String? unitNameEn,
+    String? unitSymbol,
+    bool? isActive,
+    int? displayOrder,
+    String? createdAt,
+  }) => ProductUnit(
+    unitID: unitID ?? this.unitID,
+    unitName: unitName ?? this.unitName,
+    unitNameEn: unitNameEn ?? this.unitNameEn,
+    unitSymbol: unitSymbol ?? this.unitSymbol,
+    isActive: isActive ?? this.isActive,
+    displayOrder: displayOrder ?? this.displayOrder,
+    createdAt: createdAt ?? this.createdAt,
+  );
 }

@@ -2663,7 +2663,137 @@ Future<int> updateBonus(int bonusId, Map<String, dynamic> bonus) async {
   );
 }
 
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+// 🆕 v4: دوال إدارة التصنيفات والوحدات
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
 
+// ============================================================================
+// دوال التصنيفات (Product Categories)
+// ============================================================================
+
+/// جلب كل التصنيفات النشطة
+///
+/// ← Hint: يجلب جميع التصنيفات النشطة مرتبة حسب DisplayOrder
+Future<List<ProductCategory>> getAllActiveCategories() async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Product_Categories',
+    where: 'IsActive = 1',
+    orderBy: 'DisplayOrder ASC, CategoryName ASC',
+  );
+  return List.generate(maps.length, (i) => ProductCategory.fromMap(maps[i]));
+}
+
+/// جلب كل التصنيفات (نشطة وغير نشطة)
+///
+/// ← Hint: يجلب جميع التصنيفات بدون فلترة
+Future<List<ProductCategory>> getAllCategories() async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Product_Categories',
+    orderBy: 'DisplayOrder ASC, CategoryName ASC',
+  );
+  return List.generate(maps.length, (i) => ProductCategory.fromMap(maps[i]));
+}
+
+/// إضافة تصنيف جديد
+///
+/// ← Hint: يضيف تصنيف جديد ويرجع ID التصنيف المضاف
+Future<int> insertCategory(ProductCategory category) async {
+  final db = await instance.database;
+  return await db.insert('TB_Product_Categories', category.toMap());
+}
+
+/// تحديث تصنيف موجود
+///
+/// ← Hint: يحدث بيانات تصنيف موجود
+Future<int> updateCategory(ProductCategory category) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_Product_Categories',
+    category.toMap(),
+    where: 'CategoryID = ?',
+    whereArgs: [category.categoryID],
+  );
+}
+
+/// حذف تصنيف (soft delete)
+///
+/// ← Hint: يجعل التصنيف غير نشط بدلاً من حذفه
+Future<int> deleteCategory(int categoryID) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_Product_Categories',
+    {'IsActive': 0},
+    where: 'CategoryID = ?',
+    whereArgs: [categoryID],
+  );
+}
+
+// ============================================================================
+// دوال الوحدات (Product Units)
+// ============================================================================
+
+/// جلب كل الوحدات النشطة
+///
+/// ← Hint: يجلب جميع الوحدات النشطة مرتبة حسب DisplayOrder
+Future<List<ProductUnit>> getAllActiveUnits() async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Product_Units',
+    where: 'IsActive = 1',
+    orderBy: 'DisplayOrder ASC, UnitName ASC',
+  );
+  return List.generate(maps.length, (i) => ProductUnit.fromMap(maps[i]));
+}
+
+/// جلب كل الوحدات (نشطة وغير نشطة)
+///
+/// ← Hint: يجلب جميع الوحدات بدون فلترة
+Future<List<ProductUnit>> getAllUnits() async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Product_Units',
+    orderBy: 'DisplayOrder ASC, UnitName ASC',
+  );
+  return List.generate(maps.length, (i) => ProductUnit.fromMap(maps[i]));
+}
+
+/// إضافة وحدة جديدة
+///
+/// ← Hint: يضيف وحدة جديدة ويرجع ID الوحدة المضافة
+Future<int> insertUnit(ProductUnit unit) async {
+  final db = await instance.database;
+  return await db.insert('TB_Product_Units', unit.toMap());
+}
+
+/// تحديث وحدة موجودة
+///
+/// ← Hint: يحدث بيانات وحدة موجودة
+Future<int> updateUnit(ProductUnit unit) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_Product_Units',
+    unit.toMap(),
+    where: 'UnitID = ?',
+    whereArgs: [unit.unitID],
+  );
+}
+
+/// حذف وحدة (soft delete)
+///
+/// ← Hint: يجعل الوحدة غير نشطة بدلاً من حذفها
+Future<int> deleteUnit(int unitID) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_Product_Units',
+    {'IsActive': 0},
+    where: 'UnitID = ?',
+    whereArgs: [unitID],
+  );
+}
 
 
 }
