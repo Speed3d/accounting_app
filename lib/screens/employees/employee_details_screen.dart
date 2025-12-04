@@ -16,6 +16,7 @@ import '../../widgets/loading_state.dart';
 import '../../widgets/status_badge.dart';
 import 'add_advance_screen.dart';
 import 'add_payroll_screen.dart';
+import 'add_bonus_screen.dart';
 
 /// 👤 شاشة تفاصيل الموظف - صفحة فرعية
 /// Hint: تعرض معلومات الموظف، الرواتب، والسلف
@@ -37,12 +38,13 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   late Employee _currentEmployee;
   late Future<List<PayrollEntry>> _payrollFuture;
   late Future<List<EmployeeAdvance>> _advancesFuture;
+  late Future<List<EmployeeBonus>> _bonusesFuture;
 
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _currentEmployee = widget.employee;
     _reloadData();
   }
@@ -60,6 +62,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
         _currentEmployee.employeeID!,
       );
       _advancesFuture = dbHelper.getAdvancesForEmployee(
+        _currentEmployee.employeeID!,
+      );
+      _bonusesFuture = dbHelper.getBonusesForEmployee(
         _currentEmployee.employeeID!,
       );
     });
@@ -156,6 +161,10 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   icon: const Icon(Icons.request_quote_outlined, size: 20),
                   text: l10n.advancesHistory,
                 ),
+                Tab(
+                  icon: const Icon(Icons.card_giftcard_outlined, size: 20),
+                  text: l10n.bonusesHistory ?? 'سجل المكافآت',
+                ),
               ],
             ),
           ),
@@ -175,6 +184,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               children: [
                 _buildPayrollTab(l10n, canManage),
                 _buildAdvancesTab(l10n, canManage),
+                _buildBonusesTab(l10n, canManage),
               ],
             ),
           ),
@@ -869,5 +879,345 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     if (result == true) {
       _reloadData();
     }
+  }
+
+  /// الانتقال لصفحة إضافة مكافأة
+  Future<void> _navigateToAddBonus() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => AddBonusScreen(employee: _currentEmployee),
+      ),
+    );
+
+    if (result == true) {
+      _reloadData();
+    }
+  }
+
+  // ============================================================
+  // 🎁 تبويب سجل المكافآت
+  // ============================================================
+  Widget _buildBonusesTab(AppLocalizations l10n, bool canManage) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: FutureBuilder<List<EmployeeBonus>>(
+        future: _bonusesFuture,
+        builder: (context, snapshot) {
+          // حالة التحميل
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LoadingState(message: l10n.loadingMessage);
+          }
+
+          // حالة الخطأ
+          if (snapshot.hasError) {
+            return ErrorState(
+              message: snapshot.error.toString(),
+              onRetry: _reloadData,
+            );
+          }
+
+          // حالة الفراغ
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return EmptyState(
+              icon: Icons.card_giftcard_outlined,
+              title: l10n.noBonuses ?? 'لا توجد مكافآت',
+              message: l10n.noBonusesMessage ?? 'لم يتم تسجيل أي مكافآت لهذا الموظف بعد',
+              actionText: canManage ? (l10n.addBonus ?? 'إضافة مكافأة') : null,
+              onAction: canManage ? _navigateToAddBonus : null,
+            );
+          }
+
+          // عرض القائمة
+          final bonuses = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppConstants.spacingMd),
+            itemCount: bonuses.length,
+            itemBuilder: (context, index) {
+              final bonus = bonuses[index];
+              return _buildBonusCard(bonus, l10n, canManage);
+            },
+          );
+        },
+      ),
+
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToAddBonus,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addBonus ?? 'إضافة مكافأة'),
+              tooltip: l10n.addBonusTooltip ?? 'إضافة مكافأة جديدة',
+            )
+          : null,
+    );
+  }
+
+  /// بناء بطاقة مكافأة
+  Widget _buildBonusCard(EmployeeBonus bonus, AppLocalizations l10n, bool canManage) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      onTap: canManage ? () => _showBonusOptionsDialog(bonus, l10n) : null,
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Row(
+          children: [
+            // أيقونة
+            Container(
+              padding: const EdgeInsets.all(AppConstants.spacingMd),
+              decoration: BoxDecoration(
+                color: AppColors.success.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: const Icon(
+                Icons.card_giftcard,
+                color: AppColors.success,
+                size: 28,
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // المعلومات
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // المبلغ
+                  Text(
+                    formatCurrency(bonus.bonusAmount),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingXs),
+
+                  // السبب
+                  if (bonus.bonusReason != null && bonus.bonusReason!.isNotEmpty)
+                    Text(
+                      bonus.bonusReason!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                  const SizedBox(height: AppConstants.spacingXs),
+
+                  // التاريخ
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat('yyyy-MM-dd').format(
+                          DateTime.parse(bonus.bonusDate),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // سهم
+            if (canManage)
+              Icon(
+                Icons.chevron_right,
+                color: isDark ? AppColors.textHintDark : AppColors.textHintLight,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// مربع حوار خيارات المكافأة (تعديل/حذف)
+  void _showBonusOptionsDialog(EmployeeBonus bonus, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppConstants.radiusLg),
+        ),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: AppConstants.paddingMd,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // عنوان
+              Text(
+                l10n.bonusOptions ?? 'خيارات المكافأة',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // معلومات سريعة
+              Container(
+                padding: AppConstants.paddingMd,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      formatCurrency(bonus.bonusAmount),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('yyyy-MM-dd').format(
+                        DateTime.parse(bonus.bonusDate),
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // خيار التعديل
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.info,
+                  ),
+                ),
+                title: Text(l10n.edit),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (context) => AddBonusScreen(
+                        employee: _currentEmployee,
+                        bonus: bonus,
+                      ),
+                    ),
+                  );
+                  if (result == true) {
+                    _reloadData();
+                  }
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // خيار الحذف
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: AppColors.error,
+                  ),
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: AppColors.error),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeleteBonus(bonus, l10n);
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // زر الإلغاء
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// تأكيد حذف المكافأة
+  void _confirmDeleteBonus(EmployeeBonus bonus, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmDelete ?? 'تأكيد الحذف'),
+        content: Text(
+          l10n.deleteBonusConfirmation ??
+              'هل أنت متأكد من حذف هذه المكافأة؟\n\nالمبلغ: ${formatCurrency(bonus.bonusAmount)}\nالتاريخ: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(bonus.bonusDate))}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            onPressed: () async {
+              try {
+                await dbHelper.deleteBonus(bonus.bonusID!);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.bonusDeletedSuccess ?? 'تم حذف المكافأة بنجاح'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _reloadData();
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
   }
 }

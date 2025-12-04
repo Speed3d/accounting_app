@@ -296,6 +296,43 @@ class EmployeeAdvance {
       );
 }
 
+// --- نموذج مكافأة الموظف ---
+class EmployeeBonus {
+  final int? bonusID;
+  final int employeeID;
+  final String bonusDate;
+  final Decimal bonusAmount;
+  final String? bonusReason; // سبب المكافأة
+  final String? notes;
+
+  EmployeeBonus({
+    this.bonusID,
+    required this.employeeID,
+    required this.bonusDate,
+    required this.bonusAmount,
+    this.bonusReason,
+    this.notes,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'BonusID': bonusID,
+        'EmployeeID': employeeID,
+        'BonusDate': bonusDate,
+        'BonusAmount': bonusAmount.toDouble(),
+        'BonusReason': bonusReason,
+        'Notes': notes,
+      };
+
+  factory EmployeeBonus.fromMap(Map<String, dynamic> map) => EmployeeBonus(
+        bonusID: map['BonusID'],
+        employeeID: map['EmployeeID'],
+        bonusDate: map['BonusDate'],
+        bonusAmount: map.getDecimal('BonusAmount'),
+        bonusReason: map['BonusReason'],
+        notes: map['Notes'],
+      );
+}
+
 
 // --- نموذج المورد ---
 class Supplier {
@@ -429,9 +466,10 @@ class Product {
   final String? imagePath;
 
   // 🆕 v4: حقول التصنيف والوحدة
-  final int? categoryID;        // Hint: معرف التصنيف (FK إلى TB_Product_Categories)
-  final String? unit;           // Hint: الوحدة (حبة، كرتون، كيلو، إلخ)
+  final int? categoryID;        // Hint: معرف التصنيف (FK إلى TB_ProductCategory)
+  final int? unitID;            // Hint: معرف الوحدة (FK إلى TB_ProductUnit)
   String? categoryName;         // Hint: اسم التصنيف (يتم جلبه من JOIN)
+  String? unitName;             // Hint: اسم الوحدة (يتم جلبه من JOIN)
 
   Product({
     this.productID, required
@@ -448,8 +486,9 @@ class Product {
 
     // 🆕 v4: في الكونستركتور
     this.categoryID,
-    this.unit,
+    this.unitID,
     this.categoryName,
+    this.unitName,
     });
 
   // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
@@ -467,7 +506,7 @@ class Product {
 
     // 🆕 v4: الحقول الجديدة في toMap
     'CategoryID': categoryID,
-    'Unit': unit,
+    'UnitID': unitID,
     };
 
   // Hint: إنشاء كائن Product من Map (من قاعدة البيانات)
@@ -486,8 +525,9 @@ class Product {
 
     // 🆕 v4: قراءة الحقول الجديدة من Map
     categoryID: map['CategoryID'],
-    unit: map['Unit'],
+    unitID: map['UnitID'],
     categoryName: map['CategoryName'], // Hint: من JOIN مع جدول التصنيفات
+    unitName: map['UnitName'],         // Hint: من JOIN مع جدول الوحدات
     );
 }
 

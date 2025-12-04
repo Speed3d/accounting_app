@@ -2829,6 +2829,53 @@ Future<double> getTotalBonusesInPeriod({
   return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
 }
 
+/// جلب جميع المكافآت لموظف محدد
+///
+/// ← Hint: تستخدم في صفحة تفاصيل الموظف لعرض سجل المكافآت
+Future<List<models.EmployeeBonus>> getBonusesForEmployee(int employeeID) async {
+  final db = await instance.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'TB_Employee_Bonuses',
+    where: 'EmployeeID = ?',
+    whereArgs: [employeeID],
+    orderBy: 'BonusDate DESC',
+  );
+  return maps.map((map) => models.EmployeeBonus.fromMap(map)).toList();
+}
+
+/// إضافة مكافأة جديدة (باستخدام EmployeeBonus object)
+///
+/// ← Hint: تستخدم لتسجيل مكافأة/حافز للموظف
+Future<void> recordNewBonus(models.EmployeeBonus bonus) async {
+  final db = await instance.database;
+  await db.insert('TB_Employee_Bonuses', bonus.toMap());
+}
+
+/// تعديل مكافأة موجودة
+///
+/// ← Hint: تستخدم لتعديل بيانات مكافأة محددة
+Future<void> updateBonus(models.EmployeeBonus bonus) async {
+  final db = await instance.database;
+  await db.update(
+    'TB_Employee_Bonuses',
+    bonus.toMap(),
+    where: 'BonusID = ?',
+    whereArgs: [bonus.bonusID],
+  );
+}
+
+/// حذف مكافأة
+///
+/// ← Hint: تستخدم لحذف مكافأة محددة من السجل
+Future<void> deleteBonus(int bonusID) async {
+  final db = await instance.database;
+  await db.delete(
+    'TB_Employee_Bonuses',
+    where: 'BonusID = ?',
+    whereArgs: [bonusID],
+  );
+}
+
 // ============================================================================
 // ✅ دوال الوحدات (Product Units)
 // ============================================================================
