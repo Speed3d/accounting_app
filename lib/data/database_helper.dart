@@ -34,7 +34,7 @@ class DatabaseHelper {
   // Version 1: الهيكل الأساسي
   // Version 2: إضافة جدول TB_Employee_Bonuses
   // Version 3: 🆕 النظام الجديد - Email Auth + Subscriptions
-  // Version 4: 🆕 إضافة التصنيفات والوحدات للمنتجات
+  // Version 4: ✅ نظام الوحدات والتصنيفات للمنتجات
   static const _databaseVersion = 4;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
@@ -362,18 +362,47 @@ class DatabaseHelper {
         )
       ''');
 
+    // ← Hint: جدول الوحدات (TB_ProductUnit)
+    // ← Hint: يحتوي على وحدات القياس المختلفة (قطعة، كيلو، متر، إلخ)
+    batch.execute('''
+      CREATE TABLE TB_ProductUnit (
+        UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+        UnitName TEXT NOT NULL,
+        UnitNameAr TEXT NOT NULL,
+        IsActive INTEGER DEFAULT 1
+      )
+    ''');
+
+    // ← Hint: جدول التصنيفات (TB_ProductCategory)
+    // ← Hint: يحتوي على تصنيفات المنتجات (كهربائيات، ملابس، إلخ)
+    batch.execute('''
+      CREATE TABLE TB_ProductCategory (
+        CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CategoryName TEXT NOT NULL,
+        CategoryNameAr TEXT NOT NULL,
+        IconName TEXT,
+        ColorCode TEXT,
+        IsActive INTEGER DEFAULT 1
+      )
+    ''');
+
+    // ← Hint: جدول المنتجات - محدث بإضافة UnitID و CategoryID
     batch.execute('''
     CREATE TABLE Store_Products (
-    ProductID INTEGER PRIMARY KEY AUTOINCREMENT, 
-    ProductName TEXT NOT NULL, 
-    ProductDetails TEXT, 
-    Barcode TEXT UNIQUE, 
-    Quantity INTEGER NOT NULL, 
-    CostPrice REAL NOT NULL, 
-    SellingPrice REAL NOT NULL, 
+    ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ProductName TEXT NOT NULL,
+    ProductDetails TEXT,
+    Barcode TEXT UNIQUE,
+    Quantity INTEGER NOT NULL,
+    CostPrice REAL NOT NULL,
+    SellingPrice REAL NOT NULL,
     SupplierID INTEGER NOT NULL,
-    ImagePath TEXT, 
-    IsActive INTEGER NOT NULL DEFAULT 1
+    ImagePath TEXT,
+    IsActive INTEGER NOT NULL DEFAULT 1,
+    UnitID INTEGER,
+    CategoryID INTEGER,
+    FOREIGN KEY (UnitID) REFERENCES TB_ProductUnit (UnitID),
+    FOREIGN KEY (CategoryID) REFERENCES TB_ProductCategory (CategoryID)
     )
     ''');
 
@@ -485,34 +514,14 @@ class DatabaseHelper {
       )
     ''');
 
-    // 🆕 v4: جداول التصنيفات والوحدات للمنتجات
-    batch.execute('''
-      CREATE TABLE TB_Product_Categories (
-        CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-        CategoryName TEXT NOT NULL UNIQUE,
-        CategoryNameEn TEXT,
-        Description TEXT,
-        Icon TEXT,
-        ColorCode TEXT,
-        IsActive INTEGER NOT NULL DEFAULT 1,
-        DisplayOrder INTEGER DEFAULT 0,
-        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    ''');
-
-    batch.execute('''
-      CREATE TABLE TB_Product_Units (
-        UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
-        UnitName TEXT NOT NULL UNIQUE,
-        UnitNameEn TEXT,
-        UnitSymbol TEXT,
-        IsActive INTEGER NOT NULL DEFAULT 1,
-        DisplayOrder INTEGER DEFAULT 0,
-        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )
-    ''');
-
     await batch.commit();
+
+    // ============================================================================
+    // ✅ إضافة البيانات الأولية للوحدات والتصنيفات
+    // ============================================================================
+    debugPrint('📦 [DatabaseHelper] إضافة البيانات الأولية للوحدات والتصنيفات...');
+    await _insertDefaultUnitsAndCategories(db);
+    debugPrint('✅ [DatabaseHelper] تم إضافة البيانات الأولية بنجاح');
 
     // ============================================================================
     // 🔥 إضافة Database Indexes لتحسين الأداء
@@ -574,22 +583,10 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_date ON TB_Expenses(ExpenseDate)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON TB_Expenses(Category)');
 
-    // 🆕 v4: Indexes للتصنيفات والوحدات
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_categories_isactive ON TB_Product_Categories(IsActive)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_categories_order ON TB_Product_Categories(DisplayOrder)');
-
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_units_isactive ON TB_Product_Units(IsActive)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_units_order ON TB_Product_Units(DisplayOrder)');
-
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_products_category ON Store_Products(CategoryID)');
-
-    debugPrint('✅ [DatabaseHelper] تم إنشاء ${61} Database Index بنجاح');
+    debugPrint('✅ [DatabaseHelper] تم إنشاء ${56} Database Index بنجاح');
 
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
     await _insertDefaultCategories(db);
-
-    // 🆕 v4: إضافة التصنيفات والوحدات الافتراضية للمنتجات
-    await _insertDefaultProductCategoriesAndUnits(db);
 
   }
 
@@ -627,10 +624,49 @@ class DatabaseHelper {
       debugPrint('✅ تم تطبيق Migration إلى v3 بنجاح');
     }
 
-    // 🆕 ترقية من الإصدار 3 إلى 4: نظام التصنيفات والوحدات
+    // ✅ ترقية من الإصدار 3 إلى 4: نظام الوحدات والتصنيفات
     if (oldVersion < 4) {
-      debugPrint('📦 تطبيق Migration إلى v4 (التصنيفات والوحدات)...');
-      await DatabaseMigrations.migrateToV4(db);
+      debugPrint('📦 تطبيق Migration إلى v4 (نظام الوحدات والتصنيفات)...');
+
+      // ← Hint: إنشاء جدول الوحدات
+      await db.execute('''
+        CREATE TABLE TB_ProductUnit (
+          UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+          UnitName TEXT NOT NULL,
+          UnitNameAr TEXT NOT NULL,
+          IsActive INTEGER DEFAULT 1
+        )
+      ''');
+      debugPrint('✅ تم إنشاء جدول TB_ProductUnit');
+
+      // ← Hint: إنشاء جدول التصنيفات
+      await db.execute('''
+        CREATE TABLE TB_ProductCategory (
+          CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+          CategoryName TEXT NOT NULL,
+          CategoryNameAr TEXT NOT NULL,
+          IconName TEXT,
+          ColorCode TEXT,
+          IsActive INTEGER DEFAULT 1
+        )
+      ''');
+      debugPrint('✅ تم إنشاء جدول TB_ProductCategory');
+
+      // ← Hint: إضافة البيانات الأولية للوحدات والتصنيفات
+      await _insertDefaultUnitsAndCategories(db);
+      debugPrint('✅ تم إضافة البيانات الأولية');
+
+      // ← Hint: إضافة أعمدة UnitID و CategoryID لجدول المنتجات
+      await db.execute('ALTER TABLE Store_Products ADD COLUMN UnitID INTEGER');
+      await db.execute('ALTER TABLE Store_Products ADD COLUMN CategoryID INTEGER');
+      debugPrint('✅ تم إضافة أعمدة UnitID و CategoryID');
+
+      // ← Hint: تحديث المنتجات الموجودة لتأخذ الوحدة والتصنيف الافتراضي
+      // ← Hint: الوحدة الافتراضية = "قطعة" (UnitID = 1)
+      // ← Hint: التصنيف الافتراضي = "عام" (CategoryID = 8)
+      await db.execute('UPDATE Store_Products SET UnitID = 1, CategoryID = 8 WHERE UnitID IS NULL');
+      debugPrint('✅ تم تحديث المنتجات الموجودة');
+
       debugPrint('✅ تم تطبيق Migration إلى v4 بنجاح');
     }
   }
@@ -655,61 +691,48 @@ class DatabaseHelper {
     }
   }
 
-  /// 🆕 v4: دالة مساعدة لإضافة التصنيفات والوحدات الافتراضية للمنتجات
-  /// الشرح: هذه الدالة تقوم بإضافة مجموعة من التصنيفات والوحدات الأساسية.
-  Future<void> _insertDefaultProductCategoriesAndUnits(Database db) async {
-    // إضافة التصنيفات الافتراضية
-    final defaultCategories = [
-      {'name': 'إلكترونيات', 'nameEn': 'Electronics', 'icon': 'devices', 'color': '#2196F3', 'order': 1},
-      {'name': 'أثاث', 'nameEn': 'Furniture', 'icon': 'chair', 'color': '#795548', 'order': 2},
-      {'name': 'ملابس', 'nameEn': 'Clothing', 'icon': 'checkroom', 'color': '#E91E63', 'order': 3},
-      {'name': 'أغذية', 'nameEn': 'Food', 'icon': 'restaurant', 'color': '#4CAF50', 'order': 4},
-      {'name': 'أدوات منزلية', 'nameEn': 'Home Appliances', 'icon': 'home', 'color': '#FF9800', 'order': 5},
-      {'name': 'مستلزمات مكتبية', 'nameEn': 'Office Supplies', 'icon': 'work', 'color': '#9C27B0', 'order': 6},
-      {'name': 'مستحضرات تجميل', 'nameEn': 'Cosmetics', 'icon': 'face', 'color': '#F06292', 'order': 7},
-      {'name': 'أدوية', 'nameEn': 'Pharmaceuticals', 'icon': 'medication', 'color': '#00BCD4', 'order': 8},
-      {'name': 'أخرى', 'nameEn': 'Others', 'icon': 'category', 'color': '#607D8B', 'order': 99},
+  // ============================================================================
+  // ← Hint: دالة مساعدة لإضافة البيانات الأولية للوحدات والتصنيفات
+  // ← Hint: يتم استدعاؤها عند إنشاء قاعدة البيانات لأول مرة
+  // ============================================================================
+  Future<void> _insertDefaultUnitsAndCategories(Database db) async {
+    // ← Hint: الوحدات الافتراضية (7 وحدات)
+    final defaultUnits = [
+      {'UnitName': 'Piece', 'UnitNameAr': 'قطعة', 'IsActive': 1},
+      {'UnitName': 'Set', 'UnitNameAr': 'سيت', 'IsActive': 1},
+      {'UnitName': 'Dozen', 'UnitNameAr': 'درزن', 'IsActive': 1},
+      {'UnitName': 'Kilo', 'UnitNameAr': 'كيلو', 'IsActive': 1},
+      {'UnitName': 'Carton', 'UnitNameAr': 'كارتون', 'IsActive': 1},
+      {'UnitName': 'Meter', 'UnitNameAr': 'متر', 'IsActive': 1},
+      {'UnitName': 'Liter', 'UnitNameAr': 'لتر', 'IsActive': 1},
     ];
 
-    for (var category in defaultCategories) {
+    // ← Hint: التصنيفات الافتراضية (8 تصنيفات)
+    final defaultCategories = [
+      {'CategoryName': 'Electricals', 'CategoryNameAr': 'كهربائيات', 'IconName': 'bolt', 'ColorCode': '#FFA726', 'IsActive': 1},
+      {'CategoryName': 'Furniture', 'CategoryNameAr': 'أثاث', 'IconName': 'chair', 'ColorCode': '#8D6E63', 'IsActive': 1},
+      {'CategoryName': 'Clothes', 'CategoryNameAr': 'ملابس', 'IconName': 'checkroom', 'ColorCode': '#EC407A', 'IsActive': 1},
+      {'CategoryName': 'Home Supplies', 'CategoryNameAr': 'مستلزمات منزلية', 'IconName': 'home', 'ColorCode': '#66BB6A', 'IsActive': 1},
+      {'CategoryName': 'Accessories', 'CategoryNameAr': 'إكسسوارات', 'IconName': 'watch', 'ColorCode': '#AB47BC', 'IsActive': 1},
+      {'CategoryName': 'Electronics', 'CategoryNameAr': 'إلكترونيات', 'IconName': 'devices', 'ColorCode': '#42A5F5', 'IsActive': 1},
+      {'CategoryName': 'Office Supplies', 'CategoryNameAr': 'أدوات مكتبية', 'IconName': 'business_center', 'ColorCode': '#78909C', 'IsActive': 1},
+      {'CategoryName': 'General', 'CategoryNameAr': 'عام', 'IconName': 'category', 'ColorCode': '#BDBDBD', 'IsActive': 1},
+    ];
+
+    // ← Hint: إضافة الوحدات
+    for (var unit in defaultUnits) {
       await db.insert(
-        'TB_Product_Categories',
-        {
-          'CategoryName': category['name'],
-          'CategoryNameEn': category['nameEn'],
-          'Icon': category['icon'],
-          'ColorCode': category['color'],
-          'DisplayOrder': category['order'],
-          'IsActive': 1,
-        },
+        'TB_ProductUnit',
+        unit,
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
 
-    // إضافة الوحدات الافتراضية
-    final defaultUnits = [
-      {'name': 'حبة', 'nameEn': 'Piece', 'symbol': 'قطعة', 'order': 1},
-      {'name': 'كرتون', 'nameEn': 'Carton', 'symbol': 'كرتون', 'order': 2},
-      {'name': 'كيلو', 'nameEn': 'Kilogram', 'symbol': 'كغ', 'order': 3},
-      {'name': 'جرام', 'nameEn': 'Gram', 'symbol': 'غ', 'order': 4},
-      {'name': 'لتر', 'nameEn': 'Liter', 'symbol': 'ل', 'order': 5},
-      {'name': 'متر', 'nameEn': 'Meter', 'symbol': 'م', 'order': 6},
-      {'name': 'علبة', 'nameEn': 'Box', 'symbol': 'علبة', 'order': 7},
-      {'name': 'صندوق', 'nameEn': 'Crate', 'symbol': 'صندوق', 'order': 8},
-      {'name': 'دزينة', 'nameEn': 'Dozen', 'symbol': 'دزينة', 'order': 9},
-      {'name': 'عبوة', 'nameEn': 'Package', 'symbol': 'عبوة', 'order': 10},
-    ];
-
-    for (var unit in defaultUnits) {
+    // ← Hint: إضافة التصنيفات
+    for (var category in defaultCategories) {
       await db.insert(
-        'TB_Product_Units',
-        {
-          'UnitName': unit['name'],
-          'UnitNameEn': unit['nameEn'],
-          'UnitSymbol': unit['symbol'],
-          'DisplayOrder': unit['order'],
-          'IsActive': 1,
-        },
+        'TB_ProductCategory',
+        category,
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
@@ -1174,9 +1197,22 @@ class DatabaseHelper {
     return (result.first['count'] as int) > 0;
   }
 
+  /// ← Hint: جلب جميع المنتجات مع أسماء الموردين والوحدات والتصنيفات
   Future<List<Product>> getAllProductsWithSupplierName() async {
     final db = await instance.database;
-    final result = await db.rawQuery("SELECT P.*, S.SupplierName FROM Store_Products P LEFT JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID WHERE P.IsActive = 1 ORDER BY P.ProductName");
+    final result = await db.rawQuery('''
+      SELECT
+        P.*,
+        S.SupplierName,
+        U.UnitNameAr as UnitName,
+        C.CategoryNameAr as CategoryName
+      FROM Store_Products P
+      LEFT JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
+      LEFT JOIN TB_ProductUnit U ON P.UnitID = U.UnitID
+      LEFT JOIN TB_ProductCategory C ON P.CategoryID = C.CategoryID
+      WHERE P.IsActive = 1
+      ORDER BY P.ProductName
+    ''');
     return result.map((map) => Product.fromMap(map)).toList();
   }
 
@@ -1487,11 +1523,237 @@ Future<Decimal> getTotalNetSalariesPaid() async {
   final result = await db.rawQuery(
     'SELECT SUM(NetSalary) as Total FROM TB_Payroll'
   );
-  
+
   if (result.first['Total'] != null) {
     return Decimal.parse(result.first['Total'].toString());
   }
   return Decimal.zero;
+}
+
+// ============================================================================
+// ← Hint: دوال المكافآت (Employee Bonuses)
+// ============================================================================
+
+// ← Hint: جلب جميع المكافآت لموظف معين
+Future<List<EmployeeBonus>> getBonusesForEmployee(int employeeId) async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Employee_Bonuses',
+    where: 'EmployeeID = ?',
+    whereArgs: [employeeId],
+    orderBy: 'BonusDate DESC',
+  );
+  return List.generate(maps.length, (i) => EmployeeBonus.fromMap(maps[i]));
+}
+
+// ← Hint: تسجيل مكافأة جديدة لموظف
+// ← Hint: إضافة مكافأة جديدة للموظف
+Future<void> recordNewBonus(EmployeeBonus bonus) async {
+  final db = await instance.database;
+  // ← Hint: إضافة المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
+  await db.insert('TB_Employee_Bonuses', bonus.toMap());
+}
+
+// ← Hint: تعديل مكافأة موجودة
+Future<void> editBonus({
+  required int bonusID,
+  required String newDate,
+  required Decimal newAmount,
+  String? newReason,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+  // ← Hint: تحديث المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
+  await db.update(
+    'TB_Employee_Bonuses',
+    {
+      'BonusDate': newDate,
+      'BonusAmount': newAmount.toDouble(),
+      'BonusReason': newReason,
+      'Notes': newNotes,
+    },
+    where: 'BonusID = ?',
+    whereArgs: [bonusID],
+  );
+}
+
+// ← Hint: حذف مكافأة
+Future<void> deleteBonus(int bonusID) async {
+  final db = await instance.database;
+  // ← Hint: حذف المكافأة مباشرة (لا يوجد نظام صندوق في التطبيق)
+  await db.delete(
+    'TB_Employee_Bonuses',
+    where: 'BonusID = ?',
+    whereArgs: [bonusID],
+  );
+}
+
+// ============================================================================
+// ← Hint: دوال تعديل وحذف الرواتب (Payroll Edit/Delete)
+// ============================================================================
+
+// ← Hint: تعديل راتب موجود
+// ← Hint: يحسب الفرق ويحدث رصيد الموظف
+Future<void> editPayroll({
+  required int payrollID,
+  required String newDate,
+  required Decimal newBaseSalary,
+  required Decimal newBonuses,
+  required Decimal newDeductions,
+  required Decimal newAdvanceDeduction,
+  required Decimal newNetSalary,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب الراتب القديم
+    final oldPayrollMaps = await txn.query(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    if (oldPayrollMaps.isEmpty) return;
+
+    final oldAdvanceDeduction = Decimal.parse(oldPayrollMaps.first['AdvanceDeduction'].toString());
+    final advanceDifference = newAdvanceDeduction - oldAdvanceDeduction;
+
+    // تحديث الراتب
+    await txn.update(
+      'TB_Payroll',
+      {
+        'PaymentDate': newDate,
+        'BaseSalary': newBaseSalary.toDouble(),
+        'Bonuses': newBonuses.toDouble(),
+        'Deductions': newDeductions.toDouble(),
+        'AdvanceDeduction': newAdvanceDeduction.toDouble(),
+        'NetSalary': newNetSalary.toDouble(),
+        'Notes': newNotes,
+      },
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    // تحديث رصيد الموظف بفرق خصم السلفة
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [advanceDifference.toDouble()],
+    );
+  });
+}
+
+// ← Hint: حذف راتب
+// ← Hint: يعيد رصيد السلفة للموظف
+Future<void> deletePayroll(int payrollID) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب الراتب
+    final payrollMaps = await txn.query(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    if (payrollMaps.isEmpty) return;
+
+    final advanceDeduction = Decimal.parse(payrollMaps.first['AdvanceDeduction'].toString());
+
+    // حذف الراتب
+    await txn.delete(
+      'TB_Payroll',
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    // إرجاع خصم السلفة لرصيد الموظف
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [advanceDeduction.toDouble()],
+    );
+  });
+}
+
+// ============================================================================
+// ← Hint: دوال تعديل وحذف السلف (Advances Edit/Delete)
+// ============================================================================
+
+// ← Hint: تعديل سلفة موجودة
+// ← Hint: يحسب الفرق ويحدث رصيد الموظف
+Future<void> editAdvance({
+  required int advanceID,
+  required String newDate,
+  required Decimal newAmount,
+  required String newStatus,
+  String? newNotes,
+}) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب السلفة القديمة
+    final oldAdvanceMaps = await txn.query(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (oldAdvanceMaps.isEmpty) return;
+
+    final oldAmount = Decimal.parse(oldAdvanceMaps.first['AdvanceAmount'].toString());
+    final difference = newAmount - oldAmount;
+
+    // تحديث السلفة
+    await txn.update(
+      'TB_Employee_Advances',
+      {
+        'AdvanceDate': newDate,
+        'AdvanceAmount': newAmount.toDouble(),
+        'RepaymentStatus': newStatus,
+        'Notes': newNotes,
+      },
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    // تحديث رصيد الموظف بالفرق
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance + ?',
+      [difference.toDouble()],
+    );
+  });
+}
+
+// ← Hint: حذف سلفة
+// ← Hint: يخصم المبلغ من رصيد الموظف
+Future<void> deleteAdvance(int advanceID) async {
+  final db = await instance.database;
+
+  await db.transaction((txn) async {
+    // جلب السلفة
+    final advanceMaps = await txn.query(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (advanceMaps.isEmpty) return;
+
+    final amount = Decimal.parse(advanceMaps.first['AdvanceAmount'].toString());
+
+    // حذف السلفة
+    await txn.delete(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    // خصم من رصيد الموظف
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance - ?',
+      [amount.toDouble()],
+    );
+  });
 }
 
 // Hint: دالة لحساب إجمالي رصيد السلف المستحقة على جميع الموظفين.
@@ -2564,19 +2826,6 @@ Future<int> insertBonus(Map<String, dynamic> bonus) async {
   return await db.insert('TB_Employee_Bonuses', bonus);
 }
 
-/// جلب جميع المكافآت لموظف معين
-///
-/// ← Hint: تجلب جميع المكافآت الخاصة بموظف محدد مرتبة حسب التاريخ
-Future<List<Map<String, dynamic>>> getBonusesForEmployee(int employeeId) async {
-  final db = await instance.database;
-  return await db.query(
-    'TB_Employee_Bonuses',
-    where: 'EmployeeID = ?',
-    whereArgs: [employeeId],
-    orderBy: 'BonusDate DESC',
-  );
-}
-
 /// جلب جميع المكافآت في فترة زمنية محددة
 ///
 /// ← Hint: تستخدم في التقارير المالية لحساب إجمالي المكافآت في فترة معينة
@@ -2638,162 +2887,133 @@ Future<double> getTotalBonusesInPeriod({
   return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
 }
 
-/// حذف مكافأة
-///
-/// ← Hint: تستخدم لحذف مكافأة في حال الخطأ في الإدخال
-Future<int> deleteBonus(int bonusId) async {
-  final db = await instance.database;
-  return await db.delete(
-    'TB_Employee_Bonuses',
-    where: 'BonusID = ?',
-    whereArgs: [bonusId],
-  );
-}
-
-/// تحديث مكافأة
-///
-/// ← Hint: تستخدم لتعديل بيانات مكافأة موجودة
-Future<int> updateBonus(int bonusId, Map<String, dynamic> bonus) async {
-  final db = await instance.database;
-  return await db.update(
-    'TB_Employee_Bonuses',
-    bonus,
-    where: 'BonusID = ?',
-    whereArgs: [bonusId],
-  );
-}
-
-///////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////
-// 🆕 v4: دوال إدارة التصنيفات والوحدات
-///////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////
-
 // ============================================================================
-// دوال التصنيفات (Product Categories)
+// ✅ دوال الوحدات (Product Units)
 // ============================================================================
 
-/// جلب كل التصنيفات النشطة
+/// جلب جميع الوحدات النشطة
 ///
-/// ← Hint: يجلب جميع التصنيفات النشطة مرتبة حسب DisplayOrder
-Future<List<ProductCategory>> getAllActiveCategories() async {
+/// ← Hint: تستخدم في Dropdown اختيار الوحدة عند إضافة/تعديل منتج
+Future<List<models.ProductUnit>> getProductUnits({bool activeOnly = true}) async {
   final db = await instance.database;
-  final maps = await db.query(
-    'TB_Product_Categories',
-    where: 'IsActive = 1',
-    orderBy: 'DisplayOrder ASC, CategoryName ASC',
+  final List<Map<String, dynamic>> maps = await db.query(
+    'TB_ProductUnit',
+    where: activeOnly ? 'IsActive = ?' : null,
+    whereArgs: activeOnly ? [1] : null,
+    orderBy: 'UnitNameAr ASC',
   );
-  return List.generate(maps.length, (i) => ProductCategory.fromMap(maps[i]));
-}
-
-/// جلب كل التصنيفات (نشطة وغير نشطة)
-///
-/// ← Hint: يجلب جميع التصنيفات بدون فلترة
-Future<List<ProductCategory>> getAllCategories() async {
-  final db = await instance.database;
-  final maps = await db.query(
-    'TB_Product_Categories',
-    orderBy: 'DisplayOrder ASC, CategoryName ASC',
-  );
-  return List.generate(maps.length, (i) => ProductCategory.fromMap(maps[i]));
-}
-
-/// إضافة تصنيف جديد
-///
-/// ← Hint: يضيف تصنيف جديد ويرجع ID التصنيف المضاف
-Future<int> insertCategory(ProductCategory category) async {
-  final db = await instance.database;
-  return await db.insert('TB_Product_Categories', category.toMap());
-}
-
-/// تحديث تصنيف موجود
-///
-/// ← Hint: يحدث بيانات تصنيف موجود
-Future<int> updateCategory(ProductCategory category) async {
-  final db = await instance.database;
-  return await db.update(
-    'TB_Product_Categories',
-    category.toMap(),
-    where: 'CategoryID = ?',
-    whereArgs: [category.categoryID],
-  );
-}
-
-/// حذف تصنيف (soft delete)
-///
-/// ← Hint: يجعل التصنيف غير نشط بدلاً من حذفه
-Future<int> deleteCategory(int categoryID) async {
-  final db = await instance.database;
-  return await db.update(
-    'TB_Product_Categories',
-    {'IsActive': 0},
-    where: 'CategoryID = ?',
-    whereArgs: [categoryID],
-  );
-}
-
-// ============================================================================
-// دوال الوحدات (Product Units)
-// ============================================================================
-
-/// جلب كل الوحدات النشطة
-///
-/// ← Hint: يجلب جميع الوحدات النشطة مرتبة حسب DisplayOrder
-Future<List<ProductUnit>> getAllActiveUnits() async {
-  final db = await instance.database;
-  final maps = await db.query(
-    'TB_Product_Units',
-    where: 'IsActive = 1',
-    orderBy: 'DisplayOrder ASC, UnitName ASC',
-  );
-  return List.generate(maps.length, (i) => ProductUnit.fromMap(maps[i]));
-}
-
-/// جلب كل الوحدات (نشطة وغير نشطة)
-///
-/// ← Hint: يجلب جميع الوحدات بدون فلترة
-Future<List<ProductUnit>> getAllUnits() async {
-  final db = await instance.database;
-  final maps = await db.query(
-    'TB_Product_Units',
-    orderBy: 'DisplayOrder ASC, UnitName ASC',
-  );
-  return List.generate(maps.length, (i) => ProductUnit.fromMap(maps[i]));
+  return maps.map((map) => models.ProductUnit.fromMap(map)).toList();
 }
 
 /// إضافة وحدة جديدة
 ///
-/// ← Hint: يضيف وحدة جديدة ويرجع ID الوحدة المضافة
-Future<int> insertUnit(ProductUnit unit) async {
+/// ← Hint: تستخدم في صفحة إعدادات المنتجات لإضافة وحدات جديدة
+Future<int> addProductUnit(models.ProductUnit unit) async {
   final db = await instance.database;
-  return await db.insert('TB_Product_Units', unit.toMap());
+  return await db.insert('TB_ProductUnit', unit.toMap());
 }
 
-/// تحديث وحدة موجودة
+/// تعديل وحدة موجودة
 ///
-/// ← Hint: يحدث بيانات وحدة موجودة
-Future<int> updateUnit(ProductUnit unit) async {
+/// ← Hint: تستخدم لتعديل بيانات وحدة موجودة
+Future<int> editProductUnit(models.ProductUnit unit) async {
   final db = await instance.database;
   return await db.update(
-    'TB_Product_Units',
+    'TB_ProductUnit',
     unit.toMap(),
     where: 'UnitID = ?',
     whereArgs: [unit.unitID],
   );
 }
 
-/// حذف وحدة (soft delete)
+/// حذف (أرشفة) وحدة
 ///
-/// ← Hint: يجعل الوحدة غير نشطة بدلاً من حذفها
-Future<int> deleteUnit(int unitID) async {
+/// ← Hint: في الواقع نقوم بتعطيل الوحدة (IsActive = 0) بدلاً من حذفها نهائياً
+Future<int> deleteProductUnit(int unitID) async {
   final db = await instance.database;
   return await db.update(
-    'TB_Product_Units',
+    'TB_ProductUnit',
     {'IsActive': 0},
     where: 'UnitID = ?',
     whereArgs: [unitID],
   );
 }
+
+// ============================================================================
+// ✅ دوال التصنيفات (Product Categories)
+// ============================================================================
+
+/// جلب جميع التصنيفات النشطة
+///
+/// ← Hint: تستخدم في Dropdown اختيار التصنيف عند إضافة/تعديل منتج
+Future<List<models.ProductCategory>> getProductCategories({bool activeOnly = true}) async {
+  final db = await instance.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'TB_ProductCategory',
+    where: activeOnly ? 'IsActive = ?' : null,
+    whereArgs: activeOnly ? [1] : null,
+    orderBy: 'CategoryNameAr ASC',
+  );
+  return maps.map((map) => models.ProductCategory.fromMap(map)).toList();
+}
+
+/// إضافة تصنيف جديد
+///
+/// ← Hint: تستخدم في صفحة إعدادات المنتجات لإضافة تصنيفات جديدة
+Future<int> addProductCategory(models.ProductCategory category) async {
+  final db = await instance.database;
+  return await db.insert('TB_ProductCategory', category.toMap());
+}
+
+/// تعديل تصنيف موجود
+///
+/// ← Hint: تستخدم لتعديل بيانات تصنيف موجود
+Future<int> editProductCategory(models.ProductCategory category) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_ProductCategory',
+    category.toMap(),
+    where: 'CategoryID = ?',
+    whereArgs: [category.categoryID],
+  );
+}
+
+/// حذف (أرشفة) تصنيف
+///
+/// ← Hint: في الواقع نقوم بتعطيل التصنيف (IsActive = 0) بدلاً من حذفه نهائياً
+Future<int> deleteProductCategory(int categoryID) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_ProductCategory',
+    {'IsActive': 0},
+    where: 'CategoryID = ?',
+    whereArgs: [categoryID],
+  );
+}
+
+/// جلب منتجات حسب التصنيف
+///
+/// ← Hint: تستخدم في صفحة اختيار المنتجات للفلترة حسب التصنيف
+Future<List<models.Product>> getProductsByCategory(int categoryID) async {
+  final db = await instance.database;
+  final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    SELECT
+      p.*,
+      s.SupplierName,
+      u.UnitNameAr as UnitName,
+      c.CategoryNameAr as CategoryName
+    FROM Store_Products p
+    LEFT JOIN TB_Suppliers s ON p.SupplierID = s.SupplierID
+    LEFT JOIN TB_ProductUnit u ON p.UnitID = u.UnitID
+    LEFT JOIN TB_ProductCategory c ON p.CategoryID = c.CategoryID
+    WHERE p.CategoryID = ? AND p.IsActive = 1
+    ORDER BY p.ProductName ASC
+  ''', [categoryID]);
+
+  return maps.map((map) => models.Product.fromMap(map)).toList();
+}
+
+
 
 
 }

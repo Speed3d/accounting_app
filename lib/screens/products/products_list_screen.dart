@@ -13,6 +13,7 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
+import 'manage_categories_units_screen.dart';
 
 // ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
 
@@ -217,6 +218,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ],
         ),
         actions: [
+          // ← Hint: زر إدارة التصنيفات والوحدات
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'إدارة التصنيفات والوحدات',
+            onPressed: _navigateToManageCategories,
+          ),
+
           if (_allProducts.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(
@@ -785,6 +793,17 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   // ===========================================================================
 
   /// Hint: الانتقال لصفحة إضافة منتج جديد
+  /// Hint: الانتقال لصفحة إدارة التصنيفات والوحدات
+  Future<void> _navigateToManageCategories() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ManageCategoriesUnitsScreen(),
+      ),
+    );
+    // ← Hint: إعادة تحميل المنتجات بعد تعديل التصنيفات/الوحدات
+    _reloadProducts();
+  }
+
   Future<void> _navigateToAddProduct() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
