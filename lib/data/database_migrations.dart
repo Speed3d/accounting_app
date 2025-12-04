@@ -70,21 +70,168 @@ class DatabaseMigrations {
   }
 
   // ==========================================================================
-  // Migration من v2 إلى v3 (للمستقبل)
+  // Migration من v2 إلى v3
   // ==========================================================================
   static Future<void> migrateToV3(Database db) async {
     debugPrint('🔄 بدء Migration من v2 إلى v3...');
 
     try {
-      // سيتم إضافة التحديثات المستقبلية هنا
-      // مثال:
-      // - إضافة جدول للـ Cloud Backup
-      // - تحسينات أخرى
+      // لا توجد تحديثات في v3 - تم تخطيها
 
       debugPrint('✅ Migration إلى v3 اكتمل بنجاح');
 
     } catch (e, stackTrace) {
       debugPrint('❌ خطأ في Migration إلى v3: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
+  // Migration من v3 إلى v4 - نظام التصنيفات والوحدات للمنتجات
+  // ==========================================================================
+  /// ← Hint: التحديثات في v4:
+  /// 1. إنشاء جدول TB_Product_Categories (تصنيفات المنتجات)
+  /// 2. إنشاء جدول TB_Product_Units (وحدات القياس)
+  /// 3. إضافة عمود CategoryID إلى جدول Store_Products
+  /// 4. إضافة عمود Unit إلى جدول Store_Products
+  /// 5. إضافة البيانات الافتراضية
+  static Future<void> migrateToV4(Database db) async {
+    debugPrint('🔄 بدء Migration من v3 إلى v4...');
+
+    try {
+      // ========================================================================
+      // 1️⃣ إنشاء جدول التصنيفات
+      // ========================================================================
+      debugPrint('  ├─ إنشاء جدول TB_Product_Categories...');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS TB_Product_Categories (
+          CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+          CategoryName TEXT NOT NULL UNIQUE,
+          CategoryNameEn TEXT,
+          Description TEXT,
+          Icon TEXT,
+          ColorCode TEXT,
+          IsActive INTEGER NOT NULL DEFAULT 1,
+          DisplayOrder INTEGER DEFAULT 0,
+          CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      debugPrint('  ├─ ✅ تم إنشاء جدول TB_Product_Categories بنجاح');
+
+      // ========================================================================
+      // 2️⃣ إنشاء جدول الوحدات
+      // ========================================================================
+      debugPrint('  ├─ إنشاء جدول TB_Product_Units...');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS TB_Product_Units (
+          UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+          UnitName TEXT NOT NULL UNIQUE,
+          UnitNameEn TEXT,
+          UnitSymbol TEXT,
+          IsActive INTEGER NOT NULL DEFAULT 1,
+          DisplayOrder INTEGER DEFAULT 0,
+          CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      debugPrint('  ├─ ✅ تم إنشاء جدول TB_Product_Units بنجاح');
+
+      // ========================================================================
+      // 3️⃣ إضافة أعمدة جديدة لجدول Store_Products
+      // ========================================================================
+      debugPrint('  ├─ إضافة أعمدة جديدة لجدول Store_Products...');
+
+      // التحقق من وجود العمود قبل الإضافة
+      if (!await columnExists(db, 'Store_Products', 'CategoryID')) {
+        await db.execute(
+          'ALTER TABLE Store_Products ADD COLUMN CategoryID INTEGER REFERENCES TB_Product_Categories(CategoryID)'
+        );
+        debugPrint('    ├─ ✅ تم إضافة عمود CategoryID');
+      }
+
+      if (!await columnExists(db, 'Store_Products', 'Unit')) {
+        await db.execute(
+          'ALTER TABLE Store_Products ADD COLUMN Unit TEXT'
+        );
+        debugPrint('    ├─ ✅ تم إضافة عمود Unit');
+      }
+
+      // ========================================================================
+      // 4️⃣ إضافة البيانات الافتراضية - التصنيفات
+      // ========================================================================
+      debugPrint('  ├─ إضافة التصنيفات الافتراضية...');
+
+      final defaultCategories = [
+        {'name': 'إلكترونيات', 'nameEn': 'Electronics', 'icon': 'devices', 'color': '#2196F3', 'order': 1},
+        {'name': 'أثاث', 'nameEn': 'Furniture', 'icon': 'chair', 'color': '#795548', 'order': 2},
+        {'name': 'ملابس', 'nameEn': 'Clothing', 'icon': 'checkroom', 'color': '#E91E63', 'order': 3},
+        {'name': 'أغذية', 'nameEn': 'Food', 'icon': 'restaurant', 'color': '#4CAF50', 'order': 4},
+        {'name': 'أدوات منزلية', 'nameEn': 'Home Appliances', 'icon': 'home', 'color': '#FF9800', 'order': 5},
+        {'name': 'مستلزمات مكتبية', 'nameEn': 'Office Supplies', 'icon': 'work', 'color': '#9C27B0', 'order': 6},
+        {'name': 'مستحضرات تجميل', 'nameEn': 'Cosmetics', 'icon': 'face', 'color': '#F06292', 'order': 7},
+        {'name': 'أدوية', 'nameEn': 'Pharmaceuticals', 'icon': 'medication', 'color': '#00BCD4', 'order': 8},
+        {'name': 'أخرى', 'nameEn': 'Others', 'icon': 'category', 'color': '#607D8B', 'order': 99},
+      ];
+
+      for (var category in defaultCategories) {
+        await db.insert(
+          'TB_Product_Categories',
+          {
+            'CategoryName': category['name'],
+            'CategoryNameEn': category['nameEn'],
+            'Icon': category['icon'],
+            'ColorCode': category['color'],
+            'DisplayOrder': category['order'],
+            'IsActive': 1,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      debugPrint('  ├─ ✅ تم إضافة ${defaultCategories.length} تصنيف افتراضي');
+
+      // ========================================================================
+      // 5️⃣ إضافة البيانات الافتراضية - الوحدات
+      // ========================================================================
+      debugPrint('  ├─ إضافة الوحدات الافتراضية...');
+
+      final defaultUnits = [
+        {'name': 'حبة', 'nameEn': 'Piece', 'symbol': 'قطعة', 'order': 1},
+        {'name': 'كرتون', 'nameEn': 'Carton', 'symbol': 'كرتون', 'order': 2},
+        {'name': 'كيلو', 'nameEn': 'Kilogram', 'symbol': 'كغ', 'order': 3},
+        {'name': 'جرام', 'nameEn': 'Gram', 'symbol': 'غ', 'order': 4},
+        {'name': 'لتر', 'nameEn': 'Liter', 'symbol': 'ل', 'order': 5},
+        {'name': 'متر', 'nameEn': 'Meter', 'symbol': 'م', 'order': 6},
+        {'name': 'علبة', 'nameEn': 'Box', 'symbol': 'علبة', 'order': 7},
+        {'name': 'صندوق', 'nameEn': 'Crate', 'symbol': 'صندوق', 'order': 8},
+        {'name': 'دزينة', 'nameEn': 'Dozen', 'symbol': 'دزينة', 'order': 9},
+        {'name': 'عبوة', 'nameEn': 'Package', 'symbol': 'عبوة', 'order': 10},
+      ];
+
+      for (var unit in defaultUnits) {
+        await db.insert(
+          'TB_Product_Units',
+          {
+            'UnitName': unit['name'],
+            'UnitNameEn': unit['nameEn'],
+            'UnitSymbol': unit['symbol'],
+            'DisplayOrder': unit['order'],
+            'IsActive': 1,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      debugPrint('  ├─ ✅ تم إضافة ${defaultUnits.length} وحدة افتراضية');
+
+      debugPrint('✅ Migration إلى v4 اكتمل بنجاح');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v4: $e');
       debugPrint('Stack trace: $stackTrace');
       rethrow;
     }

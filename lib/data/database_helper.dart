@@ -34,7 +34,8 @@ class DatabaseHelper {
   // Version 1: الهيكل الأساسي
   // Version 2: إضافة جدول TB_Employee_Bonuses
   // Version 3: 🆕 النظام الجديد - Email Auth + Subscriptions
-  static const _databaseVersion = 3;
+  // Version 4: 🆕 إضافة التصنيفات والوحدات للمنتجات
+  static const _databaseVersion = 4;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -484,6 +485,33 @@ class DatabaseHelper {
       )
     ''');
 
+    // 🆕 v4: جداول التصنيفات والوحدات للمنتجات
+    batch.execute('''
+      CREATE TABLE TB_Product_Categories (
+        CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CategoryName TEXT NOT NULL UNIQUE,
+        CategoryNameEn TEXT,
+        Description TEXT,
+        Icon TEXT,
+        ColorCode TEXT,
+        IsActive INTEGER NOT NULL DEFAULT 1,
+        DisplayOrder INTEGER DEFAULT 0,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    batch.execute('''
+      CREATE TABLE TB_Product_Units (
+        UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+        UnitName TEXT NOT NULL UNIQUE,
+        UnitNameEn TEXT,
+        UnitSymbol TEXT,
+        IsActive INTEGER NOT NULL DEFAULT 1,
+        DisplayOrder INTEGER DEFAULT 0,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
     await batch.commit();
 
     // ============================================================================
@@ -546,10 +574,22 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_date ON TB_Expenses(ExpenseDate)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON TB_Expenses(Category)');
 
-    debugPrint('✅ [DatabaseHelper] تم إنشاء ${56} Database Index بنجاح');
+    // 🆕 v4: Indexes للتصنيفات والوحدات
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_categories_isactive ON TB_Product_Categories(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_categories_order ON TB_Product_Categories(DisplayOrder)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_units_isactive ON TB_Product_Units(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_units_order ON TB_Product_Units(DisplayOrder)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_products_category ON Store_Products(CategoryID)');
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء ${61} Database Index بنجاح');
 
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
     await _insertDefaultCategories(db);
+
+    // 🆕 v4: إضافة التصنيفات والوحدات الافتراضية للمنتجات
+    await _insertDefaultProductCategoriesAndUnits(db);
 
   }
 
@@ -586,6 +626,13 @@ class DatabaseHelper {
       await DatabaseMigrations.migrateToV2(db);  // migrateToV2 يحتوي على التحديثات لـ v3
       debugPrint('✅ تم تطبيق Migration إلى v3 بنجاح');
     }
+
+    // 🆕 ترقية من الإصدار 3 إلى 4: نظام التصنيفات والوحدات
+    if (oldVersion < 4) {
+      debugPrint('📦 تطبيق Migration إلى v4 (التصنيفات والوحدات)...');
+      await DatabaseMigrations.migrateToV4(db);
+      debugPrint('✅ تم تطبيق Migration إلى v4 بنجاح');
+    }
   }
 
    ///////////////////////////////////////////////////////////////
@@ -603,6 +650,66 @@ class DatabaseHelper {
       await db.insert(
         'TB_Expense_Categories',
         {'CategoryName': category},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
+
+  /// 🆕 v4: دالة مساعدة لإضافة التصنيفات والوحدات الافتراضية للمنتجات
+  /// الشرح: هذه الدالة تقوم بإضافة مجموعة من التصنيفات والوحدات الأساسية.
+  Future<void> _insertDefaultProductCategoriesAndUnits(Database db) async {
+    // إضافة التصنيفات الافتراضية
+    final defaultCategories = [
+      {'name': 'إلكترونيات', 'nameEn': 'Electronics', 'icon': 'devices', 'color': '#2196F3', 'order': 1},
+      {'name': 'أثاث', 'nameEn': 'Furniture', 'icon': 'chair', 'color': '#795548', 'order': 2},
+      {'name': 'ملابس', 'nameEn': 'Clothing', 'icon': 'checkroom', 'color': '#E91E63', 'order': 3},
+      {'name': 'أغذية', 'nameEn': 'Food', 'icon': 'restaurant', 'color': '#4CAF50', 'order': 4},
+      {'name': 'أدوات منزلية', 'nameEn': 'Home Appliances', 'icon': 'home', 'color': '#FF9800', 'order': 5},
+      {'name': 'مستلزمات مكتبية', 'nameEn': 'Office Supplies', 'icon': 'work', 'color': '#9C27B0', 'order': 6},
+      {'name': 'مستحضرات تجميل', 'nameEn': 'Cosmetics', 'icon': 'face', 'color': '#F06292', 'order': 7},
+      {'name': 'أدوية', 'nameEn': 'Pharmaceuticals', 'icon': 'medication', 'color': '#00BCD4', 'order': 8},
+      {'name': 'أخرى', 'nameEn': 'Others', 'icon': 'category', 'color': '#607D8B', 'order': 99},
+    ];
+
+    for (var category in defaultCategories) {
+      await db.insert(
+        'TB_Product_Categories',
+        {
+          'CategoryName': category['name'],
+          'CategoryNameEn': category['nameEn'],
+          'Icon': category['icon'],
+          'ColorCode': category['color'],
+          'DisplayOrder': category['order'],
+          'IsActive': 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    // إضافة الوحدات الافتراضية
+    final defaultUnits = [
+      {'name': 'حبة', 'nameEn': 'Piece', 'symbol': 'قطعة', 'order': 1},
+      {'name': 'كرتون', 'nameEn': 'Carton', 'symbol': 'كرتون', 'order': 2},
+      {'name': 'كيلو', 'nameEn': 'Kilogram', 'symbol': 'كغ', 'order': 3},
+      {'name': 'جرام', 'nameEn': 'Gram', 'symbol': 'غ', 'order': 4},
+      {'name': 'لتر', 'nameEn': 'Liter', 'symbol': 'ل', 'order': 5},
+      {'name': 'متر', 'nameEn': 'Meter', 'symbol': 'م', 'order': 6},
+      {'name': 'علبة', 'nameEn': 'Box', 'symbol': 'علبة', 'order': 7},
+      {'name': 'صندوق', 'nameEn': 'Crate', 'symbol': 'صندوق', 'order': 8},
+      {'name': 'دزينة', 'nameEn': 'Dozen', 'symbol': 'دزينة', 'order': 9},
+      {'name': 'عبوة', 'nameEn': 'Package', 'symbol': 'عبوة', 'order': 10},
+    ];
+
+    for (var unit in defaultUnits) {
+      await db.insert(
+        'TB_Product_Units',
+        {
+          'UnitName': unit['name'],
+          'UnitNameEn': unit['nameEn'],
+          'UnitSymbol': unit['symbol'],
+          'DisplayOrder': unit['order'],
+          'IsActive': 1,
+        },
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
