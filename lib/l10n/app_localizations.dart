@@ -5725,6 +5725,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'session Expired'**
   String get sessionExpired;
+
+  /// No description provided for @tryChangingFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No products'**
+  String get tryChangingFilters;
+
+  /// No description provided for @noProductsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the filter'**
+  String get noProductsFound;
+
+  /// No description provided for @categoryAndUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'category And Unit'**
+  String get categoryAndUnit;
+
+  /// No description provided for @noCategoriesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No Categories Available'**
+  String get noCategoriesAvailable;
+
+  /// No description provided for @noUnitsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No Units Available'**
+  String get noUnitsAvailable;
+
+  /// No description provided for @selectUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Unit'**
+  String get selectUnit;
+
+  /// No description provided for @bonusDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The bonus was successfully deleted'**
+  String get bonusDeletedSuccess;
+
+  /// No description provided for @bonusOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Options'**
+  String get bonusOptions;
+
+  /// No description provided for @addBonusTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a new bonus'**
+  String get addBonusTooltip;
+
+  /// No description provided for @addBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Bonus'**
+  String get addBonus;
+
+  /// No description provided for @noBonusesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No bonuses have been recorded for this employee yet.'**
+  String get noBonusesMessage;
+
+  /// No description provided for @noBonuses.
+  ///
+  /// In en, this message translates to:
+  /// **'No Bonuses'**
+  String get noBonuses;
+
+  /// No description provided for @bonusesHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonuses History'**
+  String get bonusesHistory;
+
+  /// No description provided for @bonusDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Date'**
+  String get bonusDate;
+
+  /// No description provided for @bonusReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: Excellence in performance, project completion'**
+  String get bonusReasonHint;
+
+  /// No description provided for @bonusReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Reason'**
+  String get bonusReason;
+
+  /// No description provided for @amountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount must be greater than zero.'**
+  String get amountMustBePositive;
+
+  /// No description provided for @enterAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Amount'**
+  String get enterAmount;
+
+  /// No description provided for @bonusAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Amount'**
+  String get bonusAmount;
+
+  /// No description provided for @bonusDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus Details'**
+  String get bonusDetails;
+
+  /// No description provided for @editBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Bonus'**
+  String get editBonus;
+
+  /// No description provided for @bonusAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The bonus has been successfully added.'**
+  String get bonusAddedSuccess;
+
+  /// No description provided for @bonusUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The reward has been successfully updated.'**
+  String get bonusUpdatedSuccess;
+
+  /// No description provided for @deleteBonusConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm bonus deletion'**
+  String get deleteBonusConfirmation;
 }
 
 class _AppLocalizationsDelegate

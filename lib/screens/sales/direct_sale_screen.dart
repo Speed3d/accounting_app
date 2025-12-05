@@ -728,8 +728,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                       setState(() => _selectedCategory = null);
                     }
                   },
-                  selectedColor: AppColors.primary.withOpacity(0.2),
-                  checkmarkColor: AppColors.primary,
+                  selectedColor: AppColors.primaryContainer.withOpacity(0.2),
+                  checkmarkColor: AppColors.primaryContainer,
                 ),
               ),
               // أزرار التصنيفات
@@ -738,20 +738,20 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: FilterChip(
-                    label: Text(category.categoryNameAr ?? category.categoryName),
+                    label: Text(category.categoryNameEn ?? category.categoryName),
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
                         _selectedCategory = selected ? category : null;
                       });
                     },
-                    selectedColor: AppColors.primary.withOpacity(0.2),
-                    checkmarkColor: AppColors.primary,
-                    avatar: category.iconName != null
+                    selectedColor: AppColors.primaryContainer.withOpacity(0.2),
+                    checkmarkColor: AppColors.primaryContainer,
+                    avatar: category.icon != null
                         ? Icon(
-                            _getIconFromName(category.iconName!),
+                            _getIconFromName(category.icon!),
                             size: 18,
-                            color: isSelected ? AppColors.primary : null,
+                            color: isSelected ? AppColors.primaryContainer : null,
                           )
                         : null,
                   ),

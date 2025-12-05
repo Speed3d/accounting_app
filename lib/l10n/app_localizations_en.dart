@@ -3074,4 +3074,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionExpired => 'session Expired';
+
+  @override
+  String get tryChangingFilters => 'No products';
+
+  @override
+  String get noProductsFound => 'Try changing the filter';
+
+  @override
+  String get categoryAndUnit => 'category And Unit';
+
+  @override
+  String get noCategoriesAvailable => 'No Categories Available';
+
+  @override
+  String get noUnitsAvailable => 'No Units Available';
+
+  @override
+  String get selectUnit => 'Select Unit';
+
+  @override
+  String get bonusDeletedSuccess => 'The bonus was successfully deleted';
+
+  @override
+  String get bonusOptions => 'Bonus Options';
+
+  @override
+  String get addBonusTooltip => 'Add a new bonus';
+
+  @override
+  String get addBonus => 'Add Bonus';
+
+  @override
+  String get noBonusesMessage =>
+      'No bonuses have been recorded for this employee yet.';
+
+  @override
+  String get noBonuses => 'No Bonuses';
+
+  @override
+  String get bonusesHistory => 'Bonuses History';
+
+  @override
+  String get bonusDate => 'Bonus Date';
+
+  @override
+  String get bonusReasonHint =>
+      'Example: Excellence in performance, project completion';
+
+  @override
+  String get bonusReason => 'Bonus Reason';
+
+  @override
+  String get amountMustBePositive => 'The amount must be greater than zero.';
+
+  @override
+  String get enterAmount => 'Enter Amount';
+
+  @override
+  String get bonusAmount => 'Bonus Amount';
+
+  @override
+  String get bonusDetails => 'Bonus Details';
+
+  @override
+  String get editBonus => 'Edit Bonus';
+
+  @override
+  String get bonusAddedSuccess => 'The bonus has been successfully added.';
+
+  @override
+  String get bonusUpdatedSuccess => 'The reward has been successfully updated.';
+
+  @override
+  String get deleteBonusConfirmation => 'Confirm bonus deletion';
 }

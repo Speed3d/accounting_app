@@ -2345,7 +2345,55 @@
     "description": "سحوبات الأرباح من قبل الشركاء"
   },
 
-  "sessionExpired": "انتهت الجلسة"
+  "sessionExpired": "انتهت الجلسة",
+
+  "tryChangingFilters": "لا توجد منتجات",
+
+"noProductsFound": "جرب تغيير الفلتر",
+
+"categoryAndUnit": "التصنيف والوحدة",
+
+"noCategoriesAvailable": "لا توجد تصنيفات متاحة",
+
+"noUnitsAvailable": "لا توجد وحدات متاحة",
+
+"selectUnit": "اختر الوحدة",
+
+"bonusDeletedSuccess": "تم حذف المكافأة بنجاح",
+
+"bonusOptions": "خيارات المكافأة",
+
+"addBonusTooltip": "إضافة مكافأة جديدة",
+
+"addBonus": "إضافة مكافأة",
+
+"noBonusesMessage": "لم يتم تسجيل أي مكافآت لهذا الموظف بعد",
+
+"noBonuses": "لا توجد مكافآت",
+
+"bonusesHistory": "سجل المكافآت",
+
+"bonusDate": "تاريخ المكافأة",
+
+"bonusReasonHint": "مثال: تميز في الأداء، إنجاز مشروع",
+
+"bonusReason": "سبب المكافأة",
+
+"amountMustBePositive": "المبلغ يجب أن يكون أكبر من صفر",
+
+"enterAmount": "أدخل المبلغ",
+
+"bonusAmount": "قيمة المكافأة",
+
+"bonusDetails": "تفاصيل المكافأة",
+
+"editBonus": "تعديل مكافأة",
+
+"bonusAddedSuccess": "تم إضافة المكافأة بنجاح",
+
+"bonusUpdatedSuccess": "تم تحديث المكافأة بنجاح",
+
+"deleteBonusConfirmation": "تأكيد حذف المكافأة"
 
 
 

@@ -2406,7 +2406,55 @@
     "description": "Profit withdrawals by partners"
   },
 
-  "sessionExpired": "session Expired"
+  "sessionExpired": "session Expired",
+
+  "tryChangingFilters": "No products",
+
+"noProductsFound": "Try changing the filter",
+
+"categoryAndUnit": "category And Unit",
+
+"noCategoriesAvailable": "No Categories Available",
+
+"noUnitsAvailable": "No Units Available",
+
+"selectUnit": "Select Unit",
+
+"bonusDeletedSuccess": "The bonus was successfully deleted",
+
+"bonusOptions": "Bonus Options",
+
+"addBonusTooltip": "Add a new bonus",
+
+"addBonus": "Add Bonus",
+
+"noBonusesMessage": "No bonuses have been recorded for this employee yet.",
+
+"noBonuses": "No Bonuses",
+
+"bonusesHistory": "Bonuses History",
+
+"bonusDate": "Bonus Date",
+
+"bonusReasonHint": "Example: Excellence in performance, project completion",
+
+"bonusReason": "Bonus Reason",
+
+"amountMustBePositive": "The amount must be greater than zero.",
+
+"enterAmount": "Enter Amount",
+
+"bonusAmount": "Bonus Amount",
+
+"bonusDetails": "Bonus Details",
+
+"editBonus": "Edit Bonus",
+
+"bonusAddedSuccess": "The bonus has been successfully added.",
+
+"bonusUpdatedSuccess": "The reward has been successfully updated.",
+
+"deleteBonusConfirmation": "Confirm bonus deletion"
 
 
 

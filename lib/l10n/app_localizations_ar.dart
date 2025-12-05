@@ -3048,4 +3048,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sessionExpired => 'انتهت الجلسة';
+
+  @override
+  String get tryChangingFilters => 'لا توجد منتجات';
+
+  @override
+  String get noProductsFound => 'جرب تغيير الفلتر';
+
+  @override
+  String get categoryAndUnit => 'التصنيف والوحدة';
+
+  @override
+  String get noCategoriesAvailable => 'لا توجد تصنيفات متاحة';
+
+  @override
+  String get noUnitsAvailable => 'لا توجد وحدات متاحة';
+
+  @override
+  String get selectUnit => 'اختر الوحدة';
+
+  @override
+  String get bonusDeletedSuccess => 'تم حذف المكافأة بنجاح';
+
+  @override
+  String get bonusOptions => 'خيارات المكافأة';
+
+  @override
+  String get addBonusTooltip => 'إضافة مكافأة جديدة';
+
+  @override
+  String get addBonus => 'إضافة مكافأة';
+
+  @override
+  String get noBonusesMessage => 'لم يتم تسجيل أي مكافآت لهذا الموظف بعد';
+
+  @override
+  String get noBonuses => 'لا توجد مكافآت';
+
+  @override
+  String get bonusesHistory => 'سجل المكافآت';
+
+  @override
+  String get bonusDate => 'تاريخ المكافأة';
+
+  @override
+  String get bonusReasonHint => 'مثال: تميز في الأداء، إنجاز مشروع';
+
+  @override
+  String get bonusReason => 'سبب المكافأة';
+
+  @override
+  String get amountMustBePositive => 'المبلغ يجب أن يكون أكبر من صفر';
+
+  @override
+  String get enterAmount => 'أدخل المبلغ';
+
+  @override
+  String get bonusAmount => 'قيمة المكافأة';
+
+  @override
+  String get bonusDetails => 'تفاصيل المكافأة';
+
+  @override
+  String get editBonus => 'تعديل مكافأة';
+
+  @override
+  String get bonusAddedSuccess => 'تم إضافة المكافأة بنجاح';
+
+  @override
+  String get bonusUpdatedSuccess => 'تم تحديث المكافأة بنجاح';
+
+  @override
+  String get deleteBonusConfirmation => 'تأكيد حذف المكافأة';
 }

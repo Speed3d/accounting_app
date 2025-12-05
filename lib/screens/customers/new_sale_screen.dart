@@ -392,8 +392,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   });
                 }
               },
-              selectedColor: AppColors.primary.withOpacity(0.2),
-              checkmarkColor: AppColors.primary,
+              selectedColor: AppColors.primaryContainer.withOpacity(0.2),
+              checkmarkColor: AppColors.primaryContainer,
             ),
           ),
           // أزرار التصنيفات
@@ -402,7 +402,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             return Padding(
               padding: const EdgeInsets.only(left: 8),
               child: FilterChip(
-                label: Text(category.categoryNameAr ?? category.categoryName),
+                label: Text(category.categoryNameEn ?? category.categoryName),
                 selected: isSelected,
                 onSelected: (selected) {
                   setState(() {
@@ -410,13 +410,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     _filterProducts(_searchController.text);
                   });
                 },
-                selectedColor: AppColors.primary.withOpacity(0.2),
-                checkmarkColor: AppColors.primary,
-                avatar: category.iconName != null
+                selectedColor: AppColors.primaryContainer.withOpacity(0.2),
+                checkmarkColor: AppColors.primaryContainer,
+                avatar: category.icon != null
                     ? Icon(
-                        _getIconFromName(category.iconName!),
+                        _getIconFromName(category.icon!),
                         size: 18,
-                        color: isSelected ? AppColors.primary : null,
+                        color: isSelected ? AppColors.primaryContainer : null,
                       )
                     : null,
               ),

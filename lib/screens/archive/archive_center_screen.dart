@@ -388,7 +388,7 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
       title = item.fullName;
       subtitle = 'موظف مؤرشف - ${item.jobTitle}';
       icon = Icons.badge_outlined;
-      iconColor = AppColors.primary;
+      iconColor = AppColors.primaryContainer;
       if (item.imagePath != null && item.imagePath!.isNotEmpty) {
         imageFile = File(item.imagePath!);
       }
