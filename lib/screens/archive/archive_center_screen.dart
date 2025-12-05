@@ -26,7 +26,7 @@ class _ArchiveCenterScreenState extends State<ArchiveCenterScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -94,6 +94,10 @@ class _ArchiveCenterScreenState extends State<ArchiveCenterScreen>
                   icon: const Icon(Icons.inventory_2_outlined, size: 20),
                   text: l10n.products,
                 ),
+                Tab(
+                  icon: const Icon(Icons.badge_outlined, size: 20),
+                  text: l10n.employees ?? 'الموظفين',
+                ),
               ],
             ),
           ),
@@ -107,6 +111,7 @@ class _ArchiveCenterScreenState extends State<ArchiveCenterScreen>
           _ArchivedItemsList(itemType: _ItemType.customer, l10n: l10n),
           _ArchivedItemsList(itemType: _ItemType.supplier, l10n: l10n),
           _ArchivedItemsList(itemType: _ItemType.product, l10n: l10n),
+          _ArchivedItemsList(itemType: _ItemType.employee, l10n: l10n),
         ],
       ),
     );
@@ -116,7 +121,7 @@ class _ArchiveCenterScreenState extends State<ArchiveCenterScreen>
 // ============================================================
 // 📋 أنواع العناصر المؤرشفة
 // ============================================================
-enum _ItemType { customer, supplier, product }
+enum _ItemType { customer, supplier, product, employee }
 
 // ============================================================
 // 📜 قائمة العناصر المؤرشفة
@@ -162,6 +167,9 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
           _archivedItemsFuture =
               dbHelper.getArchivedProductsWithSupplierName();
           break;
+        case _ItemType.employee:
+          _archivedItemsFuture = dbHelper.getArchivedEmployees();
+          break;
       }
     });
   }
@@ -192,6 +200,12 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
         idColumn = 'ProductID';
         id = (item as Product).productID!;
         name = item.productName;
+        break;
+      case _ItemType.employee:
+        tableName = 'TB_Employees';
+        idColumn = 'EmployeeID';
+        id = (item as Employee).employeeID!;
+        name = item.fullName;
         break;
     }
 
@@ -321,6 +335,10 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
         icon = Icons.inventory_2_outlined;
         message = l10n.noarchivedproducts;
         break;
+      case _ItemType.employee:
+        icon = Icons.badge_outlined;
+        message = 'لا يوجد موظفين مؤرشفين';
+        break;
     }
 
     return EmptyState(
@@ -366,6 +384,14 @@ class _ArchivedItemsListState extends State<_ArchivedItemsList> {
       );
       icon = Icons.inventory_2_outlined;
       iconColor = AppColors.success;
+    } else if (item is Employee) {
+      title = item.fullName;
+      subtitle = 'موظف مؤرشف - ${item.jobTitle}';
+      icon = Icons.badge_outlined;
+      iconColor = AppColors.primary;
+      if (item.imagePath != null && item.imagePath!.isNotEmpty) {
+        imageFile = File(item.imagePath!);
+      }
     }
 
     final hasValidImage = imageFile != null && imageFile.existsSync();
