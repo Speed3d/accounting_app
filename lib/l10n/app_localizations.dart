@@ -5869,6 +5869,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm bonus deletion'**
   String get deleteBonusConfirmation;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetails;
+
+  /// No description provided for @payrollDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The salary was successfully deleted'**
+  String get payrollDeletedSuccess;
+
+  /// No description provided for @advanceOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Options'**
+  String get advanceOptions;
+
+  /// No description provided for @repayAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan repayment'**
+  String get repayAdvance;
+
+  /// No description provided for @confirmRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmation'**
+  String get confirmRepayment;
+
+  /// No description provided for @advanceRepaidSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The advance payment was successfully made'**
+  String get advanceRepaidSuccess;
+
+  /// No description provided for @advanceDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The advance was successfully deleted'**
+  String get advanceDeletedSuccess;
+
+  /// No description provided for @payrollUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The salary has been successfully updated.'**
+  String get payrollUpdatedSuccess;
+
+  /// No description provided for @advanceUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'The advance payment was successfully updated.'**
+  String get advanceUpdatedSuccess;
+
+  /// No description provided for @editPayroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary Adjustment'**
+  String get editPayroll;
+
+  /// No description provided for @editAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan Adjustment'**
+  String get editAdvance;
 }
 
 class _AppLocalizationsDelegate

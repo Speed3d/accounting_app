@@ -2393,7 +2393,29 @@
 
 "bonusUpdatedSuccess": "تم تحديث المكافأة بنجاح",
 
-"deleteBonusConfirmation": "تأكيد حذف المكافأة"
+"deleteBonusConfirmation": "تأكيد حذف المكافأة",
+
+"viewDetails": "عرض التفاصيل",
+
+"payrollDeletedSuccess": "تم حذف الراتب بنجاح",
+
+"advanceOptions": "خيارات السلفة",
+
+"repayAdvance": "تسديد السلفة",
+
+"confirmRepayment": "تأكيد التسديد",
+
+"advanceRepaidSuccess": "تم تسديد السلفة بنجاح",
+
+"advanceDeletedSuccess": "تم حذف السلفة بنجاح",
+
+"payrollUpdatedSuccess": "تم تحديث الراتب بنجاح",
+
+"advanceUpdatedSuccess": "تم تحديث السلفة بنجاح",
+
+"editPayroll": "تعديل راتب",
+
+"editAdvance": "تعديل سلفة"
 
 
 

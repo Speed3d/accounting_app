@@ -411,18 +411,18 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
 
             const SizedBox(height: AppConstants.spacingMd),
 
-            // المكافآت
-            CustomTextField(
-              controller: _bonusesController,
-              label: l10n.bonuses,
-              hint: l10n.bonusesAndIncentivesHint,
-              prefixIcon: Icons.card_giftcard_outlined,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              textInputAction: TextInputAction.next,
-              validator: _numberValidator,
-            ),
+            // // المكافآت ----- تلغى من هنا
+            // CustomTextField(
+            //   controller: _bonusesController,
+            //   label: l10n.bonuses,
+            //   hint: l10n.bonusesAndIncentivesHint,
+            //   prefixIcon: Icons.card_giftcard_outlined,
+            //   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            //   textInputAction: TextInputAction.next,
+            //   validator: _numberValidator,
+            // ),
 
-            const SizedBox(height: AppConstants.spacingXl),
+            // const SizedBox(height: AppConstants.spacingXl),
 
             // ============= الخصومات =============
             _buildSectionHeader(l10n.deductionsSection, Icons.remove_circle_outline, isDark),
@@ -795,10 +795,11 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
       convertArabicNumbersToEnglish(_baseSalaryController.text),
        fallback: Decimal.zero,
      );
-       final bonuses = parseDecimal(
-       convertArabicNumbersToEnglish(_bonusesController.text),
-       fallback: Decimal.zero,
-     );
+     // المكافئات تم ايقافها من هنا 
+    //    final bonuses = parseDecimal(
+    //    convertArabicNumbersToEnglish(_bonusesController.text),
+    //    fallback: Decimal.zero,
+    //  );
        final deductions = parseDecimal(
        convertArabicNumbersToEnglish(_deductionsController.text),
       fallback: Decimal.zero,
@@ -846,15 +847,15 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
               Icons.add_circle_outline,
             ),
 
-            const SizedBox(height: AppConstants.spacingSm),
+            // const SizedBox(height: AppConstants.spacingSm),
 
-            // المكافآت
-            _buildSummaryRow(
-              l10n.bonuses,
-              formatCurrency(bonuses),
-              AppColors.success,
-              Icons.add_circle_outline,
-            ),
+            // // المكافآت --- الغي من هنا
+            // _buildSummaryRow(
+            //   l10n.bonuses,
+            //   formatCurrency(bonuses),
+            //   AppColors.success,
+            //   Icons.add_circle_outline,
+            // ),
 
             const Divider(height: AppConstants.spacingLg),
 

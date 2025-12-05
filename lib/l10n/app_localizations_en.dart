@@ -3148,4 +3148,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteBonusConfirmation => 'Confirm bonus deletion';
+
+  @override
+  String get viewDetails => 'View Details';
+
+  @override
+  String get payrollDeletedSuccess => 'The salary was successfully deleted';
+
+  @override
+  String get advanceOptions => 'Advance Options';
+
+  @override
+  String get repayAdvance => 'Loan repayment';
+
+  @override
+  String get confirmRepayment => 'Payment confirmation';
+
+  @override
+  String get advanceRepaidSuccess =>
+      'The advance payment was successfully made';
+
+  @override
+  String get advanceDeletedSuccess => 'The advance was successfully deleted';
+
+  @override
+  String get payrollUpdatedSuccess =>
+      'The salary has been successfully updated.';
+
+  @override
+  String get advanceUpdatedSuccess =>
+      'The advance payment was successfully updated.';
+
+  @override
+  String get editPayroll => 'Salary Adjustment';
+
+  @override
+  String get editAdvance => 'Loan Adjustment';
 }

@@ -3120,4 +3120,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deleteBonusConfirmation => 'تأكيد حذف المكافأة';
+
+  @override
+  String get viewDetails => 'عرض التفاصيل';
+
+  @override
+  String get payrollDeletedSuccess => 'تم حذف الراتب بنجاح';
+
+  @override
+  String get advanceOptions => 'خيارات السلفة';
+
+  @override
+  String get repayAdvance => 'تسديد السلفة';
+
+  @override
+  String get confirmRepayment => 'تأكيد التسديد';
+
+  @override
+  String get advanceRepaidSuccess => 'تم تسديد السلفة بنجاح';
+
+  @override
+  String get advanceDeletedSuccess => 'تم حذف السلفة بنجاح';
+
+  @override
+  String get payrollUpdatedSuccess => 'تم تحديث الراتب بنجاح';
+
+  @override
+  String get advanceUpdatedSuccess => 'تم تحديث السلفة بنجاح';
+
+  @override
+  String get editPayroll => 'تعديل راتب';
+
+  @override
+  String get editAdvance => 'تعديل سلفة';
 }

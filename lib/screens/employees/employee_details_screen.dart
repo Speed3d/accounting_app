@@ -917,11 +917,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                 formatCurrency(entry.baseSalary),
                 AppColors.info,
               ),
-              _buildDetailRow(
-                l10n.bonuses,
-                formatCurrency(entry.bonuses),
-                AppColors.success,
-              ),
+              // تم الغاء غرض المكافئات من هنا ايضا 
+              // _buildDetailRow(
+              //   l10n.bonuses,
+              //   formatCurrency(entry.bonuses),
+              //   AppColors.success,
+              // ),
               _buildDetailRow(
                 l10n.deductions,
                 formatCurrency(entry.deductions),

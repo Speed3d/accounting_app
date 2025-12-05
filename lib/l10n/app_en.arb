@@ -2454,7 +2454,29 @@
 
 "bonusUpdatedSuccess": "The reward has been successfully updated.",
 
-"deleteBonusConfirmation": "Confirm bonus deletion"
+"deleteBonusConfirmation": "Confirm bonus deletion",
+
+"viewDetails": "View Details",
+
+"payrollDeletedSuccess": "The salary was successfully deleted",
+
+"advanceOptions": "Advance Options",
+
+"repayAdvance": "Loan repayment",
+
+"confirmRepayment": "Payment confirmation",
+
+"advanceRepaidSuccess": "The advance payment was successfully made",
+
+"advanceDeletedSuccess": "The advance was successfully deleted",
+
+"payrollUpdatedSuccess": "The salary has been successfully updated.",
+
+"advanceUpdatedSuccess": "The advance payment was successfully updated.",
+
+"editPayroll": "Salary Adjustment",
+
+"editAdvance": "Loan Adjustment"
 
 
 
