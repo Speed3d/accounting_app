@@ -40,7 +40,8 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
   // Future للبيانات الإحصائية
   late Future<Decimal> _totalSalariesFuture;
   late Future<Decimal> _totalAdvancesFuture;
-  late Future<Decimal> _totalBonusesFuture; // ← Hint: إجمالي المكافآت
+  late Future<Decimal> _totalBonusesFuture; // ← Hint: إجمالي المكافآت القديمة (من TB_Payroll)
+  late Future<Decimal> _totalEmployeeBonusesFuture; // ← Hint: إجمالي المكافآت الجديدة (من TB_Employee_Bonuses)
   late Future<Decimal> _totalDeductionsFuture; // ← Hint: إجمالي الخصومات
   late Future<int> _employeesCountFuture;
   late Future<List<Employee>> _employeesListFuture;
@@ -66,12 +67,13 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
     setState(() {
       _totalSalariesFuture = dbHelper.getTotalNetSalariesPaid();
       _totalAdvancesFuture = dbHelper.getTotalActiveAdvancesBalance();
-      _totalBonusesFuture = dbHelper.getTotalBonuses(); // ← Hint: تحميل المكافآت
+      _totalBonusesFuture = dbHelper.getTotalBonuses(); // ← Hint: المكافآت القديمة (من TB_Payroll)
+      _totalEmployeeBonusesFuture = dbHelper.getTotalEmployeeBonuses(); // ← Hint: المكافآت الجديدة (من TB_Employee_Bonuses)
       _totalDeductionsFuture = dbHelper.getTotalDeductions(); // ← Hint: تحميل الخصومات
       _employeesCountFuture = dbHelper.getActiveEmployeesCount();
       _employeesListFuture = dbHelper.getAllActiveEmployees();
     });
-    
+
     // ← Hint: تحميل قائمة الموظفين وتطبيق الفلتر
     _loadAndFilterEmployees();
   }
@@ -111,19 +113,29 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
     }
   }
 
-  /// ← Hint: فلترة الموظفين الذين لديهم مكافآت
+  /// ← Hint: فلترة الموظفين الذين لديهم مكافآت (من كلا المصدرين)
   Future<void> _filterEmployeesWithBonuses() async {
     final db = await dbHelper.database;
-    
-    // جلب IDs الموظفين الذين لديهم مكافآت من جدول الرواتب
-    final result = await db.rawQuery('''
+
+    // جلب IDs الموظفين الذين لديهم مكافآت قديمة من TB_Payroll
+    final payrollResult = await db.rawQuery('''
       SELECT DISTINCT EmployeeID
       FROM TB_Payroll
       WHERE Bonuses > 0
     ''');
-    
-    final employeeIdsWithBonuses = result.map((row) => row['EmployeeID'] as int).toSet();
-    
+
+    // جلب IDs الموظفين الذين لديهم مكافآت جديدة من TB_Employee_Bonuses
+    final bonusesResult = await db.rawQuery('''
+      SELECT DISTINCT EmployeeID
+      FROM TB_Employee_Bonuses
+    ''');
+
+    // دمج IDs من كلا المصدرين
+    final employeeIdsWithBonuses = <int>{
+      ...payrollResult.map((row) => row['EmployeeID'] as int),
+      ...bonusesResult.map((row) => row['EmployeeID'] as int),
+    };
+
     setState(() {
       _filteredEmployees = _allEmployees.where((employee) {
         return employeeIdsWithBonuses.contains(employee.employeeID);
@@ -326,18 +338,26 @@ class _EmployeesReportScreenState extends State<EmployeesReportScreen> {
         // --- الصف الثاني: المكافآت والخصومات ---
         Row(
           children: [
-            // ← Hint: بطاقة المكافآت
+            // ← Hint: بطاقة المكافآت (دمج من المصدرين)
             Expanded(
-              child: FutureBuilder<Decimal>(
-                future: _totalBonusesFuture,
+              child: FutureBuilder<List<Decimal>>(
+                future: Future.wait([
+                  _totalBonusesFuture, // القديمة من TB_Payroll
+                  _totalEmployeeBonusesFuture, // الجديدة من TB_Employee_Bonuses
+                ]),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return _buildSummaryCardSkeleton();
                   }
-                  
+
+                  // جمع المكافآت من كلا المصدرين
+                  final oldBonuses = snapshot.data?[0] ?? Decimal.zero;
+                  final newBonuses = snapshot.data?[1] ?? Decimal.zero;
+                  final totalBonuses = oldBonuses + newBonuses;
+
                   return StatCard(
                     label: 'إجمالي المكافآت',
-                    value: formatCurrency(snapshot.data ?? Decimal.zero),
+                    value: formatCurrency(totalBonuses),
                     icon: Icons.card_giftcard,
                     color: AppColors.info,
                     subtitle: 'مكافآت مدفوعة',

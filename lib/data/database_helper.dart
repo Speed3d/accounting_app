@@ -1776,14 +1776,27 @@ Future<Decimal> getTotalDeductions() async {
   final result = await db.rawQuery(
     'SELECT SUM(Deductions) as Total FROM TB_Payroll'
   );
-  
+
   if (result.first['Total'] != null) {
     return Decimal.parse(result.first['Total'].toString());
   }
   return Decimal.zero;
 }
 
+// Hint: دالة لحساب إجمالي المكافآت من TB_Employee_Bonuses (النظام الجديد).
+// ← ملاحظة: هذه الدالة تقرأ من TB_Employee_Bonuses فقط (المكافآت الجديدة المنفصلة).
+// ← للحصول على المكافآت القديمة من TB_Payroll، استخدم getTotalBonuses().
+Future<Decimal> getTotalEmployeeBonuses() async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT SUM(BonusAmount) as Total FROM TB_Employee_Bonuses'
+  );
 
+  if (result.first['Total'] != null) {
+    return Decimal.parse(result.first['Total'].toString());
+  }
+  return Decimal.zero;
+}
 
 
 // =================================================================================================

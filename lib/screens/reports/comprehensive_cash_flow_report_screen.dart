@@ -548,6 +548,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
     final generalExpenses = expenses['generalExpenses'] as double;
     final salaries = expenses['salaries'] as double;
     final advances = expenses['advances'] as double;
+    final bonuses = expenses['bonuses'] as double; // ← Hint: المكافآت من TB_Employee_Bonuses
     final profitWithdrawals = expenses['profitWithdrawals'] as double;
     final total = expenses['total'] as double;
 
@@ -577,6 +578,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             _buildExpenseItem(l10n.generalExpenses, generalExpenses, Icons.receipt_long, l10n),
             _buildExpenseItem(l10n.salaries, salaries, Icons.work, l10n),
             _buildExpenseItem(l10n.advances, advances, Icons.money, l10n),
+            _buildExpenseItem('المكافآت', bonuses, Icons.card_giftcard, l10n), // ← Hint: عرض المكافآت
             _buildExpenseItem(l10n.profitWithdrawals, profitWithdrawals, Icons.account_balance, l10n),
 
             const Divider(height: AppConstants.spacingLg),
