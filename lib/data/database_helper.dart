@@ -1422,7 +1422,44 @@ Future<int> archiveEmployee(int id) async {
   return await db.update('TB_Employees', {'IsActive': 0}, where: 'EmployeeID = ?', whereArgs: [id]);
 }
 
+// Hint: دالة لاستعادة موظف مؤرشف (جعله نشط مرة أخرى).
+Future<int> restoreEmployee(int id) async {
+  final db = await instance.database;
+  return await db.update('TB_Employees', {'IsActive': 1}, where: 'EmployeeID = ?', whereArgs: [id]);
+}
 
+// Hint: دالة للتحقق من وجود التزامات مالية للموظف (رواتب، سلف، مكافآت).
+Future<bool> employeeHasFinancialObligations(int employeeId) async {
+  final db = await instance.database;
+
+  // التحقق من وجود سجلات رواتب
+  final payrollCount = Sqflite.firstIntValue(
+    await db.rawQuery('SELECT COUNT(*) FROM TB_Payroll WHERE EmployeeID = ?', [employeeId]),
+  ) ?? 0;
+
+  if (payrollCount > 0) return true;
+
+  // التحقق من وجود سلف
+  final advancesCount = Sqflite.firstIntValue(
+    await db.rawQuery('SELECT COUNT(*) FROM TB_Employee_Advances WHERE EmployeeID = ?', [employeeId]),
+  ) ?? 0;
+
+  if (advancesCount > 0) return true;
+
+  // التحقق من وجود مكافآت
+  final bonusesCount = Sqflite.firstIntValue(
+    await db.rawQuery('SELECT COUNT(*) FROM TB_Employee_Bonuses WHERE EmployeeID = ?', [employeeId]),
+  ) ?? 0;
+
+  return bonusesCount > 0;
+}
+
+// Hint: دالة لجلب الموظفين المؤرشفين (غير النشطين).
+Future<List<models.Employee>> getArchivedEmployees() async {
+  final db = await instance.database;
+  final maps = await db.query('TB_Employees', where: 'IsActive = 0', orderBy: 'FullName ASC');
+  return List.generate(maps.length, (i) => models.Employee.fromMap(maps[i]));
+}
 
 // Hint: دالة لجلب كل سجلات الرواتب لموظف معين.
 Future<List<PayrollEntry>> getPayrollForEmployee(int employeeId) async {

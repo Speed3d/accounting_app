@@ -529,13 +529,31 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               ),
             ),
 
-            // ============= سهم التنقل =============
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 24,
-              color: isDark 
-                  ? AppColors.textSecondaryDark 
-                  : AppColors.textSecondaryLight,
+            // ============= قائمة الخيارات =============
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondaryLight,
+              ),
+              onSelected: (value) {
+                if (value == 'archive') {
+                  _confirmArchiveEmployee(employee, l10n);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'archive',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.archive_outlined, color: AppColors.warning),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Text(l10n.archive ?? 'أرشفة'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -597,6 +615,105 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
         ],
       ),
     );
+  }
+
+  // ============================================================
+  // 📦 أرشفة الموظف
+  // ============================================================
+
+  /// تأكيد أرشفة الموظف بعد التحقق من الالتزامات المالية
+  Future<void> _confirmArchiveEmployee(Employee employee, AppLocalizations l10n) async {
+    try {
+      // التحقق من وجود التزامات مالية
+      final hasObligations = await dbHelper.employeeHasFinancialObligations(employee.employeeID!);
+
+      if (!mounted) return;
+
+      if (hasObligations) {
+        // عرض تحذير بوجود التزامات مالية
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: AppColors.warning),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(l10n.warning ?? 'تحذير'),
+              ],
+            ),
+            content: Text(
+              'الموظف ${employee.fullName} لديه التزامات مالية (رواتب، سلف، أو مكافآت). لا يمكن أرشفته حالياً.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.ok ?? 'حسناً'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      // عرض حوار تأكيد الأرشفة
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.archive_outlined, color: AppColors.warning),
+              const SizedBox(width: AppConstants.spacingSm),
+              Text(l10n.confirmArchive ?? 'تأكيد الأرشفة'),
+            ],
+          ),
+          content: Text(
+            'هل أنت متأكد من أرشفة الموظف ${employee.fullName}؟\nيمكنك استعادته لاحقاً من إعدادات الأرشفة.',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel ?? 'إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.warning,
+              ),
+              child: Text(l10n.archive ?? 'أرشفة'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        // تنفيذ الأرشفة
+        await dbHelper.archiveEmployee(employee.employeeID!);
+
+        // عرض رسالة نجاح
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم أرشفة ${employee.fullName} بنجاح'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        // إعادة تحميل القائمة
+        _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   // ============================================================

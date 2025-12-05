@@ -41,17 +41,35 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   late Future<List<Product>> _productsFuture;
   bool _isProcessingSale = false;
 
+  // ← فلتر التصنيفات
+  late Future<List<ProductCategory>> _categoriesFuture;
+  ProductCategory? _selectedCategory; // null = الكل
+  List<Product> _allProducts = []; // قائمة كل المنتجات
+
   @override
   void initState() {
     super.initState();
     // ← Hint: تحميل المنتجات التي لديها كمية أكبر من 0 فقط
     _productsFuture = _loadAvailableProducts();
+    // ← Hint: تحميل التصنيفات للفلتر
+    _categoriesFuture = dbHelper.getProductCategories();
   }
 
   // ← Hint: دالة لتحميل المنتجات المتوفرة فقط (الكمية > 0)
   Future<List<Product>> _loadAvailableProducts() async {
-    final allProducts = await dbHelper.getAllProductsWithSupplierName();
-    return allProducts.where((product) => product.quantity > 0).toList();
+    final allProductsList = await dbHelper.getAllProductsWithSupplierName();
+    final availableProducts = allProductsList.where((product) => product.quantity > 0).toList();
+    // حفظ القائمة للفلترة لاحقاً
+    _allProducts = availableProducts;
+    return availableProducts;
+  }
+
+  // ← Hint: دالة لفلترة المنتجات بناءً على التصنيف المحدد
+  List<Product> _getFilteredProducts() {
+    if (_selectedCategory == null) {
+      return _allProducts; // إرجاع كل المنتجات
+    }
+    return _allProducts.where((product) => product.categoryID == _selectedCategory!.categoryID).toList();
   }
 
   // ============= دالة إتمام البيع =============
@@ -681,6 +699,89 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
     );
   }
 
+  // ============= شريط فلتر التصنيفات =============
+  Widget _buildCategoryFilter(AppLocalizations l10n) {
+    return FutureBuilder<List<ProductCategory>>(
+      future: _categoriesFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink(); // لا تعرض شيئاً إذا لم تكن هناك تصنيفات
+        }
+
+        final categories = snapshot.data!;
+
+        return Container(
+          height: 60,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              // زر "الكل"
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: FilterChip(
+                  label: Text(l10n.all ?? 'الكل'),
+                  selected: _selectedCategory == null,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _selectedCategory = null);
+                    }
+                  },
+                  selectedColor: AppColors.primary.withOpacity(0.2),
+                  checkmarkColor: AppColors.primary,
+                ),
+              ),
+              // أزرار التصنيفات
+              ...categories.map((category) {
+                final isSelected = _selectedCategory?.categoryID == category.categoryID;
+                return Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: FilterChip(
+                    label: Text(category.categoryNameAr ?? category.categoryName),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = selected ? category : null;
+                      });
+                    },
+                    selectedColor: AppColors.primary.withOpacity(0.2),
+                    checkmarkColor: AppColors.primary,
+                    avatar: category.iconName != null
+                        ? Icon(
+                            _getIconFromName(category.iconName!),
+                            size: 18,
+                            color: isSelected ? AppColors.primary : null,
+                          )
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ← Hint: تحويل اسم الأيقونة إلى IconData
+  IconData _getIconFromName(String iconName) {
+    switch (iconName) {
+      case 'fastfood':
+        return Icons.fastfood;
+      case 'local_drink':
+        return Icons.local_drink;
+      case 'cake':
+        return Icons.cake;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'coffee':
+        return Icons.coffee;
+      default:
+        return Icons.category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -760,14 +861,31 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             );
           }
 
-          final products = snapshot.data!;
+          // استخدام المنتجات المفلترة بدلاً من كل المنتجات
+          final filteredProducts = _getFilteredProducts();
 
-          return ListView.builder(
-            padding: AppConstants.screenPadding,
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return _buildProductCard(products[index], isDark, l10n);
-            },
+          return Column(
+            children: [
+              // شريط فلتر التصنيفات
+              _buildCategoryFilter(l10n),
+
+              // قائمة المنتجات المفلترة
+              Expanded(
+                child: filteredProducts.isEmpty
+                    ? EmptyState(
+                        icon: Icons.filter_alt_off,
+                        title: l10n.noProductsFound ?? 'لا توجد منتجات',
+                        message: l10n.tryChangingFilters ?? 'جرب تغيير الفلتر',
+                      )
+                    : ListView.builder(
+                        padding: AppConstants.screenPadding,
+                        itemCount: filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          return _buildProductCard(filteredProducts[index], isDark, l10n);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

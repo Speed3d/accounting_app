@@ -27,24 +27,41 @@ class NewSaleScreen extends StatefulWidget {
 
 class _NewSaleScreenState extends State<NewSaleScreen> {
   final _dbHelper = DatabaseHelper.instance;
-  
+
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
-  
+
   final List<CartItem> _cartItems = [];
-  
+
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   final _searchController = TextEditingController();
-  
+
   // ← Hint: متغير لحفظ تاريخ البيع المختار
   DateTime _selectedSaleDate = DateTime.now();
+
+  // ← فلتر التصنيفات
+  List<ProductCategory> _categories = [];
+  ProductCategory? _selectedCategory; // null = الكل
   
   @override
   void initState() {
     super.initState();
     _loadProducts();
+    _loadCategories();
+  }
+
+  /// ← Hint: تحميل التصنيفات للفلتر
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await _dbHelper.getProductCategories();
+      if (mounted) {
+        setState(() => _categories = categories);
+      }
+    } catch (e) {
+      // في حال حدوث خطأ، نتجاهله ونبقي القائمة فارغة
+    }
   }
   
   @override
@@ -83,15 +100,24 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   
   void _filterProducts(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredProducts = _allProducts;
-      } else {
-        _filteredProducts = _allProducts.where((product) {
+      // تطبيق فلترة البحث
+      List<Product> result = _allProducts;
+
+      // فلترة حسب نص البحث
+      if (query.isNotEmpty) {
+        result = result.where((product) {
           final nameLower = product.productName.toLowerCase();
           final queryLower = query.toLowerCase();
           return nameLower.contains(queryLower);
         }).toList();
       }
+
+      // فلترة حسب التصنيف المحدد
+      if (_selectedCategory != null) {
+        result = result.where((product) => product.categoryID == _selectedCategory!.categoryID).toList();
+      }
+
+      _filteredProducts = result;
     });
   }
   
@@ -338,7 +364,87 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       });
     }
   }
-  
+
+  // ============= شريط فلتر التصنيفات =============
+  Widget _buildCategoryFilter(AppLocalizations l10n) {
+    if (_categories.isEmpty) {
+      return const SizedBox.shrink(); // لا تعرض شيئاً إذا لم تكن هناك تصنيفات
+    }
+
+    return Container(
+      height: 60,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          // زر "الكل"
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: FilterChip(
+              label: Text(l10n.all ?? 'الكل'),
+              selected: _selectedCategory == null,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() {
+                    _selectedCategory = null;
+                    _filterProducts(_searchController.text);
+                  });
+                }
+              },
+              selectedColor: AppColors.primary.withOpacity(0.2),
+              checkmarkColor: AppColors.primary,
+            ),
+          ),
+          // أزرار التصنيفات
+          ..._categories.map((category) {
+            final isSelected = _selectedCategory?.categoryID == category.categoryID;
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FilterChip(
+                label: Text(category.categoryNameAr ?? category.categoryName),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    _selectedCategory = selected ? category : null;
+                    _filterProducts(_searchController.text);
+                  });
+                },
+                selectedColor: AppColors.primary.withOpacity(0.2),
+                checkmarkColor: AppColors.primary,
+                avatar: category.iconName != null
+                    ? Icon(
+                        _getIconFromName(category.iconName!),
+                        size: 18,
+                        color: isSelected ? AppColors.primary : null,
+                      )
+                    : null,
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  // ← Hint: تحويل اسم الأيقونة إلى IconData
+  IconData _getIconFromName(String iconName) {
+    switch (iconName) {
+      case 'fastfood':
+        return Icons.fastfood;
+      case 'local_drink':
+        return Icons.local_drink;
+      case 'cake':
+        return Icons.cake;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'coffee':
+        return Icons.coffee;
+      default:
+        return Icons.category;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -546,25 +652,45 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     }
     
     if (_filteredProducts.isEmpty) {
-      return EmptyState(
-        icon: Icons.search_off,
-        title: l10n.noMatchingResults,
-        message: 'جرب البحث بكلمة أخرى',
+      return Column(
+        children: [
+          // شريط فلتر التصنيفات
+          _buildCategoryFilter(l10n),
+
+          // رسالة لا توجد نتائج
+          Expanded(
+            child: EmptyState(
+              icon: Icons.search_off,
+              title: l10n.noMatchingResults,
+              message: 'جرب البحث بكلمة أخرى أو تغيير الفلتر',
+            ),
+          ),
+        ],
       );
     }
-    
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(
-        AppConstants.spacingMd,
-        AppConstants.spacingSm,
-        AppConstants.spacingMd,
-        AppConstants.spacingXl * 3,
-      ),
-      itemCount: _filteredProducts.length,
-      itemBuilder: (context, index) {
-        final product = _filteredProducts[index];
-        return _buildProductCard(product, l10n);
-      },
+
+    return Column(
+      children: [
+        // شريط فلتر التصنيفات
+        _buildCategoryFilter(l10n),
+
+        // قائمة المنتجات المفلترة
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.fromLTRB(
+              AppConstants.spacingMd,
+              AppConstants.spacingSm,
+              AppConstants.spacingMd,
+              AppConstants.spacingXl * 3,
+            ),
+            itemCount: _filteredProducts.length,
+            itemBuilder: (context, index) {
+              final product = _filteredProducts[index];
+              return _buildProductCard(product, l10n);
+            },
+          ),
+        ),
+      ],
     );
   }
   
