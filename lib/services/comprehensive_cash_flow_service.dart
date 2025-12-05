@@ -469,14 +469,6 @@ class ComprehensiveCashFlowService {
     return await db.rawQuery(sql, args);
   }
 
-  /// تفاصيل المكافآت
-  Future<List<Map<String, dynamic>>> _getBonusesDetails(DateTime? startDate, DateTime? endDate) async {
-    return await _db.getBonusesInPeriod(
-      startDate: startDate,
-      endDate: endDate,
-    );
-  }
-
   /// تفاصيل سحوبات الأرباح
   Future<List<Map<String, dynamic>>> _getWithdrawalsDetails(DateTime? startDate, DateTime? endDate) async {
     final db = await _db.database;
