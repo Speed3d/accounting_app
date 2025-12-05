@@ -13,12 +13,13 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_card.dart';
 
-/// 💳 شاشة إضافة سلفة - صفحة فرعية
-/// Hint: نموذج لتسجيل سلفة جديدة للموظف
+/// 💳 شاشة إضافة/تعديل سلفة - صفحة فرعية
+/// Hint: نموذج لتسجيل سلفة جديدة أو تعديل سلفة موجودة للموظف
 class AddAdvanceScreen extends StatefulWidget {
   final Employee employee;
+  final EmployeeAdvance? advance; // إذا كان موجوداً، فإننا في وضع التعديل
 
-  const AddAdvanceScreen({super.key, required this.employee});
+  const AddAdvanceScreen({super.key, required this.employee, this.advance});
 
   @override
   State<AddAdvanceScreen> createState() => _AddAdvanceScreenState();
@@ -39,10 +40,22 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
+  // ============= Getters =============
+  bool get _isEditMode => widget.advance != null;
+
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
+
+    if (_isEditMode) {
+      // وضع التعديل - تعبئة البيانات
+      final advance = widget.advance!;
+      _selectedDate = DateTime.parse(advance.advanceDate);
+      _amountController.text = advance.advanceAmount.toString();
+      _notesController.text = advance.notes ?? '';
+    }
+
     _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
   }
 
@@ -67,44 +80,74 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
     try {
       final amount = parseDecimal(
-       convertArabicNumbersToEnglish(_amountController.text),
-      );
-      final l10n = AppLocalizations.of(context)!;
-      final newAdvance = EmployeeAdvance(
-        employeeID: widget.employee.employeeID!,
-        advanceDate: _selectedDate.toIso8601String(),
-        advanceAmount: amount,
-        repaymentStatus: l10n.unpaid,
-        notes: _notesController.text.trim(),
+        convertArabicNumbersToEnglish(_amountController.text),
       );
 
-      await dbHelper.recordNewAdvance(newAdvance);
-
-      // تسجيل النشاط
-      // final action = 'تسجيل سلفة للموظف: ${widget.employee.fullName} بقيمة: ${formatCurrency(amount)}';
-      final action = l10n.advanceRegisteredForEmployee(
-      widget.employee.fullName,
-      formatCurrency(amount),
-      );
-      await dbHelper.logActivity(
-      action,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: AppConstants.spacingSm),
-                Expanded(child: Text(l10n.advanceAddedSuccess)),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
+      if (_isEditMode) {
+        // تعديل سلفة موجودة
+        await dbHelper.editAdvance(
+          advanceID: widget.advance!.advanceID!,
+          newDate: _selectedDate.toIso8601String(),
+          newAmount: amount,
+          newStatus: widget.advance!.repaymentStatus, // نحتفظ بنفس الحالة
+          newNotes: _notesController.text.trim().isNotEmpty
+              ? _notesController.text.trim()
+              : null,
         );
-        Navigator.of(context).pop(true);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(child: Text(l10n.advanceUpdatedSuccess ?? 'تم تحديث السلفة بنجاح')),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        // إضافة سلفة جديدة
+        final newAdvance = EmployeeAdvance(
+          employeeID: widget.employee.employeeID!,
+          advanceDate: _selectedDate.toIso8601String(),
+          advanceAmount: amount,
+          repaymentStatus: l10n.unpaid,
+          notes: _notesController.text.trim(),
+        );
+
+        await dbHelper.recordNewAdvance(newAdvance);
+
+        // تسجيل النشاط
+        final action = l10n.advanceRegisteredForEmployee(
+          widget.employee.fullName,
+          formatCurrency(amount),
+        );
+        await dbHelper.logActivity(
+          action,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(child: Text(l10n.advanceAddedSuccess)),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop(true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -157,12 +200,14 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
     return Scaffold(
       // ============= AppBar =============
       appBar: AppBar(
-        title: Text(l10n.newAdvanceFor(widget.employee.fullName)),
-        
+        title: Text(_isEditMode
+          ? (l10n.editAdvance ?? 'تعديل سلفة ${widget.employee.fullName}')
+          : l10n.newAdvanceFor(widget.employee.fullName)),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            tooltip: l10n.saveAdvance,
+            tooltip: _isEditMode ? l10n.save : l10n.saveAdvance,
             onPressed: _isLoading ? null : _saveAdvance,
           ),
         ],

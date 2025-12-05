@@ -459,7 +459,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
 
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
-      onTap: () => _showPayrollDetailsDialog(entry, l10n),
+      onTap: () => _showPayrollOptionsDialog(entry, l10n),
       child: Padding(
         padding: AppConstants.paddingMd,
         child: Row(
@@ -545,6 +545,207 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     );
   }
 
+  /// مربع حوار خيارات الراتب (عرض التفاصيل/تعديل/حذف)
+  void _showPayrollOptionsDialog(PayrollEntry entry, AppLocalizations l10n) {
+    final monthName = _getMonthName(entry.payrollMonth, l10n);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppConstants.radiusLg),
+        ),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: AppConstants.paddingMd,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // عنوان
+              Text(
+                'راتب $monthName ${entry.payrollYear}',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // معلومات سريعة
+              Container(
+                padding: AppConstants.paddingMd,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      formatCurrency(entry.netSalary),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('yyyy-MM-dd').format(
+                        DateTime.parse(entry.paymentDate),
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // خيار عرض التفاصيل
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.visibility,
+                    color: AppColors.info,
+                  ),
+                ),
+                title: Text(l10n.viewDetails ?? 'عرض التفاصيل'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showPayrollDetailsDialog(entry, l10n);
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // خيار التعديل
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.warning,
+                  ),
+                ),
+                title: Text(l10n.edit),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (context) => AddPayrollScreen(
+                        employee: _currentEmployee,
+                        payroll: entry,
+                      ),
+                    ),
+                  );
+                  if (result == true) {
+                    _reloadData();
+                  }
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // خيار الحذف
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: AppColors.error,
+                  ),
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: AppColors.error),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeletePayroll(entry, l10n, monthName);
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // زر الإلغاء
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// تأكيد حذف الراتب
+  void _confirmDeletePayroll(PayrollEntry entry, AppLocalizations l10n, String monthName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmDelete ?? 'تأكيد الحذف'),
+        content: Text(
+          'هل أنت متأكد من حذف راتب $monthName ${entry.payrollYear}؟\n\nالصافي: ${formatCurrency(entry.netSalary)}\nالتاريخ: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(entry.paymentDate))}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            onPressed: () async {
+              try {
+                await dbHelper.deletePayroll(entry.payrollID!);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.payrollDeletedSuccess ?? 'تم حذف الراتب بنجاح'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _reloadData();
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ============================================================
   // 💳 تبويب سجل السلف
   // ============================================================
@@ -612,6 +813,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
 
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+      onTap: () => _showAdvanceOptionsDialog(advance, l10n),
       child: Padding(
         padding: AppConstants.paddingMd,
         child: Row(
@@ -1038,6 +1240,273 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// مربع حوار خيارات السلفة (تسديد/تعديل/حذف)
+  void _showAdvanceOptionsDialog(EmployeeAdvance advance, AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isPaid = advance.repaymentStatus == 'مسددة بالكامل';
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppConstants.radiusLg),
+        ),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: AppConstants.paddingMd,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // عنوان
+              Text(
+                l10n.advanceOptions ?? 'خيارات السلفة',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // معلومات سريعة
+              Container(
+                padding: AppConstants.paddingMd,
+                decoration: BoxDecoration(
+                  color: (isPaid ? AppColors.success : AppColors.warning).withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          formatCurrency(advance.advanceAmount),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isPaid ? AppColors.success : AppColors.warning,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          advance.repaymentStatus,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isPaid ? AppColors.success : AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      DateFormat('yyyy-MM-dd').format(
+                        DateTime.parse(advance.advanceDate),
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // خيار التسديد (يظهر فقط للسلف غير المسددة)
+              if (!isPaid) ...[
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(AppConstants.spacingSm),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: AppConstants.borderRadiusMd,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: AppColors.success,
+                    ),
+                  ),
+                  title: Text(l10n.repayAdvance ?? 'تسديد السلفة'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _confirmRepayAdvance(advance, l10n);
+                  },
+                ),
+                const SizedBox(height: AppConstants.spacingSm),
+              ],
+
+              // خيار التعديل
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.info,
+                  ),
+                ),
+                title: Text(l10n.edit),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (context) => AddAdvanceScreen(
+                        employee: _currentEmployee,
+                        advance: advance,
+                      ),
+                    ),
+                  );
+                  if (result == true) {
+                    _reloadData();
+                  }
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // خيار الحذف
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(AppConstants.spacingSm),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusMd,
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: AppColors.error,
+                  ),
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: AppColors.error),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDeleteAdvance(advance, l10n);
+                },
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // زر الإلغاء
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// تأكيد تسديد السلفة
+  void _confirmRepayAdvance(EmployeeAdvance advance, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmRepayment ?? 'تأكيد التسديد'),
+        content: Text(
+          'هل أنت متأكد من تسديد هذه السلفة؟\n\nالمبلغ: ${formatCurrency(advance.advanceAmount)}\nالتاريخ: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(advance.advanceDate))}\n\nسيتم تغيير الحالة إلى "مسددة بالكامل".',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+            ),
+            onPressed: () async {
+              try {
+                await dbHelper.repayAdvance(advance.advanceID!, l10n.fullyPaid);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.advanceRepaidSuccess ?? 'تم تسديد السلفة بنجاح'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _reloadData();
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.confirm ?? 'تأكيد'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// تأكيد حذف السلفة
+  void _confirmDeleteAdvance(EmployeeAdvance advance, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmDelete ?? 'تأكيد الحذف'),
+        content: Text(
+          'هل أنت متأكد من حذف هذه السلفة؟\n\nالمبلغ: ${formatCurrency(advance.advanceAmount)}\nالتاريخ: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(advance.advanceDate))}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            onPressed: () async {
+              try {
+                await dbHelper.deleteAdvance(advance.advanceID!);
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.advanceDeletedSuccess ?? 'تم حذف السلفة بنجاح'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _reloadData();
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(l10n.delete),
+          ),
+        ],
       ),
     );
   }
