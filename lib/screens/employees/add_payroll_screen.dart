@@ -17,8 +17,9 @@ import '../../widgets/custom_card.dart';
 /// Hint: نموذج شامل لحساب وصرف راتب شهري للموظف
 class AddPayrollScreen extends StatefulWidget {
   final Employee employee;
+  final PayrollEntry? payroll; // إذا كان موجوداً، فإننا في وضع التعديل
 
-  const AddPayrollScreen({super.key, required this.employee});
+  const AddPayrollScreen({super.key, required this.employee, this.payroll});
 
   @override
   State<AddPayrollScreen> createState() => _AddPayrollScreenState();
@@ -45,13 +46,32 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
   Decimal _netSalary = Decimal.zero;
   bool _isLoading = false;
 
+  // ============= Getters =============
+  bool get _isEditMode => widget.payroll != null;
+
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
-    _selectedYear = DateTime.now().year;
-    _selectedMonth = DateTime.now().month;
-    _baseSalaryController.text = widget.employee.baseSalary.toString();
+
+    if (_isEditMode) {
+      // وضع التعديل - تعبئة البيانات
+      final payroll = widget.payroll!;
+      _selectedYear = payroll.payrollYear;
+      _selectedMonth = payroll.payrollMonth;
+      _selectedDate = DateTime.parse(payroll.paymentDate);
+      _baseSalaryController.text = payroll.baseSalary.toString();
+      _bonusesController.text = payroll.bonuses.toString();
+      _deductionsController.text = payroll.deductions.toString();
+      _advanceRepaymentController.text = payroll.advanceDeduction.toString();
+      _notesController.text = payroll.notes ?? '';
+    } else {
+      // وضع الإضافة - استخدام القيم الافتراضية
+      _selectedYear = DateTime.now().year;
+      _selectedMonth = DateTime.now().month;
+      _baseSalaryController.text = widget.employee.baseSalary.toString();
+    }
+
     _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
 
     // الاستماع للتغييرات لحساب الصافي
@@ -166,80 +186,114 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // التحقق من عدم التكرار
-      final isDuplicate = await dbHelper.isPayrollDuplicate(
-        widget.employee.employeeID!,
-        _selectedMonth,
-        _selectedYear,
+      final baseSalary = parseDecimal(
+        convertArabicNumbersToEnglish(_baseSalaryController.text),
+      );
+      final bonuses = parseDecimal(
+        convertArabicNumbersToEnglish(_bonusesController.text),
+      );
+      final deductions = parseDecimal(
+        convertArabicNumbersToEnglish(_deductionsController.text),
+      );
+      final advanceRepayment = parseDecimal(
+        convertArabicNumbersToEnglish(_advanceRepaymentController.text),
       );
 
-      if (isDuplicate) {
+      if (_isEditMode) {
+        // تعديل راتب موجود
+        await dbHelper.editPayroll(
+          payrollID: widget.payroll!.payrollID!,
+          newDate: _selectedDate.toIso8601String(),
+          newBaseSalary: baseSalary,
+          newBonuses: bonuses,
+          newDeductions: deductions,
+          newAdvanceDeduction: advanceRepayment,
+          newNetSalary: _netSalary,
+          newNotes: _notesController.text.trim().isNotEmpty
+              ? _notesController.text.trim()
+              : null,
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(l10n.payrollAlreadyExists),
-              backgroundColor: AppColors.error,
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(child: Text(l10n.payrollUpdatedSuccess ?? 'تم تحديث الراتب بنجاح')),
+                ],
+              ),
+              backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
           );
+          Navigator.of(context).pop(true);
         }
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final baseSalary = parseDecimal(
-      convertArabicNumbersToEnglish(_baseSalaryController.text),
-      );
-      final bonuses = parseDecimal(
-      convertArabicNumbersToEnglish(_bonusesController.text),
-     );
-      final deductions = parseDecimal(
-      convertArabicNumbersToEnglish(_deductionsController.text),
-     );
-      final advanceRepayment = parseDecimal(
-      convertArabicNumbersToEnglish(_advanceRepaymentController.text),
-     );
-
-      final newPayroll = PayrollEntry(
-        employeeID: widget.employee.employeeID!,
-        paymentDate: _selectedDate.toIso8601String(),
-        payrollMonth: _selectedMonth,
-        payrollYear: _selectedYear,
-        baseSalary: baseSalary,
-        bonuses: bonuses,
-        deductions: deductions,
-        advanceDeduction: advanceRepayment,
-        netSalary: _netSalary,
-        notes: _notesController.text.trim(),
-      );
-
-      await dbHelper.recordNewPayroll(newPayroll, advanceRepayment);
-
-      // تسجيل النشاط
-      final monthName = _getMonthName(_selectedMonth, l10n);
-      final action = l10n.payrollRegisteredForEmployee(
-        monthName,
-        widget.employee.fullName,
-      );
-      await dbHelper.logActivity(
-        action,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: AppConstants.spacingSm),
-                Expanded(child: Text(l10n.payrollSavedSuccess)),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
+      } else {
+        // إضافة راتب جديد
+        // التحقق من عدم التكرار
+        final isDuplicate = await dbHelper.isPayrollDuplicate(
+          widget.employee.employeeID!,
+          _selectedMonth,
+          _selectedYear,
         );
-        Navigator.of(context).pop(true);
+
+        if (isDuplicate) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.payrollAlreadyExists),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        final newPayroll = PayrollEntry(
+          employeeID: widget.employee.employeeID!,
+          paymentDate: _selectedDate.toIso8601String(),
+          payrollMonth: _selectedMonth,
+          payrollYear: _selectedYear,
+          baseSalary: baseSalary,
+          bonuses: bonuses,
+          deductions: deductions,
+          advanceDeduction: advanceRepayment,
+          netSalary: _netSalary,
+          notes: _notesController.text.trim(),
+        );
+
+        await dbHelper.recordNewPayroll(newPayroll, advanceRepayment);
+
+        // تسجيل النشاط
+        final monthName = _getMonthName(_selectedMonth, l10n);
+        final action = l10n.payrollRegisteredForEmployee(
+          monthName,
+          widget.employee.fullName,
+        );
+        await dbHelper.logActivity(
+          action,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(child: Text(l10n.payrollSavedSuccess)),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop(true);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -293,11 +347,13 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
     return Scaffold(
       // ============= AppBar =============
       appBar: AppBar(
-        title: Text(l10n.payrollFor(widget.employee.fullName)),
+        title: Text(_isEditMode
+          ? (l10n.editPayroll ?? 'تعديل راتب ${widget.employee.fullName}')
+          : l10n.payrollFor(widget.employee.fullName)),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            tooltip: l10n.saveAndPaySalary,
+            tooltip: _isEditMode ? l10n.save : l10n.saveAndPaySalary,
             onPressed: _isLoading ? null : _savePayroll,
           ),
         ],

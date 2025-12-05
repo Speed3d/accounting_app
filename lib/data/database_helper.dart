@@ -1735,6 +1735,21 @@ Future<void> deleteAdvance(int advanceID) async {
   });
 }
 
+// ← Hint: تسديد سلفة
+// ← Hint: يغير حالة السلفة من "غير مسددة" إلى "مسددة بالكامل"
+Future<void> repayAdvance(int advanceID, String paidStatus) async {
+  final db = await instance.database;
+
+  await db.update(
+    'TB_Employee_Advances',
+    {
+      'RepaymentStatus': paidStatus,
+    },
+    where: 'AdvanceID = ?',
+    whereArgs: [advanceID],
+  );
+}
+
 // Hint: دالة لحساب إجمالي رصيد السلف المستحقة على جميع الموظفين.
 Future<Decimal> getTotalActiveAdvancesBalance() async {
     final db = await instance.database;
