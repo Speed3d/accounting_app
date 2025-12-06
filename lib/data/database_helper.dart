@@ -1713,13 +1713,30 @@ Future<void> editAdvance({
   });
 }
 
-// ← Hint: حذف سلفة
-// ← Hint: يخصم المبلغ من رصيد الموظف
+// ← Hint: حذف سلفة (مع معالجة التسديدات بشكل صحيح)
+// ← Hint: تحذف السلفة وجميع تسديداتها من قاعدة البيانات
+// ← Hint: تحدّث Balance بشكل صحيح عند الحذف
+// ← Hint:
+// ← Hint: السيناريوهات المدعومة:
+// ← Hint: - حذف سلفة غير مسددة: Balance = Balance - AdvanceAmount
+// ← Hint: - حذف سلفة مسددة جزئياً: Balance = Balance + TotalRepaid - AdvanceAmount
+// ← Hint: - حذف سلفة مسددة بالكامل: Balance = Balance + TotalRepaid - AdvanceAmount = Balance + 0
+// ← Hint:
+// ← Hint: معادلة التحديث الموحدة:
+// ← Hint: Balance = Balance + (TotalRepaid - AdvanceAmount)
+// ← Hint:
+// ← Hint: التفسير:
+// ← Hint: 1. عند إعطاء السلفة: Balance += AdvanceAmount (زيادة الرصيد)
+// ← Hint: 2. عند التسديد: Balance -= RepaymentAmount (تخفيض الرصيد)
+// ← Hint: 3. عند الحذف: نعكس العمليتين:
+// ← Hint:    - نزيل أثر السلفة: -AdvanceAmount
+// ← Hint:    - نزيل أثر التسديدات: +TotalRepaid
+// ← Hint:    - النتيجة: Balance += (TotalRepaid - AdvanceAmount)
 Future<void> deleteAdvance(int advanceID) async {
   final db = await instance.database;
 
   await db.transaction((txn) async {
-    // جلب السلفة
+    // ← Hint: 1. جلب معلومات السلفة
     final advanceMaps = await txn.query(
       'TB_Employee_Advances',
       where: 'AdvanceID = ?',
@@ -1728,20 +1745,64 @@ Future<void> deleteAdvance(int advanceID) async {
 
     if (advanceMaps.isEmpty) return;
 
-    final amount = Decimal.parse(advanceMaps.first['AdvanceAmount'].toString());
+    final employeeID = advanceMaps.first['EmployeeID'] as int;
+    final advanceAmount = Decimal.parse(advanceMaps.first['AdvanceAmount'].toString());
 
-    // حذف السلفة
+    // ← Hint: 2. حساب إجمالي التسديدات الموجودة لهذه السلفة
+    // ← Hint: نحتاج هذا لحساب تأثير الحذف على Balance بشكل صحيح
+    final repaymentsMaps = await txn.query(
+      'TB_Advance_Repayments',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    Decimal totalRepaid = Decimal.zero;
+    for (var repayment in repaymentsMaps) {
+      totalRepaid += Decimal.parse(repayment['RepaymentAmount'].toString());
+    }
+
+    // ← Hint: 3. حذف جميع التسديدات أولاً
+    // ← Hint: على الرغم من وجود CASCADE DELETE في schema قاعدة البيانات،
+    // ← Hint: نحذفها يدوياً لضمان عملها في جميع إصدارات SQLite
+    await txn.delete(
+      'TB_Advance_Repayments',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    // ← Hint: 4. حذف السلفة نفسها
     await txn.delete(
       'TB_Employee_Advances',
       where: 'AdvanceID = ?',
       whereArgs: [advanceID],
     );
 
-    // خصم من رصيد الموظف
+    // ← Hint: 5. تحديث رصيد الموظف بالصيغة الصحيحة
+    // ← Hint: Balance = Balance + (TotalRepaid - AdvanceAmount)
+    // ← Hint:
+    // ← Hint: أمثلة:
+    // ← Hint: - سلفة 50,000 غير مسددة (TotalRepaid=0):
+    // ← Hint:   Adjustment = 0 - 50,000 = -50,000 ✅
+    // ← Hint:   (عكس العملية الأصلية عند إعطاء السلفة)
+    // ← Hint:
+    // ← Hint: - سلفة 50,000 مسددة جزئياً بـ 20,000 (TotalRepaid=20,000):
+    // ← Hint:   Adjustment = 20,000 - 50,000 = -30,000 ✅
+    // ← Hint:   (نعكس السلفة الأصلية ونعكس التسديدات)
+    // ← Hint:
+    // ← Hint: - سلفة 50,000 مسددة بالكامل (TotalRepaid=50,000):
+    // ← Hint:   Adjustment = 50,000 - 50,000 = 0 ✅
+    // ← Hint:   (Balance لن يتغير لأن السلفة والتسديد كانا متساويين)
+    final balanceAdjustment = totalRepaid - advanceAmount;
+
     await txn.rawUpdate(
-      'UPDATE TB_Employees SET Balance = Balance - ?',
-      [amount.toDouble()],
+      'UPDATE TB_Employees SET Balance = Balance + ? WHERE EmployeeID = ?',
+      [balanceAdjustment.toDouble(), employeeID],
     );
+
+    debugPrint('✅ تم حذف السلفة #$advanceID');
+    debugPrint('   ├─ مبلغ السلفة: ${advanceAmount.toStringAsFixed(2)}');
+    debugPrint('   ├─ إجمالي التسديدات: ${totalRepaid.toStringAsFixed(2)}');
+    debugPrint('   └─ تعديل الرصيد: ${balanceAdjustment.toStringAsFixed(2)}');
   });
 }
 
