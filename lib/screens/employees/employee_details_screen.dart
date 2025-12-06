@@ -1412,14 +1412,194 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     );
   }
 
-  /// تأكيد تسديد السلفة
-  void _confirmRepayAdvance(EmployeeAdvance advance, AppLocalizations l10n) {
+  /// تسديد السلفة (النظام الجديد مع دعم التسديد الجزئي والكامل)
+  /// ← Hint: يعرض مربع حوار مع خيارين:
+  /// ← Hint: 1. تسديد جزئي (إدخال مبلغ معين)
+  /// ← Hint: 2. تسديد كامل (تسديد المبلغ المتبقي بالكامل)
+  void _confirmRepayAdvance(EmployeeAdvance advance, AppLocalizations l10n) async {
+    // ← Hint: حساب المبلغ المتبقي من السلفة
+    final remainingAmount = await dbHelper.getRemainingAdvanceAmount(advance.advanceID!);
+
+    if (remainingAmount <= Decimal.zero) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('هذه السلفة مسددة بالكامل'),
+            backgroundColor: AppColors.info,
+          ),
+        );
+      }
+      return;
+    }
+
+    // ← Hint: عرض مربع حوار مع الخيارات
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppConstants.radiusLg),
+        ),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: AppConstants.spacingMd,
+          right: AppConstants.spacingMd,
+          top: AppConstants.spacingMd,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // العنوان
+            Text(
+              'تسديد السلفة',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // معلومات السلفة
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('المبلغ الأصلي:'),
+                      Text(
+                        formatCurrency(advance.advanceAmount),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingSm),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('المبلغ المتبقي:'),
+                      Text(
+                        formatCurrency(remainingAmount),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppConstants.spacingLg),
+
+            // ← Hint: خيار التسديد الكامل
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: AppColors.success,
+                ),
+              ),
+              title: const Text('تسديد كامل'),
+              subtitle: Text('تسديد ${formatCurrency(remainingAmount)}'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                _processRepayment(advance, remainingAmount, l10n);
+              },
+            ),
+
+            const Divider(),
+
+            // ← Hint: خيار التسديد الجزئي
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(AppConstants.spacingSm),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                ),
+                child: const Icon(
+                  Icons.payments,
+                  color: AppColors.info,
+                ),
+              ),
+              title: const Text('تسديد جزئي'),
+              subtitle: const Text('إدخال مبلغ محدد'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                _showPartialRepaymentDialog(advance, remainingAmount, l10n);
+              },
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// عرض مربع حوار لإدخال مبلغ التسديد الجزئي
+  /// ← Hint: يسمح للمستخدم بإدخال مبلغ معين للتسديد
+  void _showPartialRepaymentDialog(
+    EmployeeAdvance advance,
+    Decimal remainingAmount,
+    AppLocalizations l10n,
+  ) {
+    final TextEditingController amountController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.confirmRepayment ?? 'تأكيد التسديد'),
-        content: Text(
-          'هل أنت متأكد من تسديد هذه السلفة؟\n\nالمبلغ: ${formatCurrency(advance.advanceAmount)}\nالتاريخ: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(advance.advanceDate))}\n\nسيتم تغيير الحالة إلى "مسددة بالكامل".',
+        title: const Text('تسديد جزئي'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'المبلغ المتبقي: ${formatCurrency(remainingAmount)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(height: AppConstants.spacingMd),
+              TextFormField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'المبلغ المسدد',
+                  prefixIcon: Icon(Icons.attach_money),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'الرجاء إدخال المبلغ';
+                  }
+                  final amount = Decimal.tryParse(value);
+                  if (amount == null || amount <= Decimal.zero) {
+                    return 'الرجاء إدخال مبلغ صحيح';
+                  }
+                  if (amount > remainingAmount) {
+                    return 'المبلغ أكبر من المبلغ المتبقي';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -1430,36 +1610,54 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
             ),
-            onPressed: () async {
-              try {
-                await dbHelper.repayAdvance(advance.advanceID!, l10n.fullyPaid);
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.advanceRepaidSuccess ?? 'تم تسديد السلفة بنجاح'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                  _reloadData();
-                }
-              } catch (e) {
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${l10n.error}: ${e.toString()}'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                final amount = Decimal.parse(amountController.text);
+                Navigator.pop(context);
+                _processRepayment(advance, amount, l10n);
               }
             },
-            child: Text(l10n.confirm ?? 'تأكيد'),
+            child: const Text('تسديد'),
           ),
         ],
       ),
     );
+  }
+
+  /// معالجة عملية التسديد (جزئي أو كامل)
+  /// ← Hint: تسجل التسديد في قاعدة البيانات وتحدّث الواجهة
+  Future<void> _processRepayment(
+    EmployeeAdvance advance,
+    Decimal repaymentAmount,
+    AppLocalizations l10n,
+  ) async {
+    try {
+      await dbHelper.repayAdvance(
+        advanceID: advance.advanceID!,
+        employeeID: advance.employeeID,
+        repaymentAmount: repaymentAmount,
+        notes: null,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم تسديد ${formatCurrency(repaymentAmount)} بنجاح'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        _reloadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ في التسديد: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   /// تأكيد حذف السلفة

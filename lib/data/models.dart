@@ -333,6 +333,48 @@ class EmployeeBonus {
       );
 }
 
+// --- نموذج تسديد السلفة ---
+// ← Hint: يمثل جدول TB_Advance_Repayments
+// ← Hint: يسجل كل عملية تسديد للسلف (كاملة أو جزئية)
+// ← Hint: يستخدم لتتبع التسديدات وعرضها في تقرير التدفقات النقدية كإيرادات
+class AdvanceRepayment {
+  final int? repaymentID;
+  final int advanceID;          // ← Hint: معرف السلفة المرتبطة (FK)
+  final int employeeID;         // ← Hint: معرف الموظف (FK)
+  final String repaymentDate;   // ← Hint: تاريخ التسديد
+  final Decimal repaymentAmount;// ← Hint: المبلغ المسدد (يمكن أن يكون جزئي أو كامل)
+  final String? notes;          // ← Hint: ملاحظات اختيارية
+
+  AdvanceRepayment({
+    this.repaymentID,
+    required this.advanceID,
+    required this.employeeID,
+    required this.repaymentDate,
+    required this.repaymentAmount,
+    this.notes,
+  });
+
+  // ← Hint: تحويل النموذج إلى Map لحفظه في قاعدة البيانات
+  Map<String, dynamic> toMap() => {
+        'RepaymentID': repaymentID,
+        'AdvanceID': advanceID,
+        'EmployeeID': employeeID,
+        'RepaymentDate': repaymentDate,
+        'RepaymentAmount': repaymentAmount.toDouble(),
+        'Notes': notes,
+      };
+
+  // ← Hint: إنشاء نموذج من Map (من قاعدة البيانات)
+  factory AdvanceRepayment.fromMap(Map<String, dynamic> map) => AdvanceRepayment(
+        repaymentID: map['RepaymentID'],
+        advanceID: map['AdvanceID'],
+        employeeID: map['EmployeeID'],
+        repaymentDate: map['RepaymentDate'],
+        repaymentAmount: map.getDecimal('RepaymentAmount'),
+        notes: map['Notes'],
+      );
+}
+
 
 // --- نموذج المورد ---
 class Supplier {

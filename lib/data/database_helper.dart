@@ -35,7 +35,9 @@ class DatabaseHelper {
   // Version 2: إضافة جدول TB_Employee_Bonuses
   // Version 3: 🆕 النظام الجديد - Email Auth + Subscriptions
   // Version 4: ✅ نظام الوحدات والتصنيفات للمنتجات
-  static const _databaseVersion = 4;
+  // Version 5: ✅ نظام تسديدات السلف (TB_Advance_Repayments)
+  // ← Hint: v5 يضيف جدول تسديدات السلف لتسجيل عمليات التسديد الكاملة أو الجزئية
+  static const _databaseVersion = 5;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -668,6 +670,14 @@ class DatabaseHelper {
       debugPrint('✅ تم تحديث المنتجات الموجودة');
 
       debugPrint('✅ تم تطبيق Migration إلى v4 بنجاح');
+    }
+
+    // ✅ ترقية من الإصدار 4 إلى 5: نظام تسديدات السلف
+    // ← Hint: إضافة جدول TB_Advance_Repayments لتسجيل عمليات التسديد
+    if (oldVersion < 5) {
+      debugPrint('📦 تطبيق Migration إلى v5 (نظام تسديدات السلف)...');
+      await DatabaseMigrations.migrateToV5(db);
+      debugPrint('✅ تم تطبيق Migration إلى v5 بنجاح');
     }
   }
 
@@ -1737,17 +1747,189 @@ Future<void> deleteAdvance(int advanceID) async {
 
 // ← Hint: تسديد سلفة
 // ← Hint: يغير حالة السلفة من "غير مسددة" إلى "مسددة بالكامل"
-Future<void> repayAdvance(int advanceID, String paidStatus) async {
+// ← Hint: دالة تسديد السلفة (النظام الجديد مع دعم التسديد الجزئي والكامل)
+// ← Hint: تسجل عملية التسديد في جدول TB_Advance_Repayments
+// ← Hint: تحدّث Balance في TB_Employees
+// ← Hint: تحدّث RepaymentStatus في TB_Employee_Advances
+Future<void> repayAdvance({
+  required int advanceID,
+  required int employeeID,
+  required Decimal repaymentAmount,
+  String? notes,
+}) async {
   final db = await instance.database;
 
-  await db.update(
+  await db.transaction((txn) async {
+    // ← Hint: 1. جلب معلومات السلفة للتحقق من المبلغ المتبقي
+    final advanceResult = await txn.query(
+      'TB_Employee_Advances',
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (advanceResult.isEmpty) {
+      throw Exception('السلفة غير موجودة');
+    }
+
+    final advanceData = advanceResult.first;
+    final advanceAmount = Decimal.parse(advanceData['AdvanceAmount'].toString());
+
+    // ← Hint: 2. حساب المبلغ المسدد مسبقاً من جدول التسديدات
+    final repaymentsResult = await txn.rawQuery(
+      'SELECT COALESCE(SUM(RepaymentAmount), 0) as TotalRepaid FROM TB_Advance_Repayments WHERE AdvanceID = ?',
+      [advanceID],
+    );
+    final totalRepaid = Decimal.parse(repaymentsResult.first['TotalRepaid'].toString());
+
+    // ← Hint: 3. حساب المبلغ المتبقي
+    final remainingAmount = advanceAmount - totalRepaid;
+
+    // ← Hint: 4. التحقق من أن المبلغ المسدد لا يتجاوز المبلغ المتبقي
+    if (repaymentAmount > remainingAmount) {
+      throw Exception('المبلغ المسدد ($repaymentAmount) أكبر من المبلغ المتبقي ($remainingAmount)');
+    }
+
+    // ← Hint: 5. تسجيل التسديد في جدول TB_Advance_Repayments
+    final repayment = AdvanceRepayment(
+      advanceID: advanceID,
+      employeeID: employeeID,
+      repaymentDate: DateTime.now().toIso8601String(),
+      repaymentAmount: repaymentAmount,
+      notes: notes,
+    );
+
+    await txn.insert('TB_Advance_Repayments', repayment.toMap());
+
+    // ← Hint: 6. تحديث Balance في TB_Employees (تنقيص المبلغ المسدد)
+    await txn.rawUpdate(
+      'UPDATE TB_Employees SET Balance = Balance - ? WHERE EmployeeID = ?',
+      [repaymentAmount.toDouble(), employeeID],
+    );
+
+    // ← Hint: 7. تحديث حالة السلفة (RepaymentStatus)
+    final newTotalRepaid = totalRepaid + repaymentAmount;
+    final newStatus = newTotalRepaid >= advanceAmount
+        ? 'مسددة بالكامل'
+        : newTotalRepaid > Decimal.zero
+            ? 'مسددة جزئيًا'
+            : 'غير مسددة';
+
+    await txn.update(
+      'TB_Employee_Advances',
+      {'RepaymentStatus': newStatus},
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+  });
+}
+
+// ============================================================================
+// دوال مساعدة للتسديدات (جديد في v5)
+// ============================================================================
+
+// ← Hint: جلب تسديدات سلفة معينة
+// ← Hint: يُستخدم لعرض سجل التسديدات في تفاصيل السلفة
+Future<List<AdvanceRepayment>> getRepaymentsForAdvance(int advanceID) async {
+  final db = await instance.database;
+  final maps = await db.query(
+    'TB_Advance_Repayments',
+    where: 'AdvanceID = ?',
+    whereArgs: [advanceID],
+    orderBy: 'RepaymentDate DESC',
+  );
+  return maps.map((map) => AdvanceRepayment.fromMap(map)).toList();
+}
+
+// ← Hint: حساب المبلغ المتبقي من السلفة
+// ← Hint: = مبلغ السلفة - مجموع التسديدات
+Future<Decimal> getRemainingAdvanceAmount(int advanceID) async {
+  final db = await instance.database;
+
+  // ← Hint: جلب مبلغ السلفة الأصلي
+  final advanceResult = await db.query(
     'TB_Employee_Advances',
-    {
-      'RepaymentStatus': paidStatus,
-    },
+    columns: ['AdvanceAmount'],
     where: 'AdvanceID = ?',
     whereArgs: [advanceID],
   );
+
+  if (advanceResult.isEmpty) {
+    return Decimal.zero;
+  }
+
+  final advanceAmount = Decimal.parse(advanceResult.first['AdvanceAmount'].toString());
+
+  // ← Hint: حساب مجموع التسديدات
+  final repaymentsResult = await db.rawQuery(
+    'SELECT COALESCE(SUM(RepaymentAmount), 0) as TotalRepaid FROM TB_Advance_Repayments WHERE AdvanceID = ?',
+    [advanceID],
+  );
+
+  final totalRepaid = Decimal.parse(repaymentsResult.first['TotalRepaid'].toString());
+
+  // ← Hint: المبلغ المتبقي = المبلغ الأصلي - المبلغ المسدد
+  return advanceAmount - totalRepaid;
+}
+
+// ← Hint: جلب إجمالي التسديدات في فترة زمنية معينة
+// ← Hint: يُستخدم في تقرير التدفقات النقدية لعرض التسديدات كإيرادات
+Future<double> getTotalRepaymentsInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+}) async {
+  final db = await instance.database;
+
+  String sql = 'SELECT SUM(RepaymentAmount) as total FROM TB_Advance_Repayments WHERE 1=1';
+  final List<dynamic> args = [];
+
+  if (startDate != null) {
+    sql += ' AND RepaymentDate >= ?';
+    args.add(startDate.toIso8601String());
+  }
+
+  if (endDate != null) {
+    sql += ' AND RepaymentDate <= ?';
+    args.add(endDate.toIso8601String());
+  }
+
+  final result = await db.rawQuery(sql, args);
+  return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
+}
+
+// ← Hint: جلب تفاصيل التسديدات في فترة زمنية معينة
+// ← Hint: يُستخدم لعرض قائمة مفصلة بالتسديدات في التقارير
+Future<List<Map<String, dynamic>>> getRepaymentsDetailsInPeriod({
+  DateTime? startDate,
+  DateTime? endDate,
+}) async {
+  final db = await instance.database;
+
+  String sql = '''
+    SELECT
+      r.*,
+      e.FullName as EmployeeName,
+      a.AdvanceAmount as OriginalAdvanceAmount
+    FROM TB_Advance_Repayments r
+    INNER JOIN TB_Employees e ON r.EmployeeID = e.EmployeeID
+    INNER JOIN TB_Employee_Advances a ON r.AdvanceID = a.AdvanceID
+    WHERE 1=1
+  ''';
+
+  final List<dynamic> args = [];
+
+  if (startDate != null) {
+    sql += ' AND r.RepaymentDate >= ?';
+    args.add(startDate.toIso8601String());
+  }
+
+  if (endDate != null) {
+    sql += ' AND r.RepaymentDate <= ?';
+    args.add(endDate.toIso8601String());
+  }
+
+  sql += ' ORDER BY r.RepaymentDate DESC';
+
+  return await db.rawQuery(sql, args);
 }
 
 // Hint: دالة لحساب إجمالي رصيد السلف المستحقة على جميع الموظفين.

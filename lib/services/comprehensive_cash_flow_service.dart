@@ -52,8 +52,9 @@ class ComprehensiveCashFlowService {
 
     final cashSales = await _getCashSalesInPeriod(startDate, endDate);
     final customerPayments = await _getCustomerPaymentsInPeriod(startDate, endDate);
+    final advanceRepayments = await _getAdvanceRepaymentsInPeriod(startDate, endDate); // ← Hint: تسديدات السلف (جديد في v5)
 
-    final totalRevenue = cashSales + customerPayments;
+    final totalRevenue = cashSales + customerPayments + advanceRepayments;
 
     // ═══════════════════════════════════════════════════════════
     // جمع بيانات المصروفات (Expenses)
@@ -80,6 +81,7 @@ class ComprehensiveCashFlowService {
 
     final cashSalesDetails = await _getCashSalesDetails(startDate, endDate);
     final customerPaymentsDetails = await _getCustomerPaymentsDetails(startDate, endDate);
+    final advanceRepaymentsDetails = await _getAdvanceRepaymentsDetails(startDate, endDate); // ← Hint: تفاصيل تسديدات السلف (جديد في v5)
     final expensesDetails = await _getExpensesDetails(startDate, endDate);
     final salariesDetails = await _getSalariesDetails(startDate, endDate);
     final advancesDetails = await _getAdvancesDetails(startDate, endDate);
@@ -103,10 +105,12 @@ class ComprehensiveCashFlowService {
       'revenue': {
         'cashSales': cashSales,
         'customerPayments': customerPayments,
+        'advanceRepayments': advanceRepayments, // ← Hint: تسديدات السلف (إيرادات جديدة في v5)
         'total': totalRevenue,
         'details': {
           'cashSales': cashSalesDetails,
           'customerPayments': customerPaymentsDetails,
+          'advanceRepayments': advanceRepaymentsDetails, // ← Hint: تفاصيل تسديدات السلف
         },
       },
 
@@ -273,6 +277,16 @@ class ComprehensiveCashFlowService {
   /// المكافآت من TB_Employee_Bonuses
   Future<double> _getBonusesInPeriod(DateTime? startDate, DateTime? endDate) async {
     return await _db.getTotalBonusesInPeriod(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
+
+  /// تسديدات السلف من TB_Advance_Repayments (جديد في v5)
+  /// ← Hint: هذه دالة جديدة تجلب مجموع تسديدات السلف في فترة معينة
+  /// ← Hint: تُستخدم لعرض التسديدات كإيرادات في تقرير التدفقات النقدية
+  Future<double> _getAdvanceRepaymentsInPeriod(DateTime? startDate, DateTime? endDate) async {
+    return await _db.getTotalRepaymentsInPeriod(
       startDate: startDate,
       endDate: endDate,
     );
@@ -525,6 +539,18 @@ class ComprehensiveCashFlowService {
     sql += ' ORDER BY b.BonusDate DESC';
 
     return await db.rawQuery(sql, args);
+  }
+
+  /// تفاصيل تسديدات السلف من TB_Advance_Repayments (جديد في v5)
+  /// ← Hint: تجلب قائمة مفصلة بعمليات تسديد السلف مع معلومات الموظف
+  Future<List<Map<String, dynamic>>> _getAdvanceRepaymentsDetails(
+    DateTime? startDate,
+    DateTime? endDate,
+  ) async {
+    return await _db.getRepaymentsDetailsInPeriod(
+      startDate: startDate,
+      endDate: endDate,
+    );
   }
 
   // ============================================================================

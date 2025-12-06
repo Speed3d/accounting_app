@@ -238,6 +238,73 @@ class DatabaseMigrations {
   }
 
   // ==========================================================================
+  // Migration من v4 إلى v5 - نظام تسديدات السلف
+  // ==========================================================================
+  /// ← Hint: التحديثات في v5:
+  /// 1. إنشاء جدول TB_Advance_Repayments (تسديدات السلف)
+  /// ← Hint: هذا الجدول يسجل كل عملية تسديد للسلف (كامل أو جزئي)
+  /// ← Hint: يتيح للموظفين تسديد السلف على دفعات
+  /// ← Hint: يظهر التسديد في تقرير التدفقات النقدية كإيراد
+  static Future<void> migrateToV5(Database db) async {
+    debugPrint('🔄 بدء Migration من v4 إلى v5...');
+
+    try {
+      // ========================================================================
+      // 1️⃣ إنشاء جدول تسديدات السلف
+      // ========================================================================
+      debugPrint('  ├─ إنشاء جدول TB_Advance_Repayments...');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS TB_Advance_Repayments (
+          RepaymentID INTEGER PRIMARY KEY AUTOINCREMENT,
+          AdvanceID INTEGER NOT NULL,
+          EmployeeID INTEGER NOT NULL,
+          RepaymentDate TEXT NOT NULL,
+          RepaymentAmount REAL NOT NULL,
+          Notes TEXT,
+          CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (AdvanceID) REFERENCES TB_Employee_Advances(AdvanceID) ON DELETE CASCADE,
+          FOREIGN KEY (EmployeeID) REFERENCES TB_Employees(EmployeeID) ON DELETE CASCADE
+        )
+      ''');
+
+      debugPrint('  ├─ ✅ تم إنشاء جدول TB_Advance_Repayments بنجاح');
+
+      // ========================================================================
+      // 2️⃣ إنشاء مؤشرات لتحسين الأداء
+      // ========================================================================
+      debugPrint('  ├─ إنشاء المؤشرات...');
+
+      // ← Hint: مؤشر على AdvanceID لتسريع البحث عن تسديدات سلفة معينة
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_repayments_advance
+        ON TB_Advance_Repayments(AdvanceID)
+      ''');
+
+      // ← Hint: مؤشر على EmployeeID لتسريع البحث عن تسديدات موظف معين
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_repayments_employee
+        ON TB_Advance_Repayments(EmployeeID)
+      ''');
+
+      // ← Hint: مؤشر على RepaymentDate لتسريع الاستعلامات حسب الفترة الزمنية
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_repayments_date
+        ON TB_Advance_Repayments(RepaymentDate)
+      ''');
+
+      debugPrint('  ├─ ✅ تم إنشاء المؤشرات بنجاح');
+
+      debugPrint('✅ Migration إلى v5 اكتمل بنجاح');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v5: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
   // دالة مساعدة: التحقق من وجود عمود في جدول
   // ==========================================================================
   static Future<bool> columnExists(
