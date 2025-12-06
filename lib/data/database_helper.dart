@@ -312,6 +312,24 @@ class DatabaseHelper {
       )
     ''');
 
+    // ← Hint: جدول تسديدات السلف (Advance Repayments) - مُضاف في v5
+    // ← Hint: يسجل كل عملية تسديد للسلف (كامل أو جزئي)
+    // ← Hint: يتيح للموظفين تسديد السلف على دفعات
+    // ← Hint: يظهر التسديد في تقرير التدفقات النقدية كإيراد
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS TB_Advance_Repayments (
+        RepaymentID INTEGER PRIMARY KEY AUTOINCREMENT,
+        AdvanceID INTEGER NOT NULL,
+        EmployeeID INTEGER NOT NULL,
+        RepaymentDate TEXT NOT NULL,
+        RepaymentAmount REAL NOT NULL,
+        Notes TEXT,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (AdvanceID) REFERENCES TB_Employee_Advances(AdvanceID) ON DELETE CASCADE,
+        FOREIGN KEY (EmployeeID) REFERENCES TB_Employees(EmployeeID) ON DELETE CASCADE
+      )
+    ''');
+
     // ← Hint: جدول المكافآت للموظفين (Employee Bonuses)
     // ← Hint: يحتوي على جميع المكافآت والحوافز الممنوحة للموظفين
     batch.execute('''
@@ -541,6 +559,11 @@ class DatabaseHelper {
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_advances_employee ON TB_Employee_Advances(EmployeeID)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_advances_date ON TB_Employee_Advances(AdvanceDate)');
+
+    // ← Hint: Indexes لجدول تسديدات السلف (مُضاف في v5)
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_repayments_advance ON TB_Advance_Repayments(AdvanceID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_repayments_employee ON TB_Advance_Repayments(EmployeeID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_repayments_date ON TB_Advance_Repayments(RepaymentDate)');
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_bonuses_employee ON TB_Employee_Bonuses(EmployeeID)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_bonuses_date ON TB_Employee_Bonuses(BonusDate)');
