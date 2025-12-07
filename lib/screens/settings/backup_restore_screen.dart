@@ -368,8 +368,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         await _showRestoreSuccessDialog(
           'تمت استعادة النسخة الاحتياطية بنجاح!\n\n'
           '📷 تم استعادة ${restoreResult['total_images']} صورة\n'
-          '📄 تم استعادة ${restoreResult['total_pdfs']} ملف PDF\n\n'
-          'سيتم إعادة تشغيل التطبيق الآن.',
+          '📄 تم استعادة ${restoreResult['total_pdfs']} ملف PDF',
         );
       } else {
         _showErrorSnackBar(restoreResult['message'] ?? 'فشل في الاستعادة');
@@ -693,6 +692,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   /// نافذة نجاح الاستعادة
+  ///
+  /// ← Hint: تغلق التطبيق بالكامل ليُعاد فتحه يدوياً
+  /// ← Hint: هذا ضروري لإعادة تهيئة قاعدة البيانات
   Future<void> _showRestoreSuccessDialog(String message) async {
     return showDialog(
       context: context,
@@ -705,15 +707,35 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             Text('نجحت الاستعادة'),
           ],
         ),
-        content: Text(message),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message),
+            const SizedBox(height: 16),
+            const Text(
+              'سيتم إغلاق التطبيق الآن.\nالرجاء فتحه مرة أخرى.',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: Colors.orange,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
         actions: [
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () {
-              Navigator.of(ctx).pop();
-              // ← Hint: إعادة تشغيل التطبيق
-              SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+              // ← Hint: إغلاق التطبيق بالكامل
+              // ← Hint: المستخدم سيعيد فتحه يدوياً
+              exit(0);
             },
-            child: const Text('إعادة تشغيل التطبيق'),
+            icon: const Icon(Icons.restart_alt),
+            label: const Text('إغلاق التطبيق'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
