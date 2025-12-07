@@ -342,7 +342,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _isRestoring = true;
       _currentStatus = 'جاري البدء...';
       _currentStep = 0;
-      _totalSteps = 12;
+      _totalSteps = 11;
     });
 
     try {

@@ -519,10 +519,9 @@ class BackupService {
         };
       }
 
-      // ← Hint: فتح قاعدة جديدة للحصول على المسار
-      final newDb = await dbHelper.database;
-      final dbPath = newDb.path;
-      await newDb.close();
+      // ← Hint: الحصول على مسار قاعدة البيانات مباشرة
+      final appDir = await getApplicationDocumentsDirectory();
+      final dbPath = '${appDir.path}/accounting.db';
 
       final currentDbFile = File(dbPath);
       if (await currentDbFile.exists()) {
@@ -557,34 +556,10 @@ class BackupService {
       debugPrint('✅ استعادة $totalPDFsRestored ملف PDF');
 
       // ══════════════════════════════════════════════════════════
-      // 1️⃣1️⃣ إعادة فتح قاعدة البيانات
-      // ← Hint: التأكد من أن كل شيء يعمل
+      // 1️⃣1️⃣ تنظيف المجلد المؤقت
       // ══════════════════════════════════════════════════════════
 
-      onProgress?.call('جاري التحقق من القاعدة...', 11, 12);
-
-      try {
-        final testDb = await dbHelper.database;
-        await testDb.rawQuery('SELECT COUNT(*) FROM TB_Settings');
-        debugPrint('✅ قاعدة البيانات تعمل بشكل صحيح');
-
-        // ← Hint: إغلاق قاعدة البيانات لتجنب مشكلة database_closed
-        // ← Hint: التطبيق سيُعاد تشغيله فوراً
-        await dbHelper.closeDatabase();
-        debugPrint('✅ تم إغلاق قاعدة البيانات - جاهز لإعادة التشغيل');
-      } catch (e) {
-        debugPrint('❌ خطأ في فتح قاعدة البيانات: $e');
-        return {
-          'status': 'error',
-          'message': 'فشل في فتح قاعدة البيانات المستعادة: $e',
-        };
-      }
-
-      // ══════════════════════════════════════════════════════════
-      // 1️⃣2️⃣ تنظيف المجلد المؤقت
-      // ══════════════════════════════════════════════════════════
-
-      onProgress?.call('جاري التنظيف...', 12, 12);
+      onProgress?.call('جاري التنظيف...', 11, 11);
 
       await workDir.delete(recursive: true);
 
@@ -594,7 +569,7 @@ class BackupService {
       // ✅ النجاح!
       // ══════════════════════════════════════════════════════════
 
-      onProgress?.call('اكتمل!', 12, 12);
+      onProgress?.call('اكتمل!', 11, 11);
 
       return {
         'status': 'success',
