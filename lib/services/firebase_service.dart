@@ -481,31 +481,44 @@ class FirebaseService {
     }
    }
 
-  /// الحصول على Backup Magic Number مع التحقق الصارم من Native Layer 
+  /// ⚠️ [DEPRECATED] الحصول على Backup Magic Number
+  ///
+  /// ← Hint: هذه الدالة لم تعد مستخدمة في نظام النسخ الاحتياطي الجديد (v2.0)
+  /// ← Hint: النظام الجديد يستخدم كلمة سر من المستخدم + AES-256 بدلاً من magic number
+  /// ← Hint: المفتاح موجود في Firebase Remote Config لكن غير مستخدم حالياً
+  ///
+  /// 📝 للمستقبل:
+  /// - يمكن حذف هذه الدالة ومفتاح backup_magic_number بالكامل من Firebase
+  /// - أو الاحتفاظ به لأغراض أخرى في المستقبل
+  ///
+  /// @deprecated استخدم BackupService.createEncryptedBackup بدلاً منه
+  @Deprecated('لم يعد مستخدماً في نظام النسخ الاحتياطي v2.0')
   String getBackupMagicNumber() {
         try {
       final magic = NativeSecretsService.instance.cachedBackupMagic;
-      
+
       if (magic == null || magic.isEmpty) {
-        debugPrint('⚠️ Backup magic غير محمّل');
+        debugPrint('⚠️ Backup magic غير محمّل (لكنه غير مطلوب للنظام الجديد)');
         throw Exception('Backup magic not loaded');
       }
-      
+
       if (magic.length < 16) {
         debugPrint('⚠️ Backup magic قصير جداً (${magic.length} حرف)');
       }
-      
-      if (magic.contains('INVALID') || 
+
+      if (magic.contains('INVALID') ||
           magic.contains('FAILED') ||
           magic.contains('USE_FIREBASE')) {
         debugPrint('🚨 Backup magic يبدو وهمياً أو غير صالح');
         throw Exception('Invalid backup magic detected');
       }
-      
+
+      debugPrint('ℹ️ [DEPRECATED] backup_magic_number لم يعد يستخدم في نظام النسخ v2.0');
+
       return magic;
     } catch (e) {
       debugPrint('❌ خطأ في قراءة backup_magic_number: $e');
-      
+
       throw Exception(
         '🚨 خطأ أمني حرج\n\n'
         'لا يمكن الوصول لمفاتيح النسخ الاحتياطي.\n'

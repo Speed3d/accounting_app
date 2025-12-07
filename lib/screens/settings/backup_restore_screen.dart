@@ -1,21 +1,30 @@
-// lib/screens/settings/backup_restore_screen.dart
+// 💾 lib/screens/settings/backup_restore_screen.dart
 
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
+
 import '../../services/backup_service.dart';
-import '../../data/database_helper.dart';
+import '../../services/encryption_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_button.dart';
 
-/// 💾 شاشة النسخ الاحتياطي والاستعادة
-/// ← Hint: صفحة فرعية مهمة جداً - تتيح للمستخدم حفظ واستعادة بياناته
-/// ← Hint: تم تحديثها لتشمل خيارات ذكية لدمج المستخدمين
+/// 💾 شاشة النسخ الاحتياطي والاستعادة - الإصدار 2.0
+///
+/// ← Hint: واجهة جديدة كلياً لنظام النسخ الاحتياطي المشفر
+/// ← Hint: تدعم كلمة السر وتقييم قوتها
+/// ← Hint: واجهة جميلة وسهلة الاستخدام
+///
+/// 📝 للمستقبل:
+/// - إضافة dark mode support محسّن
+/// - إضافة animation effects
+/// - إضافة backup history
+/// - إضافة cloud backup integration
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
 
@@ -24,40 +33,102 @@ class BackupRestoreScreen extends StatefulWidget {
 }
 
 class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
-  // ============= المتغيرات =============
-  /// ← Hint: متغير لتتبع حالة إنشاء النسخة الاحتياطية
+  // ============================================================================
+  // 🔧 المتغيرات
+  // ============================================================================
+
+  /// ← Hint: حالة النسخ الاحتياطي
   bool _isBackingUp = false;
-  
-  /// ← Hint: متغير لتتبع حالة الاستعادة
+
+  /// ← Hint: حالة الاستعادة
   bool _isRestoring = false;
-  
+
   /// ← Hint: خدمة النسخ الاحتياطي
   final BackupService _backupService = BackupService();
-  
-  /// ← Hint: helper قاعدة البيانات للحصول على عدد المستخدمين
-  final DatabaseHelper dbHelper = DatabaseHelper.instance;
-  
-  /// ← Hint: متغيرات لتخزين معلومات آخر نسخة احتياطية تم إنشاؤها
+
+  /// ← Hint: معلومات آخر نسخة تم إنشاؤها
   String? _lastBackupFilePath;
   String? _lastBackupFileName;
 
-  // ============= الدوال =============
+  /// ← Hint: progress للعمليات
+  String _currentStatus = '';
+  int _currentStep = 0;
+  int _totalSteps = 0;
 
-  /// ← Hint: إنشاء نسخة احتياطية بسيطة (قاعدة بيانات + صور) - بدون كلمة سر
+  // ============================================================================
+  // 💾 إنشاء نسخة احتياطية
+  // ============================================================================
+
+  /// معالج إنشاء نسخة احتياطية مشفرة
+  ///
+  /// ← Hint: يطلب كلمة سر من المستخدم
+  /// ← Hint: يعرض قوة كلمة السر
+  /// ← Hint: ينشئ نسخة مشفرة بالكامل
   Future<void> _handleCreateBackup() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // ← Hint: تأكيد بسيط قبل البدء
+    // ══════════════════════════════════════════════════════════
+    // 1️⃣ طلب كلمة السر
+    // ══════════════════════════════════════════════════════════
+
+    final password = await _showPasswordDialog(
+      title: 'تأمين النسخة الاحتياطية',
+      subtitle: 'أدخل كلمة سر قوية لحماية بياناتك',
+      isConfirmation: true,
+    );
+
+    if (password == null) return;
+
+    // ══════════════════════════════════════════════════════════
+    // 2️⃣ تأكيد النسخ الاحتياطي
+    // ══════════════════════════════════════════════════════════
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('إنشاء نسخة احتياطية'),
-        content: const Text(
-          'سيتم نسخ:\n'
-          '• جميع البيانات من قاعدة البيانات\n'
-          '• جميع الصور\n'
-          '• جميع المستخدمين والصلاحيات\n\n'
-          'النسخة لن تكون مشفرة بكلمة سر.',
+        title: const Row(
+          children: [
+            Icon(Icons.backup_rounded, color: Colors.blue),
+            SizedBox(width: 12),
+            Text('إنشاء نسخة احتياطية'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('سيتم نسخ:'),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 18),
+                SizedBox(width: 8),
+                Text('✓ جميع البيانات من قاعدة البيانات'),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 18),
+                SizedBox(width: 8),
+                Text('✓ جميع الصور'),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 18),
+                SizedBox(width: 8),
+                Text('✓ جميع ملفات PDF'),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.lock_rounded, color: Colors.orange, size: 18),
+                SizedBox(width: 8),
+                Expanded(child: Text('النسخة ستكون مشفرة بالكامل')),
+              ],
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -74,344 +145,176 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
     if (confirm != true) return;
 
-    setState(() => _isBackingUp = true);
+    // ══════════════════════════════════════════════════════════
+    // 3️⃣ بدء عملية النسخ الاحتياطي
+    // ══════════════════════════════════════════════════════════
 
-    // ← Hint: متغيرات لتتبع التقدم
-    String currentStatus = '';
-    int currentStep = 0;
-    int totalSteps = 6;
+    setState(() {
+      _isBackingUp = true;
+      _currentStatus = 'جاري البدء...';
+      _currentStep = 0;
+      _totalSteps = 10;
+    });
 
     try {
-      // ← Hint: استدعاء النسخ الاحتياطي البسيط (قاعدة بيانات + صور)
-      final result = await _backupService.createSimpleBackup(
+      final result = await _backupService.createEncryptedBackup(
+        password: password,
         onProgress: (status, current, total) {
           if (mounted) {
             setState(() {
-              currentStatus = status;
-              currentStep = current;
-              totalSteps = total;
+              _currentStatus = status;
+              _currentStep = current;
+              _totalSteps = total;
             });
           }
         },
       );
 
-      if (mounted) {
-        setState(() => _isBackingUp = false);
+      if (!mounted) return;
 
-        if (result['status'] == 'success') {
-          // ← Hint: حفظ معلومات الملف المنشأ
-          final filePath = result['file_path'] as String;
-          final fileName = filePath.split('/').last;
+      setState(() => _isBackingUp = false);
 
-          setState(() {
-            _lastBackupFilePath = filePath;
-            _lastBackupFileName = fileName;
-          });
+      if (result['status'] == 'success') {
+        // ← Hint: حفظ معلومات الملف
+        setState(() {
+          _lastBackupFilePath = result['file_path'];
+          _lastBackupFileName = result['file_name'];
+        });
 
-          // ← Hint: عرض رسالة نجاح مع موقع الملف وعدد الصور
-          _showSimpleSuccessDialog(
-            l10n,
-            filePath,
-            fileName,
-            result['total_images'] as int? ?? 0,
-            result['file_size_formatted'] as String? ?? '',
-          );
-        } else {
-          // ← Hint: عرض رسالة خطأ
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? l10n.backupFailed('خطأ غير معروف')),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        // ← Hint: عرض نافذة النجاح
+        await _showSuccessDialog(
+          title: 'تمت العملية بنجاح!',
+          content: 'تم إنشاء النسخة الاحتياطية المشفرة بنجاح',
+          details: [
+            'اسم الملف: ${result['file_name']}',
+            'الحجم: ${result['file_size_formatted']}',
+            'الصور: ${result['total_images']} صورة',
+            'PDF: ${result['total_pdfs']} ملف',
+            'قوة التشفير: ${result['password_strength']}',
+          ],
+          filePath: result['file_path'],
+        );
+      } else {
+        _showErrorSnackBar(result['message'] ?? 'فشل في إنشاء النسخة');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isBackingUp = false);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showErrorSnackBar('خطأ: ${e.toString()}');
       }
     }
   }
 
-  /// ← Hint: دالة جديدة لعرض نافذة النجاح مع خيار المشاركة
-  void _showSuccessDialog(
-    AppLocalizations l10n,
-    String filePath,
-    String fileName, {
-    int imagesCount = 0,
-  }) {
-    showDialog(
+  // ============================================================================
+  // 🔄 استعادة نسخة احتياطية
+  // ============================================================================
+
+  /// معالج استعادة نسخة احتياطية مشفرة
+  ///
+  /// ← Hint: يطلب اختيار ملف
+  /// ← Hint: يطلب كلمة السر
+  /// ← Hint: يستعيد كل شيء
+  Future<void> _handleRestoreBackup() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // ══════════════════════════════════════════════════════════
+    // 1️⃣ اختيار ملف النسخة الاحتياطية
+    // ══════════════════════════════════════════════════════════
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['aab', 'zip'],
+      dialogTitle: 'اختر ملف النسخة الاحتياطية',
+    );
+
+    if (result == null || result.files.single.path == null) {
+      return;
+    }
+
+    final backupFilePath = result.files.single.path!;
+    final backupFileName = backupFilePath.split('/').last;
+
+    // ══════════════════════════════════════════════════════════
+    // 2️⃣ عرض معلومات النسخة (إن أمكن)
+    // ══════════════════════════════════════════════════════════
+
+    final backupInfo = await _backupService.getBackupInfo(backupFilePath);
+
+    if (backupInfo['status'] != 'success') {
+      _showErrorSnackBar('فشل في قراءة معلومات النسخة: ${backupInfo['message']}');
+      return;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // 3️⃣ طلب كلمة السر
+    // ══════════════════════════════════════════════════════════
+
+    final password = await _showPasswordDialog(
+      title: 'استعادة النسخة الاحتياطية',
+      subtitle: 'أدخل كلمة السر المستخدمة عند إنشاء النسخة',
+      isConfirmation: false,
+    );
+
+    if (password == null) return;
+
+    // ══════════════════════════════════════════════════════════
+    // 4️⃣ تأكيد نهائي
+    // ══════════════════════════════════════════════════════════
+
+    final confirmRestore = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
-            Icon(
-              Icons.check_circle_rounded,
-              color: AppColors.success,
-              size: 32,
-            ),
-            const SizedBox(width: AppConstants.spacingMd),
-            Expanded(
-              child: Text(
-                l10n.backupSuccessTitle,
-                style: const TextStyle(fontSize: 18),
-              ),
-            ),
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('⚠️ تأكيد الاستعادة'),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ← Hint: رسالة النجاح
-            Text(
-              l10n.backupSuccessContent,
-              style: Theme.of(context).textTheme.bodyMedium,
+            const Text(
+              'سيتم:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-
-            // ← Hint: عرض عدد الصور إذا كان أكبر من 0
-            if (imagesCount > 0) ...[
-              const SizedBox(height: AppConstants.spacingSm),
-              Container(
-                padding: AppConstants.paddingSm,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
-                  borderRadius: AppConstants.borderRadiusSm,
-                  border: Border.all(
-                    color: AppColors.info.withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.photo_library_outlined,
-                      size: 16,
-                      color: AppColors.info,
-                    ),
-                    const SizedBox(width: AppConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        'تم حفظ $imagesCount صورة',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.info,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: AppConstants.spacingLg),
-            
-            // ← Hint: عرض موقع الملف
+            const SizedBox(height: 12),
+            const Text('• حذف جميع البيانات الحالية'),
+            const Text('• استبدالها بالبيانات من النسخة الاحتياطية'),
+            const Text('• استبدال جميع الصور'),
+            const Text('• استبدال جميع ملفات PDF'),
+            const SizedBox(height: 16),
             Container(
-              padding: AppConstants.paddingMd,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
-                borderRadius: AppConstants.borderRadiusMd,
-                border: Border.all(
-                  color: AppColors.success.withOpacity(0.3),
-                ),
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.folder_outlined,
-                        size: 18,
-                        color: AppColors.success,
-                      ),
-                      const SizedBox(width: AppConstants.spacingSm),
-                      Expanded(
-                        child: Text(
-                          l10n.backupFileLocation,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppConstants.spacingXs),
-                  
-                  // ← Hint: اسم الملف
-                  Text(
-                    fileName,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Icon(Icons.info_outline, color: Colors.red, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '⚠️ هذا الإجراء لا يمكن التراجع عنه!',
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  
-                  const SizedBox(height: AppConstants.spacingXs),
-                  
-                  // ← Hint: المسار الكامل مع زر النسخ
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          filePath,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 11,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.copy_rounded,
-                          size: 18,
-                          color: AppColors.info,
-                        ),
-                        onPressed: () {
-                          // ← Hint: نسخ المسار إلى الحافظة
-                          Clipboard.setData(ClipboardData(text: filePath));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.pathCopied),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        tooltip: l10n.copyPath,
-                      ),
-                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            Text(
+              'الملف: $backupFileName',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Text(
+              'الحجم: ${backupInfo['file_size_formatted']}',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
-        ),
-        actions: [
-          // ← Hint: زر الإغلاق
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.close),
-          ),
-          
-          // ← Hint: زر المشاركة
-          ElevatedButton.icon(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await _handleShareBackup(filePath);
-            },
-            icon: const Icon(Icons.share_rounded),
-            label: Text(l10n.share),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.info,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ← Hint: دالة جديدة لمشاركة الملف المحفوظ
-  Future<void> _handleShareBackup(String filePath) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    try {
-      final file = File(filePath);
-
-      if (!await file.exists()) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('الملف غير موجود'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-        return;
-      }
-
-      // مشاركة الملف باستخدام share_plus
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        subject: 'نسخة احتياطية - ${filePath.split('/').last}',
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ في المشاركة: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  /// ← Hint: استعادة نسخة احتياطية بسيطة مع خيار دمج المستخدمين - بدون كلمة سر
-  Future<void> _handleRestoreBackup() async {
-    final l10n = AppLocalizations.of(context)!;
-
-    // ============= الخطوة 1: اختيار ملف النسخة الاحتياطية =============
-    print("🔹 الخطوة 1: اختيار الملف");
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
-      dialogTitle: 'اختر ملف النسخة الاحتياطية',
-    );
-
-    if (result == null || result.files.single.path == null) {
-      print("ℹ️ تم إلغاء اختيار الملف");
-      return;
-    }
-
-    final backupFilePath = result.files.single.path!;
-    print("✅ تم اختيار الملف: $backupFilePath");
-
-    // ============= الخطوة 2: عرض خيارات الاستعادة =============
-    print("🔹 الخطوة 2: عرض خيارات الاستعادة");
-
-    final mergeUsers = await _showSimpleRestoreOptionsDialog();
-
-    if (mergeUsers == null) {
-      print("ℹ️ تم إلغاء عملية الاستعادة");
-      return;
-    }
-
-    print("✅ الخيار المختار: ${mergeUsers ? 'دمج المستخدمين' : 'استبدال المستخدمين'}");
-
-    // ============= الخطوة 3: تأكيد نهائي =============
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('⚠️ تأكيد الاستعادة'),
-        content: Text(
-          mergeUsers
-              ? 'سيتم:\n'
-                  '• استعادة جميع البيانات والصور\n'
-                  '• دمج المستخدمين من النسخة مع المستخدمين الحاليين\n'
-                  '• الاحتفاظ بالصلاحيات\n\n'
-                  'هل تريد المتابعة؟'
-              : 'سيتم:\n'
-                  '• حذف جميع البيانات الحالية\n'
-                  '• استبدالها بالبيانات من النسخة الاحتياطية\n'
-                  '• استبدال المستخدمين\n\n'
-                  '⚠️ هذا الإجراء لا يمكن التراجع عنه!\n\n'
-                  'هل تريد المتابعة؟',
         ),
         actions: [
           TextButton(
@@ -421,7 +324,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: Colors.orange,
             ),
             child: const Text('تأكيد الاستعادة'),
           ),
@@ -429,32 +332,30 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       ),
     );
 
-    if (confirm != true) {
-      print("ℹ️ تم إلغاء التأكيد النهائي");
-      return;
-    }
+    if (confirmRestore != true) return;
 
-    // ============= الخطوة 4: تنفيذ الاستعادة =============
-    print("🔹 الخطوة 4: بدء الاستعادة الفعلية");
-    setState(() => _isRestoring = true);
+    // ══════════════════════════════════════════════════════════
+    // 5️⃣ بدء عملية الاستعادة
+    // ══════════════════════════════════════════════════════════
 
-    // ← Hint: متغيرات لتتبع التقدم
-    String currentStatus = '';
-    int currentStep = 0;
-    int totalSteps = 7;
+    setState(() {
+      _isRestoring = true;
+      _currentStatus = 'جاري البدء...';
+      _currentStep = 0;
+      _totalSteps = 12;
+    });
 
     try {
-      final result = await _backupService.restoreSimpleBackup(
+      final restoreResult = await _backupService.restoreEncryptedBackup(
         filePath: backupFilePath,
-        mergeUsers: mergeUsers,
+        password: password,
         onProgress: (status, current, total) {
           if (mounted) {
             setState(() {
-              currentStatus = status;
-              currentStep = current;
-              totalSteps = total;
+              _currentStatus = status;
+              _currentStep = current;
+              _totalSteps = total;
             });
-            print("📊 التقدم: $status ($current/$total)");
           }
         },
       );
@@ -463,34 +364,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
       setState(() => _isRestoring = false);
 
-      if (result['status'] == 'success') {
-        // ============= نجحت الاستعادة =============
-        print("✅ نجحت الاستعادة");
-
-        final totalImages = result['total_images'] as int? ?? 0;
-        String successMessage = 'تمت استعادة النسخة الاحتياطية بنجاح!\n\n';
-
-        if (totalImages > 0) {
-          successMessage += '📷 تم استعادة $totalImages صورة\n';
-        }
-
-        if (mergeUsers) {
-          successMessage += '👥 تم دمج المستخدمين مع الصلاحيات';
-        } else {
-          successMessage += '👥 تم استبدال المستخدمين';
-        }
-
-        await _showSimpleRestoreSuccessDialog(successMessage);
-
+      if (restoreResult['status'] == 'success') {
+        await _showRestoreSuccessDialog(
+          'تمت استعادة النسخة الاحتياطية بنجاح!\n\n'
+          '📷 تم استعادة ${restoreResult['total_images']} صورة\n'
+          '📄 تم استعادة ${restoreResult['total_pdfs']} ملف PDF\n\n'
+          'سيتم إعادة تشغيل التطبيق الآن.',
+        );
       } else {
-        // ============= فشلت الاستعادة =============
-        print("❌ فشلت الاستعادة: ${result['message']}");
-        _showErrorSnackBar(result['message'] ?? 'فشل في استعادة النسخة الاحتياطية');
+        _showErrorSnackBar(restoreResult['message'] ?? 'فشل في الاستعادة');
       }
-
     } catch (e) {
-      print('❌ خطأ غير متوقع: $e');
-
       if (mounted) {
         setState(() => _isRestoring = false);
         _showErrorSnackBar('خطأ: ${e.toString()}');
@@ -498,354 +382,295 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     }
   }
 
-  // ==========================================================================
-  // ← Hint: دالة جديدة - حوار اختيار طريقة دمج المستخدمين
-  // ==========================================================================
-  Future<String?> _showUserMergeDialog(
-    AppLocalizations l10n,
-    int currentCount,
-    int backupCount,
-  ) async {
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.people_alt,
-              color: AppColors.warning,
-              size: 28,
-            ),
-            const SizedBox(width: AppConstants.spacingMd),
-            Expanded(child: Text(l10n.userMergeTitle)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ← Hint: رسالة توضيحية
-              Text(
-                l10n.userMergeMessage(currentCount),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+  // ============================================================================
+  // 🎨 نوافذ الحوار
+  // ============================================================================
 
-              const SizedBox(height: AppConstants.spacingLg),
-
-              // ← Hint: الخيار 1 - دمج المستخدمين (الموصى به)
-              _buildMergeOption(
-                ctx,
-                title: l10n.mergeUsers,
-                subtitle: l10n.mergeUsersDescription,
-                icon: Icons.merge_type,
-                color: AppColors.success,
-                isRecommended: true,
-                onTap: () => Navigator.of(ctx).pop('merge'),
-              ),
-
-              const SizedBox(height: AppConstants.spacingMd),
-
-              // ← Hint: الخيار 2 - الاحتفاظ بالمستخدمين الحاليين
-              _buildMergeOption(
-                ctx,
-                title: l10n.keepCurrentUsers,
-                subtitle: l10n.keepCurrentUsersDescription,
-                icon: Icons.shield,
-                color: AppColors.info,
-                isRecommended: false,
-                onTap: () => Navigator.of(ctx).pop('keep'),
-              ),
-
-              const SizedBox(height: AppConstants.spacingMd),
-
-              // ← Hint: الخيار 3 - استبدال الكل (خطر)
-              _buildMergeOption(
-                ctx,
-                title: l10n.replaceAllUsers,
-                subtitle: l10n.replaceAllUsersDescription,
-                icon: Icons.warning_amber,
-                color: AppColors.error,
-                isRecommended: false,
-                onTap: () => Navigator.of(ctx).pop('replace'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: Text(l10n.cancel),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================================
-  // ← Hint: دالة مساعدة - بناء خيار الدمج
-  // ==========================================================================
-  Widget _buildMergeOption(
-    BuildContext ctx, {
+  /// نافذة إدخال كلمة السر
+  ///
+  /// ← Hint: تعرض مؤشر قوة كلمة السر
+  /// ← Hint: تدعم تأكيد كلمة السر
+  Future<String?> _showPasswordDialog({
     required String title,
     required String subtitle,
-    required IconData icon,
-    required Color color,
-    required bool isRecommended,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppConstants.borderRadiusMd,
-      child: Container(
-        padding: AppConstants.paddingMd,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: AppConstants.borderRadiusMd,
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: isRecommended ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // ← Hint: الأيقونة
-            Container(
-              padding: const EdgeInsets.all(AppConstants.spacingSm),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
+    required bool isConfirmation,
+  }) async {
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    bool obscurePassword = true;
+    bool obscureConfirmPassword = true;
+    String? errorMessage;
+
+    // ← Hint: متغيرات قوة كلمة السر
+    int passwordStrength = 0;
+    String strengthText = '';
+    String strengthFeedback = '';
+
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.blue),
+                const SizedBox(width: 12),
+                Expanded(child: Text(title)),
+              ],
             ),
-
-            const SizedBox(width: AppConstants.spacingMd),
-
-            // ← Hint: العنوان والوصف
-            Expanded(
+            content: SingleChildScrollView(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                      ),
-                      // ← Hint: شارة "موصى به"
-                      if (isRecommended)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.success,
-                            borderRadius: AppConstants.borderRadiusFull,
-                          ),
-                          child: const Text(
-                            '✓ موصى به',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppConstants.spacingXs),
+                  // ← Hint: الوصف
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color.withOpacity(0.8),
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ← Hint: حقل كلمة السر
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'كلمة السر',
+                      hintText: 'أدخل كلمة سر قوية',
+                      prefixIcon: const Icon(Icons.vpn_key),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                      errorText: errorMessage,
                     ),
+                    onChanged: (value) {
+                      // ← Hint: تحديث قوة كلمة السر
+                      final strength = EncryptionService.checkPasswordStrength(value);
+                      setDialogState(() {
+                        passwordStrength = strength['strength'];
+                        strengthText = strength['strengthText'];
+                        strengthFeedback = strength['feedback'];
+                        if (errorMessage != null) errorMessage = null;
+                      });
+                    },
                   ),
-                ],
-              ),
-            ),
 
-            const SizedBox(width: AppConstants.spacingSm),
+                  // ← Hint: مؤشر قوة كلمة السر
+                  if (passwordController.text.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildPasswordStrengthIndicator(
+                      passwordStrength,
+                      strengthText,
+                      strengthFeedback,
+                    ),
+                  ],
 
-            // ← Hint: سهم
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: color,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ==========================================================================
-  // ← Hint: دالة جديدة - حوار التأكيد النهائي
-  // ==========================================================================
-  Future<bool?> _showFinalConfirmDialog(
-    AppLocalizations l10n,
-    String mergeOption,
-  ) async {
-    String warningMessage = '';
-    Color warningColor = AppColors.info;
-
-    if (mergeOption == 'merge') {
-      warningMessage = l10n.permissionsWillBePreserved;
-      warningColor = AppColors.success;
-    } else if (mergeOption == 'replace') {
-      warningMessage = l10n.allDataWillBeReplaced;
-      warningColor = AppColors.error;
-    } else {
-      warningMessage = l10n.permissionsWillBePreserved;
-      warningColor = AppColors.info;
-    }
-
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: warningColor,
-              size: 28,
-            ),
-            const SizedBox(width: AppConstants.spacingMd),
-            Expanded(child: Text(l10n.restoreConfirmTitle)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.restoreConfirmContent,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            Container(
-              padding: AppConstants.paddingSm,
-              decoration: BoxDecoration(
-                color: warningColor.withOpacity(0.1),
-                borderRadius: AppConstants.borderRadiusSm,
-                border: Border.all(
-                  color: warningColor.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: warningColor,
-                  ),
-                  const SizedBox(width: AppConstants.spacingSm),
-                  Expanded(
-                    child: Text(
-                      warningMessage,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: warningColor,
+                  // ← Hint: حقل تأكيد كلمة السر
+                  if (isConfirmation) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: 'تأكيد كلمة السر',
+                        hintText: 'أعد إدخال كلمة السر',
+                        prefixIcon: const Icon(Icons.vpn_key_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscureConfirmPassword = !obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
+                  ],
+
+                  // ← Hint: نصيحة
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '⚠️ احفظ كلمة السر في مكان آمن!\nلن تتمكن من استعادة البيانات بدونها.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: warningColor,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(l10n.restore),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () {
+                  passwordController.dispose();
+                  confirmPasswordController.dispose();
+                  Navigator.of(ctx).pop(null);
+                },
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final password = passwordController.text;
+
+                  // ← Hint: التحقق من الطول الأدنى
+                  if (password.length < 6) {
+                    setDialogState(() {
+                      errorMessage = 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
+                    });
+                    return;
+                  }
+
+                  // ← Hint: التحقق من التطابق
+                  if (isConfirmation) {
+                    final confirmPassword = confirmPasswordController.text;
+                    if (password != confirmPassword) {
+                      setDialogState(() {
+                        errorMessage = 'كلمتا السر غير متطابقتين';
+                      });
+                      return;
+                    }
+                  }
+
+                  passwordController.dispose();
+                  confirmPasswordController.dispose();
+                  Navigator.of(ctx).pop(password);
+                },
+                child: const Text('تأكيد'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  // ==========================================================================
-  // ← Hint: دالة جديدة - حوار نجاح الاستعادة
-  // ==========================================================================
-  Future<void> _showRestoreSuccessDialog(
-    AppLocalizations l10n,
-    String message,
-  ) async {
+  /// مؤشر قوة كلمة السر
+  Widget _buildPasswordStrengthIndicator(
+    int strength,
+    String strengthText,
+    String feedback,
+  ) {
+    Color getColor() {
+      switch (strength) {
+        case 0:
+        case 1:
+          return Colors.red;
+        case 2:
+          return Colors.orange;
+        case 3:
+          return Colors.blue;
+        case 4:
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: strength / 4,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(getColor()),
+                  minHeight: 8,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              strengthText,
+              style: TextStyle(
+                color: getColor(),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          feedback,
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  /// نافذة النجاح
+  Future<void> _showSuccessDialog({
+    required String title,
+    required String content,
+    required List<String> details,
+    String? filePath,
+  }) async {
     return showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            Icon(
-              Icons.check_circle,
-              color: AppColors.success,
-              size: 28,
-            ),
-            const SizedBox(width: AppConstants.spacingMd),
-            Expanded(child: Text(l10n.restoreSuccessTitle)),
-          ],
-        ),
-        content: Text(
-          message,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.ok),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================================
-  // ← Hint: دوال مساعدة جديدة للنظام البسيط
-  // ==========================================================================
-
-  /// عرض نافذة نجاح إنشاء النسخة الاحتياطية البسيطة
-  void _showSimpleSuccessDialog(
-    AppLocalizations l10n,
-    String filePath,
-    String fileName,
-    int imagesCount,
-    String fileSize,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 32),
-            SizedBox(width: 12),
-            Text('تم إنشاء النسخة بنجاح'),
+            const Icon(Icons.check_circle, color: Colors.green, size: 32),
+            const SizedBox(width: 12),
+            Expanded(child: Text(title)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('📁 اسم الملف: $fileName'),
-            const SizedBox(height: 8),
-            Text('💾 الحجم: $fileSize'),
-            const SizedBox(height: 8),
-            Text('📷 عدد الصور: $imagesCount'),
-            const SizedBox(height: 8),
-            Text('📂 المسار: $filePath', style: const TextStyle(fontSize: 12)),
+            Text(content),
+            const SizedBox(height: 16),
+            ...details.map((detail) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text('• $detail', style: const TextStyle(fontSize: 13)),
+                )),
+            if (filePath != null) ...[
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                'المسار:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              Text(
+                filePath,
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -853,61 +678,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('حسناً'),
           ),
+          if (filePath != null)
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _shareBackup(filePath);
+              },
+              icon: const Icon(Icons.share),
+              label: const Text('مشاركة'),
+            ),
         ],
       ),
     );
   }
 
-  /// عرض نافذة خيارات الاستعادة البسيطة
-  Future<bool?> _showSimpleRestoreOptionsDialog() async {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('خيارات الاستعادة'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'اختر طريقة استعادة المستخدمين:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text('• استعادة البيانات والصور فقط:'),
-            Text('  سيتم حذف المستخدمين القدامى واستبدالهم',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
-            SizedBox(height: 12),
-            Text('• استعادة البيانات والصور + دمج المستخدمين:'),
-            Text('  سيتم الاحتفاظ بالمستخدمين الحاليين ودمج الجدد',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
-            child: const Text('استبدال المستخدمين'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
-            child: const Text('دمج المستخدمين'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// عرض نافذة نجاح الاستعادة البسيطة
-  Future<void> _showSimpleRestoreSuccessDialog(String message) async {
+  /// نافذة نجاح الاستعادة
+  Future<void> _showRestoreSuccessDialog(String message) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -924,7 +710,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              // الخروج من التطبيق لإعادة تحميل البيانات
+              // ← Hint: إعادة تشغيل التطبيق
               SystemChannels.platform.invokeMethod('SystemNavigator.pop');
             },
             child: const Text('إعادة تشغيل التطبيق'),
@@ -934,463 +720,264 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     );
   }
 
-  // ==========================================================================
-  // ← Hint: دالة مساعدة - عرض رسالة خطأ
-  // ==========================================================================
+  /// مشاركة ملف النسخة الاحتياطية
+  Future<void> _shareBackup(String filePath) async {
+    try {
+      final file = File(filePath);
+
+      if (!await file.exists()) {
+        _showErrorSnackBar('الملف غير موجود');
+        return;
+      }
+
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'نسخة احتياطية - ${filePath.split('/').last}',
+      );
+    } catch (e) {
+      _showErrorSnackBar('خطأ في المشاركة: ${e.toString()}');
+    }
+  }
+
+  /// عرض رسالة خطأ
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.error,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppConstants.borderRadiusMd,
-        ),
       ),
     );
   }
 
-  // ==========================================================
-  // ← Hint: دالة لعرض نافذة إدخال كلمة المرور بشكل احترافي
-  // ==========================================================
-  /// [title] عنوان النافذة
-  /// [subtitle] الوصف التوضيحي
-  /// [isConfirmation] هل نحتاج تأكيد لكلمة المرور (عند الإنشاء نعم، عند الاستعادة لا)
-  ///
-  /// ← Hint: تُرجع كلمة المرور إذا أدخلها المستخدم، أو null إذا ألغى
-  Future<String?> _showPasswordDialog({
-    required String title,
-    required String subtitle,
-    required bool isConfirmation,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
+  // ============================================================================
+  // 🎨 البناء
+  // ============================================================================
 
-    // ← Hint: Controllers لحقول كلمة المرور
-    final passwordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    // ← Hint: متغيرات لإظهار/إخفاء كلمة المرور
-    bool obscurePassword = true;
-    bool obscureConfirmPassword = true;
-
-    // ← Hint: متغير لتتبع الأخطاء
-    String? errorMessage;
-
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  Icons.lock_outline,
-                  color: AppColors.info,
-                  size: 28,
-                ),
-                const SizedBox(width: AppConstants.spacingMd),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ← Hint: الوصف التوضيحي
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondaryLight,
-                    ),
-                  ),
-
-                  const SizedBox(height: AppConstants.spacingLg),
-
-                  // ← Hint: حقل كلمة المرور
-                  TextField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.password,
-                      hintText: l10n.enterPassword,
-                      prefixIcon: const Icon(Icons.vpn_key),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                      border: const OutlineInputBorder(),
-                      errorText: errorMessage,
-                    ),
-                    onChanged: (_) {
-                      // ← Hint: إزالة رسالة الخطأ عند الكتابة
-                      if (errorMessage != null) {
-                        setDialogState(() => errorMessage = null);
-                      }
-                    },
-                  ),
-
-                  // ← Hint: حقل تأكيد كلمة المرور (فقط عند الإنشاء)
-                  if (isConfirmation) ...[
-                    const SizedBox(height: AppConstants.spacingMd),
-                    TextField(
-                      controller: confirmPasswordController,
-                      obscureText: obscureConfirmPassword,
-                      decoration: InputDecoration(
-                        labelText: l10n.confirmPassword,
-                        hintText: l10n.reEnterPassword,
-                        prefixIcon: const Icon(Icons.vpn_key_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscureConfirmPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setDialogState(() {
-                              obscureConfirmPassword = !obscureConfirmPassword;
-                            });
-                          },
-                        ),
-                        border: const OutlineInputBorder(),
-                      ),
-                      onChanged: (_) {
-                        // ← Hint: إزالة رسالة الخطأ عند الكتابة
-                        if (errorMessage != null) {
-                          setDialogState(() => errorMessage = null);
-                        }
-                      },
-                    ),
-                  ],
-
-                  // ← Hint: نصيحة للمستخدم
-                  const SizedBox(height: AppConstants.spacingMd),
-                  Container(
-                    padding: AppConstants.paddingSm,
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
-                      borderRadius: AppConstants.borderRadiusSm,
-                      border: Border.all(
-                        color: AppColors.warning.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: AppColors.warning,
-                        ),
-                        const SizedBox(width: AppConstants.spacingSm),
-                        Expanded(
-                          child: Text(
-                            l10n.passwordTip,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              // ← Hint: زر الإلغاء
-              TextButton(
-                onPressed: () {
-                  passwordController.dispose();
-                  confirmPasswordController.dispose();
-                  Navigator.of(ctx).pop(null);
-                },
-                child: Text(l10n.cancel),
-              ),
-
-              // ← Hint: زر التأكيد
-              ElevatedButton(
-                onPressed: () {
-                  final password = passwordController.text;
-
-                  // ← Hint: التحقق من أن كلمة المرور ليست فارغة
-                  if (password.trim().isEmpty) {
-                    setDialogState(() {
-                      errorMessage = l10n.passwordCannotBeEmpty;
-                    });
-                    return;
-                  }
-
-                  // ← Hint: التحقق من الحد الأدنى لطول كلمة المرور
-                  if (password.length < 4) {
-                    setDialogState(() {
-                      errorMessage = l10n.passwordTooShort;
-                    });
-                    return;
-                  }
-
-                  // ← Hint: التحقق من تطابق كلمتي المرور (فقط عند الإنشاء)
-                  if (isConfirmation) {
-                    final confirmPassword = confirmPasswordController.text;
-                    if (password != confirmPassword) {
-                      setDialogState(() {
-                        errorMessage = l10n.passwordsDoNotMatch;
-                      });
-                      return;
-                    }
-                  }
-
-                  // ← Hint: كل شيء على ما يرام، نرجع كلمة المرور
-                  passwordController.dispose();
-                  confirmPasswordController.dispose();
-                  Navigator.of(ctx).pop(password);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.info,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(l10n.confirm),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    return result;
-  }
-
-  // ============= البناء =============
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      // ============= App Bar =============
       appBar: AppBar(
-        title: Text(l10n.backupAndRestore),
+        title: const Text('النسخ الاحتياطي والاستعادة'),
+        centerTitle: true,
       ),
-
-      // ============= Body =============
-      body: Padding(
-        padding: AppConstants.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: AppConstants.spacingLg),
-
-            // ============= بطاقة النسخ الاحتياطي =============
-            _BackupCard(
-              title: l10n.createBackupTitle,
-              subtitle: l10n.createBackupSubtitle,
-              icon: Icons.cloud_upload_outlined,
-              color: AppColors.info,
-              isLoading: _isBackingUp,
-              enabled: !_isBackingUp && !_isRestoring,
-              onTap: _handleCreateBackup,
-            ),
-
-            // ← Hint: عرض زر المشاركة إذا كان هناك ملف محفوظ
-            if (_lastBackupFilePath != null) ...[
-              const SizedBox(height: AppConstants.spacingMd),
-              CustomButton(
-                text: l10n.shareLastBackup,
-                icon: Icons.share_rounded,
-                type: ButtonType.secondary,
-                onPressed: () => _handleShareBackup(_lastBackupFilePath!),
-              ),
-            ],
-
-            const SizedBox(height: AppConstants.spacingLg),
-
-            // ============= بطاقة الاستعادة =============
-            _BackupCard(
-              title: l10n.restoreFromFileTitle,
-              subtitle: l10n.restoreFromFileSubtitle,
-              icon: Icons.cloud_download_outlined,
-              color: AppColors.warning,
-              isLoading: _isRestoring,
-              enabled: !_isBackingUp && !_isRestoring,
-              onTap: _handleRestoreBackup,
-            ),
-
-            const Spacer(),
-
-            // ============= نصيحة =============
-            Container(
-              padding: AppConstants.paddingMd,
-              decoration: BoxDecoration(
-                color: (isDark 
-                    ? AppColors.primaryDark 
-                    : AppColors.primaryLight).withOpacity(0.1),
-                borderRadius: AppConstants.borderRadiusMd,
-                border: Border.all(
-                  color: isDark 
-                      ? AppColors.primaryDark.withOpacity(0.3)
-                      : AppColors.primaryLight.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline,
-                    color: isDark 
-                        ? AppColors.primaryDark 
-                        : AppColors.primaryLight,
-                    size: AppConstants.iconSizeLg,
-                  ),
-                  const SizedBox(width: AppConstants.spacingMd),
-                  Expanded(
-                    child: Text(
-                      l10n.backupTip,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isDark 
-                            ? AppColors.textSecondaryDark 
-                            : AppColors.textSecondaryLight,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppConstants.spacingLg),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// --- بطاقة خيار النسخ الاحتياطي ---
-// ← Hint: ويدجت مخصصة جميلة لعرض خيارات النسخ الاحتياطي
-// ============================================================
-class _BackupCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final bool isLoading;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _BackupCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.isLoading,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return CustomCard(
-      margin: EdgeInsets.zero,
-      // ← Hint: إذا كانت معطلة، نجعل onTap = null
-      onTap: enabled ? onTap : null,
-      // ← Hint: نغير اللون قليلاً إذا كانت معطلة
-      color: enabled 
-          ? null 
-          : (isDark 
-              ? AppColors.surfaceDark.withOpacity(0.5)
-              : AppColors.surfaceLight.withOpacity(0.5)),
-      child: Row(
+      body: Stack(
         children: [
-          // ============= الأيقونة =============
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: AppConstants.borderRadiusMd,
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: AppConstants.iconSizeLg,
-            ),
-          ),
-
-          const SizedBox(width: AppConstants.spacingLg),
-
-          // ============= العنوان والوصف =============
-          Expanded(
+          // ← Hint: المحتوى الرئيسي
+          Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    // ← Hint: نخفف اللون إذا كانت معطلة
-                    color: enabled 
-                        ? null 
-                        : (isDark 
-                            ? AppColors.textHintDark 
-                            : AppColors.textHintLight),
+                // ← Hint: بطاقة النسخ الاحتياطي
+                _buildBackupCard(isDark),
+
+                const SizedBox(height: 16),
+
+                // ← Hint: زر المشاركة (إذا كان هناك ملف)
+                if (_lastBackupFilePath != null)
+                  ElevatedButton.icon(
+                    onPressed: () => _shareBackup(_lastBackupFilePath!),
+                    icon: const Icon(Icons.share),
+                    label: const Text('مشاركة آخر نسخة'),
                   ),
-                ),
-                const SizedBox(height: AppConstants.spacingXs),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isDark 
-                        ? AppColors.textSecondaryDark 
-                        : AppColors.textSecondaryLight,
-                  ),
-                ),
+
+                const SizedBox(height: 24),
+
+                // ← Hint: بطاقة الاستعادة
+                _buildRestoreCard(isDark),
+
+                const Spacer(),
+
+                // ← Hint: معلومات
+                _buildInfoBox(isDark),
+
+                const SizedBox(height: 16),
               ],
             ),
           ),
 
-          const SizedBox(width: AppConstants.spacingMd),
-
-          // ============= مؤشر التحميل أو السهم =============
-          // ← Hint: AnimatedSwitcher يعطي تأثير انتقال سلس
-          AnimatedSwitcher(
-            duration: AppConstants.animationNormal,
-            child: isLoading
-                // --- حالة التحميل ---
-                ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
+          // ← Hint: شاشة التحميل
+          if (_isBackingUp || _isRestoring)
+            Container(
+              color: Colors.black.withOpacity(0.7),
+              child: Center(
+                child: Card(
+                  margin: const EdgeInsets.all(24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 24),
+                        Text(
+                          _isBackingUp ? 'جاري إنشاء النسخة...' : 'جاري الاستعادة...',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _currentStatus,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 16),
+                        LinearProgressIndicator(
+                          value: _totalSteps > 0 ? _currentStep / _totalSteps : 0,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_currentStep / $_totalSteps',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
                     ),
-                  )
-                // --- حالة عادية ---
-                : Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: enabled
-                        ? (isDark 
-                            ? AppColors.textSecondaryDark 
-                            : AppColors.textSecondaryLight)
-                        : (isDark 
-                            ? AppColors.textHintDark 
-                            : AppColors.textHintLight),
                   ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// بطاقة النسخ الاحتياطي
+  Widget _buildBackupCard(bool isDark) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: _isBackingUp || _isRestoring ? null : _handleCreateBackup,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.backup_rounded,
+                  color: Colors.blue,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'إنشاء نسخة احتياطية',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'نسخ احتياطي مشفر لجميع البيانات',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// بطاقة الاستعادة
+  Widget _buildRestoreCard(bool isDark) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: _isBackingUp || _isRestoring ? null : _handleRestoreBackup,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.restore_rounded,
+                  color: Colors.orange,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'استعادة نسخة احتياطية',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'استعادة البيانات من نسخة مشفرة',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// صندوق المعلومات
+  Widget _buildInfoBox(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.blue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'النسخ الاحتياطي مشفر بالكامل ويمكن نقله لأي جهاز آخر',
+              style: TextStyle(
+                color: isDark ? Colors.grey[300] : Colors.grey[800],
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),

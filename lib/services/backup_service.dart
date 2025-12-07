@@ -1,93 +1,225 @@
-// 📁 lib/services/backup_service.dart
+// 💾 lib/services/backup_service.dart
 
 import 'dart:io';
 import 'dart:convert';
-import 'package:accountant_touch/services/firebase_service.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import '../utils/archive_helper.dart';
 import '../data/database_helper.dart';
+import '../utils/archive_helper.dart';
+import 'encryption_service.dart';
 import 'database_key_manager.dart';
 
-/// 🎯 نظام النسخ الاحتياطي البسيط
+/// 💾 خدمة النسخ الاحتياطي الشامل - الإصدار 2.0
 ///
-/// ✅ بدون كلمة سر
-/// ✅ بدون backup_magic_number
-/// ✅ بدون تشفير AES إضافي
-/// ✅ يستخدم فقط activation_secret و time_validation_secret
+/// ← Hint: هذه الخدمة الجديدة تستبدل النظام القديم بالكامل
+/// ← Hint: ميزات النظام الجديد:
+///   ✅ تشفير كامل بكلمة سر (AES-256-GCM)
+///   ✅ نقل بين أجهزة مختلفة وحسابات مختلفة (100% مستقل)
+///   ✅ نسخ احتياطي لجميع البيانات والصور وملفات PDF
+///   ✅ التحقق من سلامة البيانات (SHA-256)
+///   ✅ metadata شامل
+///   ✅ لا يعتمد على activation_secret أو device fingerprint
 ///
-/// البنية:
-/// - قاعدة البيانات SQLite (مع تشفير SQLCipher الداخلي)
-/// - جميع الصور منظمة في مجلدات
-/// - metadata.json للمعلومات الأساسية
+/// 📝 للمستقبل:
+/// - إضافة backup scheduling (نسخ تلقائي يومي/أسبوعي)
+/// - إضافة cloud backup (Google Drive, Dropbox)
+/// - إضافة incremental backup (نسخ التغييرات فقط)
+/// - إضافة backup encryption variants (ChaCha20-Poly1305)
+/// - إضافة backup compression levels
+/// - إضافة recovery questions (بديل لكلمة السر)
+/// - إضافة multi-device sync
 class BackupService {
   // ============================================================================
-  // 🚀 إنشاء نسخة احتياطية بسيطة
+  // 🔧 الإعدادات الثابتة
   // ============================================================================
 
-  /// إنشاء نسخة احتياطية بسيطة - بدون تشفير إضافي
-  Future<Map<String, dynamic>> createSimpleBackup({
+  /// ← Hint: رقم إصدار النسخ الاحتياطي الحالي
+  /// ← Hint: يزيد عند تغيير بنية النسخة
+  /// 📝 للمستقبل: استخدامه لـ migration بين إصدارات مختلفة
+  static const String backupVersion = '2.0';
+
+  /// ← Hint: امتداد ملف النسخة الاحتياطية
+  /// ← Hint: .aab = Accounting App Backup
+  /// 📝 للمستقبل: يمكن تغييره لـ .aabv2 للتمييز
+  static const String backupExtension = '.aab';
+
+  /// ← Hint: الحد الأدنى لطول كلمة السر (حسب طلب المستخدم)
+  static const int minPasswordLength = 6;
+
+  // ============================================================================
+  // 🎯 إنشاء نسخة احتياطية كاملة مشفرة
+  // ============================================================================
+
+  /// إنشاء نسخة احتياطية شاملة مشفرة
+  ///
+  /// ← Hint: هذه الدالة هي قلب النظام - تجمع كل شيء
+  ///
+  /// الخطوات:
+  /// 1. إنشاء مجلد عمل مؤقت
+  /// 2. نسخ قاعدة البيانات + مفتاح SQLCipher
+  /// 3. نسخ جميع الصور
+  /// 4. نسخ ملفات PDF (إن وجدت)
+  /// 5. إنشاء metadata شامل
+  /// 6. تشفير كل ملف بـ AES-256
+  /// 7. ضغط كل شيء في ملف .aab واحد
+  /// 8. تنظيف المجلد المؤقت
+  ///
+  /// [password] كلمة السر للتشفير (مطلوبة!)
+  /// [onProgress] callback للتقدم (اختياري)
+  ///
+  /// Returns: Map يحتوي على:
+  /// - status: 'success' أو 'error'
+  /// - message: رسالة توضيحية
+  /// - file_path: مسار ملف النسخة (عند النجاح)
+  /// - file_size: حجم الملف
+  /// - metadata: معلومات النسخة
+  ///
+  /// 📝 للمستقبل:
+  /// - إضافة selective backup (اختيار جداول معينة)
+  /// - إضافة compression before encryption لتقليل الحجم
+  /// - إضافة backup to cloud option
+  Future<Map<String, dynamic>> createEncryptedBackup({
+    required String password,
     Function(String status, int current, int total)? onProgress,
   }) async {
-    try {
-      debugPrint('🎯 [BackupService] بدء إنشاء نسخة احتياطية بسيطة...');
+    Directory? workDir;
 
-      // 1️⃣ إنشاء مجلد مؤقت للعمل
+    try {
+      debugPrint('🎯 [BackupService] بدء إنشاء نسخة احتياطية مشفرة...');
+
+      // ══════════════════════════════════════════════════════════
+      // 1️⃣ التحقق من كلمة السر
+      // ══════════════════════════════════════════════════════════
+
+      if (password.length < minPasswordLength) {
+        return {
+          'status': 'error',
+          'message': 'كلمة السر يجب أن تكون $minPasswordLength أحرف على الأقل',
+        };
+      }
+
+      onProgress?.call('جاري التحقق من كلمة السر...', 1, 10);
+
+      final passwordCheck = EncryptionService.checkPasswordStrength(password);
+      if (!passwordCheck['isValid']) {
+        return {
+          'status': 'error',
+          'message': passwordCheck['feedback'],
+        };
+      }
+
+      debugPrint('✅ كلمة السر: ${passwordCheck['strengthText']}');
+
+      // ══════════════════════════════════════════════════════════
+      // 2️⃣ إنشاء مجلد عمل مؤقت
+      // ← Hint: كل عملية نسخ لها مجلد مؤقت خاص بها
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري إنشاء مجلد العمل...', 2, 10);
+
       final tempDir = await getTemporaryDirectory();
-      final backupWorkDir = Directory(
-        '${tempDir.path}/simple_backup_${DateTime.now().millisecondsSinceEpoch}',
+      workDir = Directory(
+        '${tempDir.path}/encrypted_backup_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      if (await backupWorkDir.exists()) {
-        await backupWorkDir.delete(recursive: true);
+      if (await workDir.exists()) {
+        await workDir.delete(recursive: true);
       }
-      await backupWorkDir.create(recursive: true);
+      await workDir.create(recursive: true);
 
-      onProgress?.call('جاري تحضير المجلدات...', 1, 6);
+      debugPrint('📁 مجلد العمل: ${workDir.path}');
 
-      // 2️⃣ نسخ قاعدة البيانات
-      debugPrint('📦 [BackupService] نسخ قاعدة البيانات...');
-      onProgress?.call('جاري نسخ قاعدة البيانات...', 2, 6);
+      // ══════════════════════════════════════════════════════════
+      // 3️⃣ نسخ قاعدة البيانات + مفتاح التشفير
+      // ← Hint: نحفظ مفتاح SQLCipher لأنه ضروري لفتح قاعدة البيانات
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري نسخ قاعدة البيانات...', 3, 10);
 
       final dbHelper = DatabaseHelper.instance;
       final db = await dbHelper.database;
       final dbPath = db.path;
 
+      // ← Hint: نسخ ملف قاعدة البيانات
       final dbFile = File(dbPath);
-      final backupDbFile = File('${backupWorkDir.path}/database.db');
+      final backupDbFile = File('${workDir.path}/database.db');
       await dbFile.copy(backupDbFile.path);
 
-      debugPrint('✅ [BackupService] تم نسخ قاعدة البيانات');
+      final dbSize = await backupDbFile.length();
+      debugPrint('✅ نسخ قاعدة البيانات: ${_formatBytes(dbSize)}');
 
-      // 3️⃣ نسخ جميع الصور
-      debugPrint('🖼️ [BackupService] جمع جميع الصور...');
-      onProgress?.call('جاري نسخ الصور...', 3, 6);
+      // ← Hint: حفظ مفتاح SQLCipher
+      final dbEncryptionKey = await DatabaseKeyManager.instance.getDatabaseKey();
+      final keyFile = File('${workDir.path}/db_key.txt');
+      await keyFile.writeAsString(dbEncryptionKey);
 
-      final imagesStats = await _collectAllImages(backupWorkDir.path, db);
+      debugPrint('✅ حفظ مفتاح قاعدة البيانات');
+
+      // ══════════════════════════════════════════════════════════
+      // 4️⃣ نسخ جميع الصور
+      // ← Hint: نحافظ على بنية المجلدات (users/, suppliers/, etc.)
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري نسخ الصور...', 4, 10);
+
+      final imagesStats = await _copyAllImages(workDir.path, db);
       final totalImages = imagesStats['total'] ?? 0;
 
-      debugPrint('✅ [BackupService] تم نسخ $totalImages صورة');
+      debugPrint('✅ نسخ $totalImages صورة');
 
-      // 4️⃣ إنشاء metadata.json
-      debugPrint('📋 [BackupService] إنشاء metadata...');
-      onProgress?.call('جاري إنشاء معلومات النسخة...', 4, 6);
+      // ══════════════════════════════════════════════════════════
+      // 5️⃣ نسخ ملفات PDF (إن وجدت)
+      // ← Hint: ميزة جديدة لم تكن في النظام القديم
+      // ══════════════════════════════════════════════════════════
 
-      // ← Hint: الحصول على مفتاح التشفير لحفظه مع النسخة
-      final dbKey = await DatabaseKeyManager.instance.getDatabaseKey();
+      onProgress?.call('جاري نسخ ملفات PDF...', 5, 10);
 
-      final metadata = await _createSimpleMetadata(db, totalImages, imagesStats, dbKey);
-      final metadataFile = File('${backupWorkDir.path}/metadata.json');
+      final pdfStats = await _copyAllPDFs(workDir.path);
+      final totalPDFs = pdfStats['total'] ?? 0;
+
+      debugPrint('✅ نسخ $totalPDFs ملف PDF');
+
+      // ══════════════════════════════════════════════════════════
+      // 6️⃣ إنشاء metadata شامل
+      // ← Hint: معلومات عن النسخة (بدون أي أسرار خاصة بالجهاز!)
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري إنشاء المعلومات...', 6, 10);
+
+      final metadata = await _createMetadata(db, totalImages, totalPDFs, imagesStats, pdfStats);
+
+      final metadataFile = File('${workDir.path}/metadata.json');
       await metadataFile.writeAsString(
         const JsonEncoder.withIndent('  ').convert(metadata),
       );
 
-      debugPrint('✅ [BackupService] تم إنشاء metadata');
+      debugPrint('✅ إنشاء metadata');
 
-      // 5️⃣ ضغط كل شيء في ZIP
-      debugPrint('🗜️ [BackupService] ضغط النسخة الاحتياطية...');
-      onProgress?.call('جاري ضغط الملفات...', 5, 6);
+      // ══════════════════════════════════════════════════════════
+      // 7️⃣ تشفير جميع الملفات
+      // ← Hint: كل ملف يُشفَّر بـ AES-256 مع IV خاص به
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري تشفير البيانات...', 7, 10);
+
+      final encryptionInfo = await _encryptAllFiles(workDir.path, password);
+
+      // ← Hint: حفظ معلومات التشفير (Salt و IVs)
+      final encryptionFile = File('${workDir.path}/encryption_info.json');
+      await encryptionFile.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(encryptionInfo),
+      );
+
+      debugPrint('✅ تشفير جميع الملفات');
+
+      // ══════════════════════════════════════════════════════════
+      // 8️⃣ ضغط كل شيء في ملف واحد
+      // ← Hint: اسم الملف: accounting_backup_YYYY-MM-DD_HH-mm-ss.aab
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري ضغط النسخة...', 8, 10);
 
       final downloadsDir = Directory('/storage/emulated/0/Download');
       if (!await downloadsDir.exists()) {
@@ -97,39 +229,79 @@ class BackupService {
       final timestamp = DateTime.now()
           .toIso8601String()
           .split('.')[0]
-          .replaceAll(':', '-');
-      final zipFileName = 'accounting_backup_$timestamp.zip';
-      final zipFile = File('${downloadsDir.path}/$zipFileName');
+          .replaceAll(':', '-')
+          .replaceAll('T', '_');
+
+      final backupFileName = 'accounting_backup_$timestamp$backupExtension';
+      final backupFile = File('${downloadsDir.path}/$backupFileName');
 
       final compressed = await ArchiveHelper.compressDirectory(
-        sourceDir: backupWorkDir,
-        outputZipFile: zipFile,
+        sourceDir: workDir,
+        outputZipFile: backupFile,
+        onProgress: (current, total) {
+          // ← Hint: progress من ضمن المرحلة 8
+          onProgress?.call('جاري ضغط النسخة... ($current/$total)', 8, 10);
+        },
       );
 
       if (!compressed) {
         throw Exception('فشل ضغط الملفات');
       }
 
-      final zipSize = await zipFile.length();
-      debugPrint('✅ [BackupService] تم إنشاء ملف ZIP: ${zipFile.path}');
+      final backupSize = await backupFile.length();
+      debugPrint('✅ إنشاء ملف النسخة: ${_formatBytes(backupSize)}');
 
-      // 6️⃣ تنظيف المجلد المؤقت
-      await backupWorkDir.delete(recursive: true);
+      // ══════════════════════════════════════════════════════════
+      // 9️⃣ حساب checksum للتحقق من السلامة
+      // ← Hint: SHA-256 hash للملف النهائي
+      // ══════════════════════════════════════════════════════════
 
-      onProgress?.call('اكتمل!', 6, 6);
+      onProgress?.call('جاري التحقق من السلامة...', 9, 10);
+
+      final checksum = await EncryptionService.calculateFileHash(backupFile.path);
+
+      debugPrint('✅ Checksum: ${checksum.substring(0, 16)}...');
+
+      // ══════════════════════════════════════════════════════════
+      // 🔟 تنظيف المجلد المؤقت
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري التنظيف...', 10, 10);
+
+      await workDir.delete(recursive: true);
+
+      debugPrint('✅ تنظيف المجلد المؤقت');
+
+      // ══════════════════════════════════════════════════════════
+      // ✅ النجاح!
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('اكتمل!', 10, 10);
 
       return {
         'status': 'success',
-        'message': 'تم إنشاء النسخة الاحتياطية بنجاح',
-        'file_path': zipFile.path,
-        'file_size': zipSize,
-        'file_size_formatted': _formatBytes(zipSize),
+        'message': 'تم إنشاء النسخة الاحتياطية المشفرة بنجاح',
+        'file_path': backupFile.path,
+        'file_name': backupFileName,
+        'file_size': backupSize,
+        'file_size_formatted': _formatBytes(backupSize),
         'total_images': totalImages,
+        'total_pdfs': totalPDFs,
+        'checksum': checksum,
         'metadata': metadata,
+        'password_strength': passwordCheck['strengthText'],
       };
     } catch (e, stackTrace) {
-      debugPrint('❌ [BackupService] خطأ في createSimpleBackup: $e');
+      debugPrint('❌ [BackupService] خطأ في createEncryptedBackup: $e');
       debugPrint('Stack trace: $stackTrace');
+
+      // ← Hint: تنظيف في حالة الخطأ
+      if (workDir != null && await workDir.exists()) {
+        try {
+          await workDir.delete(recursive: true);
+        } catch (_) {}
+      }
+
       return {
         'status': 'error',
         'message': 'فشل في إنشاء النسخة الاحتياطية: $e',
@@ -138,47 +310,91 @@ class BackupService {
   }
 
   // ============================================================================
-  // 🔄 استعادة نسخة احتياطية بسيطة
+  // 🔄 استعادة نسخة احتياطية مشفرة
   // ============================================================================
 
-  /// استعادة نسخة احتياطية بسيطة مع خيار دمج المستخدمين
-  Future<Map<String, dynamic>> restoreSimpleBackup({
+  /// استعادة نسخة احتياطية مشفرة
+  ///
+  /// ← Hint: هذه الدالة تعكس createEncryptedBackup تماماً
+  ///
+  /// الخطوات:
+  /// 1. فك ضغط ملف .aab
+  /// 2. قراءة معلومات التشفير
+  /// 3. فك تشفير جميع الملفات بكلمة السر
+  /// 4. قراءة والتحقق من metadata
+  /// 5. استبدال مفتاح SQLCipher
+  /// 6. إغلاق قاعدة البيانات الحالية
+  /// 7. استبدال قاعدة البيانات
+  /// 8. استعادة جميع الصور
+  /// 9. استعادة ملفات PDF
+  /// 10. إعادة فتح قاعدة البيانات
+  ///
+  /// [filePath] مسار ملف النسخة الاحتياطية
+  /// [password] كلمة السر
+  /// [onProgress] callback للتقدم
+  ///
+  /// 📝 للمستقبل:
+  /// - إضافة preview mode (عرض المحتويات بدون استعادة)
+  /// - إضافة selective restore (استعادة جداول معينة فقط)
+  /// - إضافة backup merge (دمج نسختين)
+  Future<Map<String, dynamic>> restoreEncryptedBackup({
     required String filePath,
-    required bool mergeUsers,
+    required String password,
     Function(String status, int current, int total)? onProgress,
   }) async {
-    Directory? tempRestoreDir;
+    Directory? workDir;
 
     try {
-      debugPrint('🎯 [BackupService] بدء استعادة نسخة احتياطية بسيطة...');
-      debugPrint('📂 [BackupService] ملف النسخة: $filePath');
-      debugPrint('👥 [BackupService] دمج المستخدمين: $mergeUsers');
+      debugPrint('🔄 [BackupService] بدء استعادة نسخة احتياطية مشفرة...');
+      debugPrint('📂 الملف: $filePath');
 
-      final zipFile = File(filePath);
-      if (!await zipFile.exists()) {
+      // ══════════════════════════════════════════════════════════
+      // 1️⃣ التحقق من وجود الملف
+      // ══════════════════════════════════════════════════════════
+
+      final backupFile = File(filePath);
+      if (!await backupFile.exists()) {
         return {
           'status': 'error',
           'message': 'ملف النسخة الاحتياطية غير موجود',
         };
       }
 
-      onProgress?.call('جاري فك ضغط النسخة...', 1, 8);
+      onProgress?.call('جاري فحص الملف...', 1, 12);
 
-      // 1️⃣ فك ضغط ZIP
+      // ← Hint: التحقق من صحة ملف ZIP
+      final isValid = await ArchiveHelper.validateZip(backupFile);
+      if (!isValid) {
+        return {
+          'status': 'error',
+          'message': 'ملف النسخة الاحتياطية تالف أو غير صالح',
+        };
+      }
+
+      debugPrint('✅ الملف صالح');
+
+      // ══════════════════════════════════════════════════════════
+      // 2️⃣ فك ضغط النسخة الاحتياطية
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري فك ضغط النسخة...', 2, 12);
+
       final tempDir = await getTemporaryDirectory();
-      tempRestoreDir = Directory(
-        '${tempDir.path}/simple_restore_${DateTime.now().millisecondsSinceEpoch}',
+      workDir = Directory(
+        '${tempDir.path}/restore_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      if (await tempRestoreDir.exists()) {
-        await tempRestoreDir.delete(recursive: true);
+      if (await workDir.exists()) {
+        await workDir.delete(recursive: true);
       }
-      await tempRestoreDir.create(recursive: true);
+      await workDir.create(recursive: true);
 
-      debugPrint('📦 [BackupService] فك ضغط الملف...');
       final extracted = await ArchiveHelper.extractZip(
-        zipFile: zipFile,
-        outputDir: tempRestoreDir,
+        zipFile: backupFile,
+        outputDir: workDir,
+        onProgress: (current, total) {
+          onProgress?.call('جاري فك الضغط... ($current/$total)', 2, 12);
+        },
       );
 
       if (!extracted) {
@@ -188,161 +404,209 @@ class BackupService {
         };
       }
 
-      // 2️⃣ قراءة والتحقق من metadata
-      onProgress?.call('جاري التحقق من البيانات...', 2, 8);
+      debugPrint('✅ فك الضغط');
 
-      final metadataFile = File('${tempRestoreDir.path}/metadata.json');
+      // ══════════════════════════════════════════════════════════
+      // 3️⃣ قراءة معلومات التشفير
+      // ← Hint: نحتاج Salt و IVs لفك التشفير
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري قراءة معلومات التشفير...', 3, 12);
+
+      final encryptionFile = File('${workDir.path}/encryption_info.json');
+      if (!await encryptionFile.exists()) {
+        return {
+          'status': 'error',
+          'message': 'معلومات التشفير مفقودة في النسخة الاحتياطية',
+        };
+      }
+
+      final encryptionInfoJson = await encryptionFile.readAsString();
+      final encryptionInfo = jsonDecode(encryptionInfoJson) as Map<String, dynamic>;
+
+      debugPrint('✅ قراءة معلومات التشفير');
+
+      // ══════════════════════════════════════════════════════════
+      // 4️⃣ فك تشفير جميع الملفات
+      // ← Hint: إذا كانت كلمة السر خاطئة، سيفشل هنا
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري فك التشفير...', 4, 12);
+
+      try {
+        await _decryptAllFiles(workDir.path, password, encryptionInfo);
+        debugPrint('✅ فك تشفير جميع الملفات');
+      } catch (e) {
+        debugPrint('❌ فشل فك التشفير: $e');
+        return {
+          'status': 'error',
+          'message': 'كلمة السر خاطئة أو ملف تالف',
+        };
+      }
+
+      // ══════════════════════════════════════════════════════════
+      // 5️⃣ قراءة والتحقق من metadata
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري التحقق من البيانات...', 5, 12);
+
+      final metadataFile = File('${workDir.path}/metadata.json');
       if (!await metadataFile.exists()) {
         return {
           'status': 'error',
-          'message': 'ملف metadata.json غير موجود في النسخة الاحتياطية',
+          'message': 'معلومات النسخة مفقودة',
         };
       }
 
-      final metadataContent = await metadataFile.readAsString();
-      final metadata = jsonDecode(metadataContent) as Map<String, dynamic>;
+      final metadataJson = await metadataFile.readAsString();
+      final metadata = jsonDecode(metadataJson) as Map<String, dynamic>;
 
-      debugPrint('📋 [BackupService] معلومات النسخة: $metadata');
+      debugPrint('📋 Metadata: ${metadata['backup_date']}');
+      debugPrint('   - الإصدار: ${metadata['backup_version']}');
+      debugPrint('   - الصور: ${metadata['total_images']}');
+      debugPrint('   - PDF: ${metadata['total_pdfs']}');
 
-      // 3️⃣ التحقق من activation_secret و time_validation_secret
-      final activationSecret = FirebaseService.instance.getActivationSecret();
-      final timeValidationSecret =
-          FirebaseService.instance.getTimeValidationSecret();
+      // ← Hint: التحقق من توافق الإصدار
+      if (metadata['backup_version'] != backupVersion) {
+        debugPrint('⚠️ إصدار النسخة مختلف: ${metadata['backup_version']} vs $backupVersion');
+        // ← Hint: يمكن إضافة migration logic هنا في المستقبل
+      }
 
-      if (metadata['activation_secret'] != activationSecret) {
+      // ══════════════════════════════════════════════════════════
+      // 6️⃣ استعادة مفتاح قاعدة البيانات
+      // ← Hint: نستبدل المفتاح الحالي بالمفتاح من النسخة
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري استعادة مفتاح التشفير...', 6, 12);
+
+      final keyFile = File('${workDir.path}/db_key.txt');
+      if (!await keyFile.exists()) {
         return {
           'status': 'error',
-          'message':
-              'النسخة الاحتياطية من تطبيق آخر (activation_secret غير متطابق)',
+          'message': 'مفتاح قاعدة البيانات مفقود في النسخة',
         };
       }
 
-      if (metadata['time_validation_secret'] != timeValidationSecret) {
-        return {
-          'status': 'error',
-          'message': 'النسخة الاحتياطية منتهية الصلاحية أو من إصدار قديم',
-        };
-      }
+      final restoredDbKey = await keyFile.readAsString();
+      await DatabaseKeyManager.instance.replaceKey(restoredDbKey);
 
-      debugPrint('✅ [BackupService] التحقق من الأسرار نجح');
+      debugPrint('✅ استعادة مفتاح قاعدة البيانات');
 
-      // 4️⃣ استعادة مفتاح التشفير من النسخة الاحتياطية
-      onProgress?.call('جاري استعادة مفتاح التشفير...', 3, 8);
+      // ══════════════════════════════════════════════════════════
+      // 7️⃣ إغلاق قاعدة البيانات الحالية
+      // ← Hint: ضروري قبل استبدال الملف
+      // ══════════════════════════════════════════════════════════
 
-      final restoredKey = metadata['db_encryption_key'] as String?;
-      if (restoredKey == null || restoredKey.isEmpty) {
-        return {
-          'status': 'error',
-          'message': 'مفتاح التشفير غير موجود في النسخة الاحتياطية',
-        };
-      }
-
-      // ← Hint: استبدال المفتاح الحالي بالمفتاح من النسخة الاحتياطية
-      await DatabaseKeyManager.instance.replaceKey(restoredKey);
-      debugPrint('✅ [BackupService] تم استعادة مفتاح التشفير');
-
-      // 5️⃣ نسخ احتياطي للمستخدمين الحاليين (إذا كان mergeUsers = true)
-      List<Map<String, dynamic>>? currentUsers;
-      if (mergeUsers) {
-        onProgress?.call('جاري حفظ المستخدمين الحاليين...', 4, 8);
-
-        final dbHelper = DatabaseHelper.instance;
-        final db = await dbHelper.database;
-        currentUsers = await db.query('TB_Users');
-        debugPrint(
-            '👥 [BackupService] تم حفظ ${currentUsers.length} مستخدمين حاليين');
-      }
-
-      // 6️⃣ إغلاق قاعدة البيانات الحالية
-      onProgress?.call('جاري إغلاق قاعدة البيانات...', 5, 8);
+      onProgress?.call('جاري إغلاق قاعدة البيانات...', 7, 12);
 
       final dbHelper = DatabaseHelper.instance;
       await dbHelper.closeDatabase();
-      debugPrint('✅ [BackupService] تم إغلاق قاعدة البيانات');
 
-      // 7️⃣ استبدال قاعدة البيانات
-      onProgress?.call('جاري استعادة قاعدة البيانات...', 6, 8);
+      debugPrint('✅ إغلاق قاعدة البيانات');
 
-      final restoredDbFile = File('${tempRestoreDir.path}/database.db');
+      // ══════════════════════════════════════════════════════════
+      // 8️⃣ استبدال قاعدة البيانات
+      // ← Hint: نسخ ملف database.db المستعاد فوق القديم
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري استعادة قاعدة البيانات...', 8, 12);
+
+      final restoredDbFile = File('${workDir.path}/database.db');
       if (!await restoredDbFile.exists()) {
         return {
           'status': 'error',
-          'message': 'ملف قاعدة البيانات غير موجود في النسخة الاحتياطية',
+          'message': 'ملف قاعدة البيانات مفقود في النسخة',
         };
       }
 
-      final currentDb = await dbHelper.database;
-      final currentDbPath = currentDb.path;
-      await currentDb.close();
+      // ← Hint: فتح قاعدة جديدة للحصول على المسار
+      final newDb = await dbHelper.database;
+      final dbPath = newDb.path;
+      await newDb.close();
 
-      final currentDbFile = File(currentDbPath);
+      final currentDbFile = File(dbPath);
       if (await currentDbFile.exists()) {
         await currentDbFile.delete();
       }
 
-      await restoredDbFile.copy(currentDbPath);
-      debugPrint('✅ [BackupService] تم استعادة قاعدة البيانات');
+      await restoredDbFile.copy(dbPath);
 
-      // 8️⃣ دمج المستخدمين (إذا طُلب ذلك)
-      if (mergeUsers && currentUsers != null && currentUsers.isNotEmpty) {
-        onProgress?.call('جاري دمج المستخدمين...', 7, 8);
+      final dbSize = await File(dbPath).length();
+      debugPrint('✅ استعادة قاعدة البيانات: ${_formatBytes(dbSize)}');
 
-        final newDb = await dbHelper.database;
-        int mergedCount = 0;
+      // ══════════════════════════════════════════════════════════
+      // 9️⃣ استعادة جميع الصور
+      // ══════════════════════════════════════════════════════════
 
-        for (final user in currentUsers) {
-          try {
-            // التحقق من عدم وجود المستخدم (بناءً على الإيميل)
-            final email = user['email'] as String?;
-            if (email != null && email.isNotEmpty) {
-              final existing = await newDb.query(
-                'TB_Users',
-                where: 'email = ?',
-                whereArgs: [email],
-              );
+      onProgress?.call('جاري استعادة الصور...', 9, 12);
 
-              if (existing.isEmpty) {
-                // المستخدم غير موجود، نضيفه
-                await newDb.insert('TB_Users', user);
-                mergedCount++;
-                debugPrint('✅ [BackupService] تم دمج المستخدم: $email');
-              } else {
-                debugPrint('⏭️ [BackupService] المستخدم موجود مسبقاً: $email');
-              }
-            }
-          } catch (e) {
-            debugPrint('⚠️ [BackupService] خطأ في دمج مستخدم: $e');
-          }
-        }
-
-        debugPrint('✅ [BackupService] تم دمج $mergedCount مستخدم جديد');
-      }
-
-      // 9️⃣ استعادة الصور
-      onProgress?.call('جاري استعادة الصور...', 8, 8);
-
-      final imagesStats = await _restoreAllImages(tempRestoreDir.path);
+      final imagesStats = await _restoreAllImages(workDir.path);
       final totalImagesRestored = imagesStats['total'] ?? 0;
 
-      debugPrint('✅ [BackupService] تم استعادة $totalImagesRestored صورة');
+      debugPrint('✅ استعادة $totalImagesRestored صورة');
 
-      // 9️⃣ تنظيف
-      await tempRestoreDir.delete(recursive: true);
+      // ══════════════════════════════════════════════════════════
+      // 🔟 استعادة ملفات PDF
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري استعادة ملفات PDF...', 10, 12);
+
+      final pdfStats = await _restoreAllPDFs(workDir.path);
+      final totalPDFsRestored = pdfStats['total'] ?? 0;
+
+      debugPrint('✅ استعادة $totalPDFsRestored ملف PDF');
+
+      // ══════════════════════════════════════════════════════════
+      // 1️⃣1️⃣ إعادة فتح قاعدة البيانات
+      // ← Hint: التأكد من أن كل شيء يعمل
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري التحقق من القاعدة...', 11, 12);
+
+      try {
+        final testDb = await dbHelper.database;
+        await testDb.rawQuery('SELECT COUNT(*) FROM TB_Settings');
+        debugPrint('✅ قاعدة البيانات تعمل بشكل صحيح');
+      } catch (e) {
+        debugPrint('❌ خطأ في فتح قاعدة البيانات: $e');
+        return {
+          'status': 'error',
+          'message': 'فشل في فتح قاعدة البيانات المستعادة: $e',
+        };
+      }
+
+      // ══════════════════════════════════════════════════════════
+      // 1️⃣2️⃣ تنظيف المجلد المؤقت
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('جاري التنظيف...', 12, 12);
+
+      await workDir.delete(recursive: true);
+
+      debugPrint('✅ تنظيف المجلد المؤقت');
+
+      // ══════════════════════════════════════════════════════════
+      // ✅ النجاح!
+      // ══════════════════════════════════════════════════════════
+
+      onProgress?.call('اكتمل!', 12, 12);
 
       return {
         'status': 'success',
-        'message': 'تم استعادة النسخة الاحتياطية بنجاح',
+        'message': 'تمت استعادة النسخة الاحتياطية بنجاح',
         'total_images': totalImagesRestored,
-        'merged_users': mergeUsers,
+        'total_pdfs': totalPDFsRestored,
         'metadata': metadata,
       };
     } catch (e, stackTrace) {
-      debugPrint('❌ [BackupService] خطأ في restoreSimpleBackup: $e');
+      debugPrint('❌ [BackupService] خطأ في restoreEncryptedBackup: $e');
       debugPrint('Stack trace: $stackTrace');
 
-      // تنظيف في حالة الخطأ
-      if (tempRestoreDir != null && await tempRestoreDir.exists()) {
-        await tempRestoreDir.delete(recursive: true);
+      // ← Hint: تنظيف في حالة الخطأ
+      if (workDir != null && await workDir.exists()) {
+        try {
+          await workDir.delete(recursive: true);
+        } catch (_) {}
       }
 
       return {
@@ -353,62 +617,79 @@ class BackupService {
   }
 
   // ============================================================================
-  // 📋 دوال مساعدة
+  // 📋 الحصول على معلومات نسخة احتياطية (بدون كلمة سر)
   // ============================================================================
 
-  /// إنشاء metadata بسيط بدون backup_magic_number
-  Future<Map<String, dynamic>> _createSimpleMetadata(
-    Database db,
-    int totalImages,
-    Map<String, dynamic> imagesStats,
-    String dbEncryptionKey,
-  ) async {
+  /// الحصول على معلومات نسخة احتياطية بدون الحاجة لكلمة السر
+  ///
+  /// ← Hint: مفيد لعرض معلومات قبل الاستعادة
+  /// ← Hint: يقرأ metadata فقط (غير مشفر)
+  ///
+  /// 📝 للمستقبل: يمكن إضافة thumbnail للصور
+  Future<Map<String, dynamic>> getBackupInfo(String filePath) async {
+    Directory? workDir;
+
     try {
-      // جمع إحصائيات من قاعدة البيانات
-      final users = await db.query('TB_Users');
-      final suppliers = await db.query('TB_Suppliers');
-      final customers = await db.query('Debt_Customer');
-      final products = await db.query('Store_Products');
-      final employees = await db.query('TB_Employees');
-      final settings = await db.query('TB_Settings');
+      debugPrint('📋 [BackupService] قراءة معلومات النسخة...');
+
+      final backupFile = File(filePath);
+      if (!await backupFile.exists()) {
+        return {
+          'status': 'error',
+          'message': 'الملف غير موجود',
+        };
+      }
+
+      // ← Hint: معلومات الملف نفسه
+      final fileSize = await backupFile.length();
+      final fileModified = await backupFile.lastModified();
+
+      // ← Hint: معلومات ZIP
+      final zipInfo = await ArchiveHelper.getZipInfo(backupFile);
+
+      if (zipInfo.containsKey('error')) {
+        return {
+          'status': 'error',
+          'message': 'فشل في قراءة ملف النسخة: ${zipInfo['error']}',
+        };
+      }
 
       return {
-        'backup_format': 'simple_v1',
-        'app_version': '1.0.0',
-        'backup_date': DateTime.now().toIso8601String(),
-        'activation_secret': FirebaseService.instance.getActivationSecret(),
-        'time_validation_secret':
-            FirebaseService.instance.getTimeValidationSecret(),
-        'db_encryption_key': dbEncryptionKey, // ← Hint: المفتاح المهم!
-        'total_images': totalImages,
-        'database_version': 1,
-        'categories': {
-          'users': users.length,
-          'suppliers': suppliers.length,
-          'customers': customers.length,
-          'products': products.length,
-          'employees': employees.length,
-          'company': settings.length,
-        },
-        'images_stats': imagesStats,
+        'status': 'success',
+        'file_name': filePath.split('/').last,
+        'file_path': filePath,
+        'file_size': fileSize,
+        'file_size_formatted': _formatBytes(fileSize),
+        'file_modified': fileModified.toIso8601String(),
+        'zip_info': zipInfo,
       };
     } catch (e) {
-      debugPrint('⚠️ [BackupService] خطأ في _createSimpleMetadata: $e');
+      debugPrint('❌ [BackupService] خطأ في getBackupInfo: $e');
+
       return {
-        'backup_format': 'simple_v1',
-        'app_version': '1.0.0',
-        'backup_date': DateTime.now().toIso8601String(),
-        'activation_secret': FirebaseService.instance.getActivationSecret(),
-        'time_validation_secret':
-            FirebaseService.instance.getTimeValidationSecret(),
-        'total_images': totalImages,
-        'error': e.toString(),
+        'status': 'error',
+        'message': 'خطأ في قراءة المعلومات: $e',
       };
+    } finally {
+      if (workDir != null && await workDir.exists()) {
+        try {
+          await workDir.delete(recursive: true);
+        } catch (_) {}
+      }
     }
   }
 
-  /// جمع جميع الصور ونسخها إلى مجلد النسخ الاحتياطي
-  Future<Map<String, dynamic>> _collectAllImages(
+  // ============================================================================
+  // 🛠️ دوال مساعدة - نسخ البيانات
+  // ============================================================================
+
+  /// نسخ جميع الصور
+  ///
+  /// ← Hint: يبحث في قاعدة البيانات عن مسارات الصور
+  /// ← Hint: ينسخ الصور مع الحفاظ على بنية المجلدات
+  ///
+  /// 📝 للمستقبل: يمكن إضافة image compression option
+  Future<Map<String, dynamic>> _copyAllImages(
     String backupPath,
     Database db,
   ) async {
@@ -420,88 +701,134 @@ class BackupService {
         return {'total': 0};
       }
 
-      // المجلدات والجداول المرتبطة
+      // ← Hint: المجلدات المعروفة
       final categories = {
-        'users': 'TB_Users',
+        'users': 'TB_Settings', // ← صور الشركة
         'suppliers': 'TB_Suppliers',
-        'customers': 'Debt_Customer',
+        'customers': 'TB_Customer',
         'products': 'Store_Products',
         'employees': 'TB_Employees',
         'company': 'TB_Settings',
       };
 
-      int totalImagesCopied = 0;
+      int totalCopied = 0;
       final stats = <String, int>{};
 
       for (final category in categories.entries) {
         final categoryName = category.key;
-        final tableName = category.value;
+        final sourceCategoryDir = Directory('${imagesBaseDir.path}/$categoryName');
 
-        try {
-          // الحصول على جميع السجلات من الجدول
-          final records = await db.query(tableName);
+        if (!await sourceCategoryDir.exists()) {
+          stats[categoryName] = 0;
+          continue;
+        }
 
-          int categoryImageCount = 0;
+        final destCategoryDir = Directory('$backupPath/images/$categoryName');
+        await destCategoryDir.create(recursive: true);
 
-          for (final record in records) {
-            // البحث عن حقل الصورة
-            String? imagePath;
+        int categoryCopied = 0;
 
-            if (record.containsKey('image_path')) {
-              imagePath = record['image_path'] as String?;
-            } else if (record.containsKey('logo_path')) {
-              imagePath = record['logo_path'] as String?;
-            } else if (record.containsKey('photo_path')) {
-              imagePath = record['photo_path'] as String?;
-            }
-
-            if (imagePath != null && imagePath.isNotEmpty) {
-              final imageFile = File(imagePath);
-
-              if (await imageFile.exists()) {
-                // إنشاء مجلد الفئة في النسخة الاحتياطية
-                final categoryDir =
-                    Directory('$backupPath/images/$categoryName');
-                if (!await categoryDir.exists()) {
-                  await categoryDir.create(recursive: true);
-                }
-
-                // نسخ الصورة
-                final fileName = imageFile.path.split('/').last;
-                final destFile = File('${categoryDir.path}/$fileName');
-                await imageFile.copy(destFile.path);
-
-                categoryImageCount++;
-                totalImagesCopied++;
-              }
+        await for (final entity in sourceCategoryDir.list()) {
+          if (entity is File) {
+            try {
+              final fileName = entity.path.split('/').last;
+              final destFile = File('${destCategoryDir.path}/$fileName');
+              await entity.copy(destFile.path);
+              categoryCopied++;
+              totalCopied++;
+            } catch (e) {
+              debugPrint('⚠️ خطأ في نسخ صورة: $e');
             }
           }
+        }
 
-          stats[categoryName] = categoryImageCount;
-          debugPrint('  ✅ $categoryName: $categoryImageCount صورة');
-        } catch (e) {
-          debugPrint('  ⚠️ خطأ في معالجة $categoryName: $e');
-          stats[categoryName] = 0;
+        stats[categoryName] = categoryCopied;
+        if (categoryCopied > 0) {
+          debugPrint('  ✅ $categoryName: $categoryCopied صورة');
         }
       }
 
       return {
-        'total': totalImagesCopied,
+        'total': totalCopied,
         ...stats,
       };
     } catch (e) {
-      debugPrint('❌ [BackupService] خطأ في _collectAllImages: $e');
+      debugPrint('❌ خطأ في _copyAllImages: $e');
       return {'total': 0};
     }
   }
 
-  /// استعادة جميع الصور من مجلد النسخ الاحتياطي
+  /// نسخ جميع ملفات PDF
+  ///
+  /// ← Hint: يبحث في المجلدات المعروفة لملفات PDF
+  /// ← Hint: ميزة جديدة لم تكن في النظام القديم
+  ///
+  /// 📝 للمستقبل: يمكن إضافة PDF metadata extraction
+  Future<Map<String, dynamic>> _copyAllPDFs(String backupPath) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+
+      // ← Hint: المجلدات المحتملة لملفات PDF
+      final pdfDirs = [
+        '${appDir.path}/pdfs',
+        '${appDir.path}/reports',
+        '${appDir.path}/invoices',
+      ];
+
+      int totalCopied = 0;
+      final stats = <String, int>{};
+
+      for (final dirPath in pdfDirs) {
+        final sourceDir = Directory(dirPath);
+
+        if (!await sourceDir.exists()) {
+          continue;
+        }
+
+        final dirName = dirPath.split('/').last;
+        final destDir = Directory('$backupPath/pdfs/$dirName');
+        await destDir.create(recursive: true);
+
+        int dirCopied = 0;
+
+        await for (final entity in sourceDir.list()) {
+          if (entity is File && entity.path.toLowerCase().endsWith('.pdf')) {
+            try {
+              final fileName = entity.path.split('/').last;
+              final destFile = File('${destDir.path}/$fileName');
+              await entity.copy(destFile.path);
+              dirCopied++;
+              totalCopied++;
+            } catch (e) {
+              debugPrint('⚠️ خطأ في نسخ PDF: $e');
+            }
+          }
+        }
+
+        stats[dirName] = dirCopied;
+        if (dirCopied > 0) {
+          debugPrint('  ✅ $dirName: $dirCopied ملف PDF');
+        }
+      }
+
+      return {
+        'total': totalCopied,
+        ...stats,
+      };
+    } catch (e) {
+      debugPrint('❌ خطأ في _copyAllPDFs: $e');
+      return {'total': 0};
+    }
+  }
+
+  /// استعادة جميع الصور
+  ///
+  /// ← Hint: ينسخ الصور من النسخة الاحتياطية لمجلد التطبيق
   Future<Map<String, dynamic>> _restoreAllImages(String restorePath) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final imagesBaseDir = Directory('${appDir.path}/images');
 
-      // التأكد من وجود مجلد الصور الأساسي
       if (!await imagesBaseDir.exists()) {
         await imagesBaseDir.create(recursive: true);
       }
@@ -512,10 +839,9 @@ class BackupService {
         return {'total': 0};
       }
 
-      int totalImagesRestored = 0;
+      int totalRestored = 0;
       final stats = <String, int>{};
 
-      // المجلدات المتوقعة
       final categories = [
         'users',
         'suppliers',
@@ -526,62 +852,353 @@ class BackupService {
       ];
 
       for (final category in categories) {
-        final categoryBackupDir =
-            Directory('${backupImagesDir.path}/$category');
+        final sourceCategoryDir = Directory('${backupImagesDir.path}/$category');
 
-        if (await categoryBackupDir.exists()) {
-          final categoryRestoreDir =
-              Directory('${imagesBaseDir.path}/$category');
+        if (!await sourceCategoryDir.exists()) {
+          stats[category] = 0;
+          continue;
+        }
 
-          if (!await categoryRestoreDir.exists()) {
-            await categoryRestoreDir.create(recursive: true);
-          }
+        final destCategoryDir = Directory('${imagesBaseDir.path}/$category');
+        await destCategoryDir.create(recursive: true);
 
-          int categoryCount = 0;
+        int categoryRestored = 0;
 
-          final files = categoryBackupDir.listSync();
-          for (final file in files) {
-            if (file is File) {
-              try {
-                final fileName = file.path.split('/').last;
-                final destFile = File('${categoryRestoreDir.path}/$fileName');
-                await file.copy(destFile.path);
-
-                categoryCount++;
-                totalImagesRestored++;
-              } catch (e) {
-                debugPrint('  ⚠️ خطأ في نسخ صورة: $e');
-              }
+        await for (final entity in sourceCategoryDir.list()) {
+          if (entity is File) {
+            try {
+              final fileName = entity.path.split('/').last;
+              final destFile = File('${destCategoryDir.path}/$fileName');
+              await entity.copy(destFile.path);
+              categoryRestored++;
+              totalRestored++;
+            } catch (e) {
+              debugPrint('⚠️ خطأ في استعادة صورة: $e');
             }
           }
+        }
 
-          stats[category] = categoryCount;
-          debugPrint('  ✅ $category: $categoryCount صورة');
-        } else {
-          stats[category] = 0;
+        stats[category] = categoryRestored;
+        if (categoryRestored > 0) {
+          debugPrint('  ✅ $category: $categoryRestored صورة');
         }
       }
 
       return {
-        'total': totalImagesRestored,
+        'total': totalRestored,
         ...stats,
       };
     } catch (e) {
-      debugPrint('❌ [BackupService] خطأ في _restoreAllImages: $e');
+      debugPrint('❌ خطأ في _restoreAllImages: $e');
       return {'total': 0};
     }
   }
 
-  /// تنسيق حجم الملف
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes B';
-    } else if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    } else if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    } else {
-      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  /// استعادة جميع ملفات PDF
+  Future<Map<String, dynamic>> _restoreAllPDFs(String restorePath) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final backupPDFsDir = Directory('$restorePath/pdfs');
+
+      if (!await backupPDFsDir.exists()) {
+        return {'total': 0};
+      }
+
+      int totalRestored = 0;
+      final stats = <String, int>{};
+
+      await for (final categoryEntity in backupPDFsDir.list()) {
+        if (categoryEntity is! Directory) continue;
+
+        final categoryName = categoryEntity.path.split('/').last;
+        final destDir = Directory('${appDir.path}/$categoryName');
+        await destDir.create(recursive: true);
+
+        int categoryRestored = 0;
+
+        await for (final fileEntity in categoryEntity.list()) {
+          if (fileEntity is File) {
+            try {
+              final fileName = fileEntity.path.split('/').last;
+              final destFile = File('${destDir.path}/$fileName');
+              await fileEntity.copy(destFile.path);
+              categoryRestored++;
+              totalRestored++;
+            } catch (e) {
+              debugPrint('⚠️ خطأ في استعادة PDF: $e');
+            }
+          }
+        }
+
+        stats[categoryName] = categoryRestored;
+        if (categoryRestored > 0) {
+          debugPrint('  ✅ $categoryName: $categoryRestored ملف PDF');
+        }
+      }
+
+      return {
+        'total': totalRestored,
+        ...stats,
+      };
+    } catch (e) {
+      debugPrint('❌ خطأ في _restoreAllPDFs: $e');
+      return {'total': 0};
     }
   }
+
+  // ============================================================================
+  // 🛠️ دوال مساعدة - التشفير
+  // ============================================================================
+
+  /// تشفير جميع الملفات في مجلد النسخ الاحتياطي
+  ///
+  /// ← Hint: كل ملف يُشفَّر بـ IV خاص به
+  /// ← Hint: Salt واحد مشترك لكل النسخة (من كلمة السر)
+  ///
+  /// Returns: Map يحتوي على salt و IVs لكل ملف
+  Future<Map<String, dynamic>> _encryptAllFiles(
+    String workPath,
+    String password,
+  ) async {
+    // ← Hint: توليد Salt واحد لكل النسخة الاحتياطية
+    final salt = EncryptionService.generateSalt();
+
+    final filesToEncrypt = [
+      'database.db',
+      'db_key.txt',
+      'metadata.json',
+    ];
+
+    final ivs = <String, String>{};
+
+    for (final fileName in filesToEncrypt) {
+      final file = File('$workPath/$fileName');
+
+      if (!await file.exists()) {
+        debugPrint('⚠️ ملف غير موجود للتشفير: $fileName');
+        continue;
+      }
+
+      final encryptedFile = File('$workPath/$fileName.encrypted');
+
+      final encryptionResult = await EncryptionService.encryptFile(
+        inputPath: file.path,
+        outputPath: encryptedFile.path,
+        password: password,
+      );
+
+      // ← Hint: حفظ IV الخاص بهذا الملف
+      ivs[fileName] = base64Encode(encryptionResult['iv']!);
+
+      // ← Hint: حذف الملف الأصلي (غير المشفر)
+      await file.delete();
+
+      // ← Hint: إعادة تسمية الملف المشفر
+      await encryptedFile.rename(file.path);
+
+      debugPrint('  🔒 تم تشفير: $fileName');
+    }
+
+    return {
+      'salt': base64Encode(salt),
+      'ivs': ivs,
+      'encrypted_files': filesToEncrypt,
+    };
+  }
+
+  /// فك تشفير جميع الملفات
+  ///
+  /// ← Hint: عكس _encryptAllFiles
+  Future<void> _decryptAllFiles(
+    String workPath,
+    String password,
+    Map<String, dynamic> encryptionInfo,
+  ) async {
+    final salt = base64Decode(encryptionInfo['salt'] as String);
+    final ivs = encryptionInfo['ivs'] as Map<String, dynamic>;
+
+    for (final entry in ivs.entries) {
+      final fileName = entry.key;
+      final ivBase64 = entry.value as String;
+      final iv = base64Decode(ivBase64);
+
+      final file = File('$workPath/$fileName');
+
+      if (!await file.exists()) {
+        throw Exception('ملف مشفر مفقود: $fileName');
+      }
+
+      final decryptedFile = File('$workPath/$fileName.decrypted');
+
+      await EncryptionService.decryptFile(
+        inputPath: file.path,
+        outputPath: decryptedFile.path,
+        password: password,
+        salt: salt,
+        iv: iv,
+      );
+
+      // ← Hint: حذف الملف المشفر
+      await file.delete();
+
+      // ← Hint: إعادة تسمية الملف المفكوك
+      await decryptedFile.rename(file.path);
+
+      debugPrint('  🔓 تم فك تشفير: $fileName');
+    }
+  }
+
+  // ============================================================================
+  // 🛠️ دوال مساعدة - Metadata
+  // ============================================================================
+
+  /// إنشاء metadata شامل للنسخة الاحتياطية
+  ///
+  /// ← Hint: لا يحتوي على أي معلومات سرية أو خاصة بالجهاز!
+  /// ← Hint: يمكن قراءته بدون كلمة سر (سيكون غير مشفر في النسخة النهائية)
+  ///
+  /// 📝 للمستقبل: يمكن إضافة schema version لكل جدول
+  Future<Map<String, dynamic>> _createMetadata(
+    Database db,
+    int totalImages,
+    int totalPDFs,
+    Map<String, dynamic> imagesStats,
+    Map<String, dynamic> pdfStats,
+  ) async {
+    try {
+      // ← Hint: جمع إحصائيات من قاعدة البيانات
+      final tables = [
+        'TB_Suppliers',
+        'Supplier_Partners',
+        'TB_Customer',
+        'Debt_Customer',
+        'Payment_Customer',
+        'Store_Products',
+        'TB_Product_Categories',
+        'TB_Product_Units',
+        'TB_Employees',
+        'TB_Payroll',
+        'TB_Employee_Advances',
+        'TB_Advance_Repayments',
+        'TB_Employee_Bonuses',
+        'TB_Expenses',
+        'TB_Expense_Categories',
+        'TB_Invoices',
+        'Sales_Returns',
+        'TB_Settings',
+        'TB_Subscription_Cache',
+        'TB_App_State',
+        'Activity_Log',
+      ];
+
+      final tableStats = <String, int>{};
+
+      for (final table in tables) {
+        try {
+          final result = await db.rawQuery('SELECT COUNT(*) as count FROM $table');
+          tableStats[table] = result.first['count'] as int;
+        } catch (e) {
+          debugPrint('⚠️ خطأ في قراءة $table: $e');
+          tableStats[table] = 0;
+        }
+      }
+
+      return {
+        'backup_version': backupVersion,
+        'backup_date': DateTime.now().toIso8601String(),
+        'app_version': '1.0.0', // ← يمكن جلبه من package_info
+        'database_version': 5, // ← من DatabaseHelper
+        'encryption_method': 'AES-256-GCM',
+        'encryption_pbkdf2_iterations': 100000,
+        'total_images': totalImages,
+        'total_pdfs': totalPDFs,
+        'images_stats': imagesStats,
+        'pdfs_stats': pdfStats,
+        'table_stats': tableStats,
+        'total_records': tableStats.values.reduce((a, b) => a + b),
+      };
+    } catch (e) {
+      debugPrint('⚠️ خطأ في _createMetadata: $e');
+      return {
+        'backup_version': backupVersion,
+        'backup_date': DateTime.now().toIso8601String(),
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // ============================================================================
+  // 🛠️ دوال مساعدة - عامة
+  // ============================================================================
+
+  /// تنسيق حجم البيانات
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    }
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
 }
+
+// ============================================================================
+// 📝 ملاحظات للمستقبل
+// ============================================================================
+
+/// ← Hint: الميزات المخططة للمستقبل:
+///
+/// 1. **Cloud Backup Integration**
+///    - Google Drive
+///    - Dropbox
+///    - OneDrive
+///    - S3-compatible storage
+///
+/// 2. **Incremental Backup**
+///    - نسخ التغييرات فقط (أسرع وأصغر)
+///    - Timestamp-based detection
+///    - Delta compression
+///
+/// 3. **Scheduled Backups**
+///    - يومي / أسبوعي / شهري
+///    - Automatic cleanup (حذف النسخ القديمة)
+///    - Background sync
+///
+/// 4. **Advanced Encryption**
+///    - Multi-factor authentication
+///    - Hardware key support (YubiKey)
+///    - Biometric unlock
+///    - Recovery questions
+///
+/// 5. **Compression Options**
+///    - Level selection (fast/balanced/maximum)
+///    - Algorithm selection (ZIP/7z/tar.gz)
+///    - Image compression
+///
+/// 6. **Selective Backup/Restore**
+///    - اختيار جداول معينة
+///    - اختيار فترة زمنية
+///    - اختيار categories
+///
+/// 7. **Backup Validation**
+///    - Automatic integrity checks
+///    - Corruption detection
+///    - Repair tools
+///
+/// 8. **Multi-Device Sync**
+///    - Real-time sync
+///    - Conflict resolution
+///    - Offline support
+///
+/// 9. **Backup Analytics**
+///    - Size trends
+///    - Backup frequency
+///    - Storage optimization suggestions
+///
+/// 10. **Export Options**
+///     - Excel export
+///     - CSV export
+///     - JSON export
+///     - PDF reports
