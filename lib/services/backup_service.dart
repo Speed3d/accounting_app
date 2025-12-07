@@ -685,8 +685,8 @@ class BackupService {
 
   /// نسخ جميع الصور
   ///
-  /// ← Hint: يبحث في قاعدة البيانات عن مسارات الصور
-  /// ← Hint: ينسخ الصور مع الحفاظ على بنية المجلدات
+  /// ← Hint: الصور محفوظة في المجلد الرئيسي للتطبيق
+  /// ← Hint: يتم التعرف عليها من اسم الملف (customer_, supplier_, إلخ)
   ///
   /// 📝 للمستقبل: يمكن إضافة image compression option
   Future<Map<String, dynamic>> _copyAllImages(
@@ -695,56 +695,75 @@ class BackupService {
   ) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final imagesBaseDir = Directory('${appDir.path}/images');
 
-      if (!await imagesBaseDir.exists()) {
+      // ← Hint: الصور موجودة مباشرة في المجلد الرئيسي
+      final appDirEntity = Directory(appDir.path);
+
+      if (!await appDirEntity.exists()) {
         return {'total': 0};
       }
 
-      // ← Hint: المجلدات المعروفة
-      final categories = {
-        'users': 'TB_Settings', // ← صور الشركة
-        'suppliers': 'TB_Suppliers',
-        'customers': 'TB_Customer',
-        'products': 'Store_Products',
-        'employees': 'TB_Employees',
-        'company': 'TB_Settings',
+      // ← Hint: أنماط أسماء الصور المعروفة
+      final imagePatterns = {
+        'customers': 'customer_',
+        'suppliers': 'supplier_',
+        'products': 'product_',
+        'employees': 'employee_',
+        'company': 'company_',
       };
 
       int totalCopied = 0;
       final stats = <String, int>{};
 
-      for (final category in categories.entries) {
-        final categoryName = category.key;
-        final sourceCategoryDir = Directory('${imagesBaseDir.path}/$categoryName');
+      // ← Hint: تهيئة الإحصائيات
+      for (final category in imagePatterns.keys) {
+        stats[category] = 0;
+      }
 
-        if (!await sourceCategoryDir.exists()) {
-          stats[categoryName] = 0;
-          continue;
-        }
+      // ← Hint: إنشاء مجلد الصور في النسخة الاحتياطية
+      final destImagesDir = Directory('$backupPath/images');
+      await destImagesDir.create(recursive: true);
 
-        final destCategoryDir = Directory('$backupPath/images/$categoryName');
-        await destCategoryDir.create(recursive: true);
+      // ← Hint: البحث عن جميع ملفات الصور
+      await for (final entity in appDirEntity.list()) {
+        if (entity is File) {
+          final fileName = entity.path.split('/').last.toLowerCase();
 
-        int categoryCopied = 0;
+          // ← Hint: التحقق من امتدادات الصور
+          if (fileName.endsWith('.jpg') ||
+              fileName.endsWith('.jpeg') ||
+              fileName.endsWith('.png') ||
+              fileName.endsWith('.gif')) {
 
-        await for (final entity in sourceCategoryDir.list()) {
-          if (entity is File) {
             try {
-              final fileName = entity.path.split('/').last;
-              final destFile = File('${destCategoryDir.path}/$fileName');
+              // ← Hint: تحديد الفئة من اسم الملف
+              String? category;
+              for (final entry in imagePatterns.entries) {
+                if (fileName.startsWith(entry.value)) {
+                  category = entry.key;
+                  break;
+                }
+              }
+
+              // ← Hint: نسخ الصورة
+              final destFile = File('${destImagesDir.path}/${entity.path.split('/').last}');
               await entity.copy(destFile.path);
-              categoryCopied++;
+
               totalCopied++;
+              if (category != null) {
+                stats[category] = (stats[category] ?? 0) + 1;
+              }
             } catch (e) {
               debugPrint('⚠️ خطأ في نسخ صورة: $e');
             }
           }
         }
+      }
 
-        stats[categoryName] = categoryCopied;
-        if (categoryCopied > 0) {
-          debugPrint('  ✅ $categoryName: $categoryCopied صورة');
+      // ← Hint: طباعة النتائج
+      for (final entry in stats.entries) {
+        if (entry.value > 0) {
+          debugPrint('  ✅ ${entry.key}: ${entry.value} صورة');
         }
       }
 
@@ -823,16 +842,10 @@ class BackupService {
 
   /// استعادة جميع الصور
   ///
-  /// ← Hint: ينسخ الصور من النسخة الاحتياطية لمجلد التطبيق
+  /// ← Hint: استعادة الصور من النسخة الاحتياطية للمجلد الرئيسي
   Future<Map<String, dynamic>> _restoreAllImages(String restorePath) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final imagesBaseDir = Directory('${appDir.path}/images');
-
-      if (!await imagesBaseDir.exists()) {
-        await imagesBaseDir.create(recursive: true);
-      }
-
       final backupImagesDir = Directory('$restorePath/images');
 
       if (!await backupImagesDir.exists()) {
@@ -842,45 +855,62 @@ class BackupService {
       int totalRestored = 0;
       final stats = <String, int>{};
 
-      final categories = [
-        'users',
-        'suppliers',
-        'customers',
-        'products',
-        'employees',
-        'company',
-      ];
+      // ← Hint: أنماط أسماء الصور للإحصائيات
+      final imagePatterns = {
+        'customers': 'customer_',
+        'suppliers': 'supplier_',
+        'products': 'product_',
+        'employees': 'employee_',
+        'company': 'company_',
+      };
 
-      for (final category in categories) {
-        final sourceCategoryDir = Directory('${backupImagesDir.path}/$category');
+      // ← Hint: تهيئة الإحصائيات
+      for (final category in imagePatterns.keys) {
+        stats[category] = 0;
+      }
 
-        if (!await sourceCategoryDir.exists()) {
-          stats[category] = 0;
-          continue;
-        }
+      // ← Hint: استعادة جميع الصور من المجلد الاحتياطي
+      await for (final entity in backupImagesDir.list()) {
+        if (entity is File) {
+          try {
+            final fileName = entity.path.split('/').last;
+            final fileNameLower = fileName.toLowerCase();
 
-        final destCategoryDir = Directory('${imagesBaseDir.path}/$category');
-        await destCategoryDir.create(recursive: true);
+            // ← Hint: التحقق من امتدادات الصور
+            if (fileNameLower.endsWith('.jpg') ||
+                fileNameLower.endsWith('.jpeg') ||
+                fileNameLower.endsWith('.png') ||
+                fileNameLower.endsWith('.gif')) {
 
-        int categoryRestored = 0;
-
-        await for (final entity in sourceCategoryDir.list()) {
-          if (entity is File) {
-            try {
-              final fileName = entity.path.split('/').last;
-              final destFile = File('${destCategoryDir.path}/$fileName');
+              // ← Hint: نسخ الصورة للمجلد الرئيسي
+              final destFile = File('${appDir.path}/$fileName');
               await entity.copy(destFile.path);
-              categoryRestored++;
+
               totalRestored++;
-            } catch (e) {
-              debugPrint('⚠️ خطأ في استعادة صورة: $e');
+
+              // ← Hint: تحديد الفئة للإحصائيات
+              String? category;
+              for (final entry in imagePatterns.entries) {
+                if (fileNameLower.startsWith(entry.value)) {
+                  category = entry.key;
+                  break;
+                }
+              }
+
+              if (category != null) {
+                stats[category] = (stats[category] ?? 0) + 1;
+              }
             }
+          } catch (e) {
+            debugPrint('⚠️ خطأ في استعادة صورة: $e');
           }
         }
+      }
 
-        stats[category] = categoryRestored;
-        if (categoryRestored > 0) {
-          debugPrint('  ✅ $category: $categoryRestored صورة');
+      // ← Hint: طباعة النتائج
+      for (final entry in stats.entries) {
+        if (entry.value > 0) {
+          debugPrint('  ✅ ${entry.key}: ${entry.value} صورة');
         }
       }
 
@@ -981,10 +1011,12 @@ class BackupService {
 
       final encryptedFile = File('$workPath/$fileName.encrypted');
 
+      // ← Hint: تمرير نفس salt لكل الملفات (مهم جداً!)
       final encryptionResult = await EncryptionService.encryptFile(
         inputPath: file.path,
         outputPath: encryptedFile.path,
         password: password,
+        salt: salt,
       );
 
       // ← Hint: حفظ IV الخاص بهذا الملف

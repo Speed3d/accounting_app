@@ -214,6 +214,7 @@ class EncryptionService {
     required String inputPath,
     required String outputPath,
     required String password,
+    Uint8List? salt,
   }) async {
     try {
       debugPrint('🔒 [Encryption] تشفير ملف...');
@@ -223,8 +224,8 @@ class EncryptionService {
       // 1️⃣ قراءة الملف
       final file = await compute(_readFile, inputPath);
 
-      // 2️⃣ تشفير البيانات
-      final result = encryptData(data: file, password: password);
+      // 2️⃣ تشفير البيانات (استخدام salt المُمرَّر أو توليد واحد جديد)
+      final result = encryptData(data: file, password: password, salt: salt);
 
       // 3️⃣ حفظ الملف المشفر
       await compute(
