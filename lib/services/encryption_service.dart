@@ -68,7 +68,7 @@ class EncryptionService {
       // ← Hint: استخدام PBKDF2 مع SHA-256
       // ← Hint: كل تكرار يزيد من صعوبة كسر المفتاح
       final pbkdf2 = Pbkdf2(
-        macAlgorithm: Hmac.sha256(),
+        macAlgorithm: Hmac(sha256, passwordBytes), // ← تصحيح: استخدام Hmac بشكل صحيح
         iterations: _pbkdf2Iterations,
         bits: _keyLength * 8, // 256 bits
       );
@@ -366,6 +366,7 @@ class EncryptionService {
     if (password.length < 6) {
       return {
         'strength': 0,
+        'strengthText': 'ضعيفة',
         'feedback': 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
         'isValid': false,
       };
