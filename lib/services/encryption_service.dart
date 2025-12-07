@@ -1,6 +1,7 @@
 // 🔐 lib/services/encryption_service.dart
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
@@ -472,7 +473,7 @@ class EncryptionService {
 
   /// قراءة ملف (للاستخدام مع compute)
   static Future<Uint8List> _readFile(String path) async {
-    final file = await _getFile(path);
+    final file = _getFile(path);
     return await file.readAsBytes();
   }
 
@@ -480,15 +481,13 @@ class EncryptionService {
   static Future<void> _writeFile(Map<String, dynamic> params) async {
     final path = params['path'] as String;
     final data = params['data'] as Uint8List;
-    final file = await _getFile(path);
+    final file = _getFile(path);
     await file.writeAsBytes(data);
   }
 
   /// الحصول على File object (helper)
-  static Future<dynamic> _getFile(String path) async {
-    // ← Hint: استخدام dynamic لتجنب import dart:io في ملف الخدمة
-    // ← Hint: سيتم resolve في runtime
-    final File = (await import('dart:io')).File;
+  static File _getFile(String path) {
+    // ← Hint: دالة مساعدة لإنشاء File object
     return File(path);
   }
 }
