@@ -270,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   .textTheme
                                   .bodySmall
                                   ?.color
-                                  ?.withOpacity(0.7),
+                                  ?.withOpacity(0.9),
                             ),
                       ),
 
@@ -319,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerLeft,
                         child: TextButton(
                           onPressed: _handleForgotPassword,
-                          child: const Text('نسيت كلمة المرور؟'),
+                          child: Text('نسيت كلمة المرور', style: Theme.of(context).textTheme.headlineSmall),
                         ),
                       ),
 
@@ -372,7 +372,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        type: ButtonType.secondary,
+                        type: ButtonType.primary,
                         size: ButtonSize.large,
                       ),
                     ],

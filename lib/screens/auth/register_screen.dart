@@ -402,7 +402,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           );
                         },
-                        type: ButtonType.secondary,
+                        type: ButtonType.primary,
                         size: ButtonSize.large,
                       ),
                     ],

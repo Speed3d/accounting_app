@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/database_helper.dart';
 import '../../l10n/app_localizations.dart';
@@ -122,7 +123,8 @@ class _AboutScreenState extends State<AboutScreen> {
                   // ============= حقوق النشر =============
                   _buildCopyright(isDark),
                   
-                  const SizedBox(height: AppConstants.spacingXl),
+                  // const SizedBox(height: AppConstants.spacingXl), ---- للتجربة   
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + AppConstants.spacingXl),
                 ],
               ),
             ),
@@ -405,7 +407,17 @@ class _AboutScreenState extends State<AboutScreen> {
                     ),
               ),
               const SizedBox(height: AppConstants.spacingXs),
-              Text(
+
+              // للضغط على الرقم او الايميل للنسخ
+              GestureDetector(
+                 onTap: isLink ? () {
+                 Clipboard.setData(ClipboardData(text: value));
+                 ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text('تم نسخ: $value')),
+                 );
+               } : null,
+               //--------------------------------
+              child: Text(
                 value,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -413,6 +425,7 @@ class _AboutScreenState extends State<AboutScreen> {
                           ? (isDark ? AppColors.primaryDark : AppColors.primaryLight)
                           : null,
                     ),
+                ),
               ),
             ],
           ),
