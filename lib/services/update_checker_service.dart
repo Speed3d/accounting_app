@@ -89,6 +89,17 @@ class UpdateCheckerService {
       final firebaseService = FirebaseService.instance;
       final remoteConfig = firebaseService.remoteConfig;
 
+      // ← Hint: التحقق من توفر Remote Config
+      if (remoteConfig == null) {
+        debugPrint('⚠️ [UpdateChecker] Remote Config غير متاح');
+        final packageInfo = await PackageInfo.fromPlatform();
+        return UpdateInfo(
+          currentVersion: packageInfo.version,
+          latestVersion: packageInfo.version,
+          hasUpdate: false,
+        );
+      }
+
       // ← Hint: تأكد من تحميل الإعدادات أولاً
       await firebaseService.forceRefreshConfig();
 

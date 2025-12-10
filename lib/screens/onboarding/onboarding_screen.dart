@@ -20,15 +20,42 @@ import '../auth/register_screen.dart';
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
+  /// ← Hint: مفتاح حفظ حالة Onboarding في SharedPreferences
+  static const String _keyOnboardingComplete = 'onboarding_completed';
+
+  /// ============================================================================
+  /// 🔍 فحص إذا تم إكمال Onboarding سابقاً
+  /// ============================================================================
+  /// ← Hint: استخدم هذه الدالة في splash_screen للتحقق
+  static Future<bool> isCompleted() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_keyOnboardingComplete) ?? false;
+    } catch (e) {
+      debugPrint('❌ [Onboarding] خطأ في قراءة حالة Onboarding: $e');
+      return false;
+    }
+  }
+
+  /// ============================================================================
+  /// 🔄 إعادة تعيين Onboarding (للتجربة فقط - احذف في الإنتاج)
+  /// ============================================================================
+  static Future<void> reset() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyOnboardingComplete);
+      debugPrint('✅ [Onboarding] تم إعادة تعيين Onboarding');
+    } catch (e) {
+      debugPrint('❌ [Onboarding] خطأ في إعادة تعيين Onboarding: $e');
+    }
+  }
+
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _introKey = GlobalKey<IntroductionScreenState>();
-
-  /// ← Hint: مفتاح حفظ حالة Onboarding في SharedPreferences
-  static const String _keyOnboardingComplete = 'onboarding_completed';
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +274,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       // ← Hint: حفظ حالة إكمال Onboarding
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_keyOnboardingComplete, true);
+      await prefs.setBool(OnboardingScreen._keyOnboardingComplete, true);
 
       if (!mounted) return;
 
@@ -259,33 +286,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     } catch (e) {
       debugPrint('❌ [Onboarding] خطأ في حفظ حالة Onboarding: $e');
-    }
-  }
-
-  /// ============================================================================
-  /// 🔍 فحص إذا تم إكمال Onboarding سابقاً
-  /// ============================================================================
-  /// ← Hint: استخدم هذه الدالة في splash_screen للتحقق
-  static Future<bool> isCompleted() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_keyOnboardingComplete) ?? false;
-    } catch (e) {
-      debugPrint('❌ [Onboarding] خطأ في قراءة حالة Onboarding: $e');
-      return false;
-    }
-  }
-
-  /// ============================================================================
-  /// 🔄 إعادة تعيين Onboarding (للتجربة فقط - احذف في الإنتاج)
-  /// ============================================================================
-  static Future<void> reset() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_keyOnboardingComplete);
-      debugPrint('✅ [Onboarding] تم إعادة تعيين Onboarding');
-    } catch (e) {
-      debugPrint('❌ [Onboarding] خطأ في إعادة تعيين Onboarding: $e');
     }
   }
 }
