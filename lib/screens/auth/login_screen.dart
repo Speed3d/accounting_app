@@ -1,9 +1,11 @@
 // lib/screens/auth/login_screen.dart
 
+import 'dart:io'; // ← Hint: لعرض صورة الشركة المحلية
 import 'package:accountant_touch/layouts/main_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import '../../services/session_service.dart';
+import '../../data/database_helper.dart'; // ← Hint: لجلب معلومات الشركة
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
@@ -19,17 +21,11 @@ import 'register_screen.dart';
 /// ← Hint: تسجيل دخول بالإيميل والباسوورد
 /// ← Hint: حفظ الجلسة في SessionService بعد النجاح
 /// ← Hint: التوجيه مباشرة لـ MainScreen (لا login_selection!)
+/// ← Hint: ✅ يعرض معلومات الشركة الفعلية من قاعدة البيانات
 ///
 /// ============================================================================
 class LoginScreen extends StatefulWidget {
-  final String? companyName;
-  final String? companyLogoPath;
-
-  const LoginScreen({
-    super.key,
-    this.companyName,
-    this.companyLogoPath,
-  });
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -47,6 +43,31 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // ==========================================================================
+  // ← Hint: جلب معلومات الشركة من قاعدة البيانات
+  // ==========================================================================
+  /// 🏪 جلب معلومات الشركة
+  ///
+  /// ← Hint: تُستخدم لعرض اسم وشعار الشركة بدلاً من القيم الافتراضية
+  /// ← Hint: تُجلب من جدول TB_Settings
+  Future<Map<String, String?>> _getCompanyInfo() async {
+    try {
+      final dbHelper = DatabaseHelper.instance;
+      final settings = await dbHelper.getAppSettings();
+
+      return {
+        'companyName': settings['companyName'] as String?,
+        'companyLogoPath': settings['companyLogoPath'] as String?,
+      };
+    } catch (e) {
+      debugPrint('⚠️ خطأ في جلب معلومات الشركة: $e');
+      return {
+        'companyName': null,
+        'companyLogoPath': null,
+      };
+    }
   }
 
   /// ← Hint: دالة تسجيل الدخول - Firebase Auth + SessionService فقط
@@ -235,30 +256,54 @@ class _LoginScreenState extends State<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // شعار الشركة أو أيقونة افتراضية
-                      if (widget.companyLogoPath != null)
-                        Image.asset(
-                          widget.companyLogoPath!,
-                          height: 100,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.account_circle,
-                            size: 100,
-                            color: AppColors.primaryLight,
-                          ),
-                        )
-                      else
-                        Icon(
-                          Icons.account_circle,
-                          size: 100,
-                          color: AppColors.primaryLight,
-                        ),
+                      // ← Hint: ✅ عرض شعار واسم الشركة من قاعدة البيانات
+                      FutureBuilder<Map<String, String?>>(
+                        future: _getCompanyInfo(),
+                        builder: (context, snapshot) {
+                          final companyName = snapshot.data?['companyName'] ?? 'تسجيل الدخول';
+                          final companyLogoPath = snapshot.data?['companyLogoPath'];
 
-                      const SizedBox(height: AppConstants.spacingXl),
+                          // ← Hint: التحقق من وجود صورة الشركة
+                          final hasCompanyLogo = companyLogoPath != null &&
+                                                 companyLogoPath.isNotEmpty &&
+                                                 File(companyLogoPath).existsSync();
 
-                      // اسم الشركة أو عنوان افتراضي
-                      Text(
-                        widget.companyName ?? 'تسجيل الدخول',
-                        style: Theme.of(context).textTheme.headlineMedium,
+                          return Column(
+                            children: [
+                              // ← Hint: شعار الشركة (محلي) أو أيقونة افتراضية
+                              if (hasCompanyLogo)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.file(
+                                    File(companyLogoPath!),
+                                    height: 100,
+                                    width: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                      Icons.store,
+                                      size: 100,
+                                      color: AppColors.primaryLight,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  Icons.store,
+                                  size: 100,
+                                  color: AppColors.primaryLight,
+                                ),
+
+                              const SizedBox(height: AppConstants.spacingXl),
+
+                              // ← Hint: اسم الشركة من الإعدادات
+                              Text(
+                                companyName,
+                                style: Theme.of(context).textTheme.headlineMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: AppConstants.spacingSm),

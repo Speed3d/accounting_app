@@ -18,6 +18,8 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
 import '../screens/test_pdf_screen.dart';
 import '../services/session_service.dart'; // 🆕 استبدال AuthService بـ SessionService
+import '../services/activation_status_service.dart'; // 🆕 خدمة حالة التفعيل
+import '../data/database_helper.dart'; // ← Hint: للحصول على صورة الشركة
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
@@ -257,20 +259,31 @@ class CustomDrawer extends StatelessWidget {
   }
 
   // ============================================================
-  // ✅ 📋 بناء رأس القائمة الجانبية (النظام الجديد - SessionService)
+  // ✅ 📋 بناء رأس القائمة الجانبية (النظام الجديد - SessionService + Activation Status)
   // ← Hint: النظام الجديد يستخدم FutureBuilder للحصول على البيانات من SessionService
+  // ← Hint: يعرض صورة الشركة (أولوية) أو صورة المستخدم (احتياطي)
+  // ← Hint: يعرض حالة التفعيل بتنسيق كومبو (الخيار D)
   // ============================================================
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
 
-    return FutureBuilder<Map<String, String?>>(
-      future: _getUserInfo(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getHeaderInfo(),
       builder: (context, snapshot) {
         final email = snapshot.data?['email'] ?? '';
         final displayName = snapshot.data?['displayName'] ?? l10n.user;
         final photoURL = snapshot.data?['photoURL'];
+        final companyLogoPath = snapshot.data?['companyLogoPath'];
+        final companyName = snapshot.data?['companyName'];
+        final activationInfo = snapshot.data?['activationInfo'] as ActivationInfo?;
 
-        // ← Hint: لا توجد صور محلية بعد الآن - فقط من Firebase Storage
+        // ← Hint: أولوية عرض الصورة:
+        // ← Hint: 1️⃣ صورة الشركة (من الإعدادات)
+        // ← Hint: 2️⃣ صورة المستخدم (من Firebase)
+        // ← Hint: 3️⃣ أيقونة افتراضية
+        final hasCompanyLogo = companyLogoPath != null &&
+                               companyLogoPath.isNotEmpty &&
+                               File(companyLogoPath).existsSync();
         final hasUserImage = photoURL != null && photoURL.isNotEmpty;
 
     return Container(
@@ -294,9 +307,9 @@ class CustomDrawer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ صورة المستخدم الحقيقية (مصغّرة)
+            // ← Hint: ✅ صورة الشركة أو المستخدم (حسب الأولوية)
             Container(
-              width: 60, // تقليل من 70 إلى 60
+              width: 60, // مصغّرة للأناقة
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -313,26 +326,21 @@ class CustomDrawer extends StatelessWidget {
                   ),
                 ],
               ),
-                child: ClipOval(
-                  child: hasUserImage
-                      ? Image.network(
-                          photoURL!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.person,
-                              size: 30,
-                              color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                            );
-                          },
-                        )
-                      : Icon(
-                          Icons.person,
-                          size: 30,
-                          color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-                        ),
-                ),
+              child: ClipOval(
+                // ← Hint: 1️⃣ صورة الشركة (أولوية)
+                child: hasCompanyLogo
+                    ? Image.file(
+                        File(companyLogoPath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // ← Hint: إذا فشل تحميل صورة الشركة → صورة المستخدم
+                          return _buildFallbackImage(hasUserImage, photoURL, isDark);
+                        },
+                      )
+                    // ← Hint: 2️⃣ صورة المستخدم (احتياطي)
+                    : _buildFallbackImage(hasUserImage, photoURL, isDark),
               ),
+            ),
 
               const SizedBox(height: AppConstants.spacingMd),
 
@@ -363,7 +371,7 @@ class CustomDrawer extends StatelessWidget {
 
               const SizedBox(height: AppConstants.spacingSm),
 
-              // ✅ شارة الصلاحية (Admin دائماً في النظام الجديد)
+              // ← Hint: ✅ شارة الصلاحية (Admin دائماً في النظام الجديد)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
@@ -397,6 +405,13 @@ class CustomDrawer extends StatelessWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(height: AppConstants.spacingSm),
+
+              // ← Hint: 🎯 حالة التفعيل - الخيار D (كومبو)
+              // ← Hint: يعرض أيقونة + نوع التفعيل + الأيام المتبقية
+              if (activationInfo != null)
+                _buildActivationStatusBadge(activationInfo, isDark),
             ],
           ),
         ),
@@ -405,24 +420,184 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  /// ← Hint: دالة مساعدة للحصول على معلومات المستخدم من SessionService
-  Future<Map<String, String?>> _getUserInfo() async {
+  // ============================================================
+  // ← Hint: بناء صورة احتياطية (المستخدم أو أيقونة افتراضية)
+  // ============================================================
+  Widget _buildFallbackImage(bool hasUserImage, String? photoURL, bool isDark) {
+    if (hasUserImage) {
+      // ← Hint: صورة المستخدم من Firebase
+      return Image.network(
+        photoURL!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // ← Hint: إذا فشل → أيقونة افتراضية
+          return Icon(
+            Icons.store,
+            size: 30,
+            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+          );
+        },
+      );
+    }
+
+    // ← Hint: أيقونة افتراضية
+    return Icon(
+      Icons.store,
+      size: 30,
+      color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+    );
+  }
+
+  // ============================================================
+  // ← Hint: بناء شارة حالة التفعيل (الخيار D - كومبو)
+  // ============================================================
+  /// 🎯 شارة حالة التفعيل - الخيار D (كومبو)
+  ///
+  /// التنسيق:
+  /// ```
+  /// ┌────────────────────────┐
+  /// │ [أيقونة] نوع التفعيل  │
+  /// │ تفعيل احترافي         │
+  /// │ متبقي: 180 يوم        │
+  /// └────────────────────────┘
+  /// ```
+  Widget _buildActivationStatusBadge(ActivationInfo info, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            info.color.withOpacity(0.2),
+            info.color.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: info.color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ← Hint: السطر الأول: أيقونة + نوع التفعيل
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                info.icon,
+                color: Colors.white,
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                info.displayText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+
+          // ← Hint: السطر الثاني: الأيام المتبقية أو "دائمي"
+          if (info.daysRemaining != null && info.status != ActivationStatus.lifetime) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  color: Colors.white.withOpacity(0.9),
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'متبقي: ${info.daysRemaining} يوم',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // ← Hint: إذا كان دائمي، نعرض رسالة خاصة
+          if (info.status == ActivationStatus.lifetime) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.all_inclusive,
+                  color: Colors.white.withOpacity(0.9),
+                  size: 12,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'غير محدود',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // ← Hint: دالة مساعدة شاملة للحصول على معلومات الـ Header
+  // ← Hint: تجلب: المستخدم + الشركة + حالة التفعيل
+  // ============================================================
+  /// 📊 جلب معلومات الـ Header الشاملة
+  ///
+  /// ← Hint: تُجمع البيانات من 3 مصادر:
+  /// ← Hint: 1️⃣ SessionService (معلومات المستخدم)
+  /// ← Hint: 2️⃣ DatabaseHelper (معلومات الشركة)
+  /// ← Hint: 3️⃣ ActivationStatusService (حالة التفعيل)
+  Future<Map<String, dynamic>> _getHeaderInfo() async {
     try {
+      // ← Hint: جلب معلومات المستخدم من SessionService
       final email = await SessionService.instance.getEmail();
       final displayName = await SessionService.instance.getDisplayName();
       final photoURL = await SessionService.instance.getPhotoURL();
+
+      // ← Hint: جلب معلومات الشركة من قاعدة البيانات
+      final dbHelper = DatabaseHelper.instance;
+      final settings = await dbHelper.getAppSettings();
+      final companyName = settings['companyName'] as String?;
+      final companyLogoPath = settings['companyLogoPath'] as String?;
+
+      // ← Hint: جلب حالة التفعيل
+      final activationInfo = await ActivationStatusService.instance.getActivationStatus();
 
       return {
         'email': email ?? '',
         'displayName': displayName ?? '',
         'photoURL': photoURL,
+        'companyName': companyName,
+        'companyLogoPath': companyLogoPath,
+        'activationInfo': activationInfo,
       };
     } catch (e) {
-      debugPrint('⚠️ خطأ في الحصول على معلومات المستخدم: $e');
+      debugPrint('⚠️ خطأ في الحصول على معلومات الـ Header: $e');
       return {
         'email': '',
         'displayName': '',
         'photoURL': null,
+        'companyName': null,
+        'companyLogoPath': null,
+        'activationInfo': null,
       };
     }
   }

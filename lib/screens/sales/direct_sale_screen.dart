@@ -22,6 +22,7 @@ import '../../widgets/loading_state.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../products/barcode_scanner_screen.dart';
+import '../../services/app_lock_service.dart'; // ← Hint: إضافة AppLockService
 
 // ← Hint: تم إزالة AuthService - لا حاجة له في Direct Sale
 
@@ -131,6 +132,13 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         }
         return invoiceId;
       });
+
+      // ← Hint: ✅ تعطيل القفل التلقائي مؤقتاً (10 دقائق) قبل عرض PDF
+      // ← Hint: السبب: عند فتح PDF خارجي، التطبيق ينتقل للخلفية
+      // ← Hint: بدون هذا → سيُقفل التطبيق عند العودة (مزعج للمستخدم!)
+      await AppLockService.instance.temporarilyDisableLock(
+        duration: const Duration(minutes: 10),
+      );
 
       // توليد وطباعة الفاتورة
       final pdfBytes = await _generatePdfInvoice(newInvoiceId, totalAmount, l10n);
