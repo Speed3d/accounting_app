@@ -12,6 +12,8 @@ import 'package:accountant_touch/services/firebase_service.dart'; // ← Hint: �
 import 'package:flutter/foundation.dart'; // ← Hint: للوصول إلى kDebugMode
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart'; // ← Hint: لمشاركة التطبيق
+import 'package:package_info_plus/package_info_plus.dart'; // ← Hint: للحصول على معلومات التطبيق
 import '../../l10n/app_localizations.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -290,11 +292,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
 
-             _buildDivider(isDark),
+                _buildDivider(isDark),
 
-          // const SizedBox(height: AppConstants.spacingSm),
+                // ← Hint: 🆕 مشاركة التطبيق مع الأصدقاء
+                _SettingsLinkTile(
+                  title: 'مشاركة التطبيق',
+                  subtitle: 'شارك التطبيق مع أصدقائك',
+                  icon: Icons.share,
+                  iconColor: AppColors.success,
+                  onTap: () => _shareApp(context),
+                ),
 
-_SettingsLinkTile(
+                _buildDivider(isDark),
+
+                // const SizedBox(height: AppConstants.spacingSm),
+
+                _SettingsLinkTile(
   title: 'تحديث إعدادات Firebase',
   subtitle: 'جلب أحدث الإعدادات من الخادم',
   icon: Icons.cloud_download,
@@ -940,6 +953,98 @@ _SettingsLinkTile(
       thickness: 1,
       color: isDark ? AppColors.borderDark : AppColors.borderLight,
     );
+  }
+
+  // ============================================================
+  // 📤 مشاركة التطبيق مع الأصدقاء
+  // ← Hint: تستخدم share_plus لمشاركة رابط التطبيق
+  // ============================================================
+  /// 🔗 مشاركة التطبيق
+  ///
+  /// ← Hint: تجلب معلومات التطبيق وتشاركها عبر share_plus
+  /// ← Hint: الروابط placeholders حالياً - سيتم تحديثها عند النشر
+  Future<void> _shareApp(BuildContext context) async {
+    try {
+      // ← Hint: الحصول على معلومات التطبيق
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appName = packageInfo.appName;
+      final version = packageInfo.version;
+
+      // ← Hint: التحقق من اللغة الحالية
+      final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+      // ← Hint: بناء رسالة المشاركة
+      final String message = isArabic
+          ? '''
+🌟 تطبيق $appName - الإصدار $version
+
+تطبيق محاسبي احترافي وسهل الاستخدام لإدارة حسابات الشركات والمحلات التجارية.
+
+✨ الميزات:
+• إدارة المبيعات والمشتريات
+• تتبع العملاء والموردين
+• تقارير مالية تفصيلية
+• نسخ احتياطي مشفر
+• واجهة عربية سهلة
+
+📱 حمّل التطبيق الآن:
+Android: [قريباً على Google Play]
+iOS: [قريباً على App Store]
+
+#محاسبة #إدارة_الأعمال #تطبيقات_عربية
+'''
+          : '''
+🌟 $appName - Version $version
+
+Professional and easy-to-use accounting app for managing company and store accounts.
+
+✨ Features:
+• Sales & Purchase Management
+• Customer & Supplier Tracking
+• Detailed Financial Reports
+• Encrypted Backups
+• Easy Arabic Interface
+
+📱 Download Now:
+Android: [Coming soon on Google Play]
+iOS: [Coming soon on App Store]
+
+#Accounting #BusinessManagement #ArabicApps
+''';
+
+      // ← Hint: مشاركة الرسالة
+      await Share.share(
+        message,
+        subject: isArabic ? 'تطبيق $appName' : '$appName App',
+      );
+
+      debugPrint('✅ [Settings] تمت مشاركة التطبيق بنجاح');
+    } catch (e) {
+      debugPrint('❌ [Settings] خطأ في مشاركة التطبيق: $e');
+
+      if (!mounted) return;
+
+      // ← Hint: عرض رسالة خطأ للمستخدم
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: AppConstants.spacingSm),
+              Expanded(
+                child: Text(
+                  Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'حدث خطأ في المشاركة'
+                      : 'Error sharing app',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   // ============================================================
