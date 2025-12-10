@@ -2,6 +2,7 @@
 
 import 'package:accountant_touch/screens/archive/archive_center_screen.dart';
 import 'package:accountant_touch/screens/settings/about_screen.dart';
+import 'package:accountant_touch/screens/settings/app_guide_screen.dart'; // ← Hint: 🆕 دليل التطبيق
 import 'package:accountant_touch/screens/settings/app_lock_settings_screen.dart'; // ← Hint: إضافة استيراد إعدادات القفل
 import 'package:accountant_touch/screens/settings/backup_restore_screen.dart';
 import 'package:accountant_touch/screens/settings/company_info_screen.dart';
@@ -287,6 +288,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const AboutScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                _buildDivider(isDark),
+
+                // ← Hint: 🆕 دليل التطبيق - شرح شامل لجميع الميزات
+                _SettingsLinkTile(
+                  title: 'دليل التطبيق',
+                  subtitle: 'شرح شامل لجميع ميزات التطبيق',
+                  icon: Icons.menu_book,
+                  iconColor: AppColors.primaryLight,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AppGuideScreen(),
                       ),
                     );
                   },

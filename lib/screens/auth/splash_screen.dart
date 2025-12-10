@@ -19,6 +19,7 @@ import '../../theme/app_constants.dart';
 import 'login_screen.dart';  // 🆕 LoginScreen الجديد المبسط
 import 'register_screen.dart';
 import 'blocked_screen.dart';
+import '../onboarding/onboarding_screen.dart'; // 🆕 Onboarding للمستخدمين الجدد
 
 /// ===========================================================================
 /// شاشة البداية (Splash Screen) - نسخة محسّنة ونظيفة
@@ -425,6 +426,19 @@ class _SplashScreenState extends State<SplashScreen>
       debugPrint('🧭 بدء منطق التنقل (النظام الجديد - Firebase-First)...');
 
       // ═══════════════════════════════════════════════════════════════════
+      // 0️⃣ 🆕 فحص Onboarding - هل اكتمل؟
+      // ← Hint: يُعرض فقط في أول فتح للتطبيق
+      // ═══════════════════════════════════════════════════════════════════
+
+      final onboardingCompleted = await OnboardingScreen.isCompleted();
+
+      if (!onboardingCompleted) {
+        debugPrint('➡️ أول فتح للتطبيق → OnboardingScreen');
+        _navigateToScreen(const OnboardingScreen());
+        return;
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
       // 1️⃣ فحص SessionService - هل يوجد جلسة محفوظة؟
       // ═══════════════════════════════════════════════════════════════════
 
@@ -448,10 +462,7 @@ class _SplashScreenState extends State<SplashScreen>
       // ═══════════════════════════════════════════════════════════════════
 
       debugPrint('➡️ يوجد جلسة محفوظة → LoginScreen');
-      _navigateToScreen(LoginScreen(
-        companyName: _companyName.isNotEmpty ? _companyName : null,
-        companyLogoPath: _companyLogo?.path,
-      ));
+      _navigateToScreen(const LoginScreen());
 
     } catch (e, stackTrace) {
       debugPrint('❌ خطأ في التنقل: $e');

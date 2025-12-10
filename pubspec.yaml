@@ -68,6 +68,9 @@ dependencies:
   cupertino_icons: ^1.0.6
   package_info_plus: ^9.0.0
 
+  # ✅ Hint: حزمة شاشات Onboarding الاحترافية
+  introduction_screen: ^3.1.14
+
   shared_preferences: ^2.2.3
   mobile_scanner: ^7.1.2
 
