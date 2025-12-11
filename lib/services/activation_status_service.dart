@@ -1,5 +1,6 @@
 // lib/services/activation_status_service.dart
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 
@@ -70,6 +71,7 @@ class ActivationStatusService {
   /// ← Hint: تُستخدم Cache لمدة 5 دقائق للأداء
   /// ← Hint: تحسب الأيام المتبقية تلقائياً
   /// ← Hint: تُحدد اللون والأيقونة المناسبة
+  /// ← Hint: 🆕 الآن تقرأ من subscription_cache أولاً (بيانات Firebase)
   Future<ActivationInfo> getActivationStatus() async {
     try {
       // ← Hint: التحقق من الـ Cache
@@ -85,16 +87,33 @@ class ActivationStatusService {
 
       // ← Hint: جلب البيانات من قاعدة البيانات
       final dbHelper = DatabaseHelper.instance;
-      final appState = await dbHelper.getAppSettings();
 
-      // ← Hint: التحقق من وجود تاريخ انتهاء
-      final expiryDateString = appState['activation_expiry_date'] as String?;
-      final firstRunDateString = appState['first_run_date'] as String?;
+      // ← Hint: 🆕 أولاً: محاولة القراءة من subscription_cache (بيانات Firebase)
+      final subscriptionCache = await dbHelper.getSubscriptionCache();
+
+      String? expiryDateString;
+      String? startDateString;
+      String? plan;
+
+      if (subscriptionCache != null) {
+        // ← Hint: استخدام بيانات الاشتراك من Firebase
+        debugPrint('📦 [ActivationStatus] وجدنا بيانات الاشتراك من Firebase');
+        expiryDateString = subscriptionCache['EndDate'] as String?;
+        startDateString = subscriptionCache['StartDate'] as String?;
+        plan = subscriptionCache['Plan'] as String?;
+      } else {
+        // ← Hint: Fallback: القراءة من app_settings (الطريقة القديمة)
+        debugPrint('⚠️ [ActivationStatus] لا توجد بيانات في subscription_cache، استخدام app_settings');
+        final appState = await dbHelper.getAppSettings();
+        expiryDateString = appState['activation_expiry_date'] as String?;
+        startDateString = appState['first_run_date'] as String?;
+      }
 
       // ← Hint: حساب حالة التفعيل
       final info = _calculateActivationInfo(
         expiryDateString: expiryDateString,
-        firstRunDateString: firstRunDateString,
+        startDateString: startDateString,
+        plan: plan,
       );
 
       // ← Hint: حفظ في الـ Cache
@@ -127,7 +146,8 @@ class ActivationStatusService {
   // ==========================================================================
   ActivationInfo _calculateActivationInfo({
     required String? expiryDateString,
-    required String? firstRunDateString,
+    required String? startDateString,
+    String? plan,
   }) {
     final now = DateTime.now();
 
@@ -140,7 +160,7 @@ class ActivationStatusService {
         displayText: 'تفعيل دائمي',
         icon: Icons.verified,
         color: Colors.blue,
-        plan: 'lifetime',
+        plan: plan ?? 'lifetime',
       );
     }
 
@@ -153,8 +173,9 @@ class ActivationStatusService {
       final daysRemaining = difference.inDays;
 
       // ← Hint: التحقق من نوع الخطة (تجريبي أم مدفوع)
-      final isTrial = _isTrial(
-        firstRunDateString: firstRunDateString,
+      // ← Hint: 🆕 نستخدم plan مباشرة إذا كان متاحاً (من Firebase)
+      final isTrial = plan == 'trial' || _isTrial(
+        startDateString: startDateString,
         expiryDate: expiryDate,
       );
 
@@ -169,7 +190,7 @@ class ActivationStatusService {
           daysRemaining: 0,
           icon: Icons.error_outline,
           color: Colors.red,
-          plan: isTrial ? 'trial' : 'professional',
+          plan: plan ?? (isTrial ? 'trial' : 'professional'),
         );
       }
 
@@ -184,7 +205,7 @@ class ActivationStatusService {
           daysRemaining: daysRemaining,
           icon: Icons.timer,
           color: Colors.orange,
-          plan: 'trial',
+          plan: plan ?? 'trial',
         );
       }
 
@@ -198,7 +219,7 @@ class ActivationStatusService {
         daysRemaining: daysRemaining,
         icon: Icons.check_circle,
         color: Colors.green,
-        plan: 'professional',
+        plan: plan ?? 'professional',
       );
 
     } catch (e) {
@@ -210,7 +231,7 @@ class ActivationStatusService {
         displayText: 'خطأ',
         icon: Icons.error,
         color: Colors.grey,
-        plan: 'unknown',
+        plan: plan ?? 'unknown',
       );
     }
   }
@@ -220,16 +241,16 @@ class ActivationStatusService {
   // ==========================================================================
   /// ← Hint: التجريبي = مدته <= 30 يوم من تاريخ أول تشغيل
   bool _isTrial({
-    required String? firstRunDateString,
+    required String? startDateString,
     required DateTime expiryDate,
   }) {
-    if (firstRunDateString == null || firstRunDateString.isEmpty) {
+    if (startDateString == null || startDateString.isEmpty) {
       return true; // ← افتراضي: تجريبي
     }
 
     try {
-      final firstRunDate = DateTime.parse(firstRunDateString);
-      final trialDuration = expiryDate.difference(firstRunDate);
+      final startDate = DateTime.parse(startDateString);
+      final trialDuration = expiryDate.difference(startDate);
 
       // ← Hint: إذا كانت المدة <= 30 يوم → تجريبي
       return trialDuration.inDays <= 30;

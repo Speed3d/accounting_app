@@ -2,11 +2,14 @@
 
 import 'dart:io'; // ← Hint: لعرض صورة الشركة المحلية
 import 'package:accountant_touch/layouts/main_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // ← Hint: لحفظ بيانات الدخول بشكل آمن
 import '../../services/session_service.dart';
 import '../../services/biometric_service.dart'; // ← Hint: للبصمة
+import '../../services/subscription_service.dart'; // ← Hint: 🆕 لجلب بيانات الاشتراك
+import '../../services/activation_status_service.dart'; // ← Hint: 🆕 لمسح cache حالة التفعيل
 import '../../data/database_helper.dart'; // ← Hint: لجلب معلومات الشركة
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -149,9 +152,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
       debugPrint('✅ تم حفظ الجلسة بنجاح');
 
+      // 3️⃣ Hint: 🆕 جلب وحفظ بيانات الاشتراك من Firebase
+      try {
+        debugPrint('📦 جلب بيانات الاشتراك من Firebase...');
+        final subscriptionStatus = await SubscriptionService.instance.checkSubscription(email);
+
+        if (subscriptionStatus.isValid) {
+          // قراءة startDate من Firebase مباشرة
+          final firestoreDb = FirebaseFirestore.instance;
+          final doc = await firestoreDb.collection('subscriptions').doc(email).get();
+
+          DateTime startDate = DateTime.now();
+          if (doc.exists) {
+            final data = doc.data();
+            if (data != null && data['startDate'] != null) {
+              startDate = (data['startDate'] as Timestamp).toDate();
+            }
+          }
+
+          // حفظ بيانات الاشتراك محلياً للعمل offline
+          await SubscriptionService.instance.cacheSubscriptionLocally(
+            email: email,
+            plan: subscriptionStatus.plan ?? 'trial',
+            startDate: startDate,
+            endDate: subscriptionStatus.endDate,
+            isActive: true,
+            maxDevices: subscriptionStatus.features?['maxDevices'] as int?,
+            features: subscriptionStatus.features ?? {},
+          );
+          debugPrint('✅ تم حفظ بيانات الاشتراك محلياً');
+
+          // مسح cache الـ ActivationStatusService لإجباره على إعادة القراءة
+          ActivationStatusService.instance.clearCache();
+        }
+      } catch (e) {
+        debugPrint('⚠️ خطأ في جلب بيانات الاشتراك (سيتم التجاهل): $e');
+        // لا نوقف عملية تسجيل الدخول بسبب هذا الخطأ
+      }
+
       if (!mounted) return;
 
-      // 3️⃣ Hint: 🆕 سؤال المستخدم عن تفعيل البصمة (إذا لم تكن مُفعّلة)
+      // 4️⃣ Hint: 🆕 سؤال المستخدم عن تفعيل البصمة (إذا لم تكن مُفعّلة)
       // ← Hint: يُعرض فقط في أول تسجيل دخول ناجح
       if (!_biometricEnabled && _biometricAvailable) {
         await _askToEnableBiometric(email, password);
@@ -159,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      // 4️⃣ Hint: التوجيه مباشرة للشاشة الرئيسية
+      // 5️⃣ Hint: التوجيه مباشرة للشاشة الرئيسية
       // ← Hint: حذف كل navigation stack - المستخدم مسجل دخول بالفعل
       Navigator.pushAndRemoveUntil(
         context,
