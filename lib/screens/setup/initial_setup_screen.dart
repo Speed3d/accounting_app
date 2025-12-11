@@ -511,12 +511,12 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
         final dbHelper = DatabaseHelper.instance;
 
         if (companyName.isNotEmpty) {
-          await dbHelper.updateCompanyName(companyName);
+          await dbHelper.saveSetting('companyName', companyName);
           debugPrint('✅ [InitialSetup] تم حفظ اسم الشركة: $companyName');
         }
 
         if (_companyLogo != null) {
-          await dbHelper.updateCompanyLogo(_companyLogo!.path);
+          await dbHelper.saveSetting('companyLogoPath', _companyLogo!.path);
           debugPrint('✅ [InitialSetup] تم حفظ شعار الشركة');
         }
       }
