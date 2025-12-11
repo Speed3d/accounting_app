@@ -5,7 +5,7 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
-import '../auth/register_screen.dart';
+import '../setup/initial_setup_screen.dart'; // ← Hint: التهيئة الأولية
 
 /// ============================================================================
 /// 🎓 شاشة Onboarding - شرح تمهيدي للمستخدمين الجدد
@@ -268,7 +268,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   /// ============================================================================
-  /// ✅ إكمال Onboarding والانتقال للتسجيل
+  /// ✅ إكمال Onboarding والانتقال للتهيئة
   /// ============================================================================
   Future<void> _completeOnboarding() async {
     try {
@@ -278,10 +278,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       if (!mounted) return;
 
-      // ← Hint: الانتقال لشاشة التسجيل
+      // ← Hint: الانتقال لشاشة التهيئة الأولية
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+        MaterialPageRoute(builder: (_) => const InitialSetupScreen()),
         (route) => false,
       );
     } catch (e) {

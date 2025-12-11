@@ -20,6 +20,7 @@ import 'login_screen.dart';  // 🆕 LoginScreen الجديد المبسط
 import 'register_screen.dart';
 import 'blocked_screen.dart';
 import '../onboarding/onboarding_screen.dart'; // 🆕 Onboarding للمستخدمين الجدد
+import '../setup/initial_setup_screen.dart'; // 🆕 التهيئة الأولية
 
 /// ===========================================================================
 /// شاشة البداية (Splash Screen) - نسخة محسّنة ونظيفة
@@ -435,6 +436,19 @@ class _SplashScreenState extends State<SplashScreen>
       if (!onboardingCompleted) {
         debugPrint('➡️ أول فتح للتطبيق → OnboardingScreen');
         _navigateToScreen(const OnboardingScreen());
+        return;
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // 0️⃣.5 🆕 فحص التهيئة الأولية - هل اكتملت؟
+      // ← Hint: تُعرض بعد Onboarding مباشرة
+      // ═══════════════════════════════════════════════════════════════════
+
+      final setupCompleted = await InitialSetupScreen.isCompleted();
+
+      if (!setupCompleted) {
+        debugPrint('➡️ التهيئة الأولية لم تكتمل → InitialSetupScreen');
+        _navigateToScreen(const InitialSetupScreen());
         return;
       }
 
