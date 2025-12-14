@@ -193,12 +193,14 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     Switch(
                       value: _showInactiveCategories,
                       onChanged: (value) {
-                        setState(() {
+                        setDialogState(() {
                           _showInactiveCategories = value;
                           _reloadData();
                         });
                       },
-                      activeColor: AppColors.primary,
+                      activeColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
                     ),
                   ],
                 ),
@@ -445,12 +447,14 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     Switch(
                       value: _showInactiveUnits,
                       onChanged: (value) {
-                        setState(() {
+                        setDialogState(() {
                           _showInactiveUnits = value;
                           _reloadData();
                         });
                       },
-                      activeColor: AppColors.primary,
+                      activeColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
                     ),
                   ],
                 ),
@@ -630,9 +634,9 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       builder: (ctx) {
         // 🆕 استخدام StatefulBuilder للسماح بتحديث الحقول بعد الترجمة
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setDialogState) {
             // 🆕 دالة الترجمة من العربي للإنجليزي
-            Future<void> _translateArToEn() async {
+            translateArToEn() async {
               if (nameArController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -646,7 +650,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               try {
                 final translated = await translationService.translateToEnglish(nameArController.text.trim());
                 if (translated != null) {
-                  setState(() {
+                  setDialogState(() {
                     nameEnController.text = translated;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -675,7 +679,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             }
 
             // 🆕 دالة الترجمة من الإنجليزي للعربي
-            Future<void> _translateEnToAr() async {
+            translateEnToAr() async {
               if (nameEnController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -689,7 +693,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               try {
                 final translated = await translationService.translateToArabic(nameEnController.text.trim());
                 if (translated != null) {
-                  setState(() {
+                  setDialogState(() {
                     nameArController.text = translated;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -750,7 +754,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     // 🆕 زر الترجمة للإنجليزي
                     const SizedBox(height: AppConstants.spacingSm),
                     OutlinedButton.icon(
-                      onPressed: _translateArToEn,
+                      onPressed: translateArToEn,
                       icon: const Icon(Icons.translate, size: 18),
                       label: const Text('ترجمة ← إنجليزي'),
                       style: OutlinedButton.styleFrom(
@@ -781,7 +785,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     // 🆕 زر الترجمة للعربي
                     const SizedBox(height: AppConstants.spacingSm),
                     OutlinedButton.icon(
-                      onPressed: _translateEnToAr,
+                      onPressed: translateEnToAr,
                       icon: const Icon(Icons.translate, size: 18),
                       label: const Text('ترجمة ← عربي'),
                       style: OutlinedButton.styleFrom(
@@ -1081,7 +1085,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               try {
                 final translated = await translationService.translateToEnglish(nameArController.text.trim());
                 if (translated != null) {
-                  setState(() {
+                  setDialogState(() {
                     nameEnController.text = translated;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1110,7 +1114,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             }
 
             // 🆕 دالة الترجمة من الإنجليزي للعربي
-            Future<void> _translateEnToAr() async {
+            translateEnToAr() async {
               if (nameEnController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1124,7 +1128,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               try {
                 final translated = await translationService.translateToArabic(nameEnController.text.trim());
                 if (translated != null) {
-                  setState(() {
+                  setDialogState(() {
                     nameArController.text = translated;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1184,7 +1188,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     // 🆕 زر الترجمة للإنجليزي
                     const SizedBox(height: AppConstants.spacingSm),
                     OutlinedButton.icon(
-                      onPressed: _translateArToEn,
+                      onPressed: translateArToEn,
                       icon: const Icon(Icons.translate, size: 18),
                       label: const Text('ترجمة ← إنجليزي'),
                       style: OutlinedButton.styleFrom(
@@ -1214,7 +1218,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     // 🆕 زر الترجمة للعربي
                     const SizedBox(height: AppConstants.spacingSm),
                     OutlinedButton.icon(
-                      onPressed: _translateEnToAr,
+                      onPressed: translateEnToAr,
                       icon: const Icon(Icons.translate, size: 18),
                       label: const Text('ترجمة ← عربي'),
                       style: OutlinedButton.styleFrom(
