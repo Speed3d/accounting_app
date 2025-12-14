@@ -315,7 +315,7 @@
     "username": "اسم المستخدم",
     "password": "كلمة المرور",
     "loginTo": "تسجيل الدخول إلى",
-    "accountingProgram": "برنامج المحاسبة",
+    "accountingProgram": "لمسة محاسب",
     "invalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة.",
 
     "ok": "موافق",
@@ -2415,7 +2415,13 @@
 
 "editPayroll": "تعديل راتب",
 
-"editAdvance": "تعديل سلفة"
+"editAdvance": "تعديل سلفة",
+
+"subscriptionmanagement": "ادارة الاشتراكات",
+
+"activationcodegenerator": "مولد اكواد التفعيل",
+
+"details": "التفاصيل"
 
 
 

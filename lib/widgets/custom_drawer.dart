@@ -1,6 +1,8 @@
 // lib/widgets/custom_drawer.dart
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // 🆕 Firebase Auth
+import 'package:accountant_touch/screens/admin/activation_code_generator_screen.dart';
+import 'package:accountant_touch/screens/admin/subscriptions_admin_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:accountant_touch/l10n/app_localizations.dart';
 import 'package:accountant_touch/screens/customers/customers_list_screen.dart';
 import 'package:accountant_touch/screens/employees/employees_list_screen.dart';
@@ -16,14 +18,21 @@ import '../providers/theme_provider.dart';
 import '../screens/auth/splash_screen.dart'; 
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/sales/cash_sales_history_screen.dart';
-import '../screens/test_pdf_screen.dart';
-import '../services/session_service.dart'; // 🆕 استبدال AuthService بـ SessionService
-import '../services/activation_status_service.dart'; // 🆕 خدمة حالة التفعيل
-import '../data/database_helper.dart'; // ← Hint: للحصول على صورة الشركة
+import '../services/session_service.dart';
+import '../services/subscription_service.dart'; // 🆕 للحصول على معلومات الاشتراك
 import '../theme/app_colors.dart';
 import '../theme/app_constants.dart';
 
+/// ============================================================================
 /// القائمة الجانبية المخصصة مع نظام الصلاحيات
+/// ============================================================================
+/// 
+/// ← Hint: التحديثات الجديدة:
+/// - 🆕 عرض معلومات الاشتراك (نوع الخطة، تاريخ الانتهاء، الأيام المتبقية)
+/// - 🆕 مؤشر بصري ملون حسب حالة الاشتراك
+/// - 🆕 تصميم جميل ومتناسق مع الثيم
+/// 
+/// ============================================================================
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
@@ -33,13 +42,14 @@ class CustomDrawer extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    // ← Hint: النظام الجديد - لا توجد صلاحيات محلية (كل مستخدم = owner/admin)
-
     return Drawer(
       child: Column(
         children: [
           // ============= Header =============
           _buildDrawerHeader(context, isDark),
+          
+          // ============= 🆕 معلومات الاشتراك =============
+          _buildSubscriptionCard(context, isDark, l10n),
           
           // ============= القائمة =============
           Expanded(
@@ -64,7 +74,6 @@ class CustomDrawer extends StatelessWidget {
                   },
                 ),
 
-                // ← Hint: إزالة فحص الصلاحيات - كل مستخدم يمكنه الوصول
                 _buildMenuItem(
                   context,
                   icon: Icons.receipt_long,
@@ -100,27 +109,7 @@ class CustomDrawer extends StatelessWidget {
                 
                 const Divider(),
 
-            //     // زر تم عمله لاختبار وانشار ملف PDF
-            //     //================================================
-            //     _buildMenuItem(
-            //     context,
-            //     icon: Icons.bug_report,
-            //     title: '🧪 اختبار PDF',
-            //     onTap: () {
-            //      Navigator.pop(context);
-            //      Navigator.push(
-            //      context,
-            //      MaterialPageRoute(
-            //      builder: (context) => const TestPdfScreen(),
-            //     ),
-            //    );
-            //  },
-            // ),
-                // const Divider(),
-
-
                 // ============= قسم العملاء والموردين =============
-                // ← Hint: إزالة فحص الصلاحيات - كل القوائم مفتوحة للجميع
                 _buildSection(context, l10n.customersAndSuppliers, isDark),
 
                 _buildMenuItem(
@@ -243,14 +232,67 @@ class CustomDrawer extends StatelessWidget {
                     );
                   },
                 ),
+
+                  _buildMenuItem(
+                  context,
+                  icon: Icons.info_outline,
+                  title: l10n.aboutTheApp,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutScreen(),
+                      ),
+                    );
+                  },
+                ),
                 
-                // ✅ مسافة إضافية قبل Footer لرفع الأزرار للأعلى
                 const SizedBox(height: AppConstants.spacingXl),
+
+       //=====================================================
+       // صفحات التطوير - افعلها للنسخة الخاصة بي
+       //=====================================================
+
+                    _buildMenuItem(
+                  context,
+                  icon: Icons.manage_accounts,
+                  title: l10n.activationcodegenerator,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ActivationCodeGeneratorScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                    _buildMenuItem(
+                  context,
+                  icon: Icons.verified,
+                  title: l10n.subscriptionmanagement,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SubscriptionsAdminScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+       //=====================================================
+       // صفحات التطوير - افعلها للنسخة الخاصة بي
+       //=====================================================
+
               ],
             ),
           ),
           
-          // ============= Footer (مرفوع للأعلى) =============
+          // ============= Footer =============
           _buildDrawerFooter(context, isDark, l10n),
           const SizedBox(height: AppConstants.spacingSm),
         ],
@@ -259,347 +301,586 @@ class CustomDrawer extends StatelessWidget {
   }
 
   // ============================================================
-  // ✅ 📋 بناء رأس القائمة الجانبية (النظام الجديد - SessionService + Activation Status)
-  // ← Hint: النظام الجديد يستخدم FutureBuilder للحصول على البيانات من SessionService
-  // ← Hint: يعرض صورة الشركة (أولوية) أو صورة المستخدم (احتياطي)
-  // ← Hint: يعرض حالة التفعيل بتنسيق كومبو (الخيار D)
+  // ✅ 📋 بناء رأس القائمة الجانبية (محسّن - مدمج)
   // ============================================================
   Widget _buildDrawerHeader(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _getHeaderInfo(),
+    return FutureBuilder<Map<String, String?>>(
+      future: _getUserInfo(),
       builder: (context, snapshot) {
         final email = snapshot.data?['email'] ?? '';
         final displayName = snapshot.data?['displayName'] ?? l10n.user;
         final photoURL = snapshot.data?['photoURL'];
-        final companyLogoPath = snapshot.data?['companyLogoPath'];
-        final companyName = snapshot.data?['companyName'];
-        final activationInfo = snapshot.data?['activationInfo'] as ActivationInfo?;
 
-        // ← Hint: أولوية عرض الصورة:
-        // ← Hint: 1️⃣ صورة الشركة (من الإعدادات)
-        // ← Hint: 2️⃣ صورة المستخدم (من Firebase)
-        // ← Hint: 3️⃣ أيقونة افتراضية
-        final hasCompanyLogo = companyLogoPath != null &&
-                               companyLogoPath.isNotEmpty &&
-                               File(companyLogoPath).existsSync();
         final hasUserImage = photoURL != null && photoURL.isNotEmpty;
 
-    return Container(
-      width: double.infinity,
-      // ✅ تصغير الـ padding لتقليل المساحة
-      padding: const EdgeInsets.fromLTRB(
-        AppConstants.spacingMd,
-        AppConstants.spacingXl + 2, // تقليل من 20 إلى 10
-        AppConstants.spacingMd,
-        AppConstants.spacingMd,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark ? AppColors.gradientDark : AppColors.gradientLight,
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ← Hint: ✅ صورة الشركة أو المستخدم (حسب الأولوية)
-            Container(
-              width: 60, // مصغّرة للأناقة
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                // ← Hint: 1️⃣ صورة الشركة (أولوية)
-                child: hasCompanyLogo
-                    ? Image.file(
-                        File(companyLogoPath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          // ← Hint: إذا فشل تحميل صورة الشركة → صورة المستخدم
-                          return _buildFallbackImage(hasUserImage, photoURL, isDark);
-                        },
-                      )
-                    // ← Hint: 2️⃣ صورة المستخدم (احتياطي)
-                    : _buildFallbackImage(hasUserImage, photoURL, isDark),
-              ),
-            ),
-
-              const SizedBox(height: AppConstants.spacingMd),
-
-              // ✅ اسم المستخدم (حجم أصغر)
-              Text(
-                displayName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 2),
-
-              // ✅ البريد الإلكتروني (Email)
-              Text(
-                email,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 12,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: AppConstants.spacingSm),
-
-              // ← Hint: ✅ شارة الصلاحية (Admin دائماً في النظام الجديد)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: AppConstants.borderRadiusFull,
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.admin_panel_settings,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      l10n.systemAdmin,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppConstants.spacingSm),
-
-              // ← Hint: 🎯 حالة التفعيل - الخيار D (كومبو)
-              // ← Hint: يعرض أيقونة + نوع التفعيل + الأيام المتبقية
-              if (activationInfo != null)
-                _buildActivationStatusBadge(activationInfo, isDark),
-            ],
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(
+            AppConstants.spacingMd,
+            AppConstants.spacingLg,
+            AppConstants.spacingMd,
+            AppConstants.spacingMd,
           ),
-        ),
-      );
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark ? AppColors.gradientDark : AppColors.gradientLight,
+            ),
+          ),
+          child: SafeArea(
+            bottom: false, // تقليل المسافة تحت صفة المستخدم
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ✅ صورة المستخدم
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: hasUserImage
+                        ? Image.network(
+                            photoURL!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.person,
+                                size: 20,
+                                color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.person,
+                            size: 20,
+                            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: AppConstants.spacingXs),
+
+                // ✅ اسم المستخدم
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                // const SizedBox(height: 2),
+
+                // ✅ البريد الإلكتروني
+                Text(
+                  email,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: AppConstants.spacingXs),
+
+                // ✅ شارة الصلاحية
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: AppConstants.borderRadiusFull,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.systemAdmin,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
 
-  // ============================================================
-  // ← Hint: بناء صورة احتياطية (المستخدم أو أيقونة افتراضية)
-  // ============================================================
-  Widget _buildFallbackImage(bool hasUserImage, String? photoURL, bool isDark) {
-    if (hasUserImage) {
-      // ← Hint: صورة المستخدم من Firebase
-      return Image.network(
-        photoURL!,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          // ← Hint: إذا فشل → أيقونة افتراضية
-          return Icon(
-            Icons.store,
-            size: 30,
-            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-          );
-        },
-      );
-    }
-
-    // ← Hint: أيقونة افتراضية
-    return Icon(
-      Icons.store,
-      size: 30,
-      color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-    );
-  }
-
-  // ============================================================
-  // ← Hint: بناء شارة حالة التفعيل (الخيار D - كومبو)
-  // ============================================================
-  /// 🎯 شارة حالة التفعيل - الخيار D (كومبو)
-  ///
-  /// التنسيق:
-  /// ```
-  /// ┌────────────────────────┐
-  /// │ [أيقونة] نوع التفعيل  │
-  /// │ تفعيل احترافي         │
-  /// │ متبقي: 180 يوم        │
-  /// └────────────────────────┘
-  /// ```
-  Widget _buildActivationStatusBadge(ActivationInfo info, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            info.color.withOpacity(0.2),
-            info.color.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: info.color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ← Hint: السطر الأول: أيقونة + نوع التفعيل
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                info.icon,
-                color: Colors.white,
-                size: 14,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                info.displayText,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-
-          // ← Hint: السطر الثاني: الأيام المتبقية أو "دائمي"
-          if (info.daysRemaining != null && info.status != ActivationStatus.lifetime) ...[
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.timer_outlined,
-                  color: Colors.white.withOpacity(0.9),
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'متبقي: ${info.daysRemaining} يوم',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          // ← Hint: إذا كان دائمي، نعرض رسالة خاصة
-          if (info.status == ActivationStatus.lifetime) ...[
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.all_inclusive,
-                  color: Colors.white.withOpacity(0.9),
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'غير محدود',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // ← Hint: دالة مساعدة شاملة للحصول على معلومات الـ Header
-  // ← Hint: تجلب: المستخدم + الشركة + حالة التفعيل
-  // ============================================================
-  /// 📊 جلب معلومات الـ Header الشاملة
-  ///
-  /// ← Hint: تُجمع البيانات من 3 مصادر:
-  /// ← Hint: 1️⃣ SessionService (معلومات المستخدم)
-  /// ← Hint: 2️⃣ DatabaseHelper (معلومات الشركة)
-  /// ← Hint: 3️⃣ ActivationStatusService (حالة التفعيل)
-  Future<Map<String, dynamic>> _getHeaderInfo() async {
+  /// ← Hint: دالة مساعدة للحصول على معلومات المستخدم من SessionService
+  Future<Map<String, String?>> _getUserInfo() async {
     try {
-      // ← Hint: جلب معلومات المستخدم من SessionService
       final email = await SessionService.instance.getEmail();
       final displayName = await SessionService.instance.getDisplayName();
       final photoURL = await SessionService.instance.getPhotoURL();
-
-      // ← Hint: جلب معلومات الشركة من قاعدة البيانات
-      final dbHelper = DatabaseHelper.instance;
-      final settings = await dbHelper.getAppSettings();
-      final companyName = settings['companyName'] as String?;
-      final companyLogoPath = settings['companyLogoPath'] as String?;
-
-      // ← Hint: جلب حالة التفعيل
-      final activationInfo = await ActivationStatusService.instance.getActivationStatus();
 
       return {
         'email': email ?? '',
         'displayName': displayName ?? '',
         'photoURL': photoURL,
-        'companyName': companyName,
-        'companyLogoPath': companyLogoPath,
-        'activationInfo': activationInfo,
       };
     } catch (e) {
-      debugPrint('⚠️ خطأ في الحصول على معلومات الـ Header: $e');
+      debugPrint('⚠️ خطأ في الحصول على معلومات المستخدم: $e');
       return {
         'email': '',
         'displayName': '',
         'photoURL': null,
-        'companyName': null,
-        'companyLogoPath': null,
-        'activationInfo': null,
       };
     }
+  }
+
+  // ============================================================
+  // 🆕 بناء بطاقة معلومات الاشتراك (جديد - تصميم جميل)
+  // ============================================================
+  /// 
+  /// ← Hint: يعرض:
+  /// - نوع الخطة (تجريبي / مميز / احترافي)
+  /// - حالة الاشتراك (نشط / منتهي / موقوف)
+  /// - تاريخ الانتهاء
+  /// - الأيام المتبقية مع مؤشر Progress Bar
+  /// - مؤشر بصري ملون (أخضر / أصفر / أحمر)
+  /// 
+  Widget _buildSubscriptionCard(
+    BuildContext context,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
+    return FutureBuilder<SubscriptionStatus?>(
+      future: _getSubscriptionStatus(),
+      builder: (context, snapshot) {
+        // ← Hint: أثناء التحميل - عرض شيمر بسيط
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildSubscriptionCardShimmer(isDark);
+        }
+
+        // ← Hint: في حالة الخطأ أو عدم وجود بيانات - لا نعرض شيء
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+
+        final subscription = snapshot.data!;
+
+        // ← Hint: إذا لم يكن هناك اشتراك - لا نعرض شيء
+        if (subscription.statusType == 'not_found' || 
+            subscription.statusType == 'error') {
+          return const SizedBox.shrink();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // حساب معلومات الاشتراك
+        // ═══════════════════════════════════════════════════════════
+
+        final planName = _getPlanDisplayName(subscription.plan ?? 'unknown');
+        final isActive = subscription.isActive;
+        final endDate = subscription.endDate;
+        
+        // ← Hint: حساب الأيام المتبقية
+        int? daysRemaining;
+        double? progressPercentage;
+        
+        if (endDate != null) {
+          daysRemaining = endDate.difference(DateTime.now()).inDays;
+          
+          // ← Hint: حساب النسبة المئوية (افتراضياً trial = 14 يوم)
+          const totalDays = 14; // يمكن جلبها من Remote Config
+          progressPercentage = (daysRemaining / totalDays).clamp(0.0, 1.0);
+        }
+
+        // ← Hint: تحديد اللون حسب الحالة
+        Color statusColor;
+        IconData statusIcon;
+        String statusText;
+
+        if (!isActive || (daysRemaining != null && daysRemaining <= 0)) {
+          // منتهي
+          statusColor = AppColors.error;
+          statusIcon = Icons.cancel;
+          statusText = 'منتهي';
+        } else if (daysRemaining != null && daysRemaining <= 3) {
+          // قرب الانتهاء
+          statusColor = AppColors.warning;
+          statusIcon = Icons.warning_amber;
+          statusText = 'ينتهي قريباً';
+        } else {
+          // نشط
+          statusColor = AppColors.success;
+          statusIcon = Icons.check_circle;
+          statusText = 'نشط';
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // بناء البطاقة
+        // ═══════════════════════════════════════════════════════════
+
+        return Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spacingMd,
+            vertical: AppConstants.spacingSm,
+          ),
+          padding: AppConstants.paddingMd,
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.cardDark.withOpacity(0.5)
+                : Colors.white,
+            borderRadius: AppConstants.borderRadiusMd,
+            border: Border.all(
+              color: statusColor.withOpacity(0.3),
+              width: 2.5, // سمك الاطار
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: statusColor.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─────────────────────────────────────────────────────
+              // السطر الأول: نوع الخطة + حالة الاشتراك
+              // ─────────────────────────────────────────────────────
+              Row(
+                children: [
+                  // أيقونة الخطة
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: AppConstants.borderRadiusSm,
+                    ),
+                    child: Icon(
+                      _getPlanIcon(subscription.plan ?? 'unknown'),
+                      size: 18,
+                      color: statusColor,
+                    ),
+                  ),
+
+                  const SizedBox(width: AppConstants.spacingSm),
+
+                  // اسم الخطة
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          planName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : AppColors.textPrimaryLight,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        // حالة الاشتراك
+                        Row(
+                          children: [
+                            Icon(
+                              statusIcon,
+                              size: 12,
+                              color: statusColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              statusText,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: statusColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // الأيام المتبقية (Badge)
+                  if (daysRemaining != null && daysRemaining > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.15),
+                        borderRadius: AppConstants.borderRadiusSm,
+                      ),
+                      child: Text(
+                        '$daysRemaining يوم',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              // ─────────────────────────────────────────────────────
+              // Progress Bar (إذا كان هناك تاريخ انتهاء)
+              // ─────────────────────────────────────────────────────
+              if (endDate != null && daysRemaining != null && daysRemaining > 0) ...[
+                const SizedBox(height: AppConstants.spacingSm),
+                
+                // Progress Bar
+                ClipRRect(
+                  borderRadius: AppConstants.borderRadiusSm,
+                  child: LinearProgressIndicator(
+                    value: progressPercentage,
+                    backgroundColor: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.grey.shade200,
+                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+
+              // ─────────────────────────────────────────────────────
+              // تاريخ الانتهاء
+              // ─────────────────────────────────────────────────────
+              if (endDate != null) ...[
+                const SizedBox(height: AppConstants.spacingSm),
+                
+                Row(
+                  children: [
+                    Icon(
+                      Icons.event,
+                      size: 12,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'ينتهي في: ${_formatDate(endDate)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // ─────────────────────────────────────────────────────
+              // رسالة تحذيرية (إذا كان قرب الانتهاء أو منتهي)
+              // ─────────────────────────────────────────────────────
+              if (daysRemaining != null && daysRemaining <= 3) ...[
+                const SizedBox(height: AppConstants.spacingSm),
+                
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: AppConstants.borderRadiusSm,
+                    border: Border.all(
+                      color: statusColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        daysRemaining <= 0
+                            ? Icons.error_outline
+                            : Icons.info_outline,
+                        size: 14,
+                        color: statusColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          daysRemaining <= 0
+                              ? 'يرجى تجديد الاشتراك للمتابعة'
+                              : 'اشتراكك ينتهي قريباً - فكر في التجديد',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// ← Hint: عرض شيمر أثناء التحميل
+  Widget _buildSubscriptionCardShimmer(bool isDark) {
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppConstants.spacingMd,
+        vertical: AppConstants.spacingSm,
+      ),
+      padding: AppConstants.paddingMd,
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.cardDark.withOpacity(0.3)
+            : Colors.grey.shade100,
+        borderRadius: AppConstants.borderRadiusMd,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: AppConstants.borderRadiusSm,
+                ),
+              ),
+              const SizedBox(width: AppConstants.spacingSm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: AppConstants.borderRadiusSm,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 60,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: AppConstants.borderRadiusSm,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ← Hint: دالة للحصول على معلومات الاشتراك
+  Future<SubscriptionStatus?> _getSubscriptionStatus() async {
+    try {
+      final email = await SessionService.instance.getEmail();
+      
+      if (email == null || email.isEmpty) {
+        return null;
+      }
+
+      // ← Hint: التحقق من الاشتراك (مع timeout قصير)
+      final subscription = await SubscriptionService.instance
+          .checkSubscription(email)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => SubscriptionStatus.error(
+              message: 'Timeout',
+            ),
+          );
+
+      return subscription;
+    } catch (e) {
+      debugPrint('⚠️ خطأ في جلب معلومات الاشتراك: $e');
+      return null;
+    }
+  }
+
+  /// ← Hint: تحويل اسم الخطة للعرض
+  String _getPlanDisplayName(String plan) {
+    switch (plan.toLowerCase()) {
+      case 'trial':
+        return 'اشتراك تجريبي';
+      case 'premium':
+        return 'اشتراك مميز';
+      case 'professional':
+        return 'اشتراك احترافي';
+      case 'lifetime':
+        return 'اشتراك دائم';
+      default:
+        return 'اشتراك';
+    }
+  }
+
+  /// ← Hint: أيقونة الخطة
+  IconData _getPlanIcon(String plan) {
+    switch (plan.toLowerCase()) {
+      case 'trial':
+        return Icons.access_time;
+      case 'premium':
+        return Icons.workspace_premium;
+      case 'professional':
+        return Icons.business_center;
+      case 'lifetime':
+        return Icons.all_inclusive;
+      default:
+        return Icons.card_membership;
+    }
+  }
+
+  /// ← Hint: تنسيق التاريخ
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   /// بناء عنوان القسم
@@ -614,7 +895,7 @@ class CustomDrawer extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
           color: isDark
               ? AppColors.textSecondaryDark
@@ -667,14 +948,13 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  /// ✅ بناء تذييل القائمة (مرفوع للأعلى)
+  /// ✅ بناء تذييل القائمة
   Widget _buildDrawerFooter(
     BuildContext context,
     bool isDark,
     AppLocalizations l10n, 
   ) {
     return Container(
-      // ✅ إضافة padding من الأسفل لرفع الأزرار
       padding: const EdgeInsets.only(bottom: AppConstants.spacingXl),
       decoration: BoxDecoration(
         border: Border(
@@ -686,25 +966,30 @@ class CustomDrawer extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.aboutTheApp), 
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AboutScreen(),
-                ),
-              );
-            },
-          ),
+          // قسم الحول تم ايقافه من الاسفل
+          // ListTile(
+          //   leading: const Icon(Icons.info_outline),
+          //   title: Text(l10n.aboutTheApp),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const AboutScreen(),
+          //       ),
+          //     );
+          //   },
+          // ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
             title: Text(
               l10n.logout, 
               style: const TextStyle(color: AppColors.error),
             ),
+              contentPadding: const EdgeInsets.symmetric(
+    horizontal: AppConstants.spacingMd,
+    vertical: 0,  // ← صفر لتقليل المسافة
+  ),
             onTap: () {
               Navigator.pop(context);
               _showLogoutDialog(context, l10n);
@@ -716,7 +1001,6 @@ class CustomDrawer extends StatelessWidget {
   }
 
   /// حوار تأكيد تسجيل الخروج
-  /// ← Hint: النظام الجديد يستخدم Firebase Auth + SessionService
   void _showLogoutDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
@@ -731,16 +1015,16 @@ class CustomDrawer extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               try {
-                // ← Hint: 1. تسجيل الخروج من Firebase Auth
+                // 1. تسجيل الخروج من Firebase Auth
                 await firebase_auth.FirebaseAuth.instance.signOut();
 
-                // ← Hint: 2. مسح الجلسة المحلية
+                // 2. مسح الجلسة المحلية
                 await SessionService.instance.clearSession();
 
                 debugPrint('✅ تم تسجيل الخروج بنجاح');
 
                 if (context.mounted) {
-                  // ← Hint: 3. العودة لشاشة البداية
+                  // 3. العودة لشاشة البداية
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (_) => const SplashScreen()),

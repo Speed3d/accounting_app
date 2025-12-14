@@ -9,8 +9,11 @@ import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 
-/// 🎨 شاشة إدارة التصنيفات والوحدات
-/// ← Hint: تتيح إضافة وتعديل وحذف التصنيفات والوحدات للمنتجات
+/// ============================================================================
+/// 🎨 شاشة إدارة التصنيفات والوحدات (النسخة المبسطة)
+/// ============================================================================
+/// ← Hint: تتيح إضافة وتعديل وحذف التصنيفات والوحدات بطريقة بسيطة
+/// ← Hint: لا ألوان، لا أيقونات، فقط اسم عربي + اسم إنجليزي
 class ManageCategoriesUnitsScreen extends StatefulWidget {
   const ManageCategoriesUnitsScreen({super.key});
 
@@ -132,7 +135,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             return EmptyState(
               icon: Icons.category_outlined,
               title: 'لا توجد تصنيفات',
-              message: 'لم يتم إضافة أي تصنيفات بعد',
+              message: 'ابدأ بإضافة تصنيف جديد',
               actionText: 'إضافة تصنيف',
               onAction: _showAddCategoryDialog,
             );
@@ -161,46 +164,52 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     );
   }
 
-  /// بناء بطاقة تصنيف
+  /// ============================================================================
+  /// 🃏 بناء بطاقة تصنيف (النسخة المبسطة)
+  /// ============================================================================
   /// ← Hint: تعرض معلومات التصنيف مع أزرار تعديل وحذف
+  /// ← Hint: بدون ألوان أو أيقونات - فقط الاسم العربي والإنجليزي
   Widget _buildCategoryCard(ProductCategory category, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = category.isActive;
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
       child: Padding(
         padding: AppConstants.paddingMd,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ============= الاسم المترجم (حسب اللغة الحالية) =============
             Row(
               children: [
-                // أيقونة التصنيف
+                // ← Hint: أيقونة بسيطة موحدة
                 Container(
                   padding: const EdgeInsets.all(AppConstants.spacingMd),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? AppColors.success.withOpacity(0.1)
+                        ? AppColors.info.withOpacity(0.1)
                         : AppColors.textSecondaryLight.withOpacity(0.1),
                     borderRadius: AppConstants.borderRadiusMd,
                   ),
                   child: Icon(
-                    _getIconFromName(category.icon),
-                    color: isActive ? AppColors.success : AppColors.textSecondaryLight,
+                    Icons.category,  // ← Hint: نفس الأيقونة للكل
+                    color: isActive ? AppColors.info : AppColors.textSecondaryLight,
                     size: 28,
                   ),
                 ),
 
                 const SizedBox(width: AppConstants.spacingMd),
 
-                // المعلومات
+                // ← Hint: المعلومات
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // الاسم بالعربي
+                      // ← Hint: الاسم حسب اللغة الحالية
                       Text(
-                        category.categoryName,
+                        category.getLocalizedName(languageCode),
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -208,16 +217,16 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
                       const SizedBox(height: AppConstants.spacingXs),
 
-                      // الاسم بالإنجليزي
+                      // ← Hint: عرض الاسمين معاً
                       Text(
-                        category.categoryNameEn ?? '',
+                        '${category.categoryNameAr} / ${category.categoryNameEn}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
                 ),
 
-                // حالة التفعيل
+                // ← Hint: حالة التفعيل
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppConstants.spacingSm,
@@ -230,7 +239,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     borderRadius: AppConstants.borderRadiusFull,
                   ),
                   child: Text(
-                    isActive ? 'نشط' : 'غير نشط',
+                    isActive ? 'نشط' : 'معطل',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -246,6 +255,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // ← Hint: زر التعديل
                 OutlinedButton.icon(
                   onPressed: () => _showEditCategoryDialog(category),
                   icon: const Icon(Icons.edit, size: 16),
@@ -256,6 +266,8 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                   ),
                 ),
                 const SizedBox(width: AppConstants.spacingSm),
+                
+                // ← Hint: زر التعطيل/التفعيل
                 OutlinedButton.icon(
                   onPressed: () => _toggleCategoryStatus(category),
                   icon: Icon(
@@ -264,7 +276,19 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                   ),
                   label: Text(isActive ? 'تعطيل' : 'تفعيل'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isActive ? AppColors.error : AppColors.success,
+                    foregroundColor: isActive ? AppColors.warning : AppColors.success,
+                    minimumSize: const Size(80, 32),
+                  ),
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                
+                // ← Hint: زر الحذف (فقط إذا لم تكن مرتبطة بمنتجات)
+                OutlinedButton.icon(
+                  onPressed: () => _deleteCategoryPermanently(category),
+                  icon: const Icon(Icons.delete, size: 16),
+                  label: const Text('حذف'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
                     minimumSize: const Size(80, 32),
                   ),
                 ),
@@ -303,7 +327,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             return EmptyState(
               icon: Icons.straighten_outlined,
               title: 'لا توجد وحدات',
-              message: 'لم يتم إضافة أي وحدات بعد',
+              message: 'ابدأ بإضافة وحدة جديدة',
               actionText: 'إضافة وحدة',
               onAction: _showAddUnitDialog,
             );
@@ -332,46 +356,50 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     );
   }
 
-  /// بناء بطاقة وحدة
+  /// ============================================================================
+  /// 🃏 بناء بطاقة وحدة (النسخة المبسطة)
+  /// ============================================================================
   /// ← Hint: تعرض معلومات الوحدة مع أزرار تعديل وحذف
   Widget _buildUnitCard(ProductUnit unit, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = unit.isActive;
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return CustomCard(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
       child: Padding(
         padding: AppConstants.paddingMd,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                // أيقونة الوحدة
+                // ← Hint: أيقونة بسيطة موحدة
                 Container(
                   padding: const EdgeInsets.all(AppConstants.spacingMd),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? AppColors.info.withOpacity(0.1)
+                        ? AppColors.success.withOpacity(0.1)
                         : AppColors.textSecondaryLight.withOpacity(0.1),
                     borderRadius: AppConstants.borderRadiusMd,
                   ),
                   child: Icon(
-                    Icons.straighten,
-                    color: isActive ? AppColors.info : AppColors.textSecondaryLight,
+                    Icons.straighten,  // ← Hint: نفس الأيقونة للكل
+                    color: isActive ? AppColors.success : AppColors.textSecondaryLight,
                     size: 28,
                   ),
                 ),
 
                 const SizedBox(width: AppConstants.spacingMd),
 
-                // المعلومات
+                // ← Hint: المعلومات
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // الاسم بالعربي
+                      // ← Hint: الاسم حسب اللغة الحالية
                       Text(
-                        unit.unitName,
+                        unit.getLocalizedName(languageCode),
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -379,16 +407,16 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
                       const SizedBox(height: AppConstants.spacingXs),
 
-                      // الاسم بالإنجليزي
+                      // ← Hint: عرض الاسمين معاً
                       Text(
-                        unit.unitNameEn ?? '',
+                        '${unit.unitNameAr} / ${unit.unitNameEn}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
                 ),
 
-                // حالة التفعيل
+                // ← Hint: حالة التفعيل
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppConstants.spacingSm,
@@ -401,7 +429,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     borderRadius: AppConstants.borderRadiusFull,
                   ),
                   child: Text(
-                    isActive ? 'نشط' : 'غير نشط',
+                    isActive ? 'نشط' : 'معطل',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -435,7 +463,17 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                   ),
                   label: Text(isActive ? 'تعطيل' : 'تفعيل'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isActive ? AppColors.error : AppColors.success,
+                    foregroundColor: isActive ? AppColors.warning : AppColors.success,
+                    minimumSize: const Size(80, 32),
+                  ),
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                OutlinedButton.icon(
+                  onPressed: () => _deleteUnitPermanently(unit),
+                  icon: const Icon(Icons.delete, size: 16),
+                  label: const Text('حذف'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
                     minimumSize: const Size(80, 32),
                   ),
                 ),
@@ -451,113 +489,96 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   // 🎨 دوال إدارة التصنيفات
   // ============================================================
 
-  /// عرض dialog لإضافة تصنيف جديد
+  /// ============================================================================
+  /// عرض dialog لإضافة تصنيف جديد (النسخة المبسطة)
+  /// ============================================================================
+  /// ← Hint: فقط اسمين: عربي + إنجليزي، بدون ألوان أو أيقونات
   Future<void> _showAddCategoryDialog() async {
     final nameArController = TextEditingController();
     final nameEnController = TextEditingController();
-    String selectedIcon = 'category';
+    final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.category, color: AppColors.success),
-                  SizedBox(width: AppConstants.spacingSm),
-                  Text('إضافة تصنيف جديد'),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // الاسم بالعربي
-                    TextField(
-                      controller: nameArController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالعربي *',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: AppConstants.spacingMd),
-
-                    // الاسم بالإنجليزي
-                    TextField(
-                      controller: nameEnController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالإنجليزي',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: AppConstants.spacingMd),
-
-                    // اختيار الأيقونة
-                    DropdownButtonFormField<String>(
-                      value: selectedIcon,
-                      decoration: const InputDecoration(
-                        labelText: 'الأيقونة',
-                        prefixIcon: Icon(Icons.insert_emoticon),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'category', child: Row(children: [Icon(Icons.category), SizedBox(width: 8), Text('تصنيف')])),
-                        DropdownMenuItem(value: 'shopping_bag', child: Row(children: [Icon(Icons.shopping_bag), SizedBox(width: 8), Text('حقيبة')])),
-                        DropdownMenuItem(value: 'devices', child: Row(children: [Icon(Icons.devices), SizedBox(width: 8), Text('أجهزة')])),
-                        DropdownMenuItem(value: 'checkroom', child: Row(children: [Icon(Icons.checkroom), SizedBox(width: 8), Text('ملابس')])),
-                        DropdownMenuItem(value: 'restaurant', child: Row(children: [Icon(Icons.restaurant), SizedBox(width: 8), Text('طعام')])),
-                        DropdownMenuItem(value: 'build', child: Row(children: [Icon(Icons.build), SizedBox(width: 8), Text('أدوات')])),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => selectedIcon = value);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('إلغاء'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameArController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('يرجى إدخال الاسم بالعربي')),
-                      );
-                      return;
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.category, color: AppColors.success),
+              SizedBox(width: AppConstants.spacingSm),
+              Text('إضافة تصنيف جديد'),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ← Hint: الاسم بالعربي (إجباري)
+                TextFormField(
+                  controller: nameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالعربي *',
+                    hintText: 'مثال: أجهزة كهربائية',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالعربي';
                     }
-
-                    try {
-                      await dbHelper.addProductCategory(
-                        ProductCategory(
-                          categoryName: nameArController.text,
-                          categoryNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
-                          icon: selectedIcon,
-                          isActive: true,
-                        ),
-                      );
-                      Navigator.pop(ctx, true);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('خطأ: $e')),
-                      );
-                    }
+                    return null;
                   },
-                  child: const Text('حفظ'),
+                ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // ← Hint: الاسم بالإنجليزي (إجباري)
+                TextFormField(
+                  controller: nameEnController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالإنجليزي *',
+                    hintText: 'Example: Electrical Appliances',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالإنجليزي';
+                    }
+                    return null;
+                  },
                 ),
               ],
-            );
-          },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  try {
+                    await dbHelper.addProductCategory(
+                      ProductCategory(
+                        categoryNameAr: nameArController.text.trim(),
+                        categoryNameEn: nameEnController.text.trim(),
+                        isActive: true,
+                      ),
+                    );
+                    Navigator.pop(ctx, true);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('خطأ: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
         );
       },
     );
@@ -565,110 +586,96 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     if (result == true && mounted) {
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إضافة التصنيف بنجاح')),
+        const SnackBar(
+          content: Text('تم إضافة التصنيف بنجاح'),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
 
-  /// عرض dialog لتعديل تصنيف
+  /// ============================================================================
+  /// عرض dialog لتعديل تصنيف (النسخة المبسطة)
+  /// ============================================================================
   Future<void> _showEditCategoryDialog(ProductCategory category) async {
-    final nameArController = TextEditingController(text: category.categoryName);
-    final nameEnController = TextEditingController(text: category.categoryNameEn ?? '');
-    String selectedIcon = category.icon ?? 'category';
+    final nameArController = TextEditingController(text: category.categoryNameAr);
+    final nameEnController = TextEditingController(text: category.categoryNameEn);
+    final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.edit, color: AppColors.info),
-                  SizedBox(width: AppConstants.spacingSm),
-                  Text('تعديل التصنيف'),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameArController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالعربي *',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.spacingMd),
-                    TextField(
-                      controller: nameEnController,
-                      decoration: const InputDecoration(
-                        labelText: 'الاسم بالإنجليزي *',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.spacingMd),
-                    DropdownButtonFormField<String>(
-                      value: selectedIcon,
-                      decoration: const InputDecoration(
-                        labelText: 'الأيقونة',
-                        prefixIcon: Icon(Icons.insert_emoticon),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'category', child: Row(children: [Icon(Icons.category), SizedBox(width: 8), Text('تصنيف')])),
-                        DropdownMenuItem(value: 'shopping_bag', child: Row(children: [Icon(Icons.shopping_bag), SizedBox(width: 8), Text('حقيبة')])),
-                        DropdownMenuItem(value: 'devices', child: Row(children: [Icon(Icons.devices), SizedBox(width: 8), Text('أجهزة')])),
-                        DropdownMenuItem(value: 'checkroom', child: Row(children: [Icon(Icons.checkroom), SizedBox(width: 8), Text('ملابس')])),
-                        DropdownMenuItem(value: 'restaurant', child: Row(children: [Icon(Icons.restaurant), SizedBox(width: 8), Text('طعام')])),
-                        DropdownMenuItem(value: 'build', child: Row(children: [Icon(Icons.build), SizedBox(width: 8), Text('أدوات')])),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => selectedIcon = value);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('إلغاء'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameArController.text.isEmpty || nameEnController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('يرجى إدخال جميع الحقول المطلوبة')),
-                      );
-                      return;
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: AppColors.info),
+              SizedBox(width: AppConstants.spacingSm),
+              Text('تعديل التصنيف'),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالعربي *',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالعربي';
                     }
-
-                    try {
-                      await dbHelper.editProductCategory(
-                        category.copyWith(
-                          categoryName: nameArController.text,
-                          categoryNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
-                          icon: selectedIcon,
-                        ),
-                      );
-                      Navigator.pop(ctx, true);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('خطأ: $e')),
-                      );
-                    }
+                    return null;
                   },
-                  child: const Text('حفظ'),
+                ),
+                const SizedBox(height: AppConstants.spacingMd),
+                TextFormField(
+                  controller: nameEnController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالإنجليزي *',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالإنجليزي';
+                    }
+                    return null;
+                  },
                 ),
               ],
-            );
-          },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  try {
+                    await dbHelper.editProductCategory(
+                      category.copyWith(
+                        categoryNameAr: nameArController.text.trim(),
+                        categoryNameEn: nameEnController.text.trim(),
+                      ),
+                    );
+                    Navigator.pop(ctx, true);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('خطأ: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
         );
       },
     );
@@ -676,12 +683,16 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     if (result == true && mounted) {
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تعديل التصنيف بنجاح')),
+        const SnackBar(
+          content: Text('تم تعديل التصنيف بنجاح'),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
 
   /// تبديل حالة تفعيل التصنيف
+  /// ← Hint: تعطيل/تفعيل بدون حذف نهائي
   Future<void> _toggleCategoryStatus(ProductCategory category) async {
     try {
       await dbHelper.editProductCategory(
@@ -691,11 +702,78 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(category.isActive ? 'تم تعطيل التصنيف' : 'تم تفعيل التصنيف'),
+          backgroundColor: AppColors.success,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ: $e')),
+        SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.error),
+      );
+    }
+  }
+
+  /// ============================================================================
+  /// حذف تصنيف نهائياً (مع التحقق من عدم وجود منتجات مرتبطة)
+  /// ============================================================================
+  /// ← Hint: يتحقق أولاً من عدم وجود منتجات تستخدم هذا التصنيف
+  Future<void> _deleteCategoryPermanently(ProductCategory category) async {
+    // ← Hint: التحقق من إمكانية الحذف
+    final canDelete = await dbHelper.canDeleteCategory(category.categoryID!);
+
+    if (!canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('لا يمكن حذف التصنيف لوجود منتجات مرتبطة به. قم بتغيير تصنيف المنتجات أولاً.'),
+          backgroundColor: AppColors.warning,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // ← Hint: تأكيد الحذف
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف التصنيف "${category.categoryNameAr}" نهائياً؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // ← Hint: حذف نهائي من قاعدة البيانات
+      final db = await dbHelper.database;
+      await db.delete(
+        'TB_ProductCategory',
+        where: 'CategoryID = ?',
+        whereArgs: [category.categoryID],
+      );
+
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم حذف التصنيف نهائياً'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -704,10 +782,11 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   // 📏 دوال إدارة الوحدات
   // ============================================================
 
-  /// عرض dialog لإضافة وحدة جديدة
+  /// عرض dialog لإضافة وحدة جديدة (النسخة المبسطة)
   Future<void> _showAddUnitDialog() async {
     final nameArController = TextEditingController();
     final nameEnController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
@@ -720,33 +799,46 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               Text('إضافة وحدة جديدة'),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // الاسم بالعربي
-              TextField(
-                controller: nameArController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالعربي *',
-                  hintText: 'مثال: قطعة، كيلو، متر',
-                  prefixIcon: Icon(Icons.text_fields),
-                  border: OutlineInputBorder(),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالعربي *',
+                    hintText: 'مثال: لتر، متر، علبة',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالعربي';
+                    }
+                    return null;
+                  },
                 ),
-              ),
 
-              const SizedBox(height: AppConstants.spacingMd),
+                const SizedBox(height: AppConstants.spacingMd),
 
-              // الاسم بالإنجليزي
-              TextField(
-                controller: nameEnController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالإنجليزي *',
-                  hintText: 'Example: piece, kg, meter',
-                  prefixIcon: Icon(Icons.text_fields),
-                  border: OutlineInputBorder(),
+                TextFormField(
+                  controller: nameEnController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالإنجليزي *',
+                    hintText: 'Example: Liter, Meter, Box',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالإنجليزي';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -755,26 +847,21 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameArController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('يرجى إدخال الاسم بالعربي')),
-                  );
-                  return;
-                }
-
-                try {
-                  await dbHelper.addProductUnit(
-                    ProductUnit(
-                      unitName: nameArController.text,
-                      unitNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
-                      isActive: true,
-                    ),
-                  );
-                  Navigator.pop(ctx, true);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('خطأ: $e')),
-                  );
+                if (formKey.currentState!.validate()) {
+                  try {
+                    await dbHelper.addProductUnit(
+                      ProductUnit(
+                        unitNameAr: nameArController.text.trim(),
+                        unitNameEn: nameEnController.text.trim(),
+                        isActive: true,
+                      ),
+                    );
+                    Navigator.pop(ctx, true);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('خطأ: $e')),
+                    );
+                  }
                 }
               },
               child: const Text('حفظ'),
@@ -787,15 +874,19 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     if (result == true && mounted) {
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إضافة الوحدة بنجاح')),
+        const SnackBar(
+          content: Text('تم إضافة الوحدة بنجاح'),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
 
   /// عرض dialog لتعديل وحدة
   Future<void> _showEditUnitDialog(ProductUnit unit) async {
-    final nameArController = TextEditingController(text: unit.unitName);
-    final nameEnController = TextEditingController(text: unit.unitNameEn ?? '');
+    final nameArController = TextEditingController(text: unit.unitNameAr);
+    final nameEnController = TextEditingController(text: unit.unitNameEn);
+    final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
@@ -808,27 +899,42 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
               Text('تعديل الوحدة'),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameArController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالعربي *',
-                  prefixIcon: Icon(Icons.text_fields),
-                  border: OutlineInputBorder(),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameArController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالعربي *',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالعربي';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: AppConstants.spacingMd),
-              TextField(
-                controller: nameEnController,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم بالإنجليزي *',
-                  prefixIcon: Icon(Icons.text_fields),
-                  border: OutlineInputBorder(),
+                const SizedBox(height: AppConstants.spacingMd),
+                TextFormField(
+                  controller: nameEnController,
+                  decoration: const InputDecoration(
+                    labelText: 'الاسم بالإنجليزي *',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'يرجى إدخال الاسم بالإنجليزي';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -837,25 +943,20 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameArController.text.isEmpty || nameEnController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('يرجى إدخال جميع الحقول المطلوبة')),
-                  );
-                  return;
-                }
-
-                try {
-                  await dbHelper.editProductUnit(
-                    unit.copyWith(
-                      unitName: nameArController.text,
-                      unitNameEn: nameEnController.text.isNotEmpty ? nameEnController.text : null,
-                    ),
-                  );
-                  Navigator.pop(ctx, true);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('خطأ: $e')),
-                  );
+                if (formKey.currentState!.validate()) {
+                  try {
+                    await dbHelper.editProductUnit(
+                      unit.copyWith(
+                        unitNameAr: nameArController.text.trim(),
+                        unitNameEn: nameEnController.text.trim(),
+                      ),
+                    );
+                    Navigator.pop(ctx, true);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('خطأ: $e')),
+                    );
+                  }
                 }
               },
               child: const Text('حفظ'),
@@ -868,7 +969,10 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     if (result == true && mounted) {
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تعديل الوحدة بنجاح')),
+        const SnackBar(
+          content: Text('تم تعديل الوحدة بنجاح'),
+          backgroundColor: AppColors.success,
+        ),
       );
     }
   }
@@ -883,35 +987,73 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(unit.isActive ? 'تم تعطيل الوحدة' : 'تم تفعيل الوحدة'),
+          backgroundColor: AppColors.success,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ: $e')),
+        SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.error),
       );
     }
   }
 
-  // ============================================================
-  // 🛠️ دوال مساعدة
-  // ============================================================
+  /// حذف وحدة نهائياً (مع التحقق من عدم وجود منتجات مرتبطة)
+  Future<void> _deleteUnitPermanently(ProductUnit unit) async {
+    final canDelete = await dbHelper.canDeleteUnit(unit.unitID!);
 
-  /// الحصول على الأيقونة من اسمها
-  /// ← Hint: يحول اسم الأيقونة (String) إلى IconData
-  IconData _getIconFromName(String? iconName) {
-    switch (iconName) {
-      case 'shopping_bag':
-        return Icons.shopping_bag;
-      case 'devices':
-        return Icons.devices;
-      case 'checkroom':
-        return Icons.checkroom;
-      case 'restaurant':
-        return Icons.restaurant;
-      case 'build':
-        return Icons.build;
-      default:
-        return Icons.category;
+    if (!canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('لا يمكن حذف الوحدة لوجود منتجات تستخدمها. قم بتغيير وحدة المنتجات أولاً.'),
+          backgroundColor: AppColors.warning,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف الوحدة "${unit.unitNameAr}" نهائياً؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final db = await dbHelper.database;
+      await db.delete(
+        'TB_ProductUnit',
+        where: 'UnitID = ?',
+        whereArgs: [unit.unitID],
+      );
+
+      _reloadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم حذف الوحدة نهائياً'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.error),
+      );
     }
   }
 }

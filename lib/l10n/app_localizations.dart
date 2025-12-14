@@ -1493,7 +1493,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountingProgram.
   ///
   /// In en, this message translates to:
-  /// **'Accounting Program'**
+  /// **'Accountants touch'**
   String get accountingProgram;
 
   /// No description provided for @invalidCredentials.
@@ -5935,6 +5935,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loan Adjustment'**
   String get editAdvance;
+
+  /// No description provided for @subscriptionmanagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Management'**
+  String get subscriptionmanagement;
+
+  /// No description provided for @activationcodegenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation Code Generator'**
+  String get activationcodegenerator;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
 }
 
 class _AppLocalizationsDelegate

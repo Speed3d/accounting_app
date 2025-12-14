@@ -26,7 +26,7 @@ class NewSaleScreen extends StatefulWidget {
 }
 
 class _NewSaleScreenState extends State<NewSaleScreen> {
-  final _dbHelper = DatabaseHelper.instance;
+    final _dbHelper = DatabaseHelper.instance;
 
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
@@ -41,7 +41,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   // ← Hint: متغير لحفظ تاريخ البيع المختار
   DateTime _selectedSaleDate = DateTime.now();
 
-  // ← فلتر التصنيفات
+  // ✅ فلتر التصنيفات (النسخة المبسطة)
+  // ← Hint: تحميل التصنيفات مرة واحدة عند التهيئة
   List<ProductCategory> _categories = [];
   ProductCategory? _selectedCategory; // null = الكل
   
@@ -49,19 +50,22 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   void initState() {
     super.initState();
     _loadProducts();
-    _loadCategories();
+    _loadCategories();  // ← Hint: تحميل التصنيفات
   }
+
 
   /// ← Hint: تحميل التصنيفات للفلتر
   Future<void> _loadCategories() async {
-    try {
+        try {
       final categories = await _dbHelper.getProductCategories();
       if (mounted) {
         setState(() => _categories = categories);
       }
     } catch (e) {
-      // في حال حدوث خطأ، نتجاهله ونبقي القائمة فارغة
+      debugPrint('❌ خطأ في تحميل التصنيفات: $e');
+      // ← Hint: في حال حدوث خطأ، نتجاهله ونبقي القائمة فارغة
     }
+
   }
   
   @override
@@ -99,11 +103,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
   
   void _filterProducts(String query) {
-    setState(() {
-      // تطبيق فلترة البحث
+        setState(() {
+      // ← Hint: البدء بكل المنتجات
       List<Product> result = _allProducts;
 
-      // فلترة حسب نص البحث
+      // 1️⃣ فلترة حسب نص البحث
       if (query.isNotEmpty) {
         result = result.where((product) {
           final nameLower = product.productName.toLowerCase();
@@ -112,13 +116,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         }).toList();
       }
 
-      // فلترة حسب التصنيف المحدد
+      // 2️⃣ فلترة حسب التصنيف المحدد
+      // ← Hint: إذا لم يكن هناك تصنيف محدد (null)، نعرض الكل
       if (_selectedCategory != null) {
-        result = result.where((product) => product.categoryID == _selectedCategory!.categoryID).toList();
+        result = result.where((product) {
+          return product.categoryID == _selectedCategory!.categoryID;
+        }).toList();
       }
 
       _filteredProducts = result;
     });
+
   }
   
   Future<void> _scanBarcodeAndAddToCart() async {
@@ -365,11 +373,20 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     }
   }
 
-  // ============= شريط فلتر التصنيفات =============
+  // ============================================================================
+  // 🎨 شريط فلتر التصنيفات (النسخة المبسطة والذكية)
+  // ============================================================================
+  /// ← Hint: يعرض زر "الكل" + أزرار التصنيفات
+  /// ← Hint: الأسماء تتغير تلقائياً حسب اللغة (عربي/إنجليزي)
+  /// ← Hint: بدون أيقونات أو ألوان معقدة
   Widget _buildCategoryFilter(AppLocalizations l10n) {
+        // ← Hint: إذا لم تكن هناك تصنيفات، لا نعرض شيئاً
     if (_categories.isEmpty) {
-      return const SizedBox.shrink(); // لا تعرض شيئاً إذا لم تكن هناك تصنيفات
+      return const SizedBox.shrink();
     }
+
+    // ← Hint: الحصول على كود اللغة الحالية
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return Container(
       height: 60,
@@ -378,7 +395,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          // زر "الكل"
+          // ============= زر "الكل" =============
+          // ← Hint: عند اختياره، يتم عرض جميع المنتجات
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: FilterChip(
@@ -396,13 +414,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               checkmarkColor: AppColors.primaryContainer,
             ),
           ),
-          // أزرار التصنيفات
+          
+          // ============= أزرار التصنيفات =============
+          // ← Hint: كل تصنيف له زر خاص به
+          // ← Hint: الاسم يتغير تلقائياً حسب اللغة
           ..._categories.map((category) {
             final isSelected = _selectedCategory?.categoryID == category.categoryID;
+            
             return Padding(
               padding: const EdgeInsets.only(left: 8),
               child: FilterChip(
-                label: Text(category.categoryNameEn ?? category.categoryName),
+                // ← Hint: عرض الاسم حسب اللغة الحالية
+                label: Text(category.getLocalizedName(languageCode)),
                 selected: isSelected,
                 onSelected: (selected) {
                   setState(() {
@@ -412,19 +435,19 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                 },
                 selectedColor: AppColors.primaryContainer.withOpacity(0.2),
                 checkmarkColor: AppColors.primaryContainer,
-                avatar: category.icon != null
-                    ? Icon(
-                        _getIconFromName(category.icon!),
-                        size: 18,
-                        color: isSelected ? AppColors.primaryContainer : null,
-                      )
-                    : null,
+                // ← Hint: أيقونة بسيطة موحدة (اختياري)
+                avatar: Icon(
+                  Icons.category,
+                  size: 18,
+                  color: isSelected ? AppColors.primaryContainer : null,
+                ),
               ),
             );
           }).toList(),
         ],
       ),
     );
+  
   }
 
   // ← Hint: تحويل اسم الأيقونة إلى IconData
@@ -654,7 +677,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     if (_filteredProducts.isEmpty) {
       return Column(
         children: [
-          // شريط فلتر التصنيفات
+          // ✅ شريط فلتر التصنيفات
           _buildCategoryFilter(l10n),
 
           // رسالة لا توجد نتائج
@@ -671,7 +694,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
     return Column(
       children: [
-        // شريط فلتر التصنيفات
+        // ✅ شريط فلتر التصنيفات
         _buildCategoryFilter(l10n),
 
         // قائمة المنتجات المفلترة

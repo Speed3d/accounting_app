@@ -785,144 +785,129 @@ class ActivityLog {
 // ============================================================================
 // 🆕 v4: نماذج التصنيفات والوحدات
 // ============================================================================
-
-// --- نموذج تصنيف المنتجات ---
-// Hint: يمثل جدول TB_Product_Categories
-// Hint: يستخدم لتنظيم المنتجات في فئات (إلكترونيات، أثاث، ملابس، إلخ)
+// ============================================================================
+// 🎨 نموذج تصنيف المنتجات (النسخة المبسطة)
+// ============================================================================
+// ← Hint: يمثل جدول TB_ProductCategory
+// ← Hint: نظام بسيط: اسم عربي + اسم إنجليزي فقط
+// ← Hint: لا ألوان، لا أيقونات، لا تعقيدات
 class ProductCategory {
   final int? categoryID;
-  final String categoryName;
-  final String? categoryNameEn;
-  final String? description;
-  final String? icon;           // Hint: اسم أيقونة Material Icons
-  final String? colorCode;      // Hint: كود اللون بصيغة HEX (مثل #2196F3)
+  final String categoryNameAr;
+  final String categoryNameEn;
   final bool isActive;
-  final int displayOrder;       // Hint: ترتيب العرض (الأصغر يظهر أولاً)
   final String? createdAt;
 
   ProductCategory({
     this.categoryID,
-    required this.categoryName,
-    this.categoryNameEn,
-    this.description,
-    this.icon,
-    this.colorCode,
+    required this.categoryNameAr,
+    required this.categoryNameEn,
     this.isActive = true,
-    this.displayOrder = 0,
     this.createdAt,
   });
 
-  // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+
+  // ← Hint: دالة للحصول على الاسم حسب اللغة الحالية
+  // ← Hint: تستخدم في Dropdown و FilterChip
+  String getLocalizedName(String languageCode) {
+    return languageCode == 'ar' ? categoryNameAr : categoryNameEn;
+  }
+
+  // ← Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
   Map<String, dynamic> toMap() => {
     'CategoryID': categoryID,
-    'CategoryName': categoryName,
+    'CategoryNameAr': categoryNameAr,
     'CategoryNameEn': categoryNameEn,
-    'Description': description,
-    'Icon': icon,
-    'ColorCode': colorCode,
     'IsActive': isActive ? 1 : 0,
-    'DisplayOrder': displayOrder,
     'CreatedAt': createdAt,
   };
 
-  // Hint: إنشاء كائن ProductCategory من Map (من قاعدة البيانات)
+  // ← Hint: إنشاء كائن ProductCategory من Map (من قاعدة البيانات)
   factory ProductCategory.fromMap(Map<String, dynamic> map) => ProductCategory(
-    categoryID: map['CategoryID'],
-    categoryName: map['CategoryName'],
-    categoryNameEn: map['CategoryNameEn'],
-    description: map['Description'],
-    icon: map['Icon'],
-    colorCode: map['ColorCode'],
-    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
-    displayOrder: map['DisplayOrder'] ?? 0,
-    createdAt: map['CreatedAt'],
+    categoryID: map['CategoryID'] as int?,
+    categoryNameAr: map['CategoryNameAr'] as String? ?? 'غير محدد', // ← Hint: قيمة افتراضية
+    categoryNameEn: map['CategoryNameEn'] as String? ?? 'Undefined',  // ← Hint: قيمة افتراضية
+    isActive: (map['IsActive'] as int?) == 1,
+    createdAt: map['CreatedAt'] as String?,
   );
 
-  // Hint: نسخة معدلة من الكائن (copyWith pattern)
-  // Hint: مفيد عند تحديث بعض الحقول فقط دون تغيير الباقي
+  // ← Hint: نسخة معدلة من الكائن (copyWith pattern)
+  // ← Hint: مفيد عند التعديل - نغير فقط ما نريد
   ProductCategory copyWith({
     int? categoryID,
-    String? categoryName,
+    String? categoryNameAr,
     String? categoryNameEn,
-    String? description,
-    String? icon,
-    String? colorCode,
     bool? isActive,
-    int? displayOrder,
     String? createdAt,
   }) => ProductCategory(
     categoryID: categoryID ?? this.categoryID,
-    categoryName: categoryName ?? this.categoryName,
+    categoryNameAr: categoryNameAr ?? this.categoryNameAr,
     categoryNameEn: categoryNameEn ?? this.categoryNameEn,
-    description: description ?? this.description,
-    icon: icon ?? this.icon,
-    colorCode: colorCode ?? this.colorCode,
     isActive: isActive ?? this.isActive,
-    displayOrder: displayOrder ?? this.displayOrder,
     createdAt: createdAt ?? this.createdAt,
   );
+  
+
 }
 
-// --- نموذج وحدة القياس ---
-// Hint: يمثل جدول TB_Product_Units
-// Hint: يستخدم لتحديد وحدة قياس المنتج (حبة، كيلو، لتر، إلخ)
+// ============================================================================
+// 📏 نموذج وحدة القياس (النسخة المبسطة)
+// ============================================================================
+// ← Hint: يمثل جدول TB_ProductUnit
+// ← Hint: نظام بسيط: اسم عربي + اسم إنجليزي فقط
 class ProductUnit {
   final int? unitID;
-  final String unitName;
-  final String? unitNameEn;
-  final String? unitSymbol;     // Hint: رمز الوحدة (كغ، ل، م، إلخ)
+  final String unitNameAr;
+  final String unitNameEn;
   final bool isActive;
-  final int displayOrder;       // Hint: ترتيب العرض (الأصغر يظهر أولاً)
-  final String? createdAt;
+  final String? createdAt;         // ← Hint: تاريخ الإضافة (تلقائي)
 
   ProductUnit({
     this.unitID,
-    required this.unitName,
-    this.unitNameEn,
-    this.unitSymbol,
+    required this.unitNameAr,
+    required this.unitNameEn,
     this.isActive = true,
-    this.displayOrder = 0,
     this.createdAt,
   });
 
-  // Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  // ← Hint: دالة للحصول على الاسم حسب اللغة الحالية
+  String getLocalizedName(String languageCode) {
+    return languageCode == 'ar' ? unitNameAr : unitNameEn;
+  }
+
+  // ← Hint: تحويل كائن ProductUnit إلى Map (للحفظ في قاعدة البيانات)
   Map<String, dynamic> toMap() => {
     'UnitID': unitID,
-    'UnitName': unitName,
+    'UnitNameAr': unitNameAr,
     'UnitNameEn': unitNameEn,
-    'UnitSymbol': unitSymbol,
     'IsActive': isActive ? 1 : 0,
-    'DisplayOrder': displayOrder,
     'CreatedAt': createdAt,
   };
 
-  // Hint: إنشاء كائن ProductUnit من Map (من قاعدة البيانات)
+  // ← Hint: إنشاء كائن ProductUnit من Map (من قاعدة البيانات)
+  // ✅ إصلاح: التعامل مع القيم الـ null
   factory ProductUnit.fromMap(Map<String, dynamic> map) => ProductUnit(
-    unitID: map['UnitID'],
-    unitName: map['UnitName'],
-    unitNameEn: map['UnitNameEn'],
-    unitSymbol: map['UnitSymbol'],
-    isActive: map['IsActive'] == null ? true : map['IsActive'] == 1,
-    displayOrder: map['DisplayOrder'] ?? 0,
-    createdAt: map['CreatedAt'],
+    unitID: map['UnitID'] as int?,
+    unitNameAr: map['UnitNameAr'] as String? ?? 'غير محدد', // ← Hint: قيمة افتراضية
+    unitNameEn: map['UnitNameEn'] as String? ?? 'Undefined',  // ← Hint: قيمة افتراضية
+    isActive: (map['IsActive'] as int?) == 1,
+    createdAt: map['CreatedAt'] as String?,
   );
 
-  // Hint: نسخة معدلة من الكائن (copyWith pattern)
+  // ← Hint: نسخة معدلة من الكائن (copyWith pattern)
   ProductUnit copyWith({
     int? unitID,
-    String? unitName,
+    String? unitNameAr,
     String? unitNameEn,
-    String? unitSymbol,
     bool? isActive,
-    int? displayOrder,
     String? createdAt,
   }) => ProductUnit(
     unitID: unitID ?? this.unitID,
-    unitName: unitName ?? this.unitName,
+    unitNameAr: unitNameAr ?? this.unitNameAr,
     unitNameEn: unitNameEn ?? this.unitNameEn,
-    unitSymbol: unitSymbol ?? this.unitSymbol,
     isActive: isActive ?? this.isActive,
-    displayOrder: displayOrder ?? this.displayOrder,
     createdAt: createdAt ?? this.createdAt,
   );
 }
+
+

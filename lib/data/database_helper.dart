@@ -51,6 +51,10 @@ class DatabaseHelper {
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+
+    // ✅ إصلاح: تنظيف البيانات القديمة (مرة واحدة فقط)
+    await cleanupCategoriesAndUnits();
+
     return _database!;
   }
 
@@ -382,32 +386,41 @@ class DatabaseHelper {
         )
       ''');
 
-    // ← Hint: جدول الوحدات (TB_ProductUnit)
-    // ← Hint: يحتوي على وحدات القياس المختلفة (قطعة، كيلو، متر، إلخ)
-    batch.execute('''
-      CREATE TABLE TB_ProductUnit (
-        UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
-        UnitName TEXT NOT NULL,
-        UnitNameAr TEXT NOT NULL,
-        IsActive INTEGER DEFAULT 1
-      )
-    ''');
+   // ============================================================================
+   // 🎨 جدول التصنيفات (النسخة المبسطة)
+   // ============================================================================
+   // ← Hint: فقط اسمين (عربي + إنجليزي) + IsActive + CreatedAt
+   // ← Hint: تم حذف: Icon, ColorCode, DisplayOrder, Description
+  batch.execute('''
+    CREATE TABLE IF NOT EXISTS TB_ProductCategory (
+      CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+      CategoryNameAr TEXT NOT NULL,
+      CategoryNameEn TEXT NOT NULL,
+      IsActive INTEGER DEFAULT 1,
+      CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  ''');
+  debugPrint('✅ تم إنشاء جدول TB_ProductCategory (النسخة المبسطة)');
 
-    // ← Hint: جدول التصنيفات (TB_ProductCategory)
-    // ← Hint: يحتوي على تصنيفات المنتجات (كهربائيات، ملابس، إلخ)
-    batch.execute('''
-      CREATE TABLE TB_ProductCategory (
-        CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-        CategoryName TEXT NOT NULL,
-        CategoryNameAr TEXT NOT NULL,
-        IconName TEXT,
-        ColorCode TEXT,
-        IsActive INTEGER DEFAULT 1
-      )
-    ''');
+   // ============================================================================
+  // 📏 جدول الوحدات (النسخة المبسطة)
+  // ============================================================================
+  // ← Hint: فقط اسمين (عربي + إنجليزي) + IsActive + CreatedAt
+  // ← Hint: تم حذف: UnitSymbol, DisplayOrder
+  batch.execute('''
+    CREATE TABLE IF NOT EXISTS TB_ProductUnit (
+      UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+      UnitNameAr TEXT NOT NULL,
+      UnitNameEn TEXT NOT NULL,
+      IsActive INTEGER DEFAULT 1,
+      CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  ''');
+  debugPrint('✅ تم إنشاء جدول TB_ProductUnit (النسخة المبسطة)');
 
-    // ← Hint: جدول المنتجات - محدث بإضافة UnitID و CategoryID
-    batch.execute('''
+
+  // ← Hint: جدول المنتجات - محدث بإضافة UnitID و CategoryID
+  batch.execute('''
     CREATE TABLE Store_Products (
     ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
     ProductName TEXT NOT NULL,
@@ -424,7 +437,7 @@ class DatabaseHelper {
     FOREIGN KEY (UnitID) REFERENCES TB_ProductUnit (UnitID),
     FOREIGN KEY (CategoryID) REFERENCES TB_ProductCategory (CategoryID)
     )
-    ''');
+  ''');
 
     batch.execute('''
       CREATE TABLE TB_Customer (
@@ -534,14 +547,46 @@ class DatabaseHelper {
       )
     ''');
 
+
+    batch.execute('''
+    CREATE TABLE SubscriptionCache (
+    ID INTEGER PRIMARY KEY,
+    Email TEXT,
+    Plan TEXT,
+    StartDate TEXT,
+    EndDate TEXT,
+    IsActive INTEGER,
+    MaxDevices INTEGER,
+    CurrentDeviceId TEXT,
+    CurrentDeviceName TEXT,
+    LastSyncAt TEXT,
+    OfflineDaysRemaining INTEGER,
+    LastOnlineCheck TEXT,
+    FeaturesJson TEXT,
+    Status TEXT,
+    UpdatedAt TEXT
+    )
+    ''');
+
     await batch.commit();
 
+    // // ============================================================================
+    // // ✅ إضافة البيانات الأولية للوحدات والتصنيفات
+    // // ============================================================================
+    // debugPrint('📦 [DatabaseHelper] إضافة البيانات الأولية للوحدات والتصنيفات...');
+    // await _insertDefaultUnitsAndCategories(db);
+    // debugPrint('✅ [DatabaseHelper] تم إضافة البيانات الأولية بنجاح');
+
+    // تم ايقافه يخص التصنيفات القديمة
+
     // ============================================================================
-    // ✅ إضافة البيانات الأولية للوحدات والتصنيفات
+    // ✅ إضافة البيانات الافتراضية البسيطة (2 تصنيف + 2 وحدة فقط)
     // ============================================================================
-    debugPrint('📦 [DatabaseHelper] إضافة البيانات الأولية للوحدات والتصنيفات...');
-    await _insertDefaultUnitsAndCategories(db);
-    debugPrint('✅ [DatabaseHelper] تم إضافة البيانات الأولية بنجاح');
+    // ← Hint: يتم تنفيذها مرة واحدة فقط عند أول تشغيل للتطبيق
+    // ← Hint: بعد ذلك المستخدم يضيف ما يحتاجه
+    debugPrint('📦 إضافة التصنيفات والوحدات الافتراضية...');
+    await _insertDefaultCategoriesAndUnits(db);
+    debugPrint('✅ تم إضافة البيانات الافتراضية بنجاح');
 
     // ============================================================================
     // 🔥 إضافة Database Indexes لتحسين الأداء
@@ -608,6 +653,17 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_date ON TB_Expenses(ExpenseDate)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON TB_Expenses(Category)');
 
+      // ← Hint: Indexes للتصنيفات والوحدات (بسيطة)
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_category_active ON TB_ProductCategory(IsActive)');
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_category_namear ON TB_ProductCategory(CategoryNameAr)');
+  
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_unit_active ON TB_ProductUnit(IsActive)');
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_unit_namear ON TB_ProductUnit(UnitNameAr)');
+
+  // ← Hint: Indexes للمنتجات (ربط مع التصنيفات والوحدات)
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_products_category ON Store_Products(CategoryID)');
+  await db.execute('CREATE INDEX IF NOT EXISTS idx_products_unit ON Store_Products(UnitID)');
+
     debugPrint('✅ [DatabaseHelper] تم إنشاء ${56} Database Index بنجاح');
 
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
@@ -642,6 +698,9 @@ class DatabaseHelper {
       debugPrint('✅ تم إضافة جدول TB_Employee_Bonuses بنجاح');
     }
 
+   ///////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////
+
     // 🆕 ترقية من الإصدار 2 إلى 3: النظام الجديد - Email Auth + Subscriptions
     if (oldVersion < 3) {
       debugPrint('📦 تطبيق Migration إلى v3 (النظام الجديد)...');
@@ -649,51 +708,61 @@ class DatabaseHelper {
       debugPrint('✅ تم تطبيق Migration إلى v3 بنجاح');
     }
 
-    // ✅ ترقية من الإصدار 3 إلى 4: نظام الوحدات والتصنيفات
-    if (oldVersion < 4) {
-      debugPrint('📦 تطبيق Migration إلى v4 (نظام الوحدات والتصنيفات)...');
+    ///////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////
 
-      // ← Hint: إنشاء جدول الوحدات
-      await db.execute('''
-        CREATE TABLE TB_ProductUnit (
-          UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
-          UnitName TEXT NOT NULL,
-          UnitNameAr TEXT NOT NULL,
-          IsActive INTEGER DEFAULT 1
-        )
-      ''');
-      debugPrint('✅ تم إنشاء جدول TB_ProductUnit');
+      // ✅ ترقية من الإصدار 3 إلى 4: نظام التصنيفات والوحدات المبسط
+  if (oldVersion < 4) {
+    debugPrint('📦 تطبيق Migration إلى v4 (نظام التصنيفات والوحدات المبسط)...');
 
-      // ← Hint: إنشاء جدول التصنيفات
-      await db.execute('''
-        CREATE TABLE TB_ProductCategory (
-          CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
-          CategoryName TEXT NOT NULL,
-          CategoryNameAr TEXT NOT NULL,
-          IconName TEXT,
-          ColorCode TEXT,
-          IsActive INTEGER DEFAULT 1
-        )
-      ''');
-      debugPrint('✅ تم إنشاء جدول TB_ProductCategory');
+    // ============================================================================
+    // ← Hint: إنشاء جدول التصنيفات (النسخة المبسطة)
+    // ============================================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS TB_ProductCategory (
+        CategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CategoryNameAr TEXT NOT NULL,
+        CategoryNameEn TEXT NOT NULL,
+        IsActive INTEGER DEFAULT 1,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+    debugPrint('✅ تم إنشاء جدول TB_ProductCategory');
 
-      // ← Hint: إضافة البيانات الأولية للوحدات والتصنيفات
-      await _insertDefaultUnitsAndCategories(db);
-      debugPrint('✅ تم إضافة البيانات الأولية');
+    // ============================================================================
+    // ← Hint: إنشاء جدول الوحدات (النسخة المبسطة)
+    // ============================================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS TB_ProductUnit (
+        UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+        UnitNameAr TEXT NOT NULL,
+        UnitNameEn TEXT NOT NULL,
+        IsActive INTEGER DEFAULT 1,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+    debugPrint('✅ تم إنشاء جدول TB_ProductUnit');
 
-      // ← Hint: إضافة أعمدة UnitID و CategoryID لجدول المنتجات
-      await db.execute('ALTER TABLE Store_Products ADD COLUMN UnitID INTEGER');
-      await db.execute('ALTER TABLE Store_Products ADD COLUMN CategoryID INTEGER');
-      debugPrint('✅ تم إضافة أعمدة UnitID و CategoryID');
+    // ← Hint: إضافة البيانات الافتراضية البسيطة
+    await _insertDefaultCategoriesAndUnits(db);
+    debugPrint('✅ تم إضافة البيانات الافتراضية');
 
-      // ← Hint: تحديث المنتجات الموجودة لتأخذ الوحدة والتصنيف الافتراضي
-      // ← Hint: الوحدة الافتراضية = "قطعة" (UnitID = 1)
-      // ← Hint: التصنيف الافتراضي = "عام" (CategoryID = 8)
-      await db.execute('UPDATE Store_Products SET UnitID = 1, CategoryID = 8 WHERE UnitID IS NULL');
-      debugPrint('✅ تم تحديث المنتجات الموجودة');
+    // ← Hint: إضافة أعمدة UnitID و CategoryID لجدول المنتجات
+    await db.execute('ALTER TABLE Store_Products ADD COLUMN UnitID INTEGER');
+    await db.execute('ALTER TABLE Store_Products ADD COLUMN CategoryID INTEGER');
+    debugPrint('✅ تم إضافة أعمدة UnitID و CategoryID');
 
-      debugPrint('✅ تم تطبيق Migration إلى v4 بنجاح');
-    }
+    // ← Hint: تحديث المنتجات الموجودة لتأخذ الوحدة والتصنيف الافتراضي
+    // ← Hint: الوحدة الافتراضية = "قطعة" (UnitID = 1)
+    // ← Hint: التصنيف الافتراضي = "عام" (CategoryID = 1)
+    await db.execute('UPDATE Store_Products SET UnitID = 1, CategoryID = 1 WHERE UnitID IS NULL');
+    debugPrint('✅ تم تحديث المنتجات الموجودة');
+
+    debugPrint('✅ تم تطبيق Migration إلى v4 بنجاح');
+  }
+
+    ///////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////
 
     // ✅ ترقية من الإصدار 4 إلى 5: نظام تسديدات السلف
     // ← Hint: إضافة جدول TB_Advance_Repayments لتسجيل عمليات التسديد
@@ -702,6 +771,7 @@ class DatabaseHelper {
       await DatabaseMigrations.migrateToV5(db);
       debugPrint('✅ تم تطبيق Migration إلى v5 بنجاح');
     }
+
   }
 
    ///////////////////////////////////////////////////////////////
@@ -724,52 +794,52 @@ class DatabaseHelper {
     }
   }
 
-  // ============================================================================
-  // ← Hint: دالة مساعدة لإضافة البيانات الأولية للوحدات والتصنيفات
-  // ← Hint: يتم استدعاؤها عند إنشاء قاعدة البيانات لأول مرة
-  // ============================================================================
-  Future<void> _insertDefaultUnitsAndCategories(Database db) async {
-    // ← Hint: الوحدات الافتراضية (7 وحدات)
-    final defaultUnits = [
-      {'UnitName': 'Piece', 'UnitNameAr': 'قطعة', 'IsActive': 1},
-      {'UnitName': 'Set', 'UnitNameAr': 'سيت', 'IsActive': 1},
-      {'UnitName': 'Dozen', 'UnitNameAr': 'درزن', 'IsActive': 1},
-      {'UnitName': 'Kilo', 'UnitNameAr': 'كيلو', 'IsActive': 1},
-      {'UnitName': 'Carton', 'UnitNameAr': 'كارتون', 'IsActive': 1},
-      {'UnitName': 'Meter', 'UnitNameAr': 'متر', 'IsActive': 1},
-      {'UnitName': 'Liter', 'UnitNameAr': 'لتر', 'IsActive': 1},
-    ];
+  // // ============================================================================
+  // // ← Hint: دالة مساعدة لإضافة البيانات الأولية للوحدات والتصنيفات
+  // // ← Hint: يتم استدعاؤها عند إنشاء قاعدة البيانات لأول مرة
+  // // ============================================================================
+  // Future<void> _insertDefaultUnitsAndCategories(Database db) async {
+  //   // ← Hint: الوحدات الافتراضية (7 وحدات)
+  //   final defaultUnits = [
+  //     {'UnitName': 'Piece', 'UnitNameAr': 'قطعة', 'IsActive': 1},
+  //     {'UnitName': 'Set', 'UnitNameAr': 'سيت', 'IsActive': 1},
+  //     {'UnitName': 'Dozen', 'UnitNameAr': 'درزن', 'IsActive': 1},
+  //     {'UnitName': 'Kilo', 'UnitNameAr': 'كيلو', 'IsActive': 1},
+  //     {'UnitName': 'Carton', 'UnitNameAr': 'كارتون', 'IsActive': 1},
+  //     {'UnitName': 'Meter', 'UnitNameAr': 'متر', 'IsActive': 1},
+  //     {'UnitName': 'Liter', 'UnitNameAr': 'لتر', 'IsActive': 1},
+  //   ];
 
-    // ← Hint: التصنيفات الافتراضية (8 تصنيفات)
-    final defaultCategories = [
-      {'CategoryName': 'Electricals', 'CategoryNameAr': 'كهربائيات', 'IconName': 'bolt', 'ColorCode': '#FFA726', 'IsActive': 1},
-      {'CategoryName': 'Furniture', 'CategoryNameAr': 'أثاث', 'IconName': 'chair', 'ColorCode': '#8D6E63', 'IsActive': 1},
-      {'CategoryName': 'Clothes', 'CategoryNameAr': 'ملابس', 'IconName': 'checkroom', 'ColorCode': '#EC407A', 'IsActive': 1},
-      {'CategoryName': 'Home Supplies', 'CategoryNameAr': 'مستلزمات منزلية', 'IconName': 'home', 'ColorCode': '#66BB6A', 'IsActive': 1},
-      {'CategoryName': 'Accessories', 'CategoryNameAr': 'إكسسوارات', 'IconName': 'watch', 'ColorCode': '#AB47BC', 'IsActive': 1},
-      {'CategoryName': 'Electronics', 'CategoryNameAr': 'إلكترونيات', 'IconName': 'devices', 'ColorCode': '#42A5F5', 'IsActive': 1},
-      {'CategoryName': 'Office Supplies', 'CategoryNameAr': 'أدوات مكتبية', 'IconName': 'business_center', 'ColorCode': '#78909C', 'IsActive': 1},
-      {'CategoryName': 'General', 'CategoryNameAr': 'عام', 'IconName': 'category', 'ColorCode': '#BDBDBD', 'IsActive': 1},
-    ];
+  //   // ← Hint: التصنيفات الافتراضية (8 تصنيفات)
+  //   final defaultCategories = [
+  //     {'CategoryName': 'Electricals', 'CategoryNameAr': 'كهربائيات', 'IconName': 'bolt', 'ColorCode': '#FFA726', 'IsActive': 1},
+  //     {'CategoryName': 'Furniture', 'CategoryNameAr': 'أثاث', 'IconName': 'chair', 'ColorCode': '#8D6E63', 'IsActive': 1},
+  //     {'CategoryName': 'Clothes', 'CategoryNameAr': 'ملابس', 'IconName': 'checkroom', 'ColorCode': '#EC407A', 'IsActive': 1},
+  //     {'CategoryName': 'Home Supplies', 'CategoryNameAr': 'مستلزمات منزلية', 'IconName': 'home', 'ColorCode': '#66BB6A', 'IsActive': 1},
+  //     {'CategoryName': 'Accessories', 'CategoryNameAr': 'إكسسوارات', 'IconName': 'watch', 'ColorCode': '#AB47BC', 'IsActive': 1},
+  //     {'CategoryName': 'Electronics', 'CategoryNameAr': 'إلكترونيات', 'IconName': 'devices', 'ColorCode': '#42A5F5', 'IsActive': 1},
+  //     {'CategoryName': 'Office Supplies', 'CategoryNameAr': 'أدوات مكتبية', 'IconName': 'business_center', 'ColorCode': '#78909C', 'IsActive': 1},
+  //     {'CategoryName': 'General', 'CategoryNameAr': 'عام', 'IconName': 'category', 'ColorCode': '#BDBDBD', 'IsActive': 1},
+  //   ];
 
-    // ← Hint: إضافة الوحدات
-    for (var unit in defaultUnits) {
-      await db.insert(
-        'TB_ProductUnit',
-        unit,
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
-    }
+  //   // ← Hint: إضافة الوحدات
+  //   for (var unit in defaultUnits) {
+  //     await db.insert(
+  //       'TB_ProductUnit',
+  //       unit,
+  //       conflictAlgorithm: ConflictAlgorithm.ignore,
+  //     );
+  //   }
 
-    // ← Hint: إضافة التصنيفات
-    for (var category in defaultCategories) {
-      await db.insert(
-        'TB_ProductCategory',
-        category,
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
-    }
-  }
+  //   // ← Hint: إضافة التصنيفات
+  //   for (var category in defaultCategories) {
+  //     await db.insert(
+  //       'TB_ProductCategory',
+  //       category,
+  //       conflictAlgorithm: ConflictAlgorithm.ignore,
+  //     );
+  //   }
+  // }
 
    ///////////////////////////////////////////////////////////////
    ///////////////////////////////////////////////////////////////
@@ -3208,35 +3278,33 @@ Future<void> deleteBonus(int bonusID) async {
 }
 
 // ============================================================================
-// ✅ دوال الوحدات (Product Units)
+// ✅ دوال الوحدات (Product Units) - النسخة المبسطة
 // ============================================================================
 
 /// جلب جميع الوحدات النشطة
-///
 /// ← Hint: تستخدم في Dropdown اختيار الوحدة عند إضافة/تعديل منتج
-Future<List<models.ProductUnit>> getProductUnits({bool activeOnly = true}) async {
+/// ← Hint: ترتيب أبجدي حسب الاسم العربي
+Future<List<ProductUnit>> getProductUnits({bool activeOnly = true}) async {
   final db = await instance.database;
   final List<Map<String, dynamic>> maps = await db.query(
     'TB_ProductUnit',
     where: activeOnly ? 'IsActive = ?' : null,
     whereArgs: activeOnly ? [1] : null,
-    orderBy: 'UnitNameAr ASC',
+    orderBy: 'UnitNameAr ASC',  // ← Hint: ترتيب أبجدي عربي
   );
-  return maps.map((map) => models.ProductUnit.fromMap(map)).toList();
+  return maps.map((map) => ProductUnit.fromMap(map)).toList();
 }
 
 /// إضافة وحدة جديدة
-///
-/// ← Hint: تستخدم في صفحة إعدادات المنتجات لإضافة وحدات جديدة
-Future<int> addProductUnit(models.ProductUnit unit) async {
+/// ← Hint: تستخدم في صفحة إدارة الوحدات لإضافة وحدات مخصصة
+Future<int> addProductUnit(ProductUnit unit) async {
   final db = await instance.database;
   return await db.insert('TB_ProductUnit', unit.toMap());
 }
 
 /// تعديل وحدة موجودة
-///
-/// ← Hint: تستخدم لتعديل بيانات وحدة موجودة
-Future<int> editProductUnit(models.ProductUnit unit) async {
+/// ← Hint: تستخدم لتعديل اسم الوحدة (عربي أو إنجليزي)
+Future<int> editProductUnit(ProductUnit unit) async {
   final db = await instance.database;
   return await db.update(
     'TB_ProductUnit',
@@ -3246,8 +3314,7 @@ Future<int> editProductUnit(models.ProductUnit unit) async {
   );
 }
 
-/// حذف (أرشفة) وحدة
-///
+/// حذف (تعطيل) وحدة
 /// ← Hint: في الواقع نقوم بتعطيل الوحدة (IsActive = 0) بدلاً من حذفها نهائياً
 Future<int> deleteProductUnit(int unitID) async {
   final db = await instance.database;
@@ -3259,36 +3326,46 @@ Future<int> deleteProductUnit(int unitID) async {
   );
 }
 
+/// التحقق من إمكانية حذف وحدة
+/// ← Hint: نتحقق من عدم وجود منتجات نشطة تستخدم هذه الوحدة
+Future<bool> canDeleteUnit(int unitID) async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT COUNT(*) as count FROM Store_Products WHERE UnitID = ? AND IsActive = 1',
+    [unitID],
+  );
+  return (result.first['count'] as int) == 0;
+}
+
+
 // ============================================================================
-// ✅ دوال التصنيفات (Product Categories)
+// ✅ دوال التصنيفات (Product Categories) - النسخة المبسطة
 // ============================================================================
 
 /// جلب جميع التصنيفات النشطة
-///
 /// ← Hint: تستخدم في Dropdown اختيار التصنيف عند إضافة/تعديل منتج
-Future<List<models.ProductCategory>> getProductCategories({bool activeOnly = true}) async {
+/// ← Hint: ترتيب أبجدي حسب الاسم العربي
+Future<List<ProductCategory>> getProductCategories({bool activeOnly = true}) async {
   final db = await instance.database;
   final List<Map<String, dynamic>> maps = await db.query(
     'TB_ProductCategory',
     where: activeOnly ? 'IsActive = ?' : null,
     whereArgs: activeOnly ? [1] : null,
-    orderBy: 'CategoryNameAr ASC',
+    orderBy: 'CategoryNameAr ASC',  // ← Hint: ترتيب أبجدي عربي
   );
-  return maps.map((map) => models.ProductCategory.fromMap(map)).toList();
+  return maps.map((map) => ProductCategory.fromMap(map)).toList();
 }
 
 /// إضافة تصنيف جديد
-///
-/// ← Hint: تستخدم في صفحة إعدادات المنتجات لإضافة تصنيفات جديدة
-Future<int> addProductCategory(models.ProductCategory category) async {
+/// ← Hint: تستخدم في صفحة إدارة التصنيفات لإضافة تصنيفات مخصصة
+Future<int> addProductCategory(ProductCategory category) async {
   final db = await instance.database;
   return await db.insert('TB_ProductCategory', category.toMap());
 }
 
 /// تعديل تصنيف موجود
-///
-/// ← Hint: تستخدم لتعديل بيانات تصنيف موجود
-Future<int> editProductCategory(models.ProductCategory category) async {
+/// ← Hint: تستخدم لتعديل اسم التصنيف (عربي أو إنجليزي)
+Future<int> editProductCategory(ProductCategory category) async {
   final db = await instance.database;
   return await db.update(
     'TB_ProductCategory',
@@ -3298,9 +3375,9 @@ Future<int> editProductCategory(models.ProductCategory category) async {
   );
 }
 
-/// حذف (أرشفة) تصنيف
-///
+/// حذف (تعطيل) تصنيف
 /// ← Hint: في الواقع نقوم بتعطيل التصنيف (IsActive = 0) بدلاً من حذفه نهائياً
+/// ← Hint: هذا يحافظ على سلامة البيانات المرتبطة
 Future<int> deleteProductCategory(int categoryID) async {
   final db = await instance.database;
   return await db.update(
@@ -3311,10 +3388,21 @@ Future<int> deleteProductCategory(int categoryID) async {
   );
 }
 
+/// التحقق من إمكانية حذف تصنيف
+/// ← Hint: نتحقق من عدم وجود منتجات نشطة مرتبطة بهذا التصنيف
+/// ← Hint: إذا كانت هناك منتجات، يجب تغيير تصنيفها أولاً
+Future<bool> canDeleteCategory(int categoryID) async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT COUNT(*) as count FROM Store_Products WHERE CategoryID = ? AND IsActive = 1',
+    [categoryID],
+  );
+  return (result.first['count'] as int) == 0;
+}
+
 /// جلب منتجات حسب التصنيف
-///
 /// ← Hint: تستخدم في صفحة اختيار المنتجات للفلترة حسب التصنيف
-Future<List<models.Product>> getProductsByCategory(int categoryID) async {
+Future<List<Product>> getProductsByCategory(int categoryID) async {
   final db = await instance.database;
   final List<Map<String, dynamic>> maps = await db.rawQuery('''
     SELECT
@@ -3330,10 +3418,132 @@ Future<List<models.Product>> getProductsByCategory(int categoryID) async {
     ORDER BY p.ProductName ASC
   ''', [categoryID]);
 
-  return maps.map((map) => models.Product.fromMap(map)).toList();
+  return maps.map((map) => Product.fromMap(map)).toList();
 }
 
+// ============================================================================
+// 🆕 دالة مساعدة جديدة: إضافة التصنيفات والوحدات الافتراضية
+// ============================================================================
+// ← Hint: يتم استدعاؤها مرة واحدة فقط عند إنشاء قاعدة البيانات لأول مرة
+// ← Hint: تضيف 2 تصنيف و 2 وحدة كأمثلة بسيطة
+Future<void> _insertDefaultCategoriesAndUnits(Database db) async {
+  // ============================================================================
+  // 📦 التصنيفات الافتراضية (2 فقط)
+  // ============================================================================
+  // ← Hint: تصنيفان أساسيان يمكن للمستخدم البدء بهما
+  // ← Hint: المستخدم يستطيع إضافة المزيد من manage_categories_units_screen
+  final defaultCategories = [
+    {
+      'CategoryNameAr': 'عام',
+      'CategoryNameEn': 'General',
+      'IsActive': 1,
+    },
+    {
+      'CategoryNameAr': 'أخرى',
+      'CategoryNameEn': 'Other',
+      'IsActive': 1,
+    },
+  ];
 
+  // ← Hint: إدراج التصنيفات مع تجاهل التكرار (إن وجد)
+  for (var category in defaultCategories) {
+    await db.insert(
+      'TB_ProductCategory',
+      category,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+  debugPrint('✅ تم إضافة ${defaultCategories.length} تصنيف افتراضي');
+
+  // ============================================================================
+  // 📏 الوحدات الافتراضية (2 فقط)
+  // ============================================================================
+  // ← Hint: وحدتان أساسيتان يمكن للمستخدم البدء بهما
+  final defaultUnits = [
+    {
+      'UnitNameAr': 'قطعة',
+      'UnitNameEn': 'Piece',
+      'IsActive': 1,
+    },
+    {
+      'UnitNameAr': 'كيلو',
+      'UnitNameEn': 'Kilogram',
+      'IsActive': 1,
+    },
+  ];
+
+  // ← Hint: إدراج الوحدات مع تجاهل التكرار (إن وجد)
+  for (var unit in defaultUnits) {
+    await db.insert(
+      'TB_ProductUnit',
+      unit,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+  debugPrint('✅ تم إضافة ${defaultUnits.length} وحدة افتراضية');
+}
+
+/// ============================================================================
+/// تنظيف وإصلاح بيانات التصنيفات والوحدات
+/// ============================================================================
+/// ← Hint: تُستدعى مرة واحدة لإصلاح البيانات القديمة
+Future<void> cleanupCategoriesAndUnits() async {
+  final db = await database;
+
+  try {
+    // ← Hint: حذف التصنيفات التي لديها أسماء null
+    await db.delete(
+      'TB_ProductCategory',
+      where: 'CategoryNameAr IS NULL OR CategoryNameEn IS NULL',
+    );
+
+    // ← Hint: حذف الوحدات التي لديها أسماء null
+    await db.delete(
+      'TB_ProductUnit',
+      where: 'UnitNameAr IS NULL OR UnitNameEn IS NULL',
+    );
+
+    // ← Hint: التحقق من وجود البيانات الافتراضية
+    final categoriesCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM TB_ProductCategory WHERE IsActive = 1'),
+    ) ?? 0;
+
+    final unitsCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM TB_ProductUnit WHERE IsActive = 1'),
+    ) ?? 0;
+
+    // ← Hint: إضافة البيانات الافتراضية إذا لم تكن موجودة
+    if (categoriesCount == 0) {
+      await db.insert('TB_ProductCategory', {
+        'CategoryNameAr': 'عام',
+        'CategoryNameEn': 'General',
+        'IsActive': 1,
+      });
+      await db.insert('TB_ProductCategory', {
+        'CategoryNameAr': 'أخرى',
+        'CategoryNameEn': 'Other',
+        'IsActive': 1,
+      });
+    }
+
+    if (unitsCount == 0) {
+      await db.insert('TB_ProductUnit', {
+        'UnitNameAr': 'قطعة',
+        'UnitNameEn': 'Piece',
+        'IsActive': 1,
+      });
+      await db.insert('TB_ProductUnit', {
+        'UnitNameAr': 'كيلو',
+        'UnitNameEn': 'Kilogram',
+        'IsActive': 1,
+      });
+    }
+
+    debugPrint('✅ تم تنظيف وإصلاح بيانات التصنيفات والوحدات');
+  } catch (e) {
+    debugPrint('❌ خطأ في تنظيف البيانات: $e');
+  }
+}
 
 
 }

@@ -10,7 +10,6 @@ import 'package:accountant_touch/screens/settings/profile_settings_screen.dart';
 import 'package:accountant_touch/services/biometric_service.dart';
 import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/firebase_service.dart'; // ← Hint: لاختبار Crashlytics
-import 'package:flutter/foundation.dart'; // ← Hint: للوصول إلى kDebugMode
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart'; // ← Hint: لمشاركة التطبيق
@@ -615,16 +614,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: Row(
         children: [
           Icon(
-            isArabic ? Icons.check_circle : Icons.circle_outlined,
+            Icons.check_circle,
             size: 14,
-            color: isArabic ? AppColors.success : AppColors.textSecondaryLight,
+            color: AppColors.success,
           ),
           const SizedBox(width: 4),
           Text(
             isArabic ? 'العربية' : 'English',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isArabic ? AppColors.success : null,
-              fontWeight: isArabic ? FontWeight.w600 : null,
+              color: AppColors.success,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

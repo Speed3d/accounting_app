@@ -3,6 +3,7 @@ import 'package:accountant_touch/services/app_lock_service.dart';
 import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/firebase_service.dart';
 import 'package:accountant_touch/services/native_secrets_service.dart';
+import 'package:accountant_touch/services/notification_service.dart';
 import 'package:accountant_touch/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:accountant_touch/l10n/app_localizations.dart';
@@ -39,6 +40,8 @@ Future<void> main() async {
     // ═══════════════════════════════════════════════════════════
     // ← Hint: التحقق من الصلاحية (حرج جداً!)
     // ═══════════════════════════════════════════════════════════
+
+
     
     final isValid = await nativeSecrets.validateKeys();
     
@@ -203,6 +206,14 @@ Future<void> main() async {
 
     // ← Hint: تحميل إعدادات القفل
     await AppLockService.instance.loadSettings();
+
+    // 🆕 تهيئة الإشعارات
+  try {
+    await NotificationService.instance.initialize();
+    debugPrint('✅ تم تهيئة الإشعارات');
+  } catch (e) {
+    debugPrint('⚠️ خطأ في تهيئة الإشعارات: $e');
+  }
     
     debugPrint('✅ تم تحميل جميع الإعدادات المحلية');
   } catch (e) {

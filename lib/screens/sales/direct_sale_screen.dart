@@ -37,12 +37,11 @@ class DirectSaleScreen extends StatefulWidget {
 
 class _DirectSaleScreenState extends State<DirectSaleScreen> {
   final dbHelper = DatabaseHelper.instance;
-  // ← Hint: تم إزالة AuthService
   final List<CartItem> _cartItems = [];
   late Future<List<Product>> _productsFuture;
   bool _isProcessingSale = false;
 
-  // ← فلتر التصنيفات
+  // ✅ فلتر التصنيفات (النسخة المبسطة)
   late Future<List<ProductCategory>> _categoriesFuture;
   ProductCategory? _selectedCategory; // null = الكل
   List<Product> _allProducts = []; // قائمة كل المنتجات
@@ -60,17 +59,23 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   Future<List<Product>> _loadAvailableProducts() async {
     final allProductsList = await dbHelper.getAllProductsWithSupplierName();
     final availableProducts = allProductsList.where((product) => product.quantity > 0).toList();
-    // حفظ القائمة للفلترة لاحقاً
+    // ← Hint: حفظ القائمة للفلترة لاحقاً
     _allProducts = availableProducts;
     return availableProducts;
   }
 
-  // ← Hint: دالة لفلترة المنتجات بناءً على التصنيف المحدد
+  /// ============================================================================
+  /// دالة لفلترة المنتجات بناءً على التصنيف المحدد
+  /// ============================================================================
+  /// ← Hint: تُستدعى عند تغيير التصنيف من شريط الفلتر
+  /// ← Hint: إذا كان _selectedCategory = null، تُرجع كل المنتجات
   List<Product> _getFilteredProducts() {
-    if (_selectedCategory == null) {
+        if (_selectedCategory == null) {
       return _allProducts; // إرجاع كل المنتجات
     }
-    return _allProducts.where((product) => product.categoryID == _selectedCategory!.categoryID).toList();
+    return _allProducts.where((product) {
+      return product.categoryID == _selectedCategory!.categoryID;
+    }).toList();
   }
 
   // ============= دالة إتمام البيع =============
@@ -707,68 +712,119 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
     );
   }
 
-  // ============= شريط فلتر التصنيفات =============
+  // ============================================================================
+  // 🎨 شريط فلتر التصنيفات (النسخة المبسطة والذكية)
+  // ============================================================================
   Widget _buildCategoryFilter(AppLocalizations l10n) {
-    return FutureBuilder<List<ProductCategory>>(
-      future: _categoriesFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox.shrink(); // لا تعرض شيئاً إذا لم تكن هناك تصنيفات
-        }
+    final l10n = AppLocalizations.of(context)!;
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
 
-        final categories = snapshot.data!;
-
-        return Container(
-          height: 60,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              // زر "الكل"
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: FilterChip(
-                  label: Text(l10n.all ?? 'الكل'),
-                  selected: _selectedCategory == null,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() => _selectedCategory = null);
-                    }
-                  },
-                  selectedColor: AppColors.primaryContainer.withOpacity(0.2),
-                  checkmarkColor: AppColors.primaryContainer,
-                ),
-              ),
-              // أزرار التصنيفات
-              ...categories.map((category) {
-                final isSelected = _selectedCategory?.categoryID == category.categoryID;
-                return Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: FilterChip(
-                    label: Text(category.categoryNameEn ?? category.categoryName),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = selected ? category : null;
-                      });
-                    },
-                    selectedColor: AppColors.primaryContainer.withOpacity(0.2),
-                    checkmarkColor: AppColors.primaryContainer,
-                    avatar: category.icon != null
-                        ? Icon(
-                            _getIconFromName(category.icon!),
-                            size: 18,
-                            color: isSelected ? AppColors.primaryContainer : null,
-                          )
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.directSalePoint),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: l10n.scanBarcode,
+            onPressed: _scanBarcodeAndAddToCart,
           ),
-        );
-      },
+          IconButton(
+            icon: Badge(
+              label: Text(_cartItems.length.toString()),
+              isLabelVisible: _cartItems.isNotEmpty,
+              child: const Icon(Icons.shopping_cart_outlined),
+            ),
+            tooltip: l10n.reviewCart,
+            onPressed: () => _showCartReviewDialog(l10n, isDark),
+          ),
+        ],
+      ),
+      
+      floatingActionButton: _cartItems.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _isProcessingSale ? null : _completeSale,
+              label: _isProcessingSale
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      '${l10n.completeSale} (${formatCurrency(_calculateTotal())})',
+                    ),
+              icon: _isProcessingSale ? null : const Icon(Icons.check_circle_outline),
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+            )
+          : null,
+      
+      body: FutureBuilder<List<Product>>(
+        future: _productsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LoadingState(message: l10n.loadingProducts);
+          }
+
+          if (snapshot.hasError) {
+            return ErrorState(
+              message: l10n.errorOccurred(snapshot.error.toString()),
+              onRetry: () {
+                setState(() {
+                  // ← Hint: إعادة تحميل المنتجات المتوفرة عند الخطأ
+                  _productsFuture = _loadAvailableProducts();
+                });
+              },
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return EmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: l10n.noProductsInStock,
+              message: l10n.addtonewstores,
+              actionText: l10n.addProduct,
+              onAction: () {
+                // TODO: التنقل لصفحة إضافة منتج
+              },
+            );
+          }
+
+          // ✅ استخدام المنتجات المفلترة بدلاً من كل المنتجات
+          final filteredProducts = _getFilteredProducts();
+
+          return Column(
+            children: [
+              // ✅ شريط فلتر التصنيفات
+              _buildCategoryFilter(l10n),
+
+              // قائمة المنتجات المفلترة
+              Expanded(
+                child: filteredProducts.isEmpty
+                    ? EmptyState(
+                        icon: Icons.filter_alt_off,
+                        title: l10n.noProductsFound ?? 'لا توجد منتجات',
+                        message: l10n.tryChangingFilters ?? 'جرب تغيير الفلتر',
+                      )
+                    : ListView.builder(
+                        padding: AppConstants.screenPadding,
+                        itemCount: filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          return _buildProductCard(
+                            filteredProducts[index],
+                            isDark,
+                            l10n,
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 

@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTo => 'Login to';
 
   @override
-  String get accountingProgram => 'Accounting Program';
+  String get accountingProgram => 'Accountants touch';
 
   @override
   String get invalidCredentials => 'Incorrect username or password.';
@@ -3184,4 +3184,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editAdvance => 'Loan Adjustment';
+
+  @override
+  String get subscriptionmanagement => 'Subscription Management';
+
+  @override
+  String get activationcodegenerator => 'Activation Code Generator';
+
+  @override
+  String get details => 'Details';
 }

@@ -64,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // ← Hint: قائمة صفحات Onboarding
     final pages = [
       _buildPage(
-        title: isArabic ? 'مرحباً بك في Accountant Touch' : 'Welcome to Accountant Touch',
+        title: isArabic ? 'مرحباً بك في لمسة محاسب' : 'Welcome to Accountant Touch',
         body: isArabic
             ? 'تطبيقك المحاسبي الشامل لإدارة حسابات شركتك بكل سهولة واحترافية'
             : 'Your complete accounting app for managing your business accounts easily and professionally',

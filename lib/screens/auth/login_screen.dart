@@ -1,22 +1,18 @@
 // lib/screens/auth/login_screen.dart
 
-import 'dart:io'; // ← Hint: لعرض صورة الشركة المحلية
 import 'package:accountant_touch/layouts/main_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // ← Hint: لحفظ بيانات الدخول بشكل آمن
+import '../../l10n/app_localizations.dart'; // 🆕 للغات
+import '../../services/device_service.dart'; // 🆕 للحصول على device fingerprint
 import '../../services/session_service.dart';
-import '../../services/biometric_service.dart'; // ← Hint: للبصمة
-import '../../services/subscription_service.dart'; // ← Hint: 🆕 لجلب بيانات الاشتراك
-import '../../services/activation_status_service.dart'; // ← Hint: 🆕 لمسح cache حالة التفعيل
-import '../../data/database_helper.dart'; // ← Hint: لجلب معلومات الشركة
+import '../../services/subscription_service.dart'; // 🆕 للتحقق من الاشتراك
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import 'register_screen.dart';
-// رفع جديد
+import 'activation_screen.dart'; // 🆕 شاشة التفعيل (إذا كان الاشتراك منتهي)
 
 /// ============================================================================
 /// شاشة تسجيل الدخول - النظام الجديد المبسط
@@ -24,13 +20,21 @@ import 'register_screen.dart';
 ///
 /// ← Hint: النظام الجديد - Firebase Auth فقط (لا database queries!)
 /// ← Hint: تسجيل دخول بالإيميل والباسوورد
+/// ← Hint: 🆕 التحقق من الاشتراك بعد تسجيل الدخول
 /// ← Hint: حفظ الجلسة في SessionService بعد النجاح
-/// ← Hint: التوجيه مباشرة لـ MainScreen (لا login_selection!)
-/// ← Hint: ✅ يعرض معلومات الشركة الفعلية من قاعدة البيانات
+/// ← Hint: التوجيه مباشرة لـ MainScreen (إذا كان الاشتراك نشط)
+/// ← Hint: التوجيه لـ ActivationScreen (إذا كان الاشتراك منتهي)
 ///
 /// ============================================================================
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? companyName;
+  final String? companyLogoPath;
+
+  const LoginScreen({
+    super.key,
+    this.companyName,
+    this.companyLogoPath,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -43,21 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  // ← Hint: 🆕 متغيرات البصمة
-  bool _biometricEnabled = false;
-  bool _biometricAvailable = false;
-  final _secureStorage = const FlutterSecureStorage();
-
-  // ← Hint: مفاتيح التخزين الآمن
-  static const _keyBiometricEmail = 'biometric_login_email';
-  static const _keyBiometricPassword = 'biometric_login_password';
-
-  @override
-  void initState() {
-    super.initState();
-    _checkBiometricStatus();
-  }
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -65,63 +54,15 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ==========================================================================
-  // ← Hint: 🆕 فحص حالة البصمة عند بدء الشاشة
-  // ==========================================================================
-  /// 🔍 فحص إذا كانت البصمة مُفعّلة ومتاحة
-  Future<void> _checkBiometricStatus() async {
-    try {
-      // ← Hint: 1️⃣ تحميل حالة البصمة من الإعدادات
-      await BiometricService.instance.loadBiometricState();
-      final enabled = BiometricService.instance.isBiometricEnabled;
-
-      // ← Hint: 2️⃣ التحقق من توفر البصمة في الجهاز
-      final availability = await BiometricService.instance.checkBiometricAvailability();
-      final available = availability['canCheck'] == true;
-
-      // ← Hint: 3️⃣ التحقق من وجود بيانات محفوظة
-      final savedEmail = await _secureStorage.read(key: _keyBiometricEmail);
-      final hasSavedCredentials = savedEmail != null && savedEmail.isNotEmpty;
-
-      if (mounted) {
-        setState(() {
-          _biometricEnabled = enabled && hasSavedCredentials;
-          _biometricAvailable = available;
-        });
-
-        debugPrint('🔐 [Login] البصمة: مُفعّلة=$enabled، متاحة=$available، بيانات محفوظة=$hasSavedCredentials');
-      }
-    } catch (e) {
-      debugPrint('❌ [Login] خطأ في فحص حالة البصمة: $e');
-    }
-  }
-
-  // ==========================================================================
-  // ← Hint: جلب معلومات الشركة من قاعدة البيانات
-  // ==========================================================================
-  /// 🏪 جلب معلومات الشركة
-  ///
-  /// ← Hint: تُستخدم لعرض اسم وشعار الشركة بدلاً من القيم الافتراضية
-  /// ← Hint: تُجلب من جدول TB_Settings
-  Future<Map<String, String?>> _getCompanyInfo() async {
-    try {
-      final dbHelper = DatabaseHelper.instance;
-      final settings = await dbHelper.getAppSettings();
-
-      return {
-        'companyName': settings['companyName'] as String?,
-        'companyLogoPath': settings['companyLogoPath'] as String?,
-      };
-    } catch (e) {
-      debugPrint('⚠️ خطأ في جلب معلومات الشركة: $e');
-      return {
-        'companyName': null,
-        'companyLogoPath': null,
-      };
-    }
-  }
-
-  /// ← Hint: دالة تسجيل الدخول - Firebase Auth + SessionService فقط
+  /// ============================================================================
+  /// 🆕 دالة تسجيل الدخول - محدثة مع التحقق من الاشتراك
+  /// ============================================================================
+  /// ← Hint: الخطوات:
+  /// 1. تسجيل الدخول عبر Firebase Authentication
+  /// 2. حفظ الجلسة في SessionService
+  /// 3. 🆕 التحقق من الاشتراك في Firestore
+  /// 4. التوجيه حسب حالة الاشتراك
+  /// ============================================================================
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -131,83 +72,182 @@ class _LoginScreenState extends State<LoginScreen> {
       final email = _emailController.text.trim().toLowerCase();
       final password = _passwordController.text;
 
-      debugPrint('🔐 محاولة تسجيل الدخول: $email');
+      debugPrint('═══════════════════════════════════════════════════════════');
+      debugPrint('🔐 الخطوة 1/4: محاولة تسجيل الدخول: $email');
+      debugPrint('═══════════════════════════════════════════════════════════');
 
-      // 1️⃣ Hint: تسجيل الدخول عبر Firebase Authentication
+      // ════════════════════════════════════════════════════════════════════
+      // 1️⃣ تسجيل الدخول عبر Firebase Authentication
+      // ← Hint: Firebase Auth هو المصدر الوحيد للحقيقة
+      // ════════════════════════════════════════════════════════════════════
       final userCredential = await firebase_auth.FirebaseAuth.instance
           .signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      debugPrint('✅ تم تسجيل الدخول في Firebase Auth بنجاح');
+      debugPrint('✅ الخطوة 1/4: تم تسجيل الدخول في Firebase Auth بنجاح');
 
-      // 2️⃣ Hint: حفظ الجلسة في SessionService
+      // ════════════════════════════════════════════════════════════════════
+      // 2️⃣ حفظ الجلسة في SessionService
       // ← Hint: نستخدم البيانات من Firebase User مباشرة
+      // ════════════════════════════════════════════════════════════════════
+      debugPrint('💾 الخطوة 2/4: حفظ الجلسة في SessionService...');
+      
       await SessionService.instance.saveSession(
         email: email,
         displayName: userCredential.user?.displayName ?? '',
         photoURL: userCredential.user?.photoURL,
       );
 
-      debugPrint('✅ تم حفظ الجلسة بنجاح');
+      debugPrint('✅ الخطوة 2/4: تم حفظ الجلسة بنجاح');
 
-      // 3️⃣ Hint: 🆕 جلب وحفظ بيانات الاشتراك من Firebase
-      try {
-        debugPrint('📦 جلب بيانات الاشتراك من Firebase...');
-        final subscriptionStatus = await SubscriptionService.instance.checkSubscription(email);
-
-        if (subscriptionStatus.isValid) {
-          // قراءة startDate من Firebase مباشرة
-          final firestoreDb = FirebaseFirestore.instance;
-          final doc = await firestoreDb.collection('subscriptions').doc(email).get();
-
-          DateTime startDate = DateTime.now();
-          if (doc.exists) {
-            final data = doc.data();
-            if (data != null && data['startDate'] != null) {
-              startDate = (data['startDate'] as Timestamp).toDate();
-            }
-          }
-
-          // حفظ بيانات الاشتراك محلياً للعمل offline
-          await SubscriptionService.instance.cacheSubscriptionLocally(
-            email: email,
-            plan: subscriptionStatus.plan ?? 'trial',
-            startDate: startDate,
-            endDate: subscriptionStatus.endDate,
-            isActive: true,
-            maxDevices: subscriptionStatus.features?['maxDevices'] as int?,
-            features: subscriptionStatus.features ?? {},
+      // ════════════════════════════════════════════════════════════════════
+      // 3️⃣ 🆕 التحقق من الاشتراك في Firestore
+      // ← Hint: هنا نفحص صلاحية الاشتراك قبل السماح بالدخول
+      // ════════════════════════════════════════════════════════════════════
+      debugPrint('🔍 الخطوة 3/4: التحقق من الاشتراك في Firestore...');
+      
+      final subscriptionStatus = await SubscriptionService.instance
+          .checkSubscription(email)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              // ← Hint: إذا فشل الاتصال بالإنترنت، نسمح بالدخول (fail-safe)
+              // ← Hint: النظام يعمل محلياً، Firestore اختياري
+              debugPrint('⏱️ Timeout في التحقق من الاشتراك - السماح بالدخول');
+              return SubscriptionStatus.error(
+                message: 'فشل الاتصال بخادم الاشتراكات',
+              );
+            },
           );
-          debugPrint('✅ تم حفظ بيانات الاشتراك محلياً');
 
-          // مسح cache الـ ActivationStatusService لإجباره على إعادة القراءة
-          ActivationStatusService.instance.clearCache();
+      debugPrint('✅ الخطوة 3/4: تم التحقق من الاشتراك');
+      debugPrint('📊 حالة الاشتراك: ${subscriptionStatus.statusType}');
+
+      if (!mounted) return;
+
+      // ════════════════════════════════════════════════════════════════════
+      // 4️⃣ التوجيه حسب حالة الاشتراك
+      // ← Hint: نفحص نوع الحالة ونتخذ القرار المناسب
+      // ════════════════════════════════════════════════════════════════════
+      debugPrint('🧭 الخطوة 4/4: التوجيه حسب حالة الاشتراك...');
+
+      // ────────────────────────────────────────────────────────────────────
+      // ✅ الحالة 1: الاشتراك نشط وصالح
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isValid && subscriptionStatus.isActive) {
+        debugPrint('✅ الاشتراك نشط - التوجيه لـ MainScreen');
+        debugPrint('   Plan: ${subscriptionStatus.plan}');
+        
+        if (subscriptionStatus.endDate != null) {
+          final daysRemaining = subscriptionStatus.endDate!
+              .difference(DateTime.now())
+              .inDays;
+          debugPrint('   الأيام المتبقية: $daysRemaining يوم');
         }
-      } catch (e) {
-        debugPrint('⚠️ خطأ في جلب بيانات الاشتراك (سيتم التجاهل): $e');
-        // لا نوقف عملية تسجيل الدخول بسبب هذا الخطأ
+
+        debugPrint('═══════════════════════════════════════════════════════════');
+        debugPrint('🎉 تم تسجيل الدخول بنجاح!');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        // ← Hint: التوجيه للشاشة الرئيسية
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+        return;
       }
 
-      if (!mounted) return;
+      // ────────────────────────────────────────────────────────────────────
+      // ❌ الحالة 2: الاشتراك منتهي
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isExpired) {
+        debugPrint('❌ الاشتراك منتهي - التوجيه لـ ActivationScreen');
+        debugPrint('═══════════════════════════════════════════════════════════');
 
-      // 4️⃣ Hint: 🆕 سؤال المستخدم عن تفعيل البصمة (إذا لم تكن مُفعّلة)
-      // ← Hint: يُعرض فقط في أول تسجيل دخول ناجح
-      if (!_biometricEnabled && _biometricAvailable) {
-        await _askToEnableBiometric(email, password);
+        // ← Hint: إظهار رسالة تنبيه للمستخدم
+        await _showSubscriptionExpiredDialog(
+          email: email,
+          endDate: subscriptionStatus.endDate,
+        );
+        return;
       }
 
-      if (!mounted) return;
+      // ────────────────────────────────────────────────────────────────────
+      // 🚫 الحالة 3: الاشتراك موقوف
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isSuspended) {
+        debugPrint('🚫 الاشتراك موقوف - عرض رسالة');
+        debugPrint('═══════════════════════════════════════════════════════════');
 
-      // 5️⃣ Hint: التوجيه مباشرة للشاشة الرئيسية
-      // ← Hint: حذف كل navigation stack - المستخدم مسجل دخول بالفعل
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-        (route) => false, // ← Hint: حذف كل الشاشات السابقة
-      );
+        _showErrorDialog(
+          subscriptionStatus.message ?? 'تم إيقاف الاشتراك',
+        );
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // 🔄 الحالة 4: يحتاج اتصال بالإنترنت
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.requiresOnline) {
+        debugPrint('🌐 يحتاج التحقق عبر الإنترنت');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        _showErrorDialog(
+          'يرجى الاتصال بالإنترنت للتحقق من الاشتراك',
+        );
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // ⚠️ الحالة 5: لا يوجد اشتراك (مستخدم جديد)
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.statusType == 'not_found') {
+        debugPrint('⚠️ لا يوجد اشتراك - توجيه لشاشة التفعيل');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        await _showNoSubscriptionDialog(email: email);
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // ⚠️ الحالة 6: خطأ في الاتصال (fail-safe - السماح بالدخول)
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.statusType == 'error') {
+        debugPrint('⚠️ خطأ في التحقق من الاشتراك - السماح بالدخول (offline mode)');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        // ← Hint: نعرض تنبيه بسيط ونسمح بالدخول
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '⚠️ لا يمكن التحقق من الاشتراك - العمل في الوضع المحلي',
+            ),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // 🔴 الحالة الافتراضية: حالة غير متوقعة
+      // ────────────────────────────────────────────────────────────────────
+      debugPrint('🔴 حالة غير متوقعة: ${subscriptionStatus.statusType}');
+      _showErrorDialog('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.');
+
     } on firebase_auth.FirebaseAuthException catch (e) {
+      // ════════════════════════════════════════════════════════════════════
+      // معالجة أخطاء Firebase Authentication
+      // ════════════════════════════════════════════════════════════════════
       String message = 'حدث خطأ في تسجيل الدخول';
 
       switch (e.code) {
@@ -233,171 +273,221 @@ class _LoginScreenState extends State<LoginScreen> {
 
       debugPrint('❌ خطأ Firebase Auth: ${e.code} - ${e.message}');
       if (mounted) _showErrorDialog(message);
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ خطأ عام: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (mounted) _showErrorDialog('خطأ: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ==========================================================================
-  // ← Hint: 🆕 تسجيل الدخول بالبصمة
-  // ==========================================================================
-  /// 🔐 تسجيل الدخول باستخدام البصمة
-  ///
-  /// ← Hint: يستعيد بيانات الدخول المحفوظة من FlutterSecureStorage
-  /// ← Hint: يتحقق من البصمة أولاً، ثم يسجل الدخول تلقائياً
-  Future<void> _handleBiometricLogin() async {
-    setState(() => _isLoading = true);
-
-    try {
-      debugPrint('🔐 [Login] محاولة تسجيل الدخول بالبصمة...');
-
-      // ← Hint: 1️⃣ التحقق من البصمة
-      final authResult = await BiometricService.instance.authenticateWithBiometric();
-
-      if (authResult['success'] != true) {
-        if (!mounted) return;
-        _showErrorDialog(authResult['message'] ?? 'فشل التحقق من البصمة');
-        return;
-      }
-
-      debugPrint('✅ [Login] تم التحقق من البصمة بنجاح');
-
-      // ← Hint: 2️⃣ استرجاع بيانات الدخول المحفوظة
-      final email = await _secureStorage.read(key: _keyBiometricEmail);
-      final password = await _secureStorage.read(key: _keyBiometricPassword);
-
-      if (email == null || password == null) {
-        if (!mounted) return;
-        _showErrorDialog('لا توجد بيانات دخول محفوظة');
-        return;
-      }
-
-      debugPrint('🔍 [Login] استرجاع بيانات الدخول: $email');
-
-      // ← Hint: 3️⃣ تسجيل الدخول عبر Firebase
-      final userCredential = await firebase_auth.FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      debugPrint('✅ [Login] تم تسجيل الدخول عبر Firebase بنجاح');
-
-      // ← Hint: 4️⃣ حفظ الجلسة
-      await SessionService.instance.saveSession(
-        email: email,
-        displayName: userCredential.user?.displayName ?? '',
-        photoURL: userCredential.user?.photoURL,
-      );
-
-      if (!mounted) return;
-
-      // ← Hint: 5️⃣ الانتقال للشاشة الرئيسية
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-        (route) => false,
-      );
-    } on firebase_auth.FirebaseAuthException catch (e) {
-      debugPrint('❌ [Login] خطأ Firebase: ${e.code}');
-      if (mounted) {
-        _showErrorDialog('فشل تسجيل الدخول: ${e.message}');
-      }
-    } catch (e) {
-      debugPrint('❌ [Login] خطأ في تسجيل الدخول بالبصمة: $e');
-      if (mounted) {
-        _showErrorDialog('حدث خطأ غير متوقع');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  // ==========================================================================
-  // ← Hint: 🆕 حفظ بيانات الدخول للبصمة
-  // ==========================================================================
-  /// 💾 حفظ بيانات الدخول بشكل آمن للبصمة
-  ///
-  /// ← Hint: يُستدعى بعد تسجيل الدخول الناجح إذا وافق المستخدم
-  Future<void> _saveCredentialsForBiometric(String email, String password) async {
-    try {
-      await _secureStorage.write(key: _keyBiometricEmail, value: email);
-      await _secureStorage.write(key: _keyBiometricPassword, value: password);
-      debugPrint('✅ [Login] تم حفظ بيانات الدخول للبصمة');
-    } catch (e) {
-      debugPrint('❌ [Login] خطأ في حفظ بيانات الدخول: $e');
-    }
-  }
-
-  // ==========================================================================
-  // ← Hint: 🆕 سؤال المستخدم عن تفعيل البصمة
-  // ==========================================================================
-  /// ❓ عرض حوار لسؤال المستخدم عن تفعيل البصمة
-  ///
-  /// ← Hint: يُعرض فقط في أول تسجيل دخول ناجح وإذا كانت البصمة متاحة
-  Future<void> _askToEnableBiometric(String email, String password) async {
-    if (!_biometricAvailable) return;
-
-    final enable = await showDialog<bool>(
+  /// ============================================================================
+  /// 🆕 عرض رسالة "الاشتراك منتهي" مع التوجيه لشاشة التفعيل
+  /// ============================================================================
+  /// ← Hint: يُعرض عندما يكون الاشتراك منتهي
+  /// ← Hint: يوفر زر للتوجيه لشاشة التفعيل
+  /// ============================================================================
+  Future<void> _showSubscriptionExpiredDialog({
+    required String email,
+    DateTime? endDate,
+  }) async {
+    return showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      barrierDismissible: false, // ← Hint: لا يمكن الإغلاق بالنقر خارجه
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusLg,
+        ),
         title: Row(
           children: [
-            Icon(Icons.fingerprint, color: AppColors.success),
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.warning,
+              size: 28,
+            ),
             const SizedBox(width: AppConstants.spacingSm),
-            const Expanded(child: Text('تفعيل البصمة؟')),
+            const Expanded(
+              child: Text(
+                'الاشتراك منتهي',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
           ],
         ),
-        content: const Text(
-          'هل تريد استخدام بصمة الإصبع لتسجيل الدخول السريع في المرات القادمة؟\n\n'
-          'سيتم حفظ بيانات دخولك بشكل آمن ومشفر.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'انتهت صلاحية اشتراكك ${endDate != null ? 'في ${_formatDate(endDate)}' : ''}.',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.warning.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: AppColors.warning,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(
+                    child: Text(
+                      'يرجى تجديد الاشتراك للمتابعة',
+                      style: TextStyle(
+                        color: AppColors.warning,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('لا، شكراً'),
+            onPressed: () {
+              Navigator.pop(context); // ← Hint: إغلاق الحوار
+              // ← Hint: العودة لشاشة الدخول (المستخدم يبقى في LoginScreen)
+            },
+            child: const Text('إلغاء'),
           ),
           ElevatedButton.icon(
-            onPressed: () => Navigator.pop(ctx, true),
-            icon: const Icon(Icons.fingerprint),
-            label: const Text('نعم، تفعيل'),
+            onPressed: () async {
+              Navigator.pop(context); // ← Hint: إغلاق الحوار
+
+              // ← Hint: الحصول على device fingerprint لشاشة التفعيل
+              final deviceFingerprint = 
+                  await DeviceService.instance.getDeviceFingerprint();
+
+              // ← Hint: التوجيه لشاشة التفعيل
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ActivationScreen(
+                      l10n: AppLocalizations.of(context)!,
+                      deviceFingerprint: deviceFingerprint,
+                    ),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.vpn_key),
+            label: const Text('تجديد الاشتراك'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primaryLight,
             ),
           ),
         ],
       ),
     );
+  }
 
-    if (enable != true) return;
-
-    // ← Hint: تفعيل البصمة
-    final result = await BiometricService.instance.enableBiometric();
-
-    if (result['success'] == true) {
-      // ← Hint: حفظ بيانات الدخول
-      await _saveCredentialsForBiometric(email, password);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: AppConstants.spacingSm),
-              const Expanded(child: Text('تم تفعيل البصمة بنجاح')),
-            ],
-          ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
+  /// ============================================================================
+  /// 🆕 عرض رسالة "لا يوجد اشتراك" (مستخدم جديد)
+  /// ============================================================================
+  /// ← Hint: يُعرض عندما لا يوجد اشتراك في Firestore
+  /// ← Hint: يوفر زر للتوجيه لشاشة التفعيل
+  /// ============================================================================
+  Future<void> _showNoSubscriptionDialog({required String email}) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusLg,
         ),
-      );
-    }
+        title: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: AppColors.info,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Expanded(
+              child: Text(
+                'لا يوجد اشتراك',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'لا يوجد اشتراك مسجل لهذا الحساب.',
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.info.withOpacity(0.3),
+                ),
+              ),
+              child: const Text(
+                'يرجى التواصل مع المطور للحصول على كود تفعيل.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+
+              // ← Hint: الحصول على device fingerprint لشاشة التفعيل
+              final deviceFingerprint = 
+                  await DeviceService.instance.getDeviceFingerprint();
+
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ActivationScreen(
+                      l10n: AppLocalizations.of(context)!,
+                      deviceFingerprint: deviceFingerprint,
+                    ),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.vpn_key),
+            label: const Text('تفعيل الآن'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.info,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ← Hint: دالة مساعدة لتنسيق التاريخ
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   /// ← Hint: نسيت كلمة المرور - إرسال رابط الاستعادة عبر Firebase
@@ -512,54 +602,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // ← Hint: ✅ عرض شعار واسم الشركة من قاعدة البيانات
-                      FutureBuilder<Map<String, String?>>(
-                        future: _getCompanyInfo(),
-                        builder: (context, snapshot) {
-                          final companyName = snapshot.data?['companyName'] ?? 'تسجيل الدخول';
-                          final companyLogoPath = snapshot.data?['companyLogoPath'];
+                      // شعار الشركة أو أيقونة افتراضية
+                      if (widget.companyLogoPath != null)
+                        Image.asset(
+                          widget.companyLogoPath!,
+                          height: 100,
+                          errorBuilder: (_, __, ___) => Icon(
+                            Icons.account_circle,
+                            size: 100,
+                            color: AppColors.primaryLight,
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.account_circle,
+                          size: 100,
+                          color: AppColors.primaryLight,
+                        ),
 
-                          // ← Hint: التحقق من وجود صورة الشركة
-                          final hasCompanyLogo = companyLogoPath != null &&
-                                                 companyLogoPath.isNotEmpty &&
-                                                 File(companyLogoPath).existsSync();
+                      const SizedBox(height: AppConstants.spacingXl),
 
-                          return Column(
-                            children: [
-                              // ← Hint: شعار الشركة (محلي) أو أيقونة افتراضية
-                              if (hasCompanyLogo)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(
-                                    File(companyLogoPath!),
-                                    height: 100,
-                                    width: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Icon(
-                                      Icons.store,
-                                      size: 100,
-                                      color: AppColors.primaryLight,
-                                    ),
-                                  ),
-                                )
-                              else
-                                Icon(
-                                  Icons.store,
-                                  size: 100,
-                                  color: AppColors.primaryLight,
-                                ),
-
-                              const SizedBox(height: AppConstants.spacingXl),
-
-                              // ← Hint: اسم الشركة من الإعدادات
-                              Text(
-                                companyName,
-                                style: Theme.of(context).textTheme.headlineMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          );
-                        },
+                      // اسم الشركة أو عنوان افتراضي
+                      Text(
+                        widget.companyName ?? 'تسجيل الدخول',
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
 
                       const SizedBox(height: AppConstants.spacingSm),
@@ -575,90 +641,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                       ),
 
-                      const SizedBox(height: AppConstants.spacingLg),
-
-                      // ← Hint: 🆕 زر تسجيل الدخول بالبصمة
-                      if (_biometricEnabled) ...[
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.success.withOpacity(0.1),
-                                AppColors.success.withOpacity(0.05),
-                              ],
-                            ),
-                            borderRadius: AppConstants.borderRadiusMd,
-                            border: Border.all(
-                              color: AppColors.success.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: AppConstants.borderRadiusMd,
-                              onTap: _handleBiometricLogin,
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppConstants.spacingMd),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.fingerprint,
-                                      color: AppColors.success,
-                                      size: 32,
-                                    ),
-                                    const SizedBox(width: AppConstants.spacingSm),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'تسجيل الدخول بالبصمة',
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            color: AppColors.success,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'اضغط هنا للمتابعة بسرعة',
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: AppColors.success.withOpacity(0.8),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: AppConstants.spacingMd),
-
-                        // ← Hint: فاصل "أو"
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppConstants.spacingSm),
-                              child: Text(
-                                'أو',
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.color,
-                                ),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-
-                        const SizedBox(height: AppConstants.spacingMd),
-                      ],
+                      const SizedBox(height: AppConstants.spacingXl),
 
                       // البريد الإلكتروني
                       CustomTextField(
@@ -703,7 +686,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerLeft,
                         child: TextButton(
                           onPressed: _handleForgotPassword,
-                          child: Text('نسيت كلمة المرور', style: Theme.of(context).textTheme.headlineSmall),
+                          child: Text('نسيت كلمة المرور', 
+                              style: Theme.of(context).textTheme.headlineSmall),
                         ),
                       ),
 

@@ -1,5 +1,7 @@
 // lib/screens/HomeScreen/home_screen.dart
 
+import 'package:accountant_touch/screens/admin/activation_code_generator_screen.dart';
+import 'package:accountant_touch/screens/admin/subscriptions_admin_screen.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -131,6 +133,27 @@ class _HomeScreenState extends State<HomeScreen> {
         'color': Colors.grey,
         'page': const SettingsScreen(),
       },
+       //=====================================================
+       // صفحات التطوير - افعلها للنسخة الخاصة بي
+       //=====================================================
+
+      { 
+        'title': l10n.activationcodegenerator,
+        'icon': Icons.manage_accounts,
+        'color': const Color.fromARGB(255, 103, 237, 94),
+        'page': const ActivationCodeGeneratorScreen(),
+      },
+       { 
+        'title': l10n.subscriptionmanagement,
+        'icon': Icons.verified,
+        'color': const Color.fromARGB(255, 242, 147, 46),
+        'page': const SubscriptionsAdminScreen(),
+      },
+
+       //=====================================================
+       // صفحات التطوير
+       //=====================================================
+
     ];
   }
 

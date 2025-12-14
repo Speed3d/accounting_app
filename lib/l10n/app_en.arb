@@ -314,7 +314,7 @@
     "username": "Username",
     "password": "Password",
     "loginTo": "Login to",
-    "accountingProgram": "Accounting Program",
+    "accountingProgram": "Accountants touch",
     "invalidCredentials": "Incorrect username or password.",
 
     "ok": "OK",
@@ -2476,7 +2476,13 @@
 
 "editPayroll": "Salary Adjustment",
 
-"editAdvance": "Loan Adjustment"
+"editAdvance": "Loan Adjustment",
+
+"subscriptionmanagement": "Subscription Management",
+
+"activationcodegenerator": "Activation Code Generator",
+
+"details": "Details"
 
 
 

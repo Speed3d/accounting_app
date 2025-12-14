@@ -772,7 +772,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loginTo => 'تسجيل الدخول إلى';
 
   @override
-  String get accountingProgram => 'برنامج المحاسبة';
+  String get accountingProgram => 'لمسة محاسب';
 
   @override
   String get invalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة.';
@@ -3153,4 +3153,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get editAdvance => 'تعديل سلفة';
+
+  @override
+  String get subscriptionmanagement => 'ادارة الاشتراكات';
+
+  @override
+  String get activationcodegenerator => 'مولد اكواد التفعيل';
+
+  @override
+  String get details => 'التفاصيل';
 }

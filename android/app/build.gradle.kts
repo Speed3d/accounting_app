@@ -17,6 +17,7 @@ android {
     ndkVersion = "27.0.12077973"
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -102,6 +103,9 @@ dependencies {
     // ✅ Hint: Google Play In-App Review
     implementation("com.google.android.play:review:2.0.1")
     implementation("com.google.android.play:review-ktx:2.0.1")
+
+    // ✅ Hint: تفعيل مكتبة الاشعارات
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 // ✅ Hint: نطبّق البلجن في نهاية الملف كما كنت تفعل في Groovy (صيغة Kotlin)

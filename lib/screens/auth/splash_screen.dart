@@ -11,19 +11,27 @@ import '../../data/database_helper.dart';
 import '../../services/device_service.dart';
 import '../../services/firebase_service.dart';
 import '../../services/time_validation_service.dart';
-import '../../services/session_service.dart'; // 🆕 SessionService
+import '../../services/session_service.dart';
+import '../../services/subscription_service.dart'; // 🆕 للتحقق من الاشتراك
+import '../../services/notification_service.dart'; // 🆕 للإشعارات
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 
-import 'login_screen.dart';  // 🆕 LoginScreen الجديد المبسط
+import 'login_screen.dart';
 import 'register_screen.dart';
 import 'blocked_screen.dart';
-import '../onboarding/onboarding_screen.dart'; // 🆕 Onboarding للمستخدمين الجدد
-import '../setup/initial_setup_screen.dart'; // 🆕 التهيئة الأولية
+import 'activation_screen.dart'; // 🆕 شاشة التفعيل
 
 /// ===========================================================================
 /// شاشة البداية (Splash Screen) - نسخة محسّنة ونظيفة
+/// ===========================================================================
+/// 
+/// ← Hint: التحديثات الجديدة:
+/// - 🆕 التحقق من الاشتراك قبل السماح بالدخول
+/// - 🆕 دعم Offline mode مع Grace Period
+/// - 🆕 التوجيه الذكي حسب حالة الاشتراك
+/// 
 /// ===========================================================================
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
   File? _companyLogo;
   
   static const int trialPeriodDays = 14;
-  static const int splashDuration = 1500; // ← مُخفّض من 2500 إلى 1500
+  static const int splashDuration = 1500;
 
   // ==========================================================================
   // Lifecycle
@@ -76,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // ← مُخفّض من 1500
+      duration: const Duration(milliseconds: 1000),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -104,6 +112,9 @@ class _SplashScreenState extends State<SplashScreen>
       final timeService = TimeValidationService.instance;
       final firebaseService = FirebaseService.instance;
 
+      // اشعارات في الاعلى 
+      NotificationService.instance.checkAndNotifySubscription();
+
       // ======================================================================
       // المرحلة 1: تحميل بيانات الشركة (سريع - محلي)
       // ======================================================================
@@ -130,7 +141,6 @@ class _SplashScreenState extends State<SplashScreen>
       final appStatus = await _checkAppStatus(firebaseService);
       if (!mounted) return;
       
-      // ← Hint: إذا فشل الفحص، نعرض الحوار ونوقف
       if (!appStatus['canContinue']) return;
 
       // ======================================================================
@@ -177,10 +187,10 @@ class _SplashScreenState extends State<SplashScreen>
       }
 
       // ======================================================================
-      // المرحلة 8: منطق التنقل (النهائي)
+      // 🆕 المرحلة 8: منطق التنقل مع التحقق من الاشتراك (الجديد)
       // ======================================================================
       
-      await _handleNavigation(
+      await _handleNavigationWithSubscriptionCheck(
         dbHelper, 
         deviceService, 
         realTime, 
@@ -225,7 +235,6 @@ class _SplashScreenState extends State<SplashScreen>
       final lastFetch = prefs.getInt('last_config_fetch') ?? 0;
       final now = DateTime.now().millisecondsSinceEpoch;
       
-      // ← Hint: تحديث كل 24 ساعة فقط (ليس كل Hot Restart!)
       final shouldRefresh = lastFetch == 0 || 
         (now - lastFetch) > (24 * 60 * 60 * 1000);
 
@@ -258,6 +267,7 @@ class _SplashScreenState extends State<SplashScreen>
     FirebaseService firebaseService
   ) async {
     try {
+      debugPrint('🔍 فحص حالة التطبيق...');
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
       
@@ -319,7 +329,7 @@ class _SplashScreenState extends State<SplashScreen>
       
     } catch (e) {
       debugPrint('⚠️ خطأ في فحص حالة التطبيق: $e');
-      return {'canContinue': true}; // fail-safe
+      return {'canContinue': true};
     }
   }
 
@@ -360,7 +370,7 @@ class _SplashScreenState extends State<SplashScreen>
   ) async {
     try {
       return await timeService.getRealTime().timeout(
-        const Duration(seconds: 2), // ← timeout قصير جداً
+        const Duration(seconds: 2),
         onTimeout: () {
           debugPrint('⏱️ NTP timeout - استخدام وقت الجهاز');
           return DateTime.now();
@@ -410,47 +420,27 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  /// 🆕 منطق التنقل النهائي (النظام الجديد - Firebase-First Architecture)
-  ///
-  /// ← Hint: النظام الجديد المبسط:
-  /// ← 1. فحص SessionService (هل يوجد Email محفوظ؟)
-  /// ← 2. لا يوجد → RegisterScreen (مستخدم جديد)
-  /// ← 3. يوجد → LoginScreen (تسجيل دخول)
-  /// ← Hint: لا حاجة لفحص TB_Users - Firebase Auth هو المصدر الوحيد
-  Future<void> _handleNavigation(
+  /// ============================================================================
+  /// 🆕 منطق التنقل النهائي مع التحقق من الاشتراك (محدث - Week 2)
+  /// ============================================================================
+  /// 
+  /// ← Hint: النظام الجديد - 3 سيناريوهات:
+  /// 
+  /// 1️⃣ لا يوجد جلسة → RegisterScreen (مستخدم جديد)
+  /// 2️⃣ يوجد جلسة + اتصال إنترنت → فحص الاشتراك من Firestore
+  /// 3️⃣ يوجد جلسة + لا يوجد اتصال → فحص Cache المحلي
+  /// 
+  /// ============================================================================
+  Future<void> _handleNavigationWithSubscriptionCheck(
     DatabaseHelper dbHelper,
     DeviceService deviceService,
     DateTime realTime,
     AppLocalizations l10n,
   ) async {
     try {
-      debugPrint('🧭 بدء منطق التنقل (النظام الجديد - Firebase-First)...');
-
-      // ═══════════════════════════════════════════════════════════════════
-      // 0️⃣ 🆕 فحص Onboarding - هل اكتمل؟
-      // ← Hint: يُعرض فقط في أول فتح للتطبيق
-      // ═══════════════════════════════════════════════════════════════════
-
-      final onboardingCompleted = await OnboardingScreen.isCompleted();
-
-      if (!onboardingCompleted) {
-        debugPrint('➡️ أول فتح للتطبيق → OnboardingScreen');
-        _navigateToScreen(const OnboardingScreen());
-        return;
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // 0️⃣.5 🆕 فحص التهيئة الأولية - هل اكتملت؟
-      // ← Hint: تُعرض بعد Onboarding مباشرة
-      // ═══════════════════════════════════════════════════════════════════
-
-      final setupCompleted = await InitialSetupScreen.isCompleted();
-
-      if (!setupCompleted) {
-        debugPrint('➡️ التهيئة الأولية لم تكتمل → InitialSetupScreen');
-        _navigateToScreen(const InitialSetupScreen());
-        return;
-      }
+      debugPrint('═══════════════════════════════════════════════════════════');
+      debugPrint('🧭 بدء منطق التنقل مع التحقق من الاشتراك...');
+      debugPrint('═══════════════════════════════════════════════════════════');
 
       // ═══════════════════════════════════════════════════════════════════
       // 1️⃣ فحص SessionService - هل يوجد جلسة محفوظة؟
@@ -460,32 +450,297 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (!hasSession) {
         // ← Hint: لا يوجد جلسة → مستخدم جديد → RegisterScreen
-        debugPrint('➡️ لا يوجد جلسة محفوظة → RegisterScreen');
+        debugPrint('➡️ [السيناريو 1] لا يوجد جلسة محفوظة → RegisterScreen');
+        debugPrint('═══════════════════════════════════════════════════════════');
         _navigateToScreen(const RegisterScreen());
         return;
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // 2️⃣ يوجد جلسة → طباعة معلومات الجلسة (للتشخيص)
+      // 2️⃣ يوجد جلسة → الحصول على Email
       // ═══════════════════════════════════════════════════════════════════
 
+      final email = await SessionService.instance.getEmail();
+      
+      if (email == null || email.isEmpty) {
+        debugPrint('⚠️ خطأ: جلسة موجودة لكن Email فارغ!');
+        debugPrint('➡️ تنظيف الجلسة والتوجيه لـ RegisterScreen');
+        await SessionService.instance.clearSession();
+        _navigateToScreen(const RegisterScreen());
+        return;
+      }
+
+      debugPrint('✅ يوجد جلسة محفوظة: $email');
       await SessionService.instance.debugPrintSession();
 
       // ═══════════════════════════════════════════════════════════════════
-      // 3️⃣ التوجيه إلى LoginScreen
+      // 🆕 3️⃣ التحقق من الاشتراك (الجزء الجديد!)
       // ═══════════════════════════════════════════════════════════════════
 
-      debugPrint('➡️ يوجد جلسة محفوظة → LoginScreen');
-      _navigateToScreen(const LoginScreen());
+      debugPrint('');
+      debugPrint('🔍 بدء التحقق من الاشتراك...');
+      debugPrint('───────────────────────────────────────────────────────────');
+
+      // ← Hint: محاولة الاتصال بـ Firestore (مع timeout)
+      final subscriptionStatus = await SubscriptionService.instance
+          .checkSubscription(email)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              debugPrint('⏱️ Timeout في التحقق - استخدام Cache المحلي');
+              return SubscriptionStatus.error(
+                message: 'فشل الاتصال بخادم الاشتراكات',
+              );
+            },
+          );
+
+      debugPrint('📊 نتيجة التحقق: ${subscriptionStatus.statusType}');
+      debugPrint('   - isValid: ${subscriptionStatus.isValid}');
+      debugPrint('   - isActive: ${subscriptionStatus.isActive}');
+      debugPrint('   - plan: ${subscriptionStatus.plan ?? "N/A"}');
+      debugPrint('   - isFromCache: ${subscriptionStatus.isFromCache}');
+
+      if (!mounted) return;
+
+      // ═══════════════════════════════════════════════════════════════════
+      // 4️⃣ معالجة نتيجة التحقق من الاشتراك
+      // ═══════════════════════════════════════════════════════════════════
+
+      // ────────────────────────────────────────────────────────────────────
+      // ✅ الحالة 1: الاشتراك نشط وصالح
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isValid && subscriptionStatus.isActive) {
+        debugPrint('');
+        debugPrint('✅ [السيناريو 2] الاشتراك نشط');
+        debugPrint('   Plan: ${subscriptionStatus.plan}');
+        
+        if (subscriptionStatus.endDate != null) {
+          final daysRemaining = subscriptionStatus.endDate!
+              .difference(DateTime.now())
+              .inDays;
+          debugPrint('   الأيام المتبقية: $daysRemaining يوم');
+        }
+
+        if (subscriptionStatus.isFromCache) {
+          debugPrint('   ⚠️ ملاحظة: البيانات من Cache (offline mode)');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 🆕 فحص الإشعارات (في الخلفية)
+        // ═══════════════════════════════════════════════════════════════════
+        debugPrint('🔔 فحص الإشعارات...');
+        
+        NotificationService.instance
+            .checkAndNotifySubscription()
+            .catchError((e) {
+          debugPrint('⚠️ خطأ في فحص الإشعارات: $e');
+          // ← Hint: ليس خطأ حرج - نكمل
+        });
+
+        debugPrint('➡️ التوجيه لـ LoginScreen');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        // ← Hint: حفظ الاشتراك في Cache المحلي (للعمل offline لاحقاً)
+        if (!subscriptionStatus.isFromCache) {
+          await _cacheSubscriptionForOfflineUse(
+            email: email,
+            subscriptionStatus: subscriptionStatus,
+          );
+        }
+
+        // ← Hint: التوجيه لـ LoginScreen (المستخدم يسجل دخول)
+        _navigateToScreen(LoginScreen(
+          companyName: _companyName.isNotEmpty ? _companyName : null,
+          companyLogoPath: _companyLogo?.path,
+        ));
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // ❌ الحالة 2: الاشتراك منتهي
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isExpired) {
+        debugPrint('');
+        debugPrint('❌ [السيناريو 3] الاشتراك منتهي');
+        
+        if (subscriptionStatus.endDate != null) {
+          final daysSinceExpiry = DateTime.now()
+              .difference(subscriptionStatus.endDate!)
+              .inDays;
+          debugPrint('   انتهى منذ: $daysSinceExpiry يوم');
+        }
+
+        // ← Hint: تحديث status في Firestore (إذا لم يكن محدث)
+        await _updateExpiredSubscriptionInFirestore(email);
+
+        // ← Hint: التوجيه لشاشة التفعيل مع رسالة واضحة
+        debugPrint('➡️ التوجيه لـ ActivationScreen');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        final deviceFingerprint = await deviceService.getDeviceFingerprint();
+        
+        _navigateToScreen(ActivationScreen(
+          l10n: l10n,
+          deviceFingerprint: deviceFingerprint,
+        ));
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // 🚫 الحالة 3: الاشتراك موقوف
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.isSuspended) {
+        debugPrint('');
+        debugPrint('🚫 [السيناريو 4] الاشتراك موقوف');
+        debugPrint('   السبب: ${subscriptionStatus.message}');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        _showSubscriptionSuspendedDialog(
+          message: subscriptionStatus.message ?? 'تم إيقاف الاشتراك',
+        );
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // 🔄 الحالة 4: يحتاج اتصال بالإنترنت
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.requiresOnline) {
+        debugPrint('');
+        debugPrint('🌐 [السيناريو 5] يحتاج التحقق عبر الإنترنت');
+        debugPrint('   Grace Period انتهى');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        _showInternetRequiredForSubscriptionDialog(l10n);
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // ⚠️ الحالة 5: لا يوجد اشتراك (مستخدم قديم بدون اشتراك)
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.statusType == 'not_found') {
+        debugPrint('');
+        debugPrint('⚠️ [السيناريو 6] لا يوجد اشتراك');
+        debugPrint('   Email: $email');
+        debugPrint('➡️ التوجيه لـ ActivationScreen');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        final deviceFingerprint = await deviceService.getDeviceFingerprint();
+        
+        _navigateToScreen(ActivationScreen(
+          l10n: l10n,
+          deviceFingerprint: deviceFingerprint,
+        ));
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // ⚠️ الحالة 6: خطأ في الاتصال (fail-safe - السماح بالدخول)
+      // ────────────────────────────────────────────────────────────────────
+      if (subscriptionStatus.statusType == 'error') {
+        debugPrint('');
+        debugPrint('⚠️ [السيناريو 7] خطأ في التحقق - السماح بالدخول (offline)');
+        debugPrint('➡️ التوجيه لـ LoginScreen (fail-safe)');
+        debugPrint('═══════════════════════════════════════════════════════════');
+
+        // ← Hint: عرض تنبيه بسيط
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '⚠️ لا يمكن التحقق من الاشتراك - العمل في الوضع المحلي',
+            ),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        _navigateToScreen(LoginScreen(
+          companyName: _companyName.isNotEmpty ? _companyName : null,
+          companyLogoPath: _companyLogo?.path,
+        ));
+        return;
+      }
+
+      // ────────────────────────────────────────────────────────────────────
+      // 🔴 الحالة الافتراضية: حالة غير متوقعة
+      // ────────────────────────────────────────────────────────────────────
+      debugPrint('');
+      debugPrint('🔴 حالة غير متوقعة: ${subscriptionStatus.statusType}');
+      debugPrint('➡️ Fallback لـ LoginScreen');
+      debugPrint('═══════════════════════════════════════════════════════════');
+
+      _navigateToScreen(LoginScreen(
+        companyName: _companyName.isNotEmpty ? _companyName : null,
+        companyLogoPath: _companyLogo?.path,
+      ));
 
     } catch (e, stackTrace) {
       debugPrint('❌ خطأ في التنقل: $e');
       FirebaseService.instance.logError(e, stackTrace, reason: 'navigation_error');
 
-      // ← Hint: Fallback آمن - التوجيه لشاشة التسجيل
+      // ← Hint: Fallback آمن
       if (mounted) {
         _navigateToScreen(const RegisterScreen());
       }
+    }
+  }
+
+  /// ============================================================================
+  /// 🆕 حفظ الاشتراك في Cache المحلي للعمل Offline
+  /// ============================================================================
+  /// ← Hint: يُستدعى عند نجاح التحقق من Firestore
+  /// ← Hint: يحفظ بيانات الاشتراك للعمل بدون إنترنت (Grace Period 7 أيام)
+  /// ============================================================================
+  Future<void> _cacheSubscriptionForOfflineUse({
+    required String email,
+    required SubscriptionStatus subscriptionStatus,
+  }) async {
+    try {
+      if (!subscriptionStatus.isValid || subscriptionStatus.plan == null) {
+        return; // ← Hint: لا نحفظ اشتراكات غير صالحة
+      }
+
+      debugPrint('💾 حفظ الاشتراك في Cache للعمل offline...');
+
+      await SubscriptionService.instance.cacheSubscriptionLocally(
+        email: email,
+        plan: subscriptionStatus.plan!,
+        startDate: DateTime.now(), // ← Hint: نحسبها من الآن
+        endDate: subscriptionStatus.endDate,
+        isActive: subscriptionStatus.isActive,
+        maxDevices: subscriptionStatus.features?['maxDevices'] as int?,
+        features: subscriptionStatus.features ?? {},
+      );
+
+      debugPrint('✅ تم حفظ الاشتراك في Cache');
+    } catch (e) {
+      debugPrint('⚠️ خطأ في حفظ Cache: $e');
+      // ← Hint: ليس خطأ حرج - نكمل
+    }
+  }
+
+  /// ============================================================================
+  /// 🆕 تحديث الاشتراك المنتهي في Firestore
+  /// ============================================================================
+  /// ← Hint: يُستدعى عند اكتشاف اشتراك منتهي
+  /// ← Hint: يحدث status و isActive في Firestore
+  /// ← Hint: ✅ تم تنفيذها في الخطوة 4
+  /// ============================================================================
+  Future<void> _updateExpiredSubscriptionInFirestore(String email) async {
+    try {
+      debugPrint('🔄 تحديث حالة الاشتراك في Firestore...');
+
+      // ← Hint: استدعاء الدالة الجديدة من SubscriptionService
+      final updated = await SubscriptionService.instance
+          .updateExpiredSubscription(email);
+
+      if (updated) {
+        debugPrint('✅ تم تحديث Firestore بنجاح');
+      } else {
+        debugPrint('⚠️ لم يتم التحديث (ربما الاشتراك غير موجود)');
+      }
+    } catch (e) {
+      debugPrint('⚠️ خطأ في تحديث Firestore: $e');
+      // ← Hint: ليس خطأ حرج - نكمل
     }
   }
 
@@ -507,7 +762,115 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   // ==========================================================================
-  // حوارات الـ UI
+  // 🆕 حوارات الـ UI الجديدة
+  // ==========================================================================
+
+  /// حوار "الاشتراك موقوف"
+  void _showSubscriptionSuspendedDialog({required String message}) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppConstants.borderRadiusLg,
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.block, color: AppColors.error, size: 28),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('الاشتراك موقوف'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.info.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: const Text(
+                'يرجى التواصل مع الدعم الفني',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => exit(0),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// حوار "يحتاج اتصال بالإنترنت للاشتراك"
+  void _showInternetRequiredForSubscriptionDialog(AppLocalizations l10n) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.wifi_off, color: AppColors.warning, size: 28),
+            const SizedBox(width: AppConstants.spacingSm),
+            const Text('يتطلب اتصال بالإنترنت'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'لم يتم التحقق من الاشتراك منذ 7 أيام',
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.warning.withOpacity(0.3),
+                ),
+              ),
+              child: const Text(
+                'يرجى الاتصال بالإنترنت للمتابعة',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              
+              // ← Hint: محاولة إعادة التحقق
+              await _loadAndNavigate();
+            },
+            child: const Text('إعادة المحاولة'),
+          ),
+          TextButton(
+            onPressed: () => exit(0),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // حوارات الـ UI (الموجودة مسبقاً)
   // ==========================================================================
 
   void _showKillSwitchDialog({

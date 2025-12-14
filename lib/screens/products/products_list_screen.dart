@@ -498,170 +498,227 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   // ===========================================================================
   Widget _buildProductCard(Product product) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context)!;
-    
-    // Hint: تحديد حالة المخزون
-    final isLowStock = product.quantity < 5;
-    final stockColor = isLowStock ? AppColors.warning : AppColors.success;
+  final l10n = AppLocalizations.of(context)!;
+  
+  // ← Hint: تحديد حالة المخزون
+  final isLowStock = product.quantity < 5;
+  final stockColor = isLowStock ? AppColors.warning : AppColors.success;
 
-    return CustomCard(
-      margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ============= رأس البطاقة =============
-          Padding(
-            padding: AppConstants.paddingMd,
-            child: Row(
-              children: [
-                // Hint: عرض صورة المنتج أو الأيقونة الافتراضية
-                _buildProductImage(product, isDark),
+  // ← Hint: الحصول على كود اللغة الحالية
+  final languageCode = Localizations.localeOf(context).languageCode;
 
-                const SizedBox(width: AppConstants.spacingMd),
+  return CustomCard(
+    margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ============= رأس البطاقة =============
+        Padding(
+          padding: AppConstants.paddingMd,
+          child: Row(
+            children: [
+              // Hint: عرض صورة المنتج أو الأيقونة الافتراضية
+              _buildProductImage(product, isDark),
 
-                // Hint: معلومات المنتج
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.productName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+              const SizedBox(width: AppConstants.spacingMd),
+
+              // Hint: معلومات المنتج
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.productName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacingXs),
+
+                    // ← Hint: اسم المورد
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.store,
+                          size: 18,
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            l10n.supplierLabel(
+                              product.supplierName ?? l10n.undefined,
                             ),
-                      ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
 
+                    // ✅ عرض التصنيف والوحدة (إن وجدا)
+                    if (product.categoryName != null || product.unitName != null)
                       const SizedBox(height: AppConstants.spacingXs),
 
+                    // ← Hint: عرض التصنيف والوحدة في صف واحد
+                    if (product.categoryName != null || product.unitName != null)
                       Row(
                         children: [
-                          Icon(
-                            Icons.store,
-                            size: 18,
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondaryLight,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              l10n.supplierLabel(
-                                product.supplierName ?? l10n.undefined,
-                              ),
-                              style: Theme.of(context).textTheme.bodySmall,
-                              overflow: TextOverflow.ellipsis,
+                          // ← Hint: التصنيف
+                          if (product.categoryName != null) ...[
+                            Icon(
+                              Icons.category,
+                              size: 14,
+                              color: AppColors.info,
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Text(
+                              product.categoryName!,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.info,
+                                  ),
+                            ),
+                          ],
+
+                          // ← Hint: فاصل بين التصنيف والوحدة
+                          if (product.categoryName != null && product.unitName != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppConstants.spacingSm,
+                              ),
+                              child: Text(
+                                '•',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+
+                          // ← Hint: الوحدة
+                          if (product.unitName != null) ...[
+                            Icon(
+                              Icons.straighten,
+                              size: 14,
+                              color: AppColors.success,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              product.unitName!,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.success,
+                                  ),
+                            ),
+                          ],
                         ],
                       ),
-                    ],
-                  ),
+                  ],
                 ),
+              ),
 
-                // Hint: أزرار الإجراءات
-                // ← Hint: كل مستخدم يمكنه التعديل والأرشفة
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  color: AppColors.info,
-                  tooltip: l10n.edit,
-                  onPressed: () => _navigateToEditProduct(product),
+              // Hint: أزرار الإجراءات
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                color: AppColors.info,
+                tooltip: l10n.edit,
+                onPressed: () => _navigateToEditProduct(product),
+              ),
+              IconButton(
+                icon: const Icon(Icons.archive_outlined),
+                color: AppColors.error,
+                tooltip: l10n.archive,
+                onPressed: () => _handleArchiveProduct(product),
+              ),
+            ],
+          ),
+        ),
+
+        Divider(
+          height: 1,
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+        ),
+
+        // ============= معلومات تفصيلية =============
+        Padding(
+          padding: AppConstants.paddingMd,
+          child: Row(
+            children: [
+              // Hint: الكمية (int - بدون تغيير)
+              Expanded(
+                child: _buildInfoItem(
+                  icon: Icons.inventory_outlined,
+                  label: l10n.quantity,
+                  value: product.quantity.toString(),
+                  color: stockColor,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.archive_outlined),
-                  color: AppColors.error,
-                  tooltip: l10n.archive,
-                  onPressed: () => _handleArchiveProduct(product),
+              ),
+
+              // Hint: ✅ سعر الشراء - Decimal
+              Expanded(
+                child: _buildInfoItem(
+                  icon: Icons.shopping_cart_outlined,
+                  label: l10n.purchase,
+                  value: formatCurrency(product.costPrice),
+                  color: AppColors.warning,
                 ),
-              ],
+              ),
+
+              // Hint: ✅ سعر البيع - Decimal
+              Expanded(
+                child: _buildInfoItem(
+                  icon: Icons.sell_outlined,
+                  label: l10n.sell,
+                  value: formatCurrency(product.sellingPrice),
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ============= الباركود (إن وجد) =============
+        if (product.barcode != null && product.barcode!.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.fromLTRB(
+              AppConstants.spacingMd,
+              0,
+              AppConstants.spacingMd,
+              AppConstants.spacingMd,
             ),
-          ),
-
-          Divider(
-            height: 1,
-            color: isDark ? AppColors.borderDark : AppColors.borderLight,
-          ),
-
-          // ============= معلومات تفصيلية =============
-          Padding(
-            padding: AppConstants.paddingMd,
+            padding: const EdgeInsets.all(AppConstants.spacingSm),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.surfaceDark.withOpacity(0.5)
+                  : AppColors.surfaceLight,
+              borderRadius: AppConstants.borderRadiusSm,
+            ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Hint: الكمية (int - بدون تغيير)
-                Expanded(
-                  child: _buildInfoItem(
-                    icon: Icons.inventory_outlined,
-                    label: l10n.quantity,
-                    value: product.quantity.toString(),
-                    color: stockColor,
-                  ),
+                Icon(
+                  Icons.qr_code,
+                  size: 18,
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
                 ),
-
-                // Hint: ✅ سعر الشراء - Decimal
-                Expanded(
-                  child: _buildInfoItem(
-                    icon: Icons.shopping_cart_outlined,
-                    label: l10n.purchase,
-                    value: formatCurrency(product.costPrice),
-                    color: AppColors.warning,
-                  ),
-                ),
-
-                // Hint: ✅ سعر البيع - Decimal
-                Expanded(
-                  child: _buildInfoItem(
-                    icon: Icons.sell_outlined,
-                    label: l10n.sell,
-                    value: formatCurrency(product.sellingPrice),
-                    color: AppColors.success,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ============= الباركود (إن وجد) =============
-          if (product.barcode != null && product.barcode!.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.fromLTRB(
-                AppConstants.spacingMd,
-                0,
-                AppConstants.spacingMd,
-                AppConstants.spacingMd,
-              ),
-              padding: const EdgeInsets.all(AppConstants.spacingSm),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceDark.withOpacity(0.5)
-                    : AppColors.surfaceLight,
-                borderRadius: AppConstants.borderRadiusSm,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.qr_code,
-                    size: 18,
+                const SizedBox(width: 4),
+                Text(
+                  product.barcode!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'monospace',
                     color: isDark
                         ? AppColors.textSecondaryDark
                         : AppColors.textSecondaryLight,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    product.barcode!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: 'monospace',
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-        ],
-      ),
-    );
+          ),
+      ],
+    ),
+  );
   }
 
   // ===========================================================================
