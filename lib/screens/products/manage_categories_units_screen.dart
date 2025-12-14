@@ -26,11 +26,12 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     with SingleTickerProviderStateMixin {
   // ============= المتغيرات =============
   final dbHelper = DatabaseHelper.instance;
+  final translationService = TranslationService();
   late TabController _tabController;
   late Future<List<ProductCategory>> _categoriesFuture;
   late Future<List<ProductUnit>> _unitsFuture;
 
-  // 🆕 متغيرات عرض العناصر المعطلة
+  // ← Hint: حالة إظهار/إخفاء العناصر المعطلة
   bool _showInactiveCategories = false;
   bool _showInactiveUnits = false;
 
@@ -50,11 +51,14 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
   /// إعادة تحميل البيانات
   /// ← Hint: يتم استدعاؤها عند التهيئة وبعد كل عملية إضافة/تعديل/حذف
-  /// ← Hint: تأخذ في الاعتبار إعدادات عرض العناصر المعطلة
   void _reloadData() {
     setState(() {
-      _categoriesFuture = dbHelper.getProductCategories(activeOnly: !_showInactiveCategories);
-      _unitsFuture = dbHelper.getProductUnits(activeOnly: !_showInactiveUnits);
+      _categoriesFuture = dbHelper.getProductCategories(
+        includeInactive: _showInactiveCategories,
+      );
+      _unitsFuture = dbHelper.getProductUnits(
+        includeInactive: _showInactiveUnits,
+      );
     });
   }
 
@@ -118,9 +122,52 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   // 🏷️ تبويب التصنيفات
   // ============================================================
   Widget _buildCategoriesTab(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: FutureBuilder<List<ProductCategory>>(
+      body: Column(
+        children: [
+          // ← Hint: Toggle لإظهار/إخفاء العناصر المعطلة
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.spacingMd,
+              vertical: AppConstants.spacingSm,
+            ),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.cardDark.withOpacity(0.5)
+                  : Colors.grey.shade100,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? AppColors.borderDark : Colors.grey.shade300,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'إظهار التصنيفات المعطلة',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                Switch(
+                  value: _showInactiveCategories,
+                  onChanged: (value) {
+                    setState(() {
+                      _showInactiveCategories = value;
+                      _reloadData();
+                    });
+                  },
+                  activeColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+              ],
+            ),
+          ),
+
+          // ← Hint: القائمة
+          Expanded(
+            child: FutureBuilder<List<ProductCategory>>(
         future: _categoriesFuture,
         builder: (context, snapshot) {
           // حالة التحميل
@@ -149,77 +196,18 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
           // عرض القائمة
           final categories = snapshot.data!;
-          return Column(
-            children: [
-              // 🆕 Toggle لعرض العناصر المعطلة
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spacingMd,
-                  vertical: AppConstants.spacingSm,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.cardDark.withOpacity(0.5)
-                      : Colors.grey.shade50,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.borderDark
-                          : Colors.grey.shade200,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 20,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.textSecondaryDark
-                          : Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: AppConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        'عرض التصنيفات المعطلة',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.textSecondaryDark
-                              : Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                    Switch(
-                      value: _showInactiveCategories,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          _showInactiveCategories = value;
-                          _reloadData();
-                        });
-                      },
-                      activeColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.primaryDark
-                          : AppColors.primaryLight,
-                    ),
-                  ],
-                ),
-              ),
-
-              // القائمة
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(AppConstants.spacingMd),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    return _buildCategoryCard(category, l10n);
-                  },
-                ),
-              ),
-            ],
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppConstants.spacingMd),
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              return _buildCategoryCard(category, l10n);
+            },
           );
         },
+            ),
+          ),
+        ],
       ),
 
       // ← Hint: زر الإضافة
@@ -372,9 +360,52 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   // 📏 تبويب الوحدات
   // ============================================================
   Widget _buildUnitsTab(AppLocalizations l10n) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: FutureBuilder<List<ProductUnit>>(
+      body: Column(
+        children: [
+          // ← Hint: Toggle لإظهار/إخفاء العناصر المعطلة
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.spacingMd,
+              vertical: AppConstants.spacingSm,
+            ),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.cardDark.withOpacity(0.5)
+                  : Colors.grey.shade100,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? AppColors.borderDark : Colors.grey.shade300,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'إظهار الوحدات المعطلة',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                Switch(
+                  value: _showInactiveUnits,
+                  onChanged: (value) {
+                    setState(() {
+                      _showInactiveUnits = value;
+                      _reloadData();
+                    });
+                  },
+                  activeColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+              ],
+            ),
+          ),
+
+          // ← Hint: القائمة
+          Expanded(
+            child: FutureBuilder<List<ProductUnit>>(
         future: _unitsFuture,
         builder: (context, snapshot) {
           // حالة التحميل
@@ -403,77 +434,18 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
 
           // عرض القائمة
           final units = snapshot.data!;
-          return Column(
-            children: [
-              // 🆕 Toggle لعرض العناصر المعطلة
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spacingMd,
-                  vertical: AppConstants.spacingSm,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.cardDark.withOpacity(0.5)
-                      : Colors.grey.shade50,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.borderDark
-                          : Colors.grey.shade200,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 20,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.textSecondaryDark
-                          : Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: AppConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        'عرض الوحدات المعطلة',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.textSecondaryDark
-                              : Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                    Switch(
-                      value: _showInactiveUnits,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          _showInactiveUnits = value;
-                          _reloadData();
-                        });
-                      },
-                      activeColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.primaryDark
-                          : AppColors.primaryLight,
-                    ),
-                  ],
-                ),
-              ),
-
-              // القائمة
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(AppConstants.spacingMd),
-                  itemCount: units.length,
-                  itemBuilder: (context, index) {
-                    final unit = units[index];
-                    return _buildUnitCard(unit, l10n);
-                  },
-                ),
-              ),
-            ],
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppConstants.spacingMd),
+            itemCount: units.length,
+            itemBuilder: (context, index) {
+              final unit = units[index];
+              return _buildUnitCard(unit, l10n);
+            },
           );
         },
+            ),
+          ),
+        ],
       ),
 
       // ← Hint: زر الإضافة
@@ -627,100 +599,17 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     final nameArController = TextEditingController();
     final nameEnController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    final translationService = TranslationService();
+
+    // ← Hint: متغيرات لتتبع حالة الترجمة والتعديل اليدوي
+    bool isTranslating = false;
+    bool userEditedAr = false;
+    bool userEditedEn = false;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) {
-        // 🆕 استخدام StatefulBuilder للسماح بتحديث الحقول بعد الترجمة
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            // 🆕 دالة الترجمة من العربي للإنجليزي
-            translateArToEn() async {
-              if (nameArController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('⚠️ اكتب الاسم بالعربي أولاً'),
-                    backgroundColor: AppColors.warning,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                final translated = await translationService.translateToEnglish(nameArController.text.trim());
-                if (translated != null) {
-                  setDialogState(() {
-                    nameEnController.text = translated;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ تمت الترجمة بنجاح'),
-                      backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('❌ فشلت الترجمة - تحقق من اتصال الإنترنت'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('❌ خطأ في الترجمة: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-
-            // 🆕 دالة الترجمة من الإنجليزي للعربي
-            translateEnToAr() async {
-              if (nameEnController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('⚠️ اكتب الاسم بالإنجليزي أولاً'),
-                    backgroundColor: AppColors.warning,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                final translated = await translationService.translateToArabic(nameEnController.text.trim());
-                if (translated != null) {
-                  setDialogState(() {
-                    nameArController.text = translated;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ تمت الترجمة بنجاح'),
-                      backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('❌ فشلت الترجمة - تحقق من اتصال الإنترنت'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('❌ خطأ في الترجمة: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-
             return AlertDialog(
               title: const Row(
                 children: [
@@ -737,12 +626,44 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                     // ← Hint: الاسم بالعربي (إجباري)
                     TextFormField(
                       controller: nameArController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'الاسم بالعربي *',
                         hintText: 'مثال: أجهزة كهربائية',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.text_fields),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: isTranslating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.translate, size: 20),
+                                tooltip: 'ترجمة إلى الإنجليزية',
+                                onPressed: () async {
+                                  final text = nameArController.text.trim();
+                                  if (text.isEmpty) return;
+
+                                  setDialogState(() => isTranslating = true);
+
+                                  final translated = await translationService.translateToEnglish(text);
+
+                                  setDialogState(() => isTranslating = false);
+
+                                  if (translated != null && !userEditedEn) {
+                                    setDialogState(() {
+                                      nameEnController.text = translated;
+                                    });
+                                  }
+                                },
+                              ),
                       ),
+                      onChanged: (value) {
+                        userEditedAr = true;
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'يرجى إدخال الاسم بالعربي';
@@ -751,47 +672,55 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                       },
                     ),
 
-                    // 🆕 زر الترجمة للإنجليزي
-                    const SizedBox(height: AppConstants.spacingSm),
-                    OutlinedButton.icon(
-                      onPressed: translateArToEn,
-                      icon: const Icon(Icons.translate, size: 18),
-                      label: const Text('ترجمة ← إنجليزي'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.info,
-                        minimumSize: const Size(double.infinity, 36),
-                      ),
-                    ),
-
                     const SizedBox(height: AppConstants.spacingMd),
 
                     // ← Hint: الاسم بالإنجليزي (إجباري)
                     TextFormField(
                       controller: nameEnController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'الاسم بالإنجليزي *',
                         hintText: 'Example: Electrical Appliances',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.text_fields),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: isTranslating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.translate, size: 20),
+                                tooltip: 'ترجمة إلى العربية',
+                                onPressed: () async {
+                                  final text = nameEnController.text.trim();
+                                  if (text.isEmpty) return;
+
+                                  setDialogState(() => isTranslating = true);
+
+                                  final translated = await translationService.translateToArabic(text);
+
+                                  setDialogState(() => isTranslating = false);
+
+                                  if (translated != null && !userEditedAr) {
+                                    setDialogState(() {
+                                      nameArController.text = translated;
+                                    });
+                                  }
+                                },
+                              ),
                       ),
+                      onChanged: (value) {
+                        userEditedEn = true;
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'يرجى إدخال الاسم بالإنجليزي';
                         }
                         return null;
                       },
-                    ),
-
-                    // 🆕 زر الترجمة للعربي
-                    const SizedBox(height: AppConstants.spacingSm),
-                    OutlinedButton.icon(
-                      onPressed: translateEnToAr,
-                      icon: const Icon(Icons.translate, size: 18),
-                      label: const Text('ترجمة ← عربي'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.info,
-                        minimumSize: const Size(double.infinity, 36),
-                      ),
                     ),
                   ],
                 ),
@@ -813,16 +742,18 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                           ),
                         );
                         Navigator.pop(ctx, true);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('خطأ: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('حفظ'),
-            ),
-          ],
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('خطأ: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('حفظ'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -957,22 +888,18 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   }
 
   /// ============================================================================
-  /// حذف تصنيف نهائياً (مع حماية قوية من الحذف)
+  /// حذف تصنيف نهائياً (مع التحقق من عدم وجود منتجات مرتبطة)
   /// ============================================================================
-  /// ← Hint: يتحقق أولاً من عدد المنتجات المرتبطة ويعرض تحذير
-  /// ← Hint: حسب طلب المستخدم: السماح بالتعطيل، منع الحذف النهائي إذا كان مرتبط
+  /// ← Hint: يتحقق أولاً من عدم وجود منتجات تستخدم هذا التصنيف
   Future<void> _deleteCategoryPermanently(ProductCategory category) async {
-    // 🆕 Hint: حساب عدد المنتجات المرتبطة
-    final productsCount = await dbHelper.countProductsByCategory(category.categoryID!);
+    // ← Hint: عد المنتجات المرتبطة بهذا التصنيف
+    final productCount = await dbHelper.countProductsByCategory(category.categoryID!);
 
-    if (productsCount > 0) {
-      // ← Hint: عرض رسالة تحذير مع عدد المنتجات
+    if (productCount > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '⚠️ لا يمكن حذف التصنيف نهائياً\n'
-            'هذا التصنيف مرتبط بـ $productsCount ${productsCount == 1 ? 'منتج' : 'منتج'}\n'
-            'يمكنك تعطيل التصنيف بدلاً من حذفه'
+            'لا يمكن حذف التصنيف لوجود $productCount منتج مرتبط به. قم بتغيير تصنيف المنتجات أولاً أو استخدم زر "تعطيل".',
           ),
           backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 5),
@@ -981,37 +908,12 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       return;
     }
 
-    // ← Hint: تأكيد الحذف النهائي (فقط إذا لم يكن مرتبط بمنتجات)
+    // ← Hint: تأكيد الحذف
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.error),
-            SizedBox(width: AppConstants.spacingSm),
-            Text('تحذير: حذف نهائي'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'هل أنت متأكد من حذف التصنيف "${category.categoryNameAr}" نهائياً؟',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            const Text(
-              '⚠️ تحذير: هذا الإجراء لا يمكن التراجع عنه!',
-              style: TextStyle(color: AppColors.error),
-            ),
-            const SizedBox(height: AppConstants.spacingSm),
-            const Text(
-              'ملاحظة: يُنصح بالتعطيل بدلاً من الحذف النهائي للحفاظ على البيانات.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف التصنيف "${category.categoryNameAr}" نهائياً؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -1022,7 +924,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('حذف نهائياً'),
+            child: const Text('حذف'),
           ),
         ],
       ),
@@ -1042,7 +944,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ تم حذف التصنيف نهائياً'),
+          content: Text('تم حذف التصنيف نهائياً'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -1062,100 +964,17 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
     final nameArController = TextEditingController();
     final nameEnController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    final translationService = TranslationService();
+
+    // ← Hint: متغيرات لتتبع حالة الترجمة والتعديل اليدوي
+    bool isTranslating = false;
+    bool userEditedAr = false;
+    bool userEditedEn = false;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) {
-        // 🆕 استخدام StatefulBuilder للسماح بتحديث الحقول بعد الترجمة
         return StatefulBuilder(
-          builder: (context, setState) {
-            // 🆕 دالة الترجمة من العربي للإنجليزي
-            Future<void> _translateArToEn() async {
-              if (nameArController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('⚠️ اكتب الاسم بالعربي أولاً'),
-                    backgroundColor: AppColors.warning,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                final translated = await translationService.translateToEnglish(nameArController.text.trim());
-                if (translated != null) {
-                  setDialogState(() {
-                    nameEnController.text = translated;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ تمت الترجمة بنجاح'),
-                      backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('❌ فشلت الترجمة - تحقق من اتصال الإنترنت'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('❌ خطأ في الترجمة: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-
-            // 🆕 دالة الترجمة من الإنجليزي للعربي
-            translateEnToAr() async {
-              if (nameEnController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('⚠️ اكتب الاسم بالإنجليزي أولاً'),
-                    backgroundColor: AppColors.warning,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                final translated = await translationService.translateToArabic(nameEnController.text.trim());
-                if (translated != null) {
-                  setDialogState(() {
-                    nameArController.text = translated;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ تمت الترجمة بنجاح'),
-                      backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('❌ فشلت الترجمة - تحقق من اتصال الإنترنت'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('❌ خطأ في الترجمة: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-
+          builder: (context, setDialogState) {
             return AlertDialog(
               title: const Row(
                 children: [
@@ -1171,12 +990,44 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                   children: [
                     TextFormField(
                       controller: nameArController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'الاسم بالعربي *',
                         hintText: 'مثال: لتر، متر، علبة',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.text_fields),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: isTranslating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.translate, size: 20),
+                                tooltip: 'ترجمة إلى الإنجليزية',
+                                onPressed: () async {
+                                  final text = nameArController.text.trim();
+                                  if (text.isEmpty) return;
+
+                                  setDialogState(() => isTranslating = true);
+
+                                  final translated = await translationService.translateToEnglish(text);
+
+                                  setDialogState(() => isTranslating = false);
+
+                                  if (translated != null && !userEditedEn) {
+                                    setDialogState(() {
+                                      nameEnController.text = translated;
+                                    });
+                                  }
+                                },
+                              ),
                       ),
+                      onChanged: (value) {
+                        userEditedAr = true;
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'يرجى إدخال الاسم بالعربي';
@@ -1185,46 +1036,54 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                       },
                     ),
 
-                    // 🆕 زر الترجمة للإنجليزي
-                    const SizedBox(height: AppConstants.spacingSm),
-                    OutlinedButton.icon(
-                      onPressed: translateArToEn,
-                      icon: const Icon(Icons.translate, size: 18),
-                      label: const Text('ترجمة ← إنجليزي'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.info,
-                        minimumSize: const Size(double.infinity, 36),
-                      ),
-                    ),
-
                     const SizedBox(height: AppConstants.spacingMd),
 
                     TextFormField(
                       controller: nameEnController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'الاسم بالإنجليزي *',
                         hintText: 'Example: Liter, Meter, Box',
-                        prefixIcon: Icon(Icons.text_fields),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.text_fields),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: isTranslating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.translate, size: 20),
+                                tooltip: 'ترجمة إلى العربية',
+                                onPressed: () async {
+                                  final text = nameEnController.text.trim();
+                                  if (text.isEmpty) return;
+
+                                  setDialogState(() => isTranslating = true);
+
+                                  final translated = await translationService.translateToArabic(text);
+
+                                  setDialogState(() => isTranslating = false);
+
+                                  if (translated != null && !userEditedAr) {
+                                    setDialogState(() {
+                                      nameArController.text = translated;
+                                    });
+                                  }
+                                },
+                              ),
                       ),
+                      onChanged: (value) {
+                        userEditedEn = true;
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'يرجى إدخال الاسم بالإنجليزي';
                         }
                         return null;
                       },
-                    ),
-
-                    // 🆕 زر الترجمة للعربي
-                    const SizedBox(height: AppConstants.spacingSm),
-                    OutlinedButton.icon(
-                      onPressed: translateEnToAr,
-                      icon: const Icon(Icons.translate, size: 18),
-                      label: const Text('ترجمة ← عربي'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.info,
-                        minimumSize: const Size(double.infinity, 36),
-                      ),
                     ),
                   ],
                 ),
@@ -1242,20 +1101,22 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
                           ProductUnit(
                             unitNameAr: nameArController.text.trim(),
                             unitNameEn: nameEnController.text.trim(),
-                        isActive: true,
-                      ),
-                    );
-                    Navigator.pop(ctx, true);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('خطأ: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('حفظ'),
-            ),
-          ],
+                            isActive: true,
+                          ),
+                        );
+                        Navigator.pop(ctx, true);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('خطأ: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('حفظ'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1387,23 +1248,15 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   }
 
   /// حذف وحدة نهائياً (مع التحقق من عدم وجود منتجات مرتبطة)
-  /// ============================================================================
-  /// حذف وحدة نهائياً (مع حماية قوية من الحذف)
-  /// ============================================================================
-  /// ← Hint: يتحقق أولاً من عدد المنتجات المرتبطة ويعرض تحذير
-  /// ← Hint: حسب طلب المستخدم: السماح بالتعطيل، منع الحذف النهائي إذا كان مرتبط
   Future<void> _deleteUnitPermanently(ProductUnit unit) async {
-    // 🆕 Hint: حساب عدد المنتجات المرتبطة
-    final productsCount = await dbHelper.countProductsByUnit(unit.unitID!);
+    // ← Hint: عد المنتجات المرتبطة بهذه الوحدة
+    final productCount = await dbHelper.countProductsByUnit(unit.unitID!);
 
-    if (productsCount > 0) {
-      // ← Hint: عرض رسالة تحذير مع عدد المنتجات
+    if (productCount > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '⚠️ لا يمكن حذف الوحدة نهائياً\n'
-            'هذه الوحدة مرتبطة بـ $productsCount ${productsCount == 1 ? 'منتج' : 'منتج'}\n'
-            'يمكنك تعطيل الوحدة بدلاً من حذفها'
+            'لا يمكن حذف الوحدة لوجود $productCount منتج يستخدمها. قم بتغيير وحدة المنتجات أولاً أو استخدم زر "تعطيل".',
           ),
           backgroundColor: AppColors.warning,
           duration: const Duration(seconds: 5),
@@ -1412,37 +1265,11 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       return;
     }
 
-    // ← Hint: تأكيد الحذف النهائي (فقط إذا لم يكن مرتبط بمنتجات)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.error),
-            SizedBox(width: AppConstants.spacingSm),
-            Text('تحذير: حذف نهائي'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'هل أنت متأكد من حذف الوحدة "${unit.unitNameAr}" نهائياً؟',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            const Text(
-              '⚠️ تحذير: هذا الإجراء لا يمكن التراجع عنه!',
-              style: TextStyle(color: AppColors.error),
-            ),
-            const SizedBox(height: AppConstants.spacingSm),
-            const Text(
-              'ملاحظة: يُنصح بالتعطيل بدلاً من الحذف النهائي للحفاظ على البيانات.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف الوحدة "${unit.unitNameAr}" نهائياً؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -1453,7 +1280,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('حذف نهائياً'),
+            child: const Text('حذف'),
           ),
         ],
       ),
@@ -1472,7 +1299,7 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
       _reloadData();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ تم حذف الوحدة نهائياً'),
+          content: Text('تم حذف الوحدة نهائياً'),
           backgroundColor: AppColors.success,
         ),
       );
