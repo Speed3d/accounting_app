@@ -263,17 +263,25 @@ class DatabaseHelper {
     // ← Hint: لا حاجة لتخزين بيانات المستخدمين محلياً، كل شيء يدار عبر Firebase Authentication & Firestore
 
     // 🆕 v3: جدول Subscription Cache
+    // ← Hint: Schema موحّد يطابق migration للتوافق الكامل
     batch.execute('''
       CREATE TABLE IF NOT EXISTS TB_Subscription_Cache (
         ID INTEGER PRIMARY KEY CHECK (ID = 1),
         Email TEXT NOT NULL,
         Plan TEXT NOT NULL,
-        Status TEXT NOT NULL,
         StartDate TEXT NOT NULL,
         EndDate TEXT,
+        IsActive INTEGER NOT NULL DEFAULT 1,
         MaxDevices INTEGER,
+        CurrentDeviceCount INTEGER DEFAULT 0,
+        CurrentDeviceId TEXT NOT NULL,
+        CurrentDeviceName TEXT,
+        LastSyncAt TEXT NOT NULL,
+        OfflineDaysRemaining INTEGER DEFAULT 7,
         LastOnlineCheck TEXT NOT NULL,
-        CachedAt TEXT NOT NULL
+        FeaturesJson TEXT,
+        Status TEXT NOT NULL DEFAULT 'active',
+        UpdatedAt TEXT NOT NULL
       )
     ''');
 
