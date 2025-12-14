@@ -61,6 +61,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   String? _imagePath;
   bool _isSaving = false;
 
+  // ✅ متغير جديد للباركود التلقائي
+  bool _isAutoBarcodeEnabled = true; // ← Hint: تفعيل الباركود التلقائي افتراضياً
+
   // ============= دورة الحياة =============
   @override
   void initState() {
@@ -319,10 +322,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         throw Exception('الكمية لا يمكن أن تكون سالبة');
       }
 
-      // ← Hint: التحقق من عدم تكرار الباركود (إذا تم إدخاله)
-      if (_barcodeController.text.isNotEmpty) {
+      // ✅ توليد باركود تلقائي إذا كان الخيار مفعّل والباركود فارغ
+      String? finalBarcode;
+      if (_isAutoBarcodeEnabled && _barcodeController.text.trim().isEmpty) {
+        // ← Hint: توليد باركود داخلي تلقائياً
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        finalBarcode = 'INTERNAL-$timestamp';
+      } else {
+        finalBarcode = _barcodeController.text.trim().isEmpty
+            ? null
+            : _barcodeController.text.trim();
+      }
+
+      // ← Hint: التحقق من عدم تكرار الباركود (إذا تم إدخاله أو توليده)
+      if (finalBarcode != null && finalBarcode.isNotEmpty) {
         final barcodeExists = await _dbHelper.barcodeExists(
-          _barcodeController.text,
+          finalBarcode,
           currentProductId: widget.product?.productID,
         );
 
@@ -335,12 +350,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       final product = Product(
         productID: widget.product?.productID,
         productName: _nameController.text.trim(),
-        productDetails: _detailsController.text.trim().isEmpty 
-            ? null 
+        productDetails: _detailsController.text.trim().isEmpty
+            ? null
             : _detailsController.text.trim(),
-        barcode: _barcodeController.text.trim().isEmpty 
-            ? null 
-            : _barcodeController.text.trim(),
+        barcode: finalBarcode,
         quantity: quantity,
         costPrice: costPrice,
         sellingPrice: sellingPrice,
@@ -398,7 +411,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   // ============================================================================
-  // بناء الواجهة
+  // 🎨 بناء الواجهة الرئيسية (النسخة المحدثة بنظام البطاقات)
   // ============================================================================
   @override
   Widget build(BuildContext context) {
@@ -412,7 +425,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           widget.product == null ? l10n.addProduct : l10n.editProduct,
         ),
       ),
-      
+
       body: _isLoadingSuppliers
           ? LoadingState(message: l10n.loadingMessage)
           : _suppliers.isEmpty
@@ -427,319 +440,44 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     padding: AppConstants.paddingLg,
                     children: [
                       // ============================================================
-                      // 🖼️ قسم الصورة
+                      // 🖼️ قسم الصورة (يبقى كما هو)
                       // ============================================================
                       _buildImageSection(l10n, isDark),
 
-                      const SizedBox(height: AppConstants.spacingXl),
+                      const SizedBox(height: AppConstants.spacingLg),
 
                       // ============================================================
-                      // 📝 اسم المنتج
+                      // 🏪 بطاقة: اختيار المورد/الشريك
                       // ============================================================
-                      CustomTextField(
-                        controller: _nameController,
-                        label: l10n.productName,
-                        hint: 'مثال: لابتوب Dell XPS 15',
-                        prefixIcon: Icons.inventory_2,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.fieldRequired;
-                          }
-                          return null;
-                        },
-                      ),
+                      _buildSupplierCard(l10n, isDark),
 
                       const SizedBox(height: AppConstants.spacingMd),
 
                       // ============================================================
-                      // 📄 التفاصيل (اختياري)
+                      // 📝 بطاقة: معلومات المنتج (الاسم + التفاصيل)
                       // ============================================================
-                      CustomTextField(
-                        controller: _detailsController,
-                        label: l10n.details,
-                        hint: 'تفاصيل إضافية عن المنتج (اختياري)',
-                        prefixIcon: Icons.description,
-                        maxLines: 3,
-                      ),
+                      _buildProductInfoCard(l10n, isDark),
 
                       const SizedBox(height: AppConstants.spacingMd),
 
                       // ============================================================
-                      // 🏪 اختيار المورد
+                      // 🎨 بطاقة: التصنيف والوحدة
                       // ============================================================
-                      DropdownButtonFormField<Supplier>(
-                        value: _selectedSupplier,
-                        decoration: InputDecoration(
-                          labelText: l10n.supplier,
-                          prefixIcon: const Icon(Icons.store),
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: _suppliers.map((supplier) {
-                          return DropdownMenuItem<Supplier>(
-                            value: supplier,
-                            child: Text(supplier.supplierName),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedSupplier = value);
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return l10n.pleaseSelectSupplier ?? 'يرجى اختيار المورد';
-                          }
-                          return null;
-                        },
-                      ),
+                      _buildCategoryUnitCard(l10n, isDark, languageCode),
 
                       const SizedBox(height: AppConstants.spacingMd),
 
                       // ============================================================
-                      // ✅ Dropdown التصنيف (النسخة المبسطة)
+                      // 💰 بطاقة: الكمية والأسعار + خلاصة الربح
                       // ============================================================
-                      // ← Hint: يعرض قائمة التصنيفات النشطة
-                      // ← Hint: الأسماء تتغير تلقائياً حسب اللغة
-                      DropdownButtonFormField<ProductCategory>(
-                        value: _selectedCategory,
-                        decoration: InputDecoration(
-                          labelText: 'التصنيف',
-                          prefixIcon: const Icon(Icons.category),
-                          border: const OutlineInputBorder(),
-                          // ← Hint: زر للذهاب لصفحة إدارة التصنيفات
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.settings, size: 20),
-                            tooltip: 'إدارة التصنيفات',
-                            onPressed: () async {
-                              // ← Hint: الانتقال لصفحة الإدارة
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ManageCategoriesUnitsScreen(),
-                                ),
-                              );
-                              // ← Hint: إعادة تحميل القوائم بعد العودة
-                              _loadCategoriesAndUnits();
-                            },
-                          ),
-                        ),
-                        items: _categories.map((category) {
-                          return DropdownMenuItem<ProductCategory>(
-                            value: category,
-                            child: Row(
-                              children: [
-                                const Icon(Icons.category, size: 16),
-                                const SizedBox(width: 8),
-                                Text(
-                                  // ← Hint: عرض الاسم حسب اللغة الحالية
-                                  category.getLocalizedName(languageCode),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedCategory = value);
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'يرجى اختيار التصنيف';
-                          }
-                          return null;
-                        },
-                      ),
+                      _buildPricingCard(l10n, isDark),
 
                       const SizedBox(height: AppConstants.spacingMd),
 
                       // ============================================================
-                      // ✅ Dropdown الوحدة (النسخة المبسطة)
+                      // 📷 بطاقة: الباركود (يدوي أو تلقائي)
                       // ============================================================
-                      // ← Hint: نفس التصميم كما في التصنيف
-                      DropdownButtonFormField<ProductUnit>(
-                        value: _selectedUnit,
-                        decoration: InputDecoration(
-                          labelText: 'الوحدة',
-                          prefixIcon: const Icon(Icons.straighten),
-                          border: const OutlineInputBorder(),
-                          // ← Hint: زر للذهاب لصفحة إدارة الوحدات
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.settings, size: 20),
-                            tooltip: 'إدارة الوحدات',
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ManageCategoriesUnitsScreen(),
-                                ),
-                              );
-                              _loadCategoriesAndUnits();
-                            },
-                          ),
-                        ),
-                        items: _units.map((unit) {
-                          return DropdownMenuItem<ProductUnit>(
-                            value: unit,
-                            child: Row(
-                              children: [
-                                const Icon(Icons.straighten, size: 16),
-                                const SizedBox(width: 8),
-                                Text(
-                                  // ← Hint: عرض الاسم حسب اللغة الحالية
-                                  unit.getLocalizedName(languageCode),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() => _selectedUnit = value);
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'يرجى اختيار الوحدة';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // ============================================================
-                      // 🔢 الكمية
-                      // ============================================================
-                      CustomTextField(
-                        controller: _quantityController,
-                        label: l10n.quantity,
-                        hint: 'مثال: 100',
-                        prefixIcon: Icons.inventory,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.fieldRequired;
-                          }
-                          
-                          final englishValue = convertArabicNumbersToEnglish(value);
-                          final quantity = int.tryParse(englishValue);
-                          
-                          if (quantity == null) {
-                            return l10n.enterValidNumber;
-                          }
-                          
-                          if (quantity < 0) {
-                            return 'الكمية لا يمكن أن تكون سالبة';
-                          }
-                          
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // ============================================================
-                      // 💰 الأسعار (صف واحد)
-                      // ============================================================
-                      Row(
-                        children: [
-                          // سعر الشراء
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _costPriceController,
-                              label: l10n.costPrice,
-                              hint: '0.00',
-                              prefixIcon: Icons.shopping_cart,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return l10n.fieldRequired;
-                                }
-                                
-                                final englishValue = convertArabicNumbersToEnglish(value);
-                                final price = Decimal.tryParse(englishValue);
-                                
-                                if (price == null) {
-                                  return l10n.enterValidNumber;
-                                }
-                                
-                                if (price < Decimal.zero) {
-                                  return 'السعر لا يمكن أن يكون سالباً';
-                                }
-                                
-                                return null;
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(width: AppConstants.spacingMd),
-
-                          // سعر البيع
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _sellingPriceController,
-                              label: l10n.sellingPrice,
-                              hint: '0.00',
-                              prefixIcon: Icons.sell,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return l10n.fieldRequired;
-                                }
-                                
-                                final englishValue = convertArabicNumbersToEnglish(value);
-                                final price = Decimal.tryParse(englishValue);
-                                
-                                if (price == null) {
-                                  return l10n.enterValidNumber;
-                                }
-                                
-                                if (price < Decimal.zero) {
-                                  return 'السعر لا يمكن أن يكون سالباً';
-                                }
-                                
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: AppConstants.spacingMd),
-
-            // ============================================================
-            // 📷 الباركود
-            // ============================================================
-              CustomTextField(
-                 controller: _barcodeController,
-                   label: l10n.barcode,
-                   hint: 'اختياري - امسح أو أدخل يدوياً',
-                   prefixIcon: Icons.qr_code,
-                   ),
-
-               const SizedBox(height: AppConstants.spacingSm),
-
-                    // ← Hint: أزرار الباركود
-                     Row(
-                      children: [
-                       Expanded(
-                        child: OutlinedButton.icon(
-                        onPressed: _scanBarcode,
-                        icon: const Icon(Icons.qr_code_scanner, size: 20),
-                        label: const Text('مسح الباركود'),
-                        style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                     ),
-                   ),
-                const SizedBox(width: AppConstants.spacingSm),
-                       Expanded(
-                        child: OutlinedButton.icon(
-                         onPressed: _generateInternalBarcode,
-                          icon: const Icon(Icons.auto_awesome, size: 20),
-                          label: const Text('توليد تلقائي'),
-                          style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                         ),
-                        ),
-                       ],
-                      ),
+                      _buildBarcodeCard(l10n, isDark),
 
                       const SizedBox(height: AppConstants.spacingXl),
 
@@ -757,6 +495,559 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  // ============================================================================
+  // 🏪 بطاقة: اختيار المورد/الشريك
+  // ============================================================================
+  Widget _buildSupplierCard(AppLocalizations l10n, bool isDark) {
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: عنوان البطاقة
+            Row(
+              children: [
+                Icon(
+                  Icons.store,
+                  size: 20,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  l10n.supplier,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: Dropdown اختيار المورد
+            DropdownButtonFormField<Supplier>(
+              value: _selectedSupplier,
+              decoration: InputDecoration(
+                labelText: 'اختر المورد',
+                prefixIcon: const Icon(Icons.person),
+                border: const OutlineInputBorder(),
+              ),
+              items: _suppliers.map((supplier) {
+                return DropdownMenuItem<Supplier>(
+                  value: supplier,
+                  child: Text(supplier.supplierName),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedSupplier = value);
+              },
+              validator: (value) {
+                if (value == null) {
+                  return l10n.pleaseSelectSupplier ?? 'يرجى اختيار المورد';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // 📝 بطاقة: معلومات المنتج (الاسم + التفاصيل)
+  // ============================================================================
+  Widget _buildProductInfoCard(AppLocalizations l10n, bool isDark) {
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: عنوان البطاقة
+            Row(
+              children: [
+                Icon(
+                  Icons.inventory_2,
+                  size: 20,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  'معلومات المنتج',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: اسم المنتج
+            CustomTextField(
+              controller: _nameController,
+              label: l10n.productName,
+              hint: 'مثال: لابتوب Dell XPS 15',
+              prefixIcon: Icons.text_fields,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.fieldRequired;
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: التفاصيل (اختياري)
+            CustomTextField(
+              controller: _detailsController,
+              label: l10n.details,
+              hint: 'تفاصيل إضافية عن المنتج (اختياري)',
+              prefixIcon: Icons.description,
+              maxLines: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // 🎨 بطاقة: التصنيف والوحدة
+  // ============================================================================
+  Widget _buildCategoryUnitCard(
+    AppLocalizations l10n,
+    bool isDark,
+    String languageCode,
+  ) {
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: عنوان البطاقة
+            Row(
+              children: [
+                Icon(
+                  Icons.category,
+                  size: 20,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  'التصنيف والوحدة',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: اختيار التصنيف
+            DropdownButtonFormField<ProductCategory>(
+              value: _selectedCategory,
+              decoration: InputDecoration(
+                labelText: 'التصنيف',
+                prefixIcon: const Icon(Icons.category),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.settings, size: 20),
+                  tooltip: 'إدارة التصنيفات',
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ManageCategoriesUnitsScreen(),
+                      ),
+                    );
+                    _loadCategoriesAndUnits();
+                  },
+                ),
+              ),
+              items: _categories.map((category) {
+                return DropdownMenuItem<ProductCategory>(
+                  value: category,
+                  child: Text(category.getLocalizedName(languageCode)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedCategory = value);
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'يرجى اختيار التصنيف';
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: اختيار الوحدة
+            DropdownButtonFormField<ProductUnit>(
+              value: _selectedUnit,
+              decoration: InputDecoration(
+                labelText: 'الوحدة',
+                prefixIcon: const Icon(Icons.straighten),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.settings, size: 20),
+                  tooltip: 'إدارة الوحدات',
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ManageCategoriesUnitsScreen(),
+                      ),
+                    );
+                    _loadCategoriesAndUnits();
+                  },
+                ),
+              ),
+              items: _units.map((unit) {
+                return DropdownMenuItem<ProductUnit>(
+                  value: unit,
+                  child: Text(unit.getLocalizedName(languageCode)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedUnit = value);
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'يرجى اختيار الوحدة';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // 💰 بطاقة: الكمية والأسعار + خلاصة الربح
+  // ============================================================================
+  Widget _buildPricingCard(AppLocalizations l10n, bool isDark) {
+    // ← Hint: حساب الخلاصة بشكل تفاعلي (Reactive)
+    final quantity = int.tryParse(
+          convertArabicNumbersToEnglish(_quantityController.text),
+        ) ?? 0;
+    final costPrice = Decimal.tryParse(
+          convertArabicNumbersToEnglish(_costPriceController.text),
+        ) ?? Decimal.zero;
+    final sellingPrice = Decimal.tryParse(
+          convertArabicNumbersToEnglish(_sellingPriceController.text),
+        ) ?? Decimal.zero;
+
+    final totalCost = costPrice.multiplyByInt(quantity);
+    final totalRevenue = sellingPrice.multiplyByInt(quantity);
+    final totalProfit = totalRevenue - totalCost;
+
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: عنوان البطاقة
+            Row(
+              children: [
+                Icon(
+                  Icons.attach_money,
+                  size: 20,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  'الكمية والأسعار',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: الكمية
+            CustomTextField(
+              controller: _quantityController,
+              label: l10n.quantity,
+              hint: 'مثال: 100',
+              prefixIcon: Icons.inventory,
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}), // ← Hint: تحديث الخلاصة عند التغيير
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.fieldRequired;
+                }
+                final englishValue = convertArabicNumbersToEnglish(value);
+                final quantity = int.tryParse(englishValue);
+                if (quantity == null) {
+                  return l10n.enterValidNumber;
+                }
+                if (quantity < 0) {
+                  return 'الكمية لا يمكن أن تكون سالبة';
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: الأسعار (صف واحد)
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    controller: _costPriceController,
+                    label: l10n.costPrice,
+                    hint: '0.00',
+                    prefixIcon: Icons.shopping_cart,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (_) => setState(() {}), // ← Hint: تحديث الخلاصة
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.fieldRequired;
+                      }
+                      final englishValue = convertArabicNumbersToEnglish(value);
+                      final price = Decimal.tryParse(englishValue);
+                      if (price == null) {
+                        return l10n.enterValidNumber;
+                      }
+                      if (price < Decimal.zero) {
+                        return 'السعر لا يمكن أن يكون سالباً';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: AppConstants.spacingMd),
+                Expanded(
+                  child: CustomTextField(
+                    controller: _sellingPriceController,
+                    label: l10n.sellingPrice,
+                    hint: '0.00',
+                    prefixIcon: Icons.sell,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (_) => setState(() {}), // ← Hint: تحديث الخلاصة
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.fieldRequired;
+                      }
+                      final englishValue = convertArabicNumbersToEnglish(value);
+                      final price = Decimal.tryParse(englishValue);
+                      if (price == null) {
+                        return l10n.enterValidNumber;
+                      }
+                      if (price < Decimal.zero) {
+                        return 'السعر لا يمكن أن يكون سالباً';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingLg),
+
+            // ============= ✨ خلاصة الربح =============
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: (isDark ? AppColors.success.withOpacity(0.1) : AppColors.success.withOpacity(0.05)),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.success.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calculate, size: 20, color: AppColors.success),
+                      const SizedBox(width: AppConstants.spacingSm),
+                      Text(
+                        'خلاصة الربح',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.success,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingSm),
+                  Divider(color: AppColors.success.withOpacity(0.2)),
+                  const SizedBox(height: AppConstants.spacingSm),
+                  _buildProfitRow('التكلفة الإجمالية:', formatCurrency(totalCost), AppColors.warning),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  _buildProfitRow('الإيراد المتوقع:', formatCurrency(totalRevenue), AppColors.info),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  Divider(color: AppColors.success.withOpacity(0.2)),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  _buildProfitRow(
+                    'الربح الصافي:',
+                    formatCurrency(totalProfit),
+                    totalProfit >= Decimal.zero ? AppColors.success : AppColors.error,
+                    isBold: true,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ← Hint: دالة مساعدة لبناء صف في خلاصة الربح
+  Widget _buildProfitRow(String label, String value, Color color, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isBold ? 15 : 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // 📷 بطاقة: الباركود (يدوي أو تلقائي)
+  // ============================================================================
+  Widget _buildBarcodeCard(AppLocalizations l10n, bool isDark) {
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ← Hint: عنوان البطاقة
+            Row(
+              children: [
+                Icon(
+                  Icons.qr_code,
+                  size: 20,
+                  color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+                const SizedBox(width: AppConstants.spacingSm),
+                Text(
+                  'الباركود',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: Switch لتفعيل/تعطيل الباركود التلقائي
+            SwitchListTile(
+              title: const Text('توليد باركود تلقائياً'),
+              subtitle: const Text('إذا لم تُدخل باركوداً، سيتم توليده تلقائياً عند الحفظ'),
+              value: _isAutoBarcodeEnabled,
+              onChanged: (value) {
+                setState(() => _isAutoBarcodeEnabled = value);
+              },
+              activeColor: AppColors.success,
+            ),
+
+            const SizedBox(height: AppConstants.spacingMd),
+
+            // ← Hint: حقل الباركود (يظهر فقط إذا كان الوضع يدوي)
+            if (!_isAutoBarcodeEnabled) ...[
+              CustomTextField(
+                controller: _barcodeController,
+                label: 'الباركود',
+                hint: 'أدخل الباركود يدوياً',
+                prefixIcon: Icons.tag,
+              ),
+
+              const SizedBox(height: AppConstants.spacingMd),
+
+              // ← Hint: أزرار مسح وتوليد الباركود
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _scanBarcode,
+                      icon: const Icon(Icons.qr_code_scanner, size: 20),
+                      label: const Text('مسح الباركود'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _generateInternalBarcode,
+                      icon: const Icon(Icons.auto_awesome, size: 20),
+                      label: const Text('توليد الآن'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              // ← Hint: رسالة إعلامية عند تفعيل الباركود التلقائي
+              Container(
+                padding: AppConstants.paddingMd,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusMd,
+                  border: Border.all(
+                    color: AppColors.success.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: AppColors.success, size: 20),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    Expanded(
+                      child: Text(
+                        'سيتم توليد باركود فريد تلقائياً عند حفظ المنتج',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 

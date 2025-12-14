@@ -814,13 +814,22 @@ class ProductCategory {
   }
 
   // ← Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
-  Map<String, dynamic> toMap() => {
-    'CategoryID': categoryID,
-    'CategoryNameAr': categoryNameAr,
-    'CategoryNameEn': categoryNameEn,
-    'IsActive': isActive ? 1 : 0,
-    'CreatedAt': createdAt,
-  };
+  // ← Hint: ✅ لا نرسل CreatedAt إذا كانت null، لكي يطبق SQL قيمة DEFAULT CURRENT_TIMESTAMP
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'CategoryID': categoryID,
+      'CategoryNameAr': categoryNameAr,
+      'CategoryNameEn': categoryNameEn,
+      'IsActive': isActive ? 1 : 0,
+    };
+
+    // ← Hint: فقط أضف CreatedAt إذا كانت لها قيمة (عند التعديل مثلاً)
+    if (createdAt != null) {
+      map['CreatedAt'] = createdAt;
+    }
+
+    return map;
+  }
 
   // ← Hint: إنشاء كائن ProductCategory من Map (من قاعدة البيانات)
   factory ProductCategory.fromMap(Map<String, dynamic> map) => ProductCategory(
@@ -876,13 +885,22 @@ class ProductUnit {
   }
 
   // ← Hint: تحويل كائن ProductUnit إلى Map (للحفظ في قاعدة البيانات)
-  Map<String, dynamic> toMap() => {
-    'UnitID': unitID,
-    'UnitNameAr': unitNameAr,
-    'UnitNameEn': unitNameEn,
-    'IsActive': isActive ? 1 : 0,
-    'CreatedAt': createdAt,
-  };
+  // ← Hint: ✅ لا نرسل CreatedAt إذا كانت null، لكي يطبق SQL قيمة DEFAULT CURRENT_TIMESTAMP
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'UnitID': unitID,
+      'UnitNameAr': unitNameAr,
+      'UnitNameEn': unitNameEn,
+      'IsActive': isActive ? 1 : 0,
+    };
+
+    // ← Hint: فقط أضف CreatedAt إذا كانت لها قيمة (عند التعديل مثلاً)
+    if (createdAt != null) {
+      map['CreatedAt'] = createdAt;
+    }
+
+    return map;
+  }
 
   // ← Hint: إنشاء كائن ProductUnit من Map (من قاعدة البيانات)
   // ✅ إصلاح: التعامل مع القيم الـ null

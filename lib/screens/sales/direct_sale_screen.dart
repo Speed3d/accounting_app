@@ -713,118 +713,77 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
   }
 
   // ============================================================================
-  // 🎨 شريط فلتر التصنيفات (النسخة المبسطة والذكية)
+  // 🎨 شريط فلتر التصنيفات (النسخة المبسطة والمُصلحة)
   // ============================================================================
-  Widget _buildCategoryFilter(AppLocalizations l10n) {
-    final l10n = AppLocalizations.of(context)!;
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
+  /// ← Hint: ✅ دالة بسيطة تُرجع فقط شريط الفلتر، بدون Scaffold
+  /// ← Hint: يعرض التصنيفات كـ FilterChips أفقية قابلة للتمرير
+  Widget _buildCategoryFilterChips(bool isDark, String languageCode) {
+    return FutureBuilder<List<ProductCategory>>(
+      future: _categoriesFuture,
+      builder: (context, snapshot) {
+        // ← Hint: إذا لم تُحمل التصنيفات بعد، لا نعرض شيء
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.directSalePoint),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: l10n.scanBarcode,
-            onPressed: _scanBarcodeAndAddToCart,
-          ),
-          IconButton(
-            icon: Badge(
-              label: Text(_cartItems.length.toString()),
-              isLabelVisible: _cartItems.isNotEmpty,
-              child: const Icon(Icons.shopping_cart_outlined),
-            ),
-            tooltip: l10n.reviewCart,
-            onPressed: () => _showCartReviewDialog(l10n, isDark),
-          ),
-        ],
-      ),
-      
-      floatingActionButton: _cartItems.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: _isProcessingSale ? null : _completeSale,
-              label: _isProcessingSale
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      '${l10n.completeSale} (${formatCurrency(_calculateTotal())})',
-                    ),
-              icon: _isProcessingSale ? null : const Icon(Icons.check_circle_outline),
-              backgroundColor: AppColors.success,
-              foregroundColor: Colors.white,
-            )
-          : null,
-      
-      body: FutureBuilder<List<Product>>(
-        future: _productsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return LoadingState(message: l10n.loadingProducts);
-          }
+        final categories = snapshot.data!;
 
-          if (snapshot.hasError) {
-            return ErrorState(
-              message: l10n.errorOccurred(snapshot.error.toString()),
-              onRetry: () {
-                setState(() {
-                  // ← Hint: إعادة تحميل المنتجات المتوفرة عند الخطأ
-                  _productsFuture = _loadAvailableProducts();
-                });
-              },
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return EmptyState(
-              icon: Icons.inventory_2_outlined,
-              title: l10n.noProductsInStock,
-              message: l10n.addtonewstores,
-              actionText: l10n.addProduct,
-              onAction: () {
-                // TODO: التنقل لصفحة إضافة منتج
-              },
-            );
-          }
-
-          // ✅ استخدام المنتجات المفلترة بدلاً من كل المنتجات
-          final filteredProducts = _getFilteredProducts();
-
-          return Column(
-            children: [
-              // ✅ شريط فلتر التصنيفات
-              _buildCategoryFilter(l10n),
-
-              // قائمة المنتجات المفلترة
-              Expanded(
-                child: filteredProducts.isEmpty
-                    ? EmptyState(
-                        icon: Icons.filter_alt_off,
-                        title: l10n.noProductsFound ?? 'لا توجد منتجات',
-                        message: l10n.tryChangingFilters ?? 'جرب تغيير الفلتر',
-                      )
-                    : ListView.builder(
-                        padding: AppConstants.screenPadding,
-                        itemCount: filteredProducts.length,
-                        itemBuilder: (context, index) {
-                          return _buildProductCard(
-                            filteredProducts[index],
-                            isDark,
-                            l10n,
-                          );
-                        },
-                      ),
+        return Container(
+          height: 60,
+          padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingSm),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.surfaceDark.withOpacity(0.3)
+                : AppColors.surfaceLight.withOpacity(0.3),
+            border: Border(
+              bottom: BorderSide(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
               ),
+            ),
+          ),
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd),
+            children: [
+              // ← Hint: شريحة "الكل" لإلغاء الفلتر
+              Padding(
+                padding: const EdgeInsets.only(left: AppConstants.spacingSm),
+                child: FilterChip(
+                  label: const Text('الكل'),
+                  selected: _selectedCategory == null,
+                  onSelected: (selected) {
+                    setState(() => _selectedCategory = null);
+                  },
+                  selectedColor: (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                      .withOpacity(0.2),
+                  checkmarkColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                ),
+              ),
+
+              // ← Hint: شرائح التصنيفات
+              ...categories.map((category) {
+                final isSelected = _selectedCategory?.categoryID == category.categoryID;
+                return Padding(
+                  padding: const EdgeInsets.only(left: AppConstants.spacingSm),
+                  child: FilterChip(
+                    label: Text(category.getLocalizedName(languageCode)),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = selected ? category : null;
+                      });
+                    },
+                    selectedColor: (isDark ? AppColors.primaryDark : AppColors.primaryLight)
+                        .withOpacity(0.2),
+                    checkmarkColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                  ),
+                );
+              }).toList(),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -846,21 +805,28 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
     }
   }
 
+  // ============================================================================
+  // 🎨 بناء الواجهة الرئيسية
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
+      // ============= AppBar =============
       appBar: AppBar(
         title: Text(l10n.directSalePoint),
         actions: [
+          // ← Hint: زر مسح الباركود
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             tooltip: l10n.scanBarcode,
             onPressed: _scanBarcodeAndAddToCart,
           ),
+          // ← Hint: زر عرض السلة مع عدد العناصر
           IconButton(
             icon: Badge(
               label: Text(_cartItems.length.toString()),
@@ -872,7 +838,8 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
           ),
         ],
       ),
-      
+
+      // ============= زر إتمام البيع العائم =============
       floatingActionButton: _cartItems.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: _isProcessingSale ? null : _completeSale,
@@ -893,26 +860,29 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
               foregroundColor: Colors.white,
             )
           : null,
-      
+
+      // ============= Body =============
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
+          // ← Hint: حالة التحميل
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadingState(message: l10n.loadingProducts);
           }
 
+          // ← Hint: حالة الخطأ
           if (snapshot.hasError) {
             return ErrorState(
               message: l10n.errorOccurred(snapshot.error.toString()),
               onRetry: () {
                 setState(() {
-                  // ← Hint: إعادة تحميل المنتجات المتوفرة عند الخطأ
                   _productsFuture = _loadAvailableProducts();
                 });
               },
             );
           }
 
+          // ← Hint: حالة عدم وجود منتجات
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return EmptyState(
               icon: Icons.inventory_2_outlined,
@@ -925,15 +895,16 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
             );
           }
 
-          // استخدام المنتجات المفلترة بدلاً من كل المنتجات
+          // ← Hint: الحصول على المنتجات المفلترة
           final filteredProducts = _getFilteredProducts();
 
+          // ← Hint: ✅ العرض الصحيح مع شريط الفلتر
           return Column(
             children: [
-              // شريط فلتر التصنيفات
-              _buildCategoryFilter(l10n),
+              // ← Hint: ✅ شريط فلتر التصنيفات (الدالة الجديدة المُصلحة)
+              _buildCategoryFilterChips(isDark, languageCode),
 
-              // قائمة المنتجات المفلترة
+              // ← Hint: قائمة المنتجات المفلترة
               Expanded(
                 child: filteredProducts.isEmpty
                     ? EmptyState(
@@ -945,7 +916,11 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
                         padding: AppConstants.screenPadding,
                         itemCount: filteredProducts.length,
                         itemBuilder: (context, index) {
-                          return _buildProductCard(filteredProducts[index], isDark, l10n);
+                          return _buildProductCard(
+                            filteredProducts[index],
+                            isDark,
+                            l10n,
+                          );
                         },
                       ),
               ),
