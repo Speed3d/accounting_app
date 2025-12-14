@@ -87,6 +87,10 @@ dependencies:
   # ← مطلوبة للنسخ الاحتياطي الشامل مع الصور
   archive: ^3.6.1
 
+  # ✅ Hint: حزمة الترجمة التلقائية (Google Translate)
+  # ← مطلوبة لترجمة أسماء التصنيفات والوحدات
+  translator: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

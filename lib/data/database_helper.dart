@@ -3345,6 +3345,39 @@ Future<bool> canDeleteUnit(int unitID) async {
   return (result.first['count'] as int) == 0;
 }
 
+/// 🆕 حساب عدد المنتجات المرتبطة بوحدة معينة
+/// ← Hint: تستخدم لعرض رسالة تحذير قبل التعطيل/الحذف
+/// ← Hint: تعد المنتجات النشطة فقط (IsActive = 1)
+///
+/// العودة:
+/// - عدد المنتجات المرتبطة
+Future<int> countProductsByUnit(int unitID) async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT COUNT(*) as count FROM Store_Products WHERE UnitID = ? AND IsActive = 1',
+    [unitID],
+  );
+  return result.first['count'] as int;
+}
+
+/// 🆕 إعادة تفعيل وحدة معطلة
+/// ← Hint: تستخدم لاستعادة الوحدات المعطلة (IsActive = 0 → 1)
+///
+/// المعاملات:
+/// - [unitID] معرّف الوحدة المراد تفعيلها
+///
+/// العودة:
+/// - عدد الصفوف المتأثرة (1 في حالة النجاح)
+Future<int> reactivateUnit(int unitID) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_ProductUnit',
+    {'IsActive': 1},
+    where: 'UnitID = ?',
+    whereArgs: [unitID],
+  );
+}
+
 
 // ============================================================================
 // ✅ دوال التصنيفات (Product Categories) - النسخة المبسطة
@@ -3406,6 +3439,39 @@ Future<bool> canDeleteCategory(int categoryID) async {
     [categoryID],
   );
   return (result.first['count'] as int) == 0;
+}
+
+/// 🆕 حساب عدد المنتجات المرتبطة بتصنيف معين
+/// ← Hint: تستخدم لعرض رسالة تحذير قبل التعطيل/الحذف
+/// ← Hint: تعد المنتجات النشطة فقط (IsActive = 1)
+///
+/// العودة:
+/// - عدد المنتجات المرتبطة
+Future<int> countProductsByCategory(int categoryID) async {
+  final db = await instance.database;
+  final result = await db.rawQuery(
+    'SELECT COUNT(*) as count FROM Store_Products WHERE CategoryID = ? AND IsActive = 1',
+    [categoryID],
+  );
+  return result.first['count'] as int;
+}
+
+/// 🆕 إعادة تفعيل تصنيف معطل
+/// ← Hint: تستخدم لاستعادة التصنيفات المعطلة (IsActive = 0 → 1)
+///
+/// المعاملات:
+/// - [categoryID] معرّف التصنيف المراد تفعيله
+///
+/// العودة:
+/// - عدد الصفوف المتأثرة (1 في حالة النجاح)
+Future<int> reactivateCategory(int categoryID) async {
+  final db = await instance.database;
+  return await db.update(
+    'TB_ProductCategory',
+    {'IsActive': 1},
+    where: 'CategoryID = ?',
+    whereArgs: [categoryID],
+  );
 }
 
 /// جلب منتجات حسب التصنيف
