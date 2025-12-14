@@ -53,11 +53,12 @@ class _ManageCategoriesUnitsScreenState extends State<ManageCategoriesUnitsScree
   /// ← Hint: يتم استدعاؤها عند التهيئة وبعد كل عملية إضافة/تعديل/حذف
   void _reloadData() {
     setState(() {
+      // ← Hint: activeOnly معكوسة: true = نشطة فقط، false = الكل
       _categoriesFuture = dbHelper.getProductCategories(
-        includeInactive: _showInactiveCategories,
+        activeOnly: !_showInactiveCategories,
       );
       _unitsFuture = dbHelper.getProductUnits(
-        includeInactive: _showInactiveUnits,
+        activeOnly: !_showInactiveUnits,
       );
     });
   }
