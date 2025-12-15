@@ -1,5 +1,8 @@
 // lib/screens/reports/reports_hub_screen.dart
 
+import 'package:accountant_touch/screens/fiscal_years/financial_report_screen.dart';
+import 'package:accountant_touch/screens/fiscal_years/fiscal_years_screen.dart';
+import 'package:accountant_touch/screens/fiscal_years/transactions_screen.dart';
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -212,6 +215,43 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
           icon: Icons.people_outline,
           color: AppColors.warning,
           screen: const EmployeesReportScreen(),
+        ),
+      );
+    }
+
+    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+     if (true) {
+      reports.add(
+        ReportItem(
+          title: ('التقرير المالي الشامل'),
+          subtitle: l10n.employeePayrollReport_desc,
+          icon: Icons.people_outline,
+          color: AppColors.warning,
+          screen: const FinancialReportScreen(),
+        ),
+      );
+    }
+     if (true) {
+      reports.add(
+        ReportItem(
+          title: ('شاشة القيود المالية'),
+          subtitle: l10n.employeePayrollReport_desc,
+          icon: Icons.people_outline,
+          color: AppColors.warning,
+          screen: const TransactionsScreen(),
+        ),
+      );
+    }
+     if (true) {
+      reports.add(
+        ReportItem(
+          title: ('شاشة السنوات المالية'),
+          subtitle: l10n.employeePayrollReport_desc,
+          icon: Icons.people_outline,
+          color: AppColors.warning,
+          screen: const FiscalYearsScreen(),
         ),
       );
     }

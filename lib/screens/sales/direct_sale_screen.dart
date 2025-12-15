@@ -121,7 +121,9 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
           invoiceId: newInvoiceId,
           customerId: cashCustomer.customerID!,
           productId: product.productID!,
-          customerName: cashCustomer.address,
+          // هنا كان خطا وتم تعديله
+          //customerName: cashCustomer.address,
+          customerName: cashCustomer.customerName,
           details: l10n.saleDetails(product.productName, quantitySold.toString()),
           debt: salePriceForItem,
           quantity: quantitySold,

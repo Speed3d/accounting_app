@@ -115,9 +115,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                 ),
                 title: Text(year.name),
                 subtitle: Text(
-                  DateFormat('yyyy/MM/dd').format(year.startDate) +
-                      ' - ' +
-                      DateFormat('yyyy/MM/dd').format(year.endDate),
+                  '${DateFormat('yyyy/MM/dd').format(year.startDate)} - ${DateFormat('yyyy/MM/dd').format(year.endDate)}',
                 ),
                 trailing: isSelected
                     ? const Icon(Icons.check, color: AppColors.primaryLight)
@@ -329,7 +327,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             ),
           ),
           Text(
-            '${amount.toStringAsFixed(2)} دينار',
+            '${amount.toDouble().toStringAsFixed(2)} دينار',
             style: TextStyle(
               fontSize: isHighlighted ? 18 : 16,
               fontWeight: FontWeight.bold,
@@ -469,7 +467,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
           ),
         ),
         Text(
-          '${amount.toStringAsFixed(2)} د',
+          '${amount.toDouble().toStringAsFixed(2)} د',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -485,14 +483,14 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     final totalExpense = Decimal.parse(_summary!['totalExpense'].toString());
     final netProfit = Decimal.parse(_summary!['netProfit'].toString());
 
-    // ← Hint: حساب المؤشرات
-    final profitMargin = totalIncome > Decimal.zero
-        ? (netProfit / totalIncome * Decimal.fromInt(100))
-        : Decimal.zero;
-
-    final expenseRatio = totalIncome > Decimal.zero
-        ? (totalExpense / totalIncome * Decimal.fromInt(100))
-        : Decimal.zero;
+    // ← Hint: حساب المؤشرات - نحول إلى double مباشرة لتجنب مشاكل Rational
+    final profitMarginValue = totalIncome > Decimal.zero
+        ? (netProfit.toDouble() / totalIncome.toDouble() * 100)
+        : 0.0;
+    
+    final expenseRatioValue = totalIncome > Decimal.zero
+        ? (totalExpense.toDouble() / totalIncome.toDouble() * 100)
+        : 0.0;
 
     return Card(
       elevation: 4,
@@ -525,26 +523,26 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             // ← Hint: هامش الربح
             _buildIndicatorRow(
               'هامش الربح',
-              '${profitMargin.toStringAsFixed(1)}%',
-              profitMargin >= Decimal.fromInt(20)
+              '${profitMarginValue.toStringAsFixed(1)}%',
+              profitMarginValue >= 20
                   ? Colors.green
-                  : profitMargin >= Decimal.fromInt(10)
+                  : profitMarginValue >= 10
                       ? Colors.orange
                       : Colors.red,
-              profitMargin.toDouble() / 100,
+              profitMarginValue / 100,
             ),
             const SizedBox(height: 16),
 
             // ← Hint: نسبة المصروفات
             _buildIndicatorRow(
               'نسبة المصروفات للدخل',
-              '${expenseRatio.toStringAsFixed(1)}%',
-              expenseRatio <= Decimal.fromInt(70)
+              '${expenseRatioValue.toStringAsFixed(1)}%',
+              expenseRatioValue <= 70
                   ? Colors.green
-                  : expenseRatio <= Decimal.fromInt(85)
+                  : expenseRatioValue <= 85
                       ? Colors.orange
                       : Colors.red,
-              expenseRatio.toDouble() / 100,
+              expenseRatioValue / 100,
             ),
             const SizedBox(height: 16),
 
