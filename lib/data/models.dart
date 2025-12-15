@@ -928,4 +928,329 @@ class ProductUnit {
   );
 }
 
+// ============================================================================
+// 🏦 نظام السنوات المالية والقيود المحاسبية
+// ============================================================================
+// ← Hint: هذا النظام يوفر إدارة احترافية للسنوات المالية مع قيود محاسبية موحّدة
+// ← Hint: كل عملية (مبيعات، رواتب، مصروفات) تُسجل كقيد مالي تلقائياً
+// ← Hint: يتيح إقفال السنوات وترحيل الأرصدة للسنة الجديدة
+// ============================================================================
+
+// ============================================================================
+// 📅 نموذج السنة المالية
+// ============================================================================
+// ← Hint: يمثل جدول TB_FiscalYears
+// ← Hint: كل سنة مالية لها أرصدة افتتاحية وختامية
+// ← Hint: السنة المقفلة لا يمكن إضافة/تعديل قيود فيها (للحماية)
+class FiscalYear {
+  final int? fiscalYearID;          // ← Hint: المعرف الفريد للسنة المالية
+  final String name;                // ← Hint: اسم السنة (مثال: "سنة 2025")
+  final int year;                   // ← Hint: السنة الميلادية (2025)
+  final DateTime startDate;         // ← Hint: تاريخ بداية السنة المالية
+  final DateTime endDate;           // ← Hint: تاريخ نهاية السنة المالية
+  final bool isClosed;              // ← Hint: هل السنة مقفلة؟ (true = لا يمكن التعديل)
+  final bool isActive;              // ← Hint: هل هذه السنة النشطة حالياً؟ (سنة واحدة فقط نشطة)
+
+  // ← Hint: الأرصدة المالية (تُحسب تلقائياً من القيود)
+  final Decimal openingBalance;     // ← Hint: الرصيد الافتتاحي (من السنة السابقة)
+  final Decimal totalIncome;        // ← Hint: إجمالي الدخل (مجموع كل القيود "in")
+  final Decimal totalExpense;       // ← Hint: إجمالي المصروفات (مجموع كل القيود "out")
+  final Decimal netProfit;          // ← Hint: صافي الربح (الدخل - المصروفات)
+  final Decimal closingBalance;     // ← Hint: الرصيد الختامي (افتتاحي + صافي الربح)
+
+  final String? createdAt;          // ← Hint: تاريخ إنشاء السنة المالية
+  final String? closedAt;           // ← Hint: تاريخ إقفال السنة المالية
+  final String? notes;              // ← Hint: ملاحظات اختيارية
+
+  FiscalYear({
+    this.fiscalYearID,
+    required this.name,
+    required this.year,
+    required this.startDate,
+    required this.endDate,
+    this.isClosed = false,
+    this.isActive = false,
+    Decimal? openingBalance,
+    Decimal? totalIncome,
+    Decimal? totalExpense,
+    Decimal? netProfit,
+    Decimal? closingBalance,
+    this.createdAt,
+    this.closedAt,
+    this.notes,
+  })  : openingBalance = openingBalance ?? Decimal.zero,
+        totalIncome = totalIncome ?? Decimal.zero,
+        totalExpense = totalExpense ?? Decimal.zero,
+        netProfit = netProfit ?? Decimal.zero,
+        closingBalance = closingBalance ?? Decimal.zero;
+
+  // ← Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  // ← Hint: استخدام Decimal.toDouble() للتخزين (SQLite لا يدعم Decimal مباشرة)
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'FiscalYearID': fiscalYearID,
+      'Name': name,
+      'Year': year,
+      'StartDate': startDate.toIso8601String(),
+      'EndDate': endDate.toIso8601String(),
+      'IsClosed': isClosed ? 1 : 0,
+      'IsActive': isActive ? 1 : 0,
+      'OpeningBalance': openingBalance.toDouble(),
+      'TotalIncome': totalIncome.toDouble(),
+      'TotalExpense': totalExpense.toDouble(),
+      'NetProfit': netProfit.toDouble(),
+      'ClosingBalance': closingBalance.toDouble(),
+      'Notes': notes,
+    };
+
+    // ← Hint: إضافة التواريخ فقط إذا كانت موجودة
+    if (createdAt != null) map['CreatedAt'] = createdAt;
+    if (closedAt != null) map['ClosedAt'] = closedAt;
+
+    return map;
+  }
+
+  // ← Hint: إنشاء كائن FiscalYear من Map (من قاعدة البيانات)
+  factory FiscalYear.fromMap(Map<String, dynamic> map) => FiscalYear(
+        fiscalYearID: map['FiscalYearID'] as int?,
+        name: map['Name'] as String,
+        year: map['Year'] as int,
+        startDate: DateTime.parse(map['StartDate'] as String),
+        endDate: DateTime.parse(map['EndDate'] as String),
+        isClosed: (map['IsClosed'] as int?) == 1,
+        isActive: (map['IsActive'] as int?) == 1,
+        openingBalance: map.getDecimal('OpeningBalance'),
+        totalIncome: map.getDecimal('TotalIncome'),
+        totalExpense: map.getDecimal('TotalExpense'),
+        netProfit: map.getDecimal('NetProfit'),
+        closingBalance: map.getDecimal('ClosingBalance'),
+        createdAt: map['CreatedAt'] as String?,
+        closedAt: map['ClosedAt'] as String?,
+        notes: map['Notes'] as String?,
+      );
+
+  // ← Hint: نسخة معدلة من الكائن (مفيد عند التحديث)
+  FiscalYear copyWith({
+    int? fiscalYearID,
+    String? name,
+    int? year,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool? isClosed,
+    bool? isActive,
+    Decimal? openingBalance,
+    Decimal? totalIncome,
+    Decimal? totalExpense,
+    Decimal? netProfit,
+    Decimal? closingBalance,
+    String? createdAt,
+    String? closedAt,
+    String? notes,
+  }) => FiscalYear(
+        fiscalYearID: fiscalYearID ?? this.fiscalYearID,
+        name: name ?? this.name,
+        year: year ?? this.year,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        isClosed: isClosed ?? this.isClosed,
+        isActive: isActive ?? this.isActive,
+        openingBalance: openingBalance ?? this.openingBalance,
+        totalIncome: totalIncome ?? this.totalIncome,
+        totalExpense: totalExpense ?? this.totalExpense,
+        netProfit: netProfit ?? this.netProfit,
+        closingBalance: closingBalance ?? this.closingBalance,
+        createdAt: createdAt ?? this.createdAt,
+        closedAt: closedAt ?? this.closedAt,
+        notes: notes ?? this.notes,
+      );
+}
+
+// ============================================================================
+// 💰 أنواع القيود المالية (Enums)
+// ============================================================================
+// ← Hint: تصنيف أنواع القيود لسهولة الفلترة والتقارير
+
+// ← Hint: النوع الرئيسي للقيد المالي
+enum TransactionType {
+  sale,                  // ← Hint: مبيعات (دخل)
+  saleReturn,            // ← Hint: مرتجع مبيعات (صرف)
+  customerPayment,       // ← Hint: دفعة من زبون (دخل)
+  salary,                // ← Hint: راتب موظف (صرف)
+  employeeAdvance,       // ← Hint: سلفة موظف (صرف)
+  advanceRepayment,      // ← Hint: تسديد سلفة من موظف (دخل)
+  employeeBonus,         // ← Hint: مكافأة موظف (صرف)
+  expense,               // ← Hint: مصروف عام (صرف)
+  openingBalance,        // ← Hint: رصيد افتتاحي (ترحيل من سنة سابقة)
+  closingBalance,        // ← Hint: رصيد ختامي (عند إقفال السنة)
+  other,                 // ← Hint: قيود أخرى
+}
+
+// ← Hint: تصنيف فرعي للقيود (للتقارير التفصيلية)
+enum TransactionCategory {
+  revenue,               // ← Hint: إيرادات
+  costOfGoodsSold,       // ← Hint: تكلفة البضاعة المباعة
+  operatingExpense,      // ← Hint: مصروفات تشغيلية
+  salaryExpense,         // ← Hint: مصروفات رواتب
+  advanceExpense,        // ← Hint: سلف موظفين
+  customerDebt,          // ← Hint: ديون عملاء
+  returnExpense,         // ← Hint: مرتجعات
+  balanceTransfer,       // ← Hint: ترحيل أرصدة
+  miscellaneous,         // ← Hint: متنوعة
+}
+
+// ============================================================================
+// 📝 نموذج القيد المالي الموحّد
+// ============================================================================
+// ← Hint: يمثل جدول TB_Transactions
+// ← Hint: كل عملية في النظام (مبيعات، رواتب، إلخ) تُسجل هنا تلقائياً
+// ← Hint: هذا الجدول هو قلب النظام المحاسبي
+class FinancialTransaction {
+  final int? transactionID;         // ← Hint: المعرف الفريد للقيد
+  final int fiscalYearID;           // ← Hint: السنة المالية التي ينتمي إليها القيد
+  final DateTime date;              // ← Hint: تاريخ العملية
+
+  // ← Hint: نوع وتصنيف القيد
+  final TransactionType type;       // ← Hint: نوع القيد (مبيعات، راتب، إلخ)
+  final TransactionCategory category; // ← Hint: تصنيف فرعي للقيد
+
+  // ← Hint: المبلغ والاتجاه
+  final Decimal amount;             // ← Hint: المبلغ (يُخزن كـ Decimal للدقة)
+  final String direction;           // ← Hint: "in" (دخل) أو "out" (صرف)
+
+  // ← Hint: التفاصيل والوصف
+  final String description;         // ← Hint: وصف مختصر للقيد
+  final String? notes;              // ← Hint: ملاحظات تفصيلية (اختياري)
+
+  // ← Hint: الربط مع العملية الأصلية (Foreign Key)
+  final String? referenceType;      // ← Hint: نوع العملية الأصلية ("sale", "payroll", إلخ)
+  final int? referenceId;           // ← Hint: معرف العملية الأصلية
+
+  // ← Hint: معلومات إضافية للربط
+  final int? customerId;            // ← Hint: معرف الزبون (إن وجد)
+  final int? supplierId;            // ← Hint: معرف المورد (إن وجد)
+  final int? employeeId;            // ← Hint: معرف الموظف (إن وجد)
+  final int? productId;             // ← Hint: معرف المنتج (إن وجد)
+
+  // ← Hint: معلومات النظام
+  final int? createdBy;             // ← Hint: معرف المستخدم الذي أنشأ القيد
+  final String? createdAt;          // ← Hint: تاريخ إنشاء القيد (تلقائي)
+
+  FinancialTransaction({
+    this.transactionID,
+    required this.fiscalYearID,
+    required this.date,
+    required this.type,
+    required this.category,
+    required this.amount,
+    required this.direction,
+    required this.description,
+    this.notes,
+    this.referenceType,
+    this.referenceId,
+    this.customerId,
+    this.supplierId,
+    this.employeeId,
+    this.productId,
+    this.createdBy,
+    this.createdAt,
+  });
+
+  // ← Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'TransactionID': transactionID,
+      'FiscalYearID': fiscalYearID,
+      'Date': date.toIso8601String(),
+      'Type': type.name,                    // ← Hint: تحويل Enum إلى String
+      'Category': category.name,            // ← Hint: تحويل Enum إلى String
+      'Amount': amount.toDouble(),          // ← Hint: تحويل Decimal إلى double
+      'Direction': direction,
+      'Description': description,
+      'Notes': notes,
+      'ReferenceType': referenceType,
+      'ReferenceID': referenceId,
+      'CustomerID': customerId,
+      'SupplierID': supplierId,
+      'EmployeeID': employeeId,
+      'ProductID': productId,
+      'CreatedBy': createdBy,
+    };
+
+    // ← Hint: إضافة CreatedAt فقط إذا كانت موجودة
+    if (createdAt != null) map['CreatedAt'] = createdAt;
+
+    return map;
+  }
+
+  // ← Hint: إنشاء كائن FinancialTransaction من Map (من قاعدة البيانات)
+  factory FinancialTransaction.fromMap(Map<String, dynamic> map) => FinancialTransaction(
+        transactionID: map['TransactionID'] as int?,
+        fiscalYearID: map['FiscalYearID'] as int,
+        date: DateTime.parse(map['Date'] as String),
+        type: TransactionType.values.firstWhere(
+          (e) => e.name == map['Type'],
+          orElse: () => TransactionType.other,
+        ),
+        category: TransactionCategory.values.firstWhere(
+          (e) => e.name == map['Category'],
+          orElse: () => TransactionCategory.miscellaneous,
+        ),
+        amount: map.getDecimal('Amount'),
+        direction: map['Direction'] as String,
+        description: map['Description'] as String,
+        notes: map['Notes'] as String?,
+        referenceType: map['ReferenceType'] as String?,
+        referenceId: map['ReferenceID'] as int?,
+        customerId: map['CustomerID'] as int?,
+        supplierId: map['SupplierID'] as int?,
+        employeeId: map['EmployeeID'] as int?,
+        productId: map['ProductID'] as int?,
+        createdBy: map['CreatedBy'] as int?,
+        createdAt: map['CreatedAt'] as String?,
+      );
+
+  // ← Hint: نسخة معدلة من الكائن
+  FinancialTransaction copyWith({
+    int? transactionID,
+    int? fiscalYearID,
+    DateTime? date,
+    TransactionType? type,
+    TransactionCategory? category,
+    Decimal? amount,
+    String? direction,
+    String? description,
+    String? notes,
+    String? referenceType,
+    int? referenceId,
+    int? customerId,
+    int? supplierId,
+    int? employeeId,
+    int? productId,
+    int? createdBy,
+    String? createdAt,
+  }) => FinancialTransaction(
+        transactionID: transactionID ?? this.transactionID,
+        fiscalYearID: fiscalYearID ?? this.fiscalYearID,
+        date: date ?? this.date,
+        type: type ?? this.type,
+        category: category ?? this.category,
+        amount: amount ?? this.amount,
+        direction: direction ?? this.direction,
+        description: description ?? this.description,
+        notes: notes ?? this.notes,
+        referenceType: referenceType ?? this.referenceType,
+        referenceId: referenceId ?? this.referenceId,
+        customerId: customerId ?? this.customerId,
+        supplierId: supplierId ?? this.supplierId,
+        employeeId: employeeId ?? this.employeeId,
+        productId: productId ?? this.productId,
+        createdBy: createdBy ?? this.createdBy,
+        createdAt: createdAt ?? this.createdAt,
+      );
+
+  // ← Hint: دالة مساعدة للتحقق من نوع القيد
+  bool get isIncome => direction == 'in';
+  bool get isExpense => direction == 'out';
+}
+
 
