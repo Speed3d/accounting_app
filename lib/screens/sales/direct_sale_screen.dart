@@ -103,40 +103,39 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
       final totalAmount = _calculateTotal();
       int newInvoiceId;
 
-      newInvoiceId = await db.transaction((txn) async {
-        final invoiceId = await txn.insert('TB_Invoices', {
-          'CustomerID': cashCustomer.customerID!,
-          'InvoiceDate': DateTime.now().toIso8601String(),
-          'TotalAmount': totalAmount.toDouble(),
-        });
-
-        for (var item in _cartItems) {
-          final product = item.product;
-          final quantitySold = item.quantity;
-          final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
-          final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
-
-
-          await txn.insert('Debt_Customer', {
-            'InvoiceID': invoiceId,
-            'CustomerID': cashCustomer.customerID!,
-            'ProductID': product.productID!,
-            'CustomerName': cashCustomer.address,
-            'Details': l10n.saleDetails(product.productName, quantitySold.toString()),
-            'Debt': salePriceForItem.toDouble(),
-            'DateT': DateTime.now().toIso8601String(),
-            'Qty_Customer': quantitySold,
-            'CostPriceAtTimeOfSale': product.costPrice.toDouble(),
-            'ProfitAmount': profitForItem.toDouble(),
-          });
-
-          await txn.rawUpdate(
-            'UPDATE Store_Products SET Quantity = Quantity - ? WHERE ProductID = ?',
-            [quantitySold, product.productID],
-          );
-        }
-        return invoiceId;
+      // إنشاء الفاتورة أولاً
+      newInvoiceId = await db.insert('TB_Invoices', {
+        'CustomerID': cashCustomer.customerID!,
+        'InvoiceDate': DateTime.now().toIso8601String(),
+        'TotalAmount': totalAmount.toDouble(),
       });
+
+      // ✨ تسجيل كل مبيعة باستخدام الدالة الجديدة (مع قيد مالي تلقائي)
+      for (var item in _cartItems) {
+        final product = item.product;
+        final quantitySold = item.quantity;
+        final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
+        final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
+
+        await dbHelper.recordSale(
+          invoiceId: newInvoiceId,
+          customerId: cashCustomer.customerID!,
+          productId: product.productID!,
+          customerName: cashCustomer.address,
+          details: l10n.saleDetails(product.productName, quantitySold.toString()),
+          debt: salePriceForItem,
+          quantity: quantitySold,
+          costPrice: product.costPrice,
+          profitAmount: profitForItem,
+          productName: product.productName,
+        );
+
+        // تحديث المخزون
+        await db.rawUpdate(
+          'UPDATE Store_Products SET Quantity = Quantity - ? WHERE ProductID = ?',
+          [quantitySold, product.productID],
+        );
+      }
 
       // ← Hint: ✅ تعطيل القفل التلقائي مؤقتاً (10 دقائق) قبل عرض PDF
       // ← Hint: السبب: عند فتح PDF خارجي، التطبيق ينتقل للخلفية

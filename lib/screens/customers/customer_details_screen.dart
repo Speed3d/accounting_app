@@ -198,51 +198,50 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
   final DateTime saleDate = result['date'] as DateTime;
   
   try {
-    final db = await _dbHelper.database;
     Decimal totalSaleAmount = Decimal.zero;
-    
-    await db.transaction((txn) async {
-      for (var item in cartItems) {
-        final product = item.product;
-        final quantitySold = item.quantity;
-        
-        // final salePriceForItem = product.sellingPrice * quantitySold; السابق double
-        final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
-        // final profitForItem = (product.sellingPrice - product.costPrice) * quantitySold;
-        final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
-        totalSaleAmount += salePriceForItem;
-        
-        final saleDetails = l10n.saleDetails(
-          product.productName,
-          quantitySold.toString(),
-        );
-        
-        //  Hint: استخدام التاريخ المختار
-        final newDebt = CustomerDebt(
-          customerID: _currentCustomer.customerID!,
-          customerName: _currentCustomer.customerName,
-          details: saleDetails,
-          debt: salePriceForItem,
-          dateT: saleDate.toIso8601String(),
-          qty_Customer: quantitySold,
-          productID: product.productID!,
-          costPriceAtTimeOfSale: product.costPrice,
-          profitAmount: profitForItem,
-        );
-        await txn.insert('Debt_Customer', newDebt.toMap());
-        
-        await txn.rawUpdate(
-          'UPDATE Store_Products SET Quantity = Quantity - ? WHERE ProductID = ?',
-          [quantitySold, product.productID],
-        );
-      }
-      
-      await txn.rawUpdate(
-        'UPDATE TB_Customer SET Debt = Debt + ?, Remaining = Remaining + ? WHERE CustomerID = ?',
-     // [totalSaleAmount, totalSaleAmount, _currentCustomer.customerID],
-        [totalSaleAmount.toDouble(), totalSaleAmount.toDouble(), _currentCustomer.customerID],
+
+    // ← Hint: تسجيل كل مبيعة باستخدام DatabaseHelper (مع قيد مالي تلقائي)
+    for (var item in cartItems) {
+      final product = item.product;
+      final quantitySold = item.quantity;
+
+      final salePriceForItem = product.sellingPrice.multiplyByInt(quantitySold);
+      final profitForItem = (product.sellingPrice - product.costPrice).multiplyByInt(quantitySold);
+      totalSaleAmount += salePriceForItem;
+
+      final saleDetails = l10n.saleDetails(
+        product.productName,
+        quantitySold.toString(),
       );
-    });
+
+      // ✨ استخدام الدالة الجديدة التي تسجل القيد المالي تلقائياً
+      await _dbHelper.recordSale(
+        invoiceId: 0, // يمكن تحديث هذا لاحقاً إذا كان لديك نظام فواتير
+        customerId: _currentCustomer.customerID!,
+        productId: product.productID!,
+        customerName: _currentCustomer.customerName,
+        details: saleDetails,
+        debt: salePriceForItem,
+        quantity: quantitySold,
+        costPrice: product.costPrice,
+        profitAmount: profitForItem,
+        productName: product.productName,
+      );
+
+      // تحديث المخزون
+      final db = await _dbHelper.database;
+      await db.rawUpdate(
+        'UPDATE Store_Products SET Quantity = Quantity - ? WHERE ProductID = ?',
+        [quantitySold, product.productID],
+      );
+    }
+
+    // تحديث رصيد العميل
+    final db = await _dbHelper.database;
+    await db.rawUpdate(
+      'UPDATE TB_Customer SET Debt = Debt + ?, Remaining = Remaining + ? WHERE CustomerID = ?',
+      [totalSaleAmount.toDouble(), totalSaleAmount.toDouble(), _currentCustomer.customerID],
+    );
     
     await _dbHelper.logActivity(
       l10n.newSaleActivityLog(_currentCustomer.customerName, formatCurrency(totalSaleAmount)),
@@ -415,26 +414,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
           convertArabicNumbersToEnglish(paymentController.text),
         );
 
-        final db = await _dbHelper.database;
-
-        // === استخدام Transaction ===
-        await db.transaction((txn) async {
-          // إدراج سجل الدفعة
-          final newPayment = CustomerPayment(
-            customerID: _currentCustomer.customerID!,
-            customerName: _currentCustomer.customerName,
-            payment: amount,
-            dateT: selectedDate.toIso8601String(),  // Hint: استخدام التاريخ المختار
-            comments: commentsController.text,
-          );
-          await txn.insert('Payment_Customer', newPayment.toMap());
-
-          // تحديث رصيد الزبون
-          await txn.rawUpdate(
-            'UPDATE TB_Customer SET Payment = Payment + ?, Remaining = Remaining - ? WHERE CustomerID = ?',
-            [amount.toDouble(), amount.toDouble(), _currentCustomer.customerID],
-          );
-        });
+        // ✨ استخدام الدالة الجديدة التي تسجل القيد المالي تلقائياً
+        await _dbHelper.recordCustomerPayment(
+          customerId: _currentCustomer.customerID!,
+          amount: amount,
+          paymentDate: selectedDate.toIso8601String(),
+          comments: commentsController.text.isEmpty ? null : commentsController.text,
+        );
 
         // تسجيل النشاط
         await _dbHelper.logActivity(
