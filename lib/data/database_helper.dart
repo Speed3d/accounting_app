@@ -9,6 +9,7 @@ import 'package:accountant_touch/data/models.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../services/database_key_manager.dart';
 import 'database_migrations.dart';  // 🆕 استيراد نظام الـ Migrations
+import '../helpers/financial_integration_helper.dart';  // 🆕 استيراد مساعد الربط المالي
 
 import 'models.dart' as models;
 
@@ -1369,20 +1370,23 @@ class DatabaseHelper {
   // Hint: دالة إرجاع المبيعات المحدثة.
   // لم نعد نتحقق مما إذا كانت قيمة الإرجاع أكبر من الدين المتبقي.
   // ببساطة نقوم بإنقاص المبلغ المتبقي، مما يسمح له بأن يصبح سالبًا (رصيد دائن للزبون).
+  // ← Hint: تسجل قيد مالي تلقائي عبر FinancialIntegrationHelper
   Future<void> returnSaleItem(CustomerDebt saleToReturn) async {
     final db = await instance.database;
+    int? returnId;
+
     await db.transaction((txn) async {
       // الخطوة 1: تحديث حالة عملية البيع الأصلية إلى "مرجع".
       await txn.update('Debt_Customer', {'IsReturned': 1}, where: 'ID = ?', whereArgs: [saleToReturn.id]);
       // الخطوة 2: زيادة كمية المنتج في المخزن.
       await txn.rawUpdate('UPDATE Store_Products SET Quantity = Quantity + ? WHERE ProductID = ?',
        [saleToReturn.qty_Customer, saleToReturn.productID]);
-      
+
       // الخطوة 3 (المُعدلة): إنقاص المبلغ المتبقي على الزبون.
       // لا يوجد تغيير في الكود هنا، لكن المنطق تغير. الآن نسمح بأن تكون النتيجة سالبة.
       await txn.rawUpdate('UPDATE TB_Customer SET Remaining = Remaining - ? WHERE CustomerID = ?',
        [saleToReturn.debt.toDouble(), saleToReturn.customerID]);
-      
+
       // الخطوة 4: تسجيل عملية الإرجاع في جدول المرتجعات.
       final saleReturn = SalesReturn(
         originalSaleID: saleToReturn.id!,
@@ -1393,8 +1397,20 @@ class DatabaseHelper {
         returnDate: DateTime.now().toIso8601String(),
         reason: 'إرجاع من قبل المستخدم',
       );
-      await txn.insert('Sales_Returns', saleReturn.toMap());
+      returnId = await txn.insert('Sales_Returns', saleReturn.toMap());
     });
+
+    // ← Hint: تسجيل القيد المالي التلقائي (بعد transaction)
+    if (returnId != null && saleToReturn.id != null) {
+      await FinancialIntegrationHelper.recordSaleReturnTransaction(
+        returnId: returnId!,
+        originalSaleId: saleToReturn.id!,
+        customerId: saleToReturn.customerID,
+        amount: saleToReturn.debt,
+        returnDate: DateTime.now().toIso8601String(),
+        reason: 'إرجاع من قبل المستخدم',
+      );
+    }
   }
 
 
@@ -1618,27 +1634,46 @@ Future<Employee?> getEmployeeById(int id) async {
 
 // Hint: دالة لتسجيل سلفة جديدة لموظف.
 // تستخدم transaction لضمان تنفيذ العمليتين معًا.
+// ← Hint: تسجل قيد مالي تلقائي عبر FinancialIntegrationHelper
 Future<void> recordNewAdvance(EmployeeAdvance advance) async {
-    final db = await instance.database;
+  final db = await instance.database;
+  int? advanceId;
+
   await db.transaction((txn) async {
-    await txn.insert('TB_Employee_Advances', advance.toMap());
-    
+    // ← Hint: إدراج السلفة في الجدول
+    advanceId = await txn.insert('TB_Employee_Advances', advance.toMap());
+
     // ✅ تحديث رصيد الموظف
     await txn.rawUpdate(
       'UPDATE TB_Employees SET Balance = Balance + ? WHERE EmployeeID = ?',
       [advance.advanceAmount.toDouble(), advance.employeeID],
     );
   });
+
+  // ← Hint: تسجيل القيد المالي التلقائي (بعد transaction)
+  if (advanceId != null) {
+    await FinancialIntegrationHelper.recordAdvanceTransaction(
+      advanceId: advanceId!,
+      employeeId: advance.employeeID,
+      amount: advance.advanceAmount,
+      advanceDate: advance.advanceDate,
+      notes: advance.notes,
+    );
+  }
 }
 
 
 
 // دالة لتسجيل عملية دفع راتب جديدة.
 // هذه دالة حرجة تستخدم transaction لضمان تكامل البيانات.
+// ← Hint: تسجل قيد مالي تلقائي عبر FinancialIntegrationHelper
 Future<void> recordNewPayroll(PayrollEntry payroll, Decimal advanceAmountToRepay) async {
   final db = await instance.database;
+  int? payrollId;
+
   await db.transaction((txn) async {
-    await txn.insert('TB_Payroll', payroll.toMap());
+    // ← Hint: إدراج الراتب في الجدول
+    payrollId = await txn.insert('TB_Payroll', payroll.toMap());
 
     await txn.rawUpdate(
       'UPDATE TB_Employees SET Balance = Balance - ? WHERE EmployeeID = ?',
@@ -1652,9 +1687,9 @@ Future<void> recordNewPayroll(PayrollEntry payroll, Decimal advanceAmountToRepay
       where: 'EmployeeID = ?',
       whereArgs: [payroll.employeeID],
     );
-    
+
     final currentBalance = Decimal.parse(result.first['Balance'].toString());
-    
+
     if (currentBalance <= Decimal.zero) {
       await txn.update(
         'TB_Employee_Advances',
@@ -1664,6 +1699,17 @@ Future<void> recordNewPayroll(PayrollEntry payroll, Decimal advanceAmountToRepay
       );
     }
   });
+
+  // ← Hint: تسجيل القيد المالي التلقائي (بعد transaction)
+  if (payrollId != null) {
+    await FinancialIntegrationHelper.recordSalaryTransaction(
+      payrollId: payrollId!,
+      employeeId: payroll.employeeID,
+      netSalary: payroll.netSalary,
+      paymentDate: payroll.paymentDate,
+      notes: 'راتب ${payroll.payrollMonth}/${payroll.payrollYear}',
+    );
+  }
 }
 
 
@@ -1927,6 +1973,7 @@ Future<void> deleteAdvance(int advanceID) async {
 // ← Hint: تسجل عملية التسديد في جدول TB_Advance_Repayments
 // ← Hint: تحدّث Balance في TB_Employees
 // ← Hint: تحدّث RepaymentStatus في TB_Employee_Advances
+// ← Hint: تسجل قيد مالي تلقائي عبر FinancialIntegrationHelper
 Future<void> repayAdvance({
   required int advanceID,
   required int employeeID,
@@ -1934,6 +1981,7 @@ Future<void> repayAdvance({
   String? notes,
 }) async {
   final db = await instance.database;
+  int? repaymentId;
 
   await db.transaction((txn) async {
     // ← Hint: 1. جلب معلومات السلفة للتحقق من المبلغ المتبقي
@@ -1974,7 +2022,7 @@ Future<void> repayAdvance({
       notes: notes,
     );
 
-    await txn.insert('TB_Advance_Repayments', repayment.toMap());
+    repaymentId = await txn.insert('TB_Advance_Repayments', repayment.toMap());
 
     // ← Hint: 6. تحديث Balance في TB_Employees (تنقيص المبلغ المسدد)
     await txn.rawUpdate(
@@ -1997,6 +2045,18 @@ Future<void> repayAdvance({
       whereArgs: [advanceID],
     );
   });
+
+  // ← Hint: تسجيل القيد المالي التلقائي (بعد transaction)
+  if (repaymentId != null) {
+    await FinancialIntegrationHelper.recordAdvanceRepaymentTransaction(
+      repaymentId: repaymentId!,
+      advanceId: advanceID,
+      employeeId: employeeID,
+      amount: repaymentAmount,
+      repaymentDate: DateTime.now().toIso8601String(),
+      notes: notes,
+    );
+  }
 }
 
 // ============================================================================
@@ -3269,9 +3329,19 @@ Future<List<models.EmployeeBonus>> getBonusesForEmployee(int employeeID) async {
 /// إضافة مكافأة جديدة (باستخدام EmployeeBonus object)
 ///
 /// ← Hint: تستخدم لتسجيل مكافأة/حافز للموظف
+/// ← Hint: تسجل قيد مالي تلقائي عبر FinancialIntegrationHelper
 Future<void> recordNewBonus(models.EmployeeBonus bonus) async {
   final db = await instance.database;
-  await db.insert('TB_Employee_Bonuses', bonus.toMap());
+  final bonusId = await db.insert('TB_Employee_Bonuses', bonus.toMap());
+
+  // ← Hint: تسجيل القيد المالي التلقائي
+  await FinancialIntegrationHelper.recordBonusTransaction(
+    bonusId: bonusId,
+    employeeId: bonus.employeeID,
+    amount: bonus.bonusAmount,
+    bonusDate: bonus.bonusDate,
+    bonusReason: bonus.bonusReason,
+  );
 }
 
 /// تعديل مكافأة موجودة
@@ -3631,6 +3701,99 @@ Future<void> cleanupCategoriesAndUnits() async {
   } catch (e) {
     debugPrint('❌ خطأ في تنظيف البيانات: $e');
   }
+}
+
+// ==============================================================================
+// 🔗 دوال wrapper للعمليات المالية مع الربط التلقائي
+// ==============================================================================
+// ← Hint: هذه الدوال الجديدة توفر طريقة موحدة وآمنة للعمليات المالية
+// ← Hint: تسجل القيود المالية تلقائياً عبر FinancialIntegrationHelper
+// ← Hint: يُفضل استخدامها بدلاً من التعامل المباشر مع قاعدة البيانات
+
+/// تسجيل مبيعة جديدة مع قيد مالي تلقائي
+///
+/// ← Hint: تُستدعى من الشاشات لتسجيل مبيعة
+/// ← Hint: تسجل القيد المالي تلقائياً
+/// ← Returns: معرف المبيعة (Sale ID)
+Future<int> recordSale({
+  required int invoiceId,
+  required int customerId,
+  required int productId,
+  required String customerName,
+  required String details,
+  required Decimal debt,
+  required int quantity,
+  required Decimal costPrice,
+  required Decimal profitAmount,
+  String? productName,
+}) async {
+  final db = await instance.database;
+
+  // ← Hint: إدراج المبيعة في جدول Debt_Customer
+  final saleId = await db.insert('Debt_Customer', {
+    'InvoiceID': invoiceId,
+    'CustomerID': customerId,
+    'ProductID': productId,
+    'CustomerName': customerName,
+    'Details': details,
+    'Debt': debt.toDouble(),
+    'DateT': DateTime.now().toIso8601String(),
+    'Qty_Customer': quantity,
+    'CostPriceAtTimeOfSale': costPrice.toDouble(),
+    'ProfitAmount': profitAmount.toDouble(),
+    'IsReturned': 0,
+  });
+
+  // ← Hint: تسجيل القيد المالي التلقائي
+  await FinancialIntegrationHelper.recordSaleTransaction(
+    saleId: saleId,
+    customerId: customerId,
+    amount: debt,
+    saleDate: DateTime.now().toIso8601String(),
+    productId: productId,
+    productName: productName ?? details,
+  );
+
+  return saleId;
+}
+
+/// تسجيل دفعة من زبون مع قيد مالي تلقائي
+///
+/// ← Hint: تُستدعى عند استلام دفعة من زبون
+/// ← Hint: تسجل القيد المالي تلقائياً
+/// ← Returns: معرف الدفعة (Payment ID)
+Future<int> recordCustomerPayment({
+  required int customerId,
+  required Decimal amount,
+  required String paymentDate,
+  String? comments,
+}) async {
+  final db = await instance.database;
+
+  // ← Hint: إدراج الدفعة في جدول Payment_Customer
+  final paymentId = await db.insert('Payment_Customer', {
+    'CustomerID': customerId,
+    'Amount': amount.toDouble(),
+    'DateT': paymentDate,
+    'Comments': comments ?? '',
+  });
+
+  // ← Hint: تسجيل القيد المالي التلقائي
+  await FinancialIntegrationHelper.recordCustomerPaymentTransaction(
+    paymentId: paymentId,
+    customerId: customerId,
+    amount: amount,
+    paymentDate: paymentDate,
+    comments: comments,
+  );
+
+  // ← Hint: تحديث رصيد العميل المتبقي
+  await db.rawUpdate(
+    'UPDATE TB_Customer SET Remaining = Remaining - ? WHERE CustomerID = ?',
+    [amount.toDouble(), customerId],
+  );
+
+  return paymentId;
 }
 
 
