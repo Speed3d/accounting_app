@@ -619,6 +619,13 @@ class TransactionService {
         endDate: endDate,
       );
 
+      final customerPaymentsTotal = await _getTotalByType(
+        TransactionType.customerPayment,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
       final salariesTotal = await _getTotalByType(
         TransactionType.salary,
         fiscalYearId: targetFiscalYearId,
@@ -628,6 +635,20 @@ class TransactionService {
 
       final advancesTotal = await _getTotalByType(
         TransactionType.employeeAdvance,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final bonusesTotal = await _getTotalByType(
+        TransactionType.employeeBonus,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final returnsTotal = await _getTotalByType(
+        TransactionType.saleReturn,
         fiscalYearId: targetFiscalYearId,
         startDate: startDate,
         endDate: endDate,
@@ -645,8 +666,11 @@ class TransactionService {
         'totalCount': totalCount,
         'breakdown': {
           'sales': salesTotal.toDouble(),
+          'customerPayments': customerPaymentsTotal.toDouble(),
           'salaries': salariesTotal.toDouble(),
           'advances': advancesTotal.toDouble(),
+          'bonuses': bonusesTotal.toDouble(),
+          'returns': returnsTotal.toDouble(),
         },
       };
 

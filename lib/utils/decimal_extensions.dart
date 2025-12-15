@@ -108,10 +108,10 @@ class DecimalHelper {
   }
   
   /// تقريب Decimal لعدد معين من الكسور
-  static Rational round(Decimal value, {int decimals = 2}) {
-  final multiplier = Decimal.fromInt(10).pow(decimals).toDecimal();
-  return (value * multiplier).round() / multiplier;
-}
+  static Decimal round(Decimal value, {int decimals = 2}) {
+    final multiplier = Decimal.fromInt(10).pow(decimals).toDecimal();
+    return ((value * multiplier).round() / multiplier).toDecimal();
+  }
   
   /// التحقق من أن Decimal صالح (ليس infinity أو NaN)
   static bool isValid(Decimal value) {
@@ -131,8 +131,8 @@ class DecimalHelper {
   
   /// إنشاء Decimal من percentage
   static Decimal fromPercentage(num percentage) {
-      final r = Decimal.parse(percentage.toString()) / Decimal.fromInt(100);
-  return r.toDecimal();
+    final r = Decimal.parse(percentage.toString()) / Decimal.fromInt(100);
+    return r.toDecimal();
   }
   
   /// تحويل Decimal إلى percentage
