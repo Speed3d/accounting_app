@@ -226,9 +226,9 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
       reports.add(
         ReportItem(
           title: ('التقرير المالي الشامل'),
-          subtitle: l10n.employeePayrollReport_desc,
-          icon: Icons.people_outline,
-          color: AppColors.warning,
+          subtitle: ('تقرير مالي شالم حسب السنة والنوع والتصنيف والنسب'),
+          icon: Icons.report,
+          color: AppColors.primaryDark,
           screen: const FinancialReportScreen(),
         ),
       );
@@ -237,9 +237,9 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
       reports.add(
         ReportItem(
           title: ('شاشة القيود المالية'),
-          subtitle: l10n.employeePayrollReport_desc,
-          icon: Icons.people_outline,
-          color: AppColors.warning,
+          subtitle: ('ملخص مالي شامل بجميع القيود'),
+          icon: Icons.money_outlined,
+          color: AppColors.expense,
           screen: const TransactionsScreen(),
         ),
       );
@@ -247,10 +247,10 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
      if (true) {
       reports.add(
         ReportItem(
-          title: ('شاشة السنوات المالية'),
-          subtitle: l10n.employeePayrollReport_desc,
-          icon: Icons.people_outline,
-          color: AppColors.warning,
+          title: ('إدارة السنوات المالية'),
+          subtitle: ('قائمة بجميع السنوات ، تفعيل سنة ، إقفال سنة '),
+          icon: Icons.money_off,
+          color: const Color.fromARGB(255, 64, 162, 233),
           screen: const FiscalYearsScreen(),
         ),
       );
