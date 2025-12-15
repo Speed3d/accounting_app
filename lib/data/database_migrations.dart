@@ -364,13 +364,13 @@ static Future<void> migrateToV4(Database db) async {
 
       // ← Hint: قائمة الجداول التي نحتاج لإضافة FiscalYearID لها
       final tables = [
-        'TB_Customer_Debts',      // ديون العملاء (مبيعات)
-        'TB_Customer_Payments',   // دفعات العملاء
+        'Debt_Customer',          // ديون العملاء (مبيعات) - الاسم الفعلي في قاعدة البيانات
+        'Payment_Customer',       // دفعات العملاء - الاسم الفعلي في قاعدة البيانات
         'TB_Payroll',             // رواتب الموظفين
         'TB_Employee_Advances',   // سلف الموظفين
         'TB_Employee_Bonuses',    // مكافآت الموظفين
         'TB_Advance_Repayments',  // تسديدات السلف
-        'TB_Sales_Returns',       // مرتجعات المبيعات
+        'Sales_Returns',          // مرتجعات المبيعات - الاسم الفعلي في قاعدة البيانات
       ];
 
       for (final tableName in tables) {
