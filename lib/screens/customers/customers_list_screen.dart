@@ -370,7 +370,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                 // رقم الهاتف
                 Text(
                   '${l10n.phone}: ${customer.phone ?? l10n.unregistered}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 
                 const SizedBox(height: AppConstants.spacingSm),
@@ -379,7 +379,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                 StatusBadge(
                   text: balanceInfo['text'],
                   type: balanceInfo['type'],
-                  small: true,
+                  // small: true,
                 ),
               ],
             ),
@@ -418,7 +418,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         child: !hasValidImage
             ? Icon(
                 Icons.person,
-                size: AppConstants.iconSizeLg,
+                size: AppConstants.iconSizeMd,
                 color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
               )
             : null,

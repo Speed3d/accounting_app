@@ -1281,7 +1281,7 @@
   "november": "November",
   "december": "December",
 
-  "salaryLabel": "Salary",
+  "salaryLabel": "Basic salary",
   "advancesLabel": "Advances",
 
   "loadingMessage": "Loading...",
@@ -1905,6 +1905,7 @@
   "nighttimemode": "Nighttime mode",
 
   "selectCurrency": "Select Currency",
+  "selectedcurrency": "selected currency",
   "currencyChanged": "Currency changed successfully",
   "security": "Security",
   "biometricLogin": "Biometric Login",

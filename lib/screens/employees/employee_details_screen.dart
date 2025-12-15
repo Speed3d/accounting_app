@@ -353,7 +353,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(AppConstants.spacingSm),
+      padding: const EdgeInsets.all(AppConstants.spacingMd),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: AppConstants.borderRadiusSm,
@@ -917,7 +917,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                 formatCurrency(entry.baseSalary),
                 AppColors.info,
               ),
-              // تم الغاء غرض المكافئات من هنا ايضا 
+              // تم الغاء عرض المكافئات من هنا ايضا 
               // _buildDetailRow(
               //   l10n.bonuses,
               //   formatCurrency(entry.bonuses),

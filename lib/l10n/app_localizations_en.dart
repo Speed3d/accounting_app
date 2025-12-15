@@ -1018,7 +1018,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEmployeesToDisplay => 'No employees to display.';
 
   @override
-  String get salaryLabel => 'Salary';
+  String get salaryLabel => 'Basic salary';
 
   @override
   String get totalNetProfit => 'Total Net Profit';
@@ -2499,6 +2499,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectCurrency => 'Select Currency';
+
+  @override
+  String get selectedcurrency => 'selected currency';
 
   @override
   String get currencyChanged => 'Currency changed successfully';

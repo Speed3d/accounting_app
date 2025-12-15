@@ -1219,7 +1219,7 @@
   "november": "نوفمبر",
   "december": "ديسمبر",
 
-  "salaryLabel": "الراتب",
+  "salaryLabel": "الراتب الاساسي",
   "advancesLabel": "السلف",
 
   "loadingMessage": "جاري التحميل...",
@@ -1843,6 +1843,7 @@
   "nighttimemode": "الوضع الليلي",
 
   "selectCurrency": "اختر العملة",
+  "selectedcurrency": "العملة المختارة",
   "currencyChanged": "تم تغيير العملة بنجاح",
   "security": "الأمان",
   "biometricLogin": "تسجيل الدخول بالبصمة",

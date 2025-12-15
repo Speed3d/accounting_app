@@ -1,6 +1,7 @@
 // lib/screens/products/add_edit_product_screen.dart
 
 import 'dart:io';
+import 'package:accountant_touch/widgets/custom_card.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';

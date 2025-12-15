@@ -133,26 +133,28 @@ class _HomeScreenState extends State<HomeScreen> {
         'color': Colors.grey,
         'page': const SettingsScreen(),
       },
-       //=====================================================
-       // صفحات التطوير - افعلها للنسخة الخاصة بي
-       //=====================================================
 
-      { 
-        'title': l10n.activationcodegenerator,
-        'icon': Icons.manage_accounts,
-        'color': const Color.fromARGB(255, 103, 237, 94),
-        'page': const ActivationCodeGeneratorScreen(),
-      },
-       { 
-        'title': l10n.subscriptionmanagement,
-        'icon': Icons.verified,
-        'color': const Color.fromARGB(255, 242, 147, 46),
-        'page': const SubscriptionsAdminScreen(),
-      },
 
-       //=====================================================
-       // صفحات التطوير
-       //=====================================================
+      //  //=====================================================
+      //  // صفحات التطوير - افعلها للنسخة الخاصة بي
+      //  //=====================================================
+
+      // { 
+      //   'title': l10n.activationcodegenerator,
+      //   'icon': Icons.manage_accounts,
+      //   'color': const Color.fromARGB(255, 103, 237, 94),
+      //   'page': const ActivationCodeGeneratorScreen(),
+      // },
+      //  { 
+      //   'title': l10n.subscriptionmanagement,
+      //   'icon': Icons.verified,
+      //   'color': const Color.fromARGB(255, 242, 147, 46),
+      //   'page': const SubscriptionsAdminScreen(),
+      // },
+
+      //  //=====================================================
+      //  // صفحات التطوير
+      //  //=====================================================
 
     ];
   }

@@ -342,7 +342,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: color, size: 18),
+                // Icon(icon, color: color, size: 18),
                 const SizedBox(width: AppConstants.spacingSm),
                 Expanded(
                   child: Text(
@@ -425,7 +425,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
               tag: 'employee_${employee.employeeID}',
               child: Container(
                 width: AppConstants.avatarSizeLg,
-                height: AppConstants.avatarSizeLg,
+                height: AppConstants.avatarSizeMd,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -452,7 +452,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                 child: !hasValidImage
                     ? Icon(
                         Icons.person,
-                        size: 32,
+                        size: 34,
                         color: isDark 
                             ? AppColors.primaryDark 
                             : AppColors.primaryLight,
@@ -507,7 +507,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                       Expanded(
                         child: _buildInfoChip(
                           icon: Icons.paid_outlined,
-                          label: l10n.salary,
+                          label: l10n.salaryLabel,
                           value: formatCurrency(employee.baseSalary),
                           color: AppColors.success,
                         ),
@@ -586,8 +586,8 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 4),
+          // Icon(icon, size: 8, color: color),
+          const SizedBox(width: 1),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

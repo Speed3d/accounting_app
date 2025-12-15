@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ============================================================
           _buildSectionHeader(
             context,
-            title: l10n.currency,
+            title: l10n.selectCurrency,
             icon: Icons.attach_money,
             isDark: isDark,
           ),
@@ -276,23 +276,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsCard(
             child: Column(
               children: [
-                // ← Hint: رابط لصفحة حول التطبيق
-                _SettingsLinkTile(
-                  title: l10n.about,
-                  subtitle: l10n.aboutTheApp,
-                  icon: Icons.info_outline,
-                  iconColor: AppColors.info,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AboutScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                _buildDivider(isDark),
 
                 // ← Hint: 🆕 دليل التطبيق - شرح شامل لجميع الميزات
                 _SettingsLinkTile(
@@ -323,143 +306,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 _buildDivider(isDark),
 
-                // const SizedBox(height: AppConstants.spacingSm),
-
+                                // ← Hint: رابط لصفحة حول التطبيق
                 _SettingsLinkTile(
-  title: 'تحديث إعدادات Firebase',
-  subtitle: 'جلب أحدث الإعدادات من الخادم',
-  icon: Icons.cloud_download,
-  iconColor: AppColors.info,
-  onTap: () async {
-    // عرض مؤشر تحميل
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+                  title: l10n.about,
+                  subtitle: l10n.aboutTheApp,
+                  icon: Icons.info_outline,
+                  iconColor: AppColors.info,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AboutScreen(),
+                      ),
+                    );
+                  },
+                ),
 
-    try {
-      final refreshed = await FirebaseService.instance.forceRefreshConfig();
+                _buildDivider(isDark),
+
+          // const SizedBox(height: AppConstants.spacingSm),
+
+//        //=====================================================
+//       // صفحات التطوير - افعلها للنسخة الخاصة بي
+//       //=====================================================
+
+//                 _SettingsLinkTile(
+//   title: 'تحديث إعدادات Firebase', 
+//   subtitle: 'جلب أحدث الإعدادات من الخادم',
+//   icon: Icons.cloud_download,
+//   iconColor: AppColors.info,
+//   onTap: () async {
+//     // عرض مؤشر تحميل
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (ctx) => const Center(
+//         child: CircularProgressIndicator(),
+//       ),
+//     );
+
+//     try {
+//       final refreshed = await FirebaseService.instance.forceRefreshConfig();
       
-      if (!mounted) return;
-      Navigator.pop(context); // إغلاق المؤشر
+//       if (!mounted) return;
+//       Navigator.pop(context); // إغلاق المؤشر
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            refreshed 
-              ? '✅ تم تحديث الإعدادات بنجاح'
-              : 'ℹ️ الإعدادات محدثة بالفعل',
-          ),
-          backgroundColor: refreshed ? AppColors.success : AppColors.info,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             refreshed 
+//               ? '✅ تم تحديث الإعدادات بنجاح'
+//               : 'ℹ️ الإعدادات محدثة بالفعل',
+//           ),
+//           backgroundColor: refreshed ? AppColors.success : AppColors.info,
+//           behavior: SnackBarBehavior.floating,
+//         ),
+//       );
+//     } catch (e) {
+//       if (!mounted) return;
+//       Navigator.pop(context);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ فشل التحديث: ${e.toString()}'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  },
-),
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('❌ فشل التحديث: ${e.toString()}'),
+//           backgroundColor: AppColors.error,
+//           behavior: SnackBarBehavior.floating,
+//         ),
+//       );
+//     }
+//   },
+// ),
               ],
             ),
           ),
-
-          // const SizedBox(height: AppConstants.spacingXl),
-
-
-          // // ============================================================
-          // // 🧪 قسم الاختبار والتطوير (فقط في اصدار نسخة لهاتف حقيقي للتجربته Release mode)
-          // // ← Hint: زر اختبار Crashlytics - احذفه بعد التأكد من عمل Firebase
-          // // ============================================================
-          // if (!kDebugMode) ...[
-          //   _buildSectionHeader(
-          //     context,
-          //     title: '🧪 اختبار وتطوير',
-          //     icon: Icons.science_outlined,
-          //     isDark: isDark,
-          //   ),
-          //   const SizedBox(height: AppConstants.spacingSm),
-            
-          //   _SettingsCard(
-          //     child: Padding(
-          //       padding: const EdgeInsets.all(AppConstants.spacingMd),
-          //       child: Column(
-          //         crossAxisAlignment: CrossAxisAlignment.stretch,
-          //         children: [
-          //           // ← Hint: زر اختبار Crashlytics
-          //           ElevatedButton.icon(
-          //             onPressed: () {
-          //               // ← Hint: إرسال خطأ تجريبي لـ Crashlytics
-          //               FirebaseService.instance.logError(
-          //                 Exception('Test error from settings - تجربة Crashlytics'),
-          //                 StackTrace.current,
-          //                 reason: 'Testing Crashlytics integration',
-          //                 fatal: false,
-          //               );
-                        
-          //               ScaffoldMessenger.of(context).showSnackBar(
-          //                 SnackBar(
-          //                   content: Row(
-          //                     children: [
-          //                       const Icon(
-          //                         Icons.check_circle,
-          //                         color: Colors.white,
-          //                       ),
-          //                       const SizedBox(width: AppConstants.spacingSm),
-          //                       const Expanded(
-          //                         child: Text(
-          //                           '✅ تم إرسال خطأ تجريبي لـ Crashlytics\n'
-          //                           'تحقق من Firebase Console بعد دقائق',
-          //                           style: TextStyle(fontSize: 13),
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   backgroundColor: AppColors.success,
-          //                   behavior: SnackBarBehavior.floating,
-          //                   duration: const Duration(seconds: 4),
-          //                 ),
-          //               );
-          //             },
-          //             icon: const Icon(Icons.bug_report),
-          //             label: const Text('🧪 Test Crashlytics'),
-          //             style: ElevatedButton.styleFrom(
-          //               backgroundColor: AppColors.warning,
-          //               foregroundColor: Colors.white,
-          //               padding: const EdgeInsets.symmetric(
-          //                 vertical: AppConstants.spacingMd,
-          //               ),
-          //             ),
-          //           ),
-          //           const SizedBox(height: AppConstants.spacingSm),
-          //           Text(
-          //             '⚠️ هذا الزر للتجربة فقط - احذفه بعد التأكد من عمل Crashlytics',
-          //             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          //               color: AppColors.warning,
-          //               fontStyle: FontStyle.italic,
-          //             ),
-          //             textAlign: TextAlign.center,
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-            
-          //   const SizedBox(height: AppConstants.spacingXl),
-          // ],
           
-
           // ← Hint: معلومات الإصدار في الأسفل
           _buildVersionInfo(context, isDark),
           
@@ -693,7 +613,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       title: Text(
-        l10n.currency,
+        l10n.selectedcurrency, 
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
         ),

@@ -261,7 +261,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
           baseSalary: baseSalary,
           bonuses: bonuses,
           deductions: deductions,
-          advanceDeduction: advanceRepayment,
+          // advanceDeduction: advanceRepayment,
           netSalary: _netSalary,
           notes: _notesController.text.trim(),
         );
@@ -394,7 +394,7 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
 
             const SizedBox(height: AppConstants.spacingXl),
 
-            // ============= الراتب الأساسي =============
+            // =============  مكونات الراتب - الراتب الأساسي =============
             _buildSectionHeader(l10n.salaryComponents, Icons.attach_money, isDark),
 
             const SizedBox(height: AppConstants.spacingMd),
@@ -441,68 +441,68 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
 
             const SizedBox(height: AppConstants.spacingMd),
 
-            // خصم السلف
-            CustomTextField(
-              controller: _advanceRepaymentController,
-              label: l10n.advanceRepayment,
-              hint: l10n.advanceDeductionFromSalaryHint,
-              prefixIcon: Icons.request_quote_outlined,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              textInputAction: TextInputAction.next,
-              validator: (v) {
-            if (v == null || v.isEmpty) return l10n.enterZeroIfNotRepaying;
-                try {
-                final amount = parseDecimal(convertArabicNumbersToEnglish(v));
-                if (amount < Decimal.zero) return l10n.enterValidNumber;
-                if (amount > widget.employee.balance) {
-               return l10n.repaymentExceedsBalance;
-               }
-             } catch (e) {
-            return l10n.enterValidNumber;
-              }
-              return null;
+            // // خصم السلف
+            // CustomTextField(
+            //   controller: _advanceRepaymentController,
+            //   label: l10n.advanceRepayment,
+            //   hint: l10n.advanceDeductionFromSalaryHint,
+            //   prefixIcon: Icons.request_quote_outlined,
+            //   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            //   textInputAction: TextInputAction.next,
+            //   validator: (v) {
+            // if (v == null || v.isEmpty) return l10n.enterZeroIfNotRepaying;
+            //     try {
+            //     final amount = parseDecimal(convertArabicNumbersToEnglish(v));
+            //     if (amount < Decimal.zero) return l10n.enterValidNumber;
+            //     if (amount > widget.employee.balance) {
+            //    return l10n.repaymentExceedsBalance;
+            //    }
+            //  } catch (e) {
+            // return l10n.enterValidNumber;
+            //   }
+            //   return null;
                 
-              },
-            ),
+            //   },
+            // ),
 
-            // ملاحظة رصيد السلف
-            if (widget.employee.balance > Decimal.zero) ...[
-              const SizedBox(height: AppConstants.spacingSm),
-              Container(
-                padding: const EdgeInsets.all(AppConstants.spacingSm),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: AppConstants.borderRadiusSm,
-                  border: Border.all(
-                    color: AppColors.warning.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.warning,
-                    ),
-                    const SizedBox(width: AppConstants.spacingSm),
-                    Expanded(
-                      child: Text(
-                        l10n.currentBalanceOnEmployee(
-                          formatCurrency(widget.employee.balance),
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.warning,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // // ملاحظة رصيد السلف
+            // if (widget.employee.balance > Decimal.zero) ...[
+            //   const SizedBox(height: AppConstants.spacingSm),
+            //   Container(
+            //     padding: const EdgeInsets.all(AppConstants.spacingSm),
+            //     decoration: BoxDecoration(
+            //       color: AppColors.warning.withOpacity(0.1),
+            //       borderRadius: AppConstants.borderRadiusSm,
+            //       border: Border.all(
+            //         color: AppColors.warning.withOpacity(0.3),
+            //         width: 1,
+            //       ),
+            //     ),
+            //     child: Row(
+            //       children: [
+            //         Icon(
+            //           Icons.info_outline,
+            //           size: 16,
+            //           color: AppColors.warning,
+            //         ),
+            //         const SizedBox(width: AppConstants.spacingSm),
+            //         Expanded(
+            //           child: Text(
+            //             l10n.currentBalanceOnEmployee(
+            //               formatCurrency(widget.employee.balance),
+            //             ),
+            //             style: TextStyle(
+            //               fontSize: 12,
+            //               color: AppColors.warning,
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ],
 
-            const SizedBox(height: AppConstants.spacingXl),
+            // const SizedBox(height: AppConstants.spacingXl),
 
             // ============= معلومات إضافية =============
             _buildSectionHeader(l10n.additionalInformation, Icons.info_outline, isDark),
@@ -869,13 +869,14 @@ class _AddPayrollScreenState extends State<AddPayrollScreen> {
 
             const SizedBox(height: AppConstants.spacingSm),
 
-            // خصم السلف
-            _buildSummaryRow(
-              l10n.advanceRepayment,
-              formatCurrency(advanceRepayment),
-              AppColors.warning,
-              Icons.remove_circle_outline,
-            ),
+            // تم ايقاف خصم السلف من العرض في الملخص
+            // // خصم السلف
+            // _buildSummaryRow(
+            //   l10n.advanceRepayment,
+            //   formatCurrency(advanceRepayment),
+            //   AppColors.warning,
+            //   Icons.remove_circle_outline,
+            // ),
 
             const Divider(height: AppConstants.spacingLg),
 

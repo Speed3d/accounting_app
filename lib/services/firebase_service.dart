@@ -120,15 +120,6 @@ class FirebaseService {
         'backup_magic_number': 'INVALID_USE_FIREBASE',
         'time_validation_secret': 'INVALID_CONNECT_TO_INTERNET_FIRST',
 
-        // //================///========================
-        // //  فقط للتطوير تحذف اذا اردنا ان نخرج نسخة لهاتف حقيقي
-        // //================///========================
-        // 'activation_secret': 'DEV_FALLBACK_X4NL27OcZRHz6SaDoClQdeB0Psk5UgIw3tVMqvKnA1JmjbuiGE8FyfhpYTxrW9',
-        // 'backup_magic_number': 'DEV_FALLBACK_LxwJtAU9bgXI3oH15B8zFfKWNamYuO7R',
-        // 'time_validation_secret': 'DEV_FALLBACK_w0LAC8y57giFxtYvUZDzuTJdPalBX2W6roqhHsecIkEVR3Om19Knj4GQNMpfSb',
-        // //================///========================
-        // //================///========================
-
         // ========== Kill Switch المتقدم ==========
         'app_maintenance_mode': false,
         'app_maintenance_message_ar': 'التطبيق متوقف مؤقتاً للصيانة. نعتذر عن الإزعاج.',

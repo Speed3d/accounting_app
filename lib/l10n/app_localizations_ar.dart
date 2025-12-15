@@ -1009,7 +1009,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noEmployeesToDisplay => 'لا يوجد موظفون لعرضهم.';
 
   @override
-  String get salaryLabel => 'الراتب';
+  String get salaryLabel => 'الراتب الاساسي';
 
   @override
   String get totalNetProfit => 'إجمالي صافي الربح';
@@ -2477,6 +2477,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectCurrency => 'اختر العملة';
+
+  @override
+  String get selectedcurrency => 'العملة المختارة';
 
   @override
   String get currencyChanged => 'تم تغيير العملة بنجاح';

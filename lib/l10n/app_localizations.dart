@@ -1913,7 +1913,7 @@ abstract class AppLocalizations {
   /// No description provided for @salaryLabel.
   ///
   /// In en, this message translates to:
-  /// **'Salary'**
+  /// **'Basic salary'**
   String get salaryLabel;
 
   /// No description provided for @totalNetProfit.
@@ -4639,6 +4639,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Currency'**
   String get selectCurrency;
+
+  /// No description provided for @selectedcurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'selected currency'**
+  String get selectedcurrency;
 
   /// No description provided for @currencyChanged.
   ///

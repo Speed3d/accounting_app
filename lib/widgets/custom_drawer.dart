@@ -250,43 +250,43 @@ class CustomDrawer extends StatelessWidget {
                 
                 const SizedBox(height: AppConstants.spacingXl),
 
-       //=====================================================
-       // صفحات التطوير - افعلها للنسخة الخاصة بي
-       //=====================================================
+      //  //=====================================================
+      //  // صفحات التطوير - افعلها للنسخة الخاصة بي
+      //  //=====================================================
 
-                    _buildMenuItem(
-                  context,
-                  icon: Icons.manage_accounts,
-                  title: l10n.activationcodegenerator,
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ActivationCodeGeneratorScreen(),
-                      ),
-                    );
-                  },
-                ),
+      //               _buildMenuItem(
+      //             context,
+      //             icon: Icons.manage_accounts,
+      //             title: l10n.activationcodegenerator,
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(
+      //                   builder: (context) => const ActivationCodeGeneratorScreen(),
+      //                 ),
+      //               );
+      //             },
+      //           ),
 
-                    _buildMenuItem(
-                  context,
-                  icon: Icons.verified,
-                  title: l10n.subscriptionmanagement,
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SubscriptionsAdminScreen(),
-                      ),
-                    );
-                  },
-                ),
+      //               _buildMenuItem(
+      //             context,
+      //             icon: Icons.verified,
+      //             title: l10n.subscriptionmanagement,
+      //             onTap: () {
+      //               Navigator.pop(context);
+      //               Navigator.push(
+      //                 context,
+      //                 MaterialPageRoute(
+      //                   builder: (context) => const SubscriptionsAdminScreen(),
+      //                 ),
+      //               );
+      //             },
+      //           ),
 
-       //=====================================================
-       // صفحات التطوير - افعلها للنسخة الخاصة بي
-       //=====================================================
+      //  //=====================================================
+      //  // صفحات التطوير - افعلها للنسخة الخاصة بي
+      //  //=====================================================
 
               ],
             ),
@@ -966,20 +966,6 @@ class CustomDrawer extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // قسم الحول تم ايقافه من الاسفل
-          // ListTile(
-          //   leading: const Icon(Icons.info_outline),
-          //   title: Text(l10n.aboutTheApp),
-          //   onTap: () {
-          //     Navigator.pop(context);
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const AboutScreen(),
-          //       ),
-          //     );
-          //   },
-          // ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
             title: Text(
