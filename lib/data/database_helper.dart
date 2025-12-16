@@ -877,6 +877,85 @@ class DatabaseHelper {
       END;
     ''');
     debugPrint('  └─ ✅ تم إنشاء Triggers للتحديث التلقائي');
+
+    // ============================================================================
+    // 6️⃣ Triggers للحذف التلقائي (CASCADE DELETE للقيود المرتبطة)
+    // ============================================================================
+    // ← Hint: عند حذف فاتورة/راتب/سلفة، يتم حذف القيد المالي المرتبط تلقائياً
+    // ← Hint: هذا يضمن تطابق البيانات دائماً (لا قيود يتيمة!)
+    debugPrint('  ├─ إنشاء Triggers للحذف التلقائي...');
+
+    // ← Hint: عند حذف فاتورة، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
+      AFTER DELETE ON TB_Invoices
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'invoice' AND ReferenceID = OLD.InvoiceID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف راتب، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_payroll_transaction
+      AFTER DELETE ON TB_Payroll
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'payroll' AND ReferenceID = OLD.PayrollID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف سلفة، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_advance_transaction
+      AFTER DELETE ON TB_Employee_Advances
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'advance' AND ReferenceID = OLD.AdvanceID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف تسديد سلفة، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_repayment_transaction
+      AFTER DELETE ON TB_Advance_Repayments
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'advance_repayment' AND ReferenceID = OLD.RepaymentID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف مكافأة، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_bonus_transaction
+      AFTER DELETE ON TB_Employee_Bonuses
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'bonus' AND ReferenceID = OLD.BonusID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف دفعة زبون، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_payment_transaction
+      AFTER DELETE ON Payment_Customer
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'customer_payment' AND ReferenceID = OLD.PaymentID;
+      END;
+    ''');
+
+    // ← Hint: عند حذف مرتجع مبيعات، احذف القيد المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_return_transaction
+      AFTER DELETE ON Sales_Returns
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'sale_return' AND ReferenceID = OLD.ReturnID;
+      END;
+    ''');
+
+    debugPrint('  └─ ✅ تم إنشاء Triggers للحذف التلقائي (7 triggers)');
     debugPrint('✅ [DatabaseHelper] اكتمل إنشاء نظام السنوات المالية (v6) بنجاح! 🎉');
 
     // ← Hint: نبدأ batch جديد للـ Indexes المتبقية
@@ -3951,15 +4030,14 @@ Future<int> recordSale({
     'IsReturned': 0,
   });
 
-  // ← Hint: تسجيل القيد المالي التلقائي
-  await FinancialIntegrationHelper.recordSaleTransaction(
-    saleId: saleId,
-    customerId: customerId,
-    amount: debt,
-    saleDate: DateTime.now().toIso8601String(),
-    productId: productId,
-    productName: productName ?? details,
-  );
+  // ═══════════════════════════════════════════════════════════
+  // ⚠️ تم إزالة تسجيل القيد المالي من هنا
+  // ═══════════════════════════════════════════════════════════
+  // ← Hint: التسجيل المالي القديم كان يسجل قيد لكل منتج (خطأ!)
+  // ← Hint: الآن يتم تسجيل قيد واحد فقط للفاتورة الكاملة
+  // ← Hint: استخدم FinancialIntegrationHelper.recordInvoiceTransaction()
+  //    بعد إضافة جميع المنتجات للفاتورة
+  // ═══════════════════════════════════════════════════════════
 
   return saleId;
 }

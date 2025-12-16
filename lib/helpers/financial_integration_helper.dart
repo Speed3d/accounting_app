@@ -28,10 +28,83 @@ class FinancialIntegrationHelper {
   // 🎯 الربط التلقائي للمبيعات
   // ==========================================================================
 
-  /// إنشاء قيد مالي تلقائي عند إضافة مبيعة
+  /// إنشاء قيد مالي تلقائي عند إضافة فاتورة (البيع المباشر أو الآجل)
   ///
-  /// ← Hint: يُستدعى من DatabaseHelper.insertCustomerDebt()
-  /// ← Hint: يسجل المبيعة كقيد دخل (in) في نظام القيود
+  /// ← Hint: يُستدعى بعد إنشاء الفاتورة الكاملة (TB_Invoices)
+  /// ← Hint: يسجل قيد واحد فقط بمجموع الفاتورة (وليس قيد لكل منتج)
+  /// ← Hint: يميز بين البيع النقدي (Cash) والآجل (Credit)
+  static Future<bool> recordInvoiceTransaction({
+    required int invoiceId,
+    required int customerId,
+    required Decimal totalAmount,
+    required bool isCashSale, // ← جديد: هل الدفع نقدي أم آجل؟
+    required DateTime invoiceDate,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('🔗 [FinancialIntegration] تسجيل قيد فاتورة تلقائياً...');
+      debugPrint('  ├─ رقم الفاتورة: #$invoiceId');
+      debugPrint('  ├─ المبلغ الإجمالي: ${totalAmount.toString()}');
+      debugPrint('  └─ نوع البيع: ${isCashSale ? "نقدي" : "آجل"}');
+
+      // ← Hint: التحقق من وجود سنة مالية نشطة
+      final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
+      if (!isOpen) {
+        debugPrint('⚠️ [FinancialIntegration] السنة المالية النشطة مقفلة - تخطي التسجيل');
+        return false;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // المنطق المحاسبي الصحيح:
+      // ═══════════════════════════════════════════════════════════
+      // ✅ البيع النقدي (Cash Sale): يُسجل فوراً كقيد دخل (direction='in')
+      //    لأن المبلغ تم تحصيله فعلياً
+      //
+      // ❌ البيع الآجل (Credit Sale): لا يُسجل كقيد دخل الآن
+      //    لأن المبلغ لم يُحصّل بعد (مجرد دين على الزبون)
+      //    سيُسجل القيد فقط عند التسديد الفعلي
+      // ═══════════════════════════════════════════════════════════
+
+      if (isCashSale) {
+        // ← Hint: البيع النقدي - تسجيل قيد الدخل فوراً
+        final transaction = await _transactionService.createTransaction(
+          type: TransactionType.sale,
+          category: TransactionCategory.revenue,
+          amount: totalAmount,
+          direction: 'in', // ← دخل (تم التحصيل)
+          description: 'مبيعات نقدية - فاتورة رقم #$invoiceId',
+          notes: notes,
+          referenceType: 'invoice',
+          referenceId: invoiceId,
+          customerId: customerId,
+          transactionDate: invoiceDate,
+        );
+
+        if (transaction != null) {
+          debugPrint('✅ [FinancialIntegration] تم تسجيل قيد الفاتورة النقدية (ID: ${transaction.transactionID})');
+          return true;
+        }
+      } else {
+        // ← Hint: البيع الآجل - لا نسجل قيد الآن
+        // ← Hint: سيتم التسجيل فقط عند استلام الدفعة من الزبون
+        debugPrint('ℹ️ [FinancialIntegration] بيع آجل - لن يتم تسجيل قيد دخل الآن');
+        debugPrint('   سيتم تسجيل القيد عند التسديد الفعلي من الزبون');
+        return true; // ← نجاح العملية (لكن بدون تسجيل قيد)
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [FinancialIntegration] خطأ في recordInvoiceTransaction: $e');
+      return false;
+    }
+  }
+
+  /// إنشاء قيد مالي تلقائي عند إضافة مبيعة منفردة (DEPRECATED)
+  ///
+  /// ⚠️ DEPRECATED: استخدم recordInvoiceTransaction بدلاً من هذه الدالة
+  /// ← Hint: هذه الدالة القديمة تُسجل قيد لكل منتج (خطأ محاسبياً)
+  /// ← Hint: الدالة الجديدة recordInvoiceTransaction تسجل قيد واحد للفاتورة كاملة
+  @Deprecated('Use recordInvoiceTransaction instead')
   static Future<bool> recordSaleTransaction({
     required int saleId,
     required int customerId,
@@ -41,7 +114,8 @@ class FinancialIntegrationHelper {
     String? productName,
   }) async {
     try {
-      debugPrint('🔗 [FinancialIntegration] تسجيل قيد مبيعة تلقائياً...');
+      debugPrint('⚠️ [FinancialIntegration] استخدام recordSaleTransaction القديمة (DEPRECATED)');
+      debugPrint('⚠️ يُفضل استخدام recordInvoiceTransaction للفواتير الكاملة');
 
       // ← Hint: التحقق من وجود سنة مالية نشطة
       final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();

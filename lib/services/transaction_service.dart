@@ -347,7 +347,76 @@ class TransactionService {
   }
 
   // ==========================================================================
-  // 7️⃣ حذف قيد مالي
+  // 7️⃣ تحديث قيد مالي
+  // ==========================================================================
+
+  /// تحديث قيد مالي موجود
+  ///
+  /// ← Hint: يسمح بتعديل المبلغ والوصف والملاحظات
+  /// ← Hint: الـ Trigger يحدّث الأرصدة تلقائياً
+  /// ← Hint: لا يمكن تعديل قيود السنوات المقفلة
+  Future<bool> updateTransaction(
+    int transactionId, {
+    Decimal? amount,
+    String? description,
+    String? notes,
+    DateTime? transactionDate,
+  }) async {
+    try {
+      debugPrint('🔄 [TransactionService] تحديث القيد (ID: $transactionId)...');
+
+      // ← Hint: الحصول على القيد أولاً
+      final transaction = await getTransactionById(transactionId);
+      if (transaction == null) {
+        debugPrint('⚠️ [TransactionService] القيد غير موجود!');
+        return false;
+      }
+
+      // ← Hint: التحقق من أن السنة المالية غير مقفلة
+      final fiscalYear = await _fiscalYearService.getFiscalYearById(
+        transaction.fiscalYearID,
+      );
+
+      if (fiscalYear != null && fiscalYear.isClosed) {
+        debugPrint('⚠️ [TransactionService] لا يمكن تعديل قيد من سنة مقفلة!');
+        return false;
+      }
+
+      final db = await DatabaseHelper.instance.database;
+
+      // ← Hint: بناء Map التحديثات فقط للحقول المطلوب تعديلها
+      final updates = <String, dynamic>{};
+      if (amount != null) updates['Amount'] = amount.toDouble();
+      if (description != null) updates['Description'] = description;
+      if (notes != null) updates['Notes'] = notes;
+      if (transactionDate != null) updates['Date'] = transactionDate.toIso8601String();
+
+      // ← Hint: إذا لم يكن هناك شيء للتحديث
+      if (updates.isEmpty) {
+        debugPrint('⚠️ [TransactionService] لا توجد تعديلات للتطبيق');
+        return false;
+      }
+
+      // ← Hint: تطبيق التحديثات
+      await db.update(
+        'TB_Transactions',
+        updates,
+        where: 'TransactionID = ?',
+        whereArgs: [transactionId],
+      );
+
+      debugPrint('✅ [TransactionService] تم تحديث القيد بنجاح');
+      debugPrint('   التعديلات: ${updates.keys.join(', ')}');
+
+      return true;
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في updateTransaction: $e');
+      return false;
+    }
+  }
+
+  // ==========================================================================
+  // 8️⃣ حذف قيد مالي
   // ==========================================================================
 
   /// حذف قيد مالي

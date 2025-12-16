@@ -529,7 +529,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 if (transaction.referenceType != null) ...[
                   _buildDetailRow(
                     'نوع المرجع',
-                    transaction.referenceType!,
+                    _getReferenceTypeNameArabic(transaction.referenceType),
                     Icons.link,
                     Colors.orange,
                   ),
@@ -581,6 +581,41 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ],
       ),
     );
+  }
+
+  /// ترجمة نوع المرجع إلى العربية (للعرض للمستخدم)
+  ///
+  /// ← Hint: يحول الأسماء التقنية إلى أسماء عربية مفهومة
+  /// ← Hint: مثلاً: 'invoice' → 'فاتورة بيع'
+  String _getReferenceTypeNameArabic(String? referenceType) {
+    if (referenceType == null) return 'غير محدد';
+
+    switch (referenceType) {
+      case 'sale':
+        return 'مبيعة منفردة';
+      case 'invoice':
+        return 'فاتورة بيع';
+      case 'customer_payment':
+        return 'دفعة من زبون';
+      case 'advance':
+        return 'سلفة موظف';
+      case 'advance_repayment':
+        return 'تسديد سلفة';
+      case 'payroll':
+      case 'salary':
+        return 'راتب موظف';
+      case 'bonus':
+        return 'مكافأة موظف';
+      case 'expense':
+        return 'مصروف عام';
+      case 'profit_withdrawal':
+        return 'سحب أرباح';
+      case 'sale_return':
+        return 'مرتجع مبيعات';
+      default:
+        // ← Hint: إذا كان نوع غير معروف، نعرض الاسم كما هو
+        return referenceType;
+    }
   }
 
   /// ترجمة نوع القيد إلى العربية

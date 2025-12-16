@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../products/barcode_scanner_screen.dart';
 import '../../services/app_lock_service.dart'; // ← Hint: إضافة AppLockService
+import '../../helpers/financial_integration_helper.dart'; // ← Hint: لتسجيل القيود المالية التلقائية
 
 // ← Hint: تم إزالة AuthService - لا حاجة له في Direct Sale
 
@@ -138,6 +139,21 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
           [quantitySold, product.productID],
         );
       }
+
+      // ═══════════════════════════════════════════════════════════
+      // ✅ تسجيل القيد المالي للفاتورة الكاملة (مرة واحدة فقط)
+      // ═══════════════════════════════════════════════════════════
+      // ← Hint: هنا نسجل قيد واحد بمجموع الفاتورة (755)
+      // ← Hint: وليس قيد لكل منتج (365 + 390) ← خطأ!
+      // ← Hint: البيع المباشر = نقدي (isCashSale: true)
+      await FinancialIntegrationHelper.recordInvoiceTransaction(
+        invoiceId: newInvoiceId,
+        customerId: cashCustomer.customerID!,
+        totalAmount: totalAmount,
+        isCashSale: true, // ← البيع المباشر دائماً نقدي
+        invoiceDate: DateTime.now(),
+        notes: 'مبيعات نقدية - ${_cartItems.length} منتج',
+      );
 
       // ← Hint: ✅ تعطيل القفل التلقائي مؤقتاً (10 دقائق) قبل عرض PDF
       // ← Hint: السبب: عند فتح PDF خارجي، التطبيق ينتقل للخلفية
