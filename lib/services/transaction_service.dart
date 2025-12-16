@@ -448,7 +448,7 @@ class TransactionService {
     try {
       final db = await DatabaseHelper.instance.database;
 
-      // ← Hint: بناء الـ WHERE clause
+      // ← Hint: 1. المصروفات من TB_Transactions (Direction = 'out')
       final whereClauses = <String>['Direction = ?'];
       final whereArgs = <dynamic>['out'];
 
@@ -473,8 +473,28 @@ class TransactionService {
         WHERE ${whereClauses.join(' AND ')}
       ''', whereArgs);
 
-      final total = (result.first['total'] as num).toDouble();
-      return Decimal.parse(total.toString());
+      final transactionsExpense = Decimal.parse((result.first['total'] as num).toDouble().toString());
+
+      // ← Hint: 2. المصروفات العامة من TB_Expenses
+      final generalExpenses = await _getGeneralExpensesFromDB(
+        fiscalYearId: fiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // ← Hint: 3. سحوبات الأرباح من TB_Profit_Withdrawals
+      final profitWithdrawals = await _getProfitWithdrawalsFromDB(
+        fiscalYearId: fiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // ← Hint: إجمالي المصروفات = مصروفات Transactions + مصروفات عامة + سحوبات أرباح
+      final total = transactionsExpense + generalExpenses + profitWithdrawals;
+
+      debugPrint('💰 [TransactionService] إجمالي المصروفات: $total (Transactions: $transactionsExpense + عامة: $generalExpenses + سحوبات: $profitWithdrawals)');
+
+      return total;
     } catch (e) {
       debugPrint('❌ [TransactionService] خطأ في getTotalExpense: $e');
       return Decimal.zero;
