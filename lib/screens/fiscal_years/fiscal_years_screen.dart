@@ -543,8 +543,10 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
                 const SizedBox(height: 16),
 
                 // ← Hint: أزرار الإجراءات
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     if (!year.isActive && !year.isClosed)
                       ElevatedButton.icon(
