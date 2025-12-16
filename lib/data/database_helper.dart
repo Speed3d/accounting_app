@@ -689,7 +689,7 @@ class DatabaseHelper {
     // ← Hint: هذا الجدول يحتوي على السنوات المالية للشركة
     // ← Hint: كل سنة مالية لها رصيد افتتاحي وختامي وحالة (نشطة/مقفلة)
     // ← Hint: يمكن أن يكون هناك سنة واحدة نشطة فقط في وقت واحد
-    batch.execute('''
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS TB_FiscalYears (
         FiscalYearID INTEGER PRIMARY KEY AUTOINCREMENT,
         Name TEXT NOT NULL,
@@ -719,7 +719,7 @@ class DatabaseHelper {
     // ← Hint: Direction = 'in' للدخل، 'out' للمصروفات
     // ← Hint: Type يحدد نوع القيد (sale, salary, expense, إلخ)
     // ← Hint: Category يحدد التصنيف المحاسبي (revenue, operatingExpense, إلخ)
-    batch.execute('''
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS TB_Transactions (
         TransactionID INTEGER PRIMARY KEY AUTOINCREMENT,
         FiscalYearID INTEGER NOT NULL,
@@ -755,9 +755,7 @@ class DatabaseHelper {
     // ← Hint: في _onCreate نضيفه مباشرة في تعريف الجدول (أفضل من ALTER TABLE)
     debugPrint('  ├─ إضافة عمود FiscalYearID للجداول المالية...');
 
-    await batch.commit(); // ← Hint: commit الجداول الأساسية أولاً
-
-    // ← Hint: الآن نضيف العمود للجداول الموجودة
+    // ← Hint: نضيف العمود للجداول الموجودة
     // ← Hint: نستخدم ALTER TABLE لأن الجداول تم إنشاؤها بالفعل في السطور السابقة
     await db.execute('ALTER TABLE Debt_Customer ADD COLUMN FiscalYearID INTEGER');
     await db.execute('ALTER TABLE Payment_Customer ADD COLUMN FiscalYearID INTEGER');
