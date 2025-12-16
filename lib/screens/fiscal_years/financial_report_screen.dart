@@ -431,18 +431,14 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             ),
             const SizedBox(height: 8),
             _buildBreakdownItem(
-              'المرتجعات',
-              Decimal.parse(breakdown['returns'].toString()),
-              Icons.undo,
-              Colors.red,
-            ),
-            const SizedBox(height: 8),
-            _buildBreakdownItem(
               'سحوبات الأرباح/الشركاء',
               Decimal.parse(breakdown['profitWithdrawals']?.toString() ?? '0'),
               Icons.account_balance,
               Colors.red,
             ),
+
+            // ← Hint: المرتجعات تم إزالتها من المصروفات
+            // ← Hint: منطقياً، المرتجعات هي خصم من المبيعات وليست مصروف منفصل
           ],
         ),
       ),

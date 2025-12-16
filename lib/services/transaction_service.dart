@@ -518,8 +518,9 @@ class TransactionService {
       final db = await DatabaseHelper.instance.database;
 
       // ← Hint: 1. المصروفات من TB_Transactions (Direction = 'out')
-      final whereClauses = <String>['Direction = ?'];
-      final whereArgs = <dynamic>['out'];
+      // ← Hint: استبعاد مرتجعات المبيعات (لأنها خصم من المبيعات وليست مصروف)
+      final whereClauses = <String>['Direction = ?', "Type != ?"];
+      final whereArgs = <dynamic>['out', 'saleReturn'];
 
       if (fiscalYearId != null) {
         whereClauses.add('FiscalYearID = ?');
@@ -700,44 +701,20 @@ class TransactionService {
 
       final totalCount = incomeCount + expenseCount;
 
-      // ← Hint: تفصيل حسب النوع
-      final salesTotal = await _getTotalByType(
-        TransactionType.sale,
+      // ═══════════════════════════════════════════════════════════
+      // ✅ جلب البيانات من الجداول الأصلية مباشرة
+      // ← Hint: نفس منطق ComprehensiveCashFlowService (التقارير القديمة)
+      // ← Hint: يضمن عرض جميع العمليات (حتى الآجلة التي لم تُسجل كقيود)
+      // ═══════════════════════════════════════════════════════════
+
+      // --- الإيرادات ---
+      final salesTotal = await _getCashSalesFromInvoices(
         fiscalYearId: targetFiscalYearId,
         startDate: startDate,
         endDate: endDate,
       );
 
-      final customerPaymentsTotal = await _getTotalByType(
-        TransactionType.customerPayment,
-        fiscalYearId: targetFiscalYearId,
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      final salariesTotal = await _getTotalByType(
-        TransactionType.salary,
-        fiscalYearId: targetFiscalYearId,
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      final advancesTotal = await _getTotalByType(
-        TransactionType.employeeAdvance,
-        fiscalYearId: targetFiscalYearId,
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      final bonusesTotal = await _getTotalByType(
-        TransactionType.employeeBonus,
-        fiscalYearId: targetFiscalYearId,
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      final returnsTotal = await _getTotalByType(
-        TransactionType.saleReturn,
+      final customerPaymentsTotal = await _getCustomerPaymentsFromDB(
         fiscalYearId: targetFiscalYearId,
         startDate: startDate,
         endDate: endDate,
@@ -750,15 +727,41 @@ class TransactionService {
         endDate: endDate,
       );
 
-      // ← Hint: المصروفات العامة من جدول TB_Expenses مباشرة
+      // --- المصروفات ---
+      final salariesTotal = await _getSalariesFromDB(
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final advancesTotal = await _getAdvancesFromDB(
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final bonusesTotal = await _getTotalByType(
+        TransactionType.employeeBonus,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
       final expensesTotal = await _getGeneralExpensesFromDB(
         fiscalYearId: targetFiscalYearId,
         startDate: startDate,
         endDate: endDate,
       );
 
-      // ← Hint: سحوبات الأرباح/الشركاء من جدول TB_Profit_Withdrawals
       final profitWithdrawalsTotal = await _getProfitWithdrawalsFromDB(
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // ← Hint: مرتجعات المبيعات للعرض فقط (لا تُحسب في المصروفات!)
+      final returnsTotal = await _getTotalByType(
+        TransactionType.saleReturn,
         fiscalYearId: targetFiscalYearId,
         startDate: startDate,
         endDate: endDate,
@@ -833,6 +836,170 @@ class TransactionService {
       final total = (result.first['total'] as num).toDouble();
       return Decimal.parse(total.toString());
     } catch (e) {
+      return Decimal.zero;
+    }
+  }
+
+  // ==========================================================================
+  // 📊 دوال مساعدة - جلب البيانات من الجداول الأصلية مباشرة
+  // ← Hint: تتبع نفس منطق ComprehensiveCashFlowService
+  // ← Hint: تضمن عرض جميع العمليات (حتى الآجلة التي لم تُسجل كقيود)
+  // ==========================================================================
+
+  /// المبيعات النقدية من TB_Invoices مباشرة
+  ///
+  /// ← Hint: تجلب المبيعات من جدول الفواتير مباشرة
+  /// ← Hint: تشمل جميع الفواتير (نقدية وآجلة)
+  Future<Decimal> _getCashSalesFromInvoices({
+    int? fiscalYearId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      String sql = '''
+        SELECT COALESCE(SUM(TotalAmount), 0) as total
+        FROM TB_Invoices
+        WHERE IsVoid = 0
+      ''';
+
+      final List<dynamic> args = [];
+
+      if (fiscalYearId != null) {
+        sql += ' AND FiscalYearID = ?';
+        args.add(fiscalYearId);
+      }
+
+      if (startDate != null) {
+        sql += ' AND InvoiceDate >= ?';
+        args.add(startDate.toIso8601String());
+      }
+
+      if (endDate != null) {
+        sql += ' AND InvoiceDate <= ?';
+        args.add(endDate.toIso8601String());
+      }
+
+      final result = await db.rawQuery(sql, args);
+      final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      return Decimal.parse(total.toString());
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في _getCashSalesFromInvoices: $e');
+      return Decimal.zero;
+    }
+  }
+
+  /// دفعات الزبائن من Payment_Customer مباشرة
+  ///
+  /// ← Hint: تجلب الدفعات من جدول دفعات الزبائن مباشرة
+  Future<Decimal> _getCustomerPaymentsFromDB({
+    int? fiscalYearId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      String sql = 'SELECT COALESCE(SUM(Payment), 0) as total FROM Payment_Customer WHERE 1=1';
+      final List<dynamic> args = [];
+
+      if (fiscalYearId != null) {
+        sql += ' AND FiscalYearID = ?';
+        args.add(fiscalYearId);
+      }
+
+      if (startDate != null) {
+        sql += ' AND DateT >= ?';
+        args.add(startDate.toIso8601String());
+      }
+
+      if (endDate != null) {
+        sql += ' AND DateT <= ?';
+        args.add(endDate.toIso8601String());
+      }
+
+      final result = await db.rawQuery(sql, args);
+      final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      return Decimal.parse(total.toString());
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في _getCustomerPaymentsFromDB: $e');
+      return Decimal.zero;
+    }
+  }
+
+  /// الرواتب من TB_Payroll مباشرة
+  ///
+  /// ← Hint: تجلب الرواتب من جدول الرواتب مباشرة
+  Future<Decimal> _getSalariesFromDB({
+    int? fiscalYearId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      String sql = 'SELECT COALESCE(SUM(NetSalary), 0) as total FROM TB_Payroll WHERE 1=1';
+      final List<dynamic> args = [];
+
+      if (fiscalYearId != null) {
+        sql += ' AND FiscalYearID = ?';
+        args.add(fiscalYearId);
+      }
+
+      if (startDate != null) {
+        sql += ' AND PaymentDate >= ?';
+        args.add(startDate.toIso8601String());
+      }
+
+      if (endDate != null) {
+        sql += ' AND PaymentDate <= ?';
+        args.add(endDate.toIso8601String());
+      }
+
+      final result = await db.rawQuery(sql, args);
+      final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      return Decimal.parse(total.toString());
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في _getSalariesFromDB: $e');
+      return Decimal.zero;
+    }
+  }
+
+  /// السلف من TB_Employee_Advances مباشرة
+  ///
+  /// ← Hint: تجلب السلف من جدول سلف الموظفين مباشرة
+  Future<Decimal> _getAdvancesFromDB({
+    int? fiscalYearId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      String sql = 'SELECT COALESCE(SUM(AdvanceAmount), 0) as total FROM TB_Employee_Advances WHERE 1=1';
+      final List<dynamic> args = [];
+
+      if (fiscalYearId != null) {
+        sql += ' AND FiscalYearID = ?';
+        args.add(fiscalYearId);
+      }
+
+      if (startDate != null) {
+        sql += ' AND AdvanceDate >= ?';
+        args.add(startDate.toIso8601String());
+      }
+
+      if (endDate != null) {
+        sql += ' AND AdvanceDate <= ?';
+        args.add(endDate.toIso8601String());
+      }
+
+      final result = await db.rawQuery(sql, args);
+      final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      return Decimal.parse(total.toString());
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في _getAdvancesFromDB: $e');
       return Decimal.zero;
     }
   }

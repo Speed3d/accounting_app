@@ -936,12 +936,13 @@ class DatabaseHelper {
     ''');
 
     // ← Hint: عند حذف دفعة زبون، احذف القيد المرتبط
+    // ← Hint: تصحيح: Payment_Customer يستخدم عمود 'ID' وليس 'PaymentID'
     await db.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_delete_payment_transaction
       AFTER DELETE ON Payment_Customer
       BEGIN
         DELETE FROM TB_Transactions
-        WHERE ReferenceType = 'customer_payment' AND ReferenceID = OLD.PaymentID;
+        WHERE ReferenceType = 'customer_payment' AND ReferenceID = OLD.ID;
       END;
     ''');
 
