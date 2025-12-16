@@ -3756,15 +3756,27 @@ Future<int> recordSale({
     'IsReturned': 0,
   });
 
-  // ← Hint: تسجيل القيد المالي التلقائي
-  await FinancialIntegrationHelper.recordSaleTransaction(
-    saleId: saleId,
-    customerId: customerId,
-    amount: debt,
-    saleDate: DateTime.now().toIso8601String(),
-    productId: productId,
-    productName: productName ?? details,
-  );
+  // ============================================================================
+  // ✅ تسجيل القيد المالي فقط للمبيعات النقدية
+  // ============================================================================
+  // ← Hint: البيع الآجل (للعملاء) لا يسجل كقيد دخل حتى يتم التسديد
+  // ← Hint: البيع النقدي (الزبون النقدي) يسجل كقيد دخل فوري
+
+  final isCashSale = customerName == DatabaseHelper.cashCustomerInternalName;
+
+  if (isCashSale) {
+    debugPrint('💵 [RecordSale] بيع نقدي - تسجيل قيد دخل فوري');
+    await FinancialIntegrationHelper.recordSaleTransaction(
+      saleId: saleId,
+      customerId: customerId,
+      amount: debt,
+      saleDate: DateTime.now().toIso8601String(),
+      productId: productId,
+      productName: productName ?? details,
+    );
+  } else {
+    debugPrint('📝 [RecordSale] بيع آجل - سيتم تسجيل القيد عند التسديد');
+  }
 
   return saleId;
 }
@@ -3785,7 +3797,7 @@ Future<int> recordCustomerPayment({
   // ← Hint: إدراج الدفعة في جدول Payment_Customer
   final paymentId = await db.insert('Payment_Customer', {
     'CustomerID': customerId,
-    'Amount': amount.toDouble(),
+    'Payment': amount.toDouble(),  // ✅ تم تصحيح: Payment بدلاً من Amount
     'DateT': paymentDate,
     'Comments': comments ?? '',
   });

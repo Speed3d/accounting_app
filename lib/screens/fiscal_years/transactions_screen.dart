@@ -1,6 +1,7 @@
 // lib/screens/fiscal_years/transactions_screen.dart
 
 import 'package:accountant_touch/data/models.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
@@ -25,6 +26,7 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final _transactionService = TransactionService.instance;
   final _fiscalYearService = FiscalYearService.instance;
+  final _currencyService = CurrencyService.instance;
 
   List<FinancialTransaction> _transactions = [];
   FiscalYear? _activeFiscalYear;
@@ -493,23 +495,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             Text(dateFormat.format(transaction.date)),
           ],
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${isIncome ? '+' : '-'}${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isIncome ? Colors.green : Colors.red,
-              ),
-            ),
-            const Text(
-              'دينار',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
+        trailing: Text(
+          '${isIncome ? '+' : '-'}${_currencyService.formatAmountWithoutSymbol(transaction.amount)} ${_currencyService.currentCurrency.symbol}',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isIncome ? Colors.green : Colors.red,
+          ),
         ),
         children: [
           Padding(

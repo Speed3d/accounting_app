@@ -1,6 +1,7 @@
 // lib/screens/fiscal_years/fiscal_years_screen.dart
 
 import 'package:accountant_touch/data/models.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
@@ -24,6 +25,7 @@ class FiscalYearsScreen extends StatefulWidget {
 
 class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
   final _fiscalYearService = FiscalYearService.instance;
+  final _currencyService = CurrencyService.instance;
   List<FiscalYear> _fiscalYears = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -471,77 +473,93 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
           '${dateFormat.format(year.startDate)} - ${dateFormat.format(year.endDate)}',
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ← Hint: معلومات مالية
-                _buildInfoRow(
-                  'الرصيد الافتتاحي',
-                  '${year.openingBalance.toStringAsFixed(2)} دينار',
-                  Icons.trending_up,
-                  Colors.blue,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'إجمالي الدخل',
-                  '${year.totalIncome.toStringAsFixed(2)} دينار',
-                  Icons.arrow_downward,
-                  Colors.green,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'إجمالي المصروفات',
-                  '${year.totalExpense.toStringAsFixed(2)} دينار',
-                  Icons.arrow_upward,
-                  Colors.red,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'صافي الربح',
-                  '${year.netProfit.toStringAsFixed(2)} دينار',
-                  Icons.account_balance,
-                  year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'الرصيد الختامي',
-                  '${year.closingBalance.toStringAsFixed(2)} دينار',
-                  Icons.account_balance_wallet,
-                  Colors.purple,
-                ),
-
-                const SizedBox(height: 16),
-
-                // ← Hint: أزرار الإجراءات
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (!year.isActive && !year.isClosed)
-                      ElevatedButton.icon(
-                        onPressed: () => _activateFiscalYear(year),
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: const Text('تفعيل'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryLight,
-                          foregroundColor: Colors.white,
-                        ),
+          Builder(
+            builder: (context) {
+              // ✅ إضافة try-catch للحماية من الأخطاء
+              try {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ← Hint: معلومات مالية مع CurrencyService
+                      _buildInfoRow(
+                        'الرصيد الافتتاحي',
+                        _currencyService.formatAmount(year.openingBalance),
+                        Icons.trending_up,
+                        Colors.blue,
                       ),
-                    if (year.isActive && !year.isClosed)
-                      ElevatedButton.icon(
-                        onPressed: () => _closeFiscalYear(year),
-                        icon: const Icon(Icons.lock_outline, size: 18),
-                        label: const Text('إقفال'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                        ),
+                      const Divider(),
+                      _buildInfoRow(
+                        'إجمالي الدخل',
+                        _currencyService.formatAmount(year.totalIncome),
+                        Icons.arrow_downward,
+                        Colors.green,
                       ),
-                  ],
-                ),
-              ],
-            ),
+                      const Divider(),
+                      _buildInfoRow(
+                        'إجمالي المصروفات',
+                        _currencyService.formatAmount(year.totalExpense),
+                        Icons.arrow_upward,
+                        Colors.red,
+                      ),
+                      const Divider(),
+                      _buildInfoRow(
+                        'صافي الربح',
+                        _currencyService.formatAmount(year.netProfit),
+                        Icons.account_balance,
+                        year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
+                      ),
+                      const Divider(),
+                      _buildInfoRow(
+                        'الرصيد الختامي',
+                        _currencyService.formatAmount(year.closingBalance),
+                        Icons.account_balance_wallet,
+                        Colors.purple,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ← Hint: أزرار الإجراءات
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          if (!year.isActive && !year.isClosed)
+                            ElevatedButton.icon(
+                              onPressed: () => _activateFiscalYear(year),
+                              icon: const Icon(Icons.play_arrow, size: 18),
+                              label: const Text('تفعيل'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryLight,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          if (year.isActive && !year.isClosed)
+                            ElevatedButton.icon(
+                              onPressed: () => _closeFiscalYear(year),
+                              icon: const Icon(Icons.lock_outline, size: 18),
+                              label: const Text('إقفال'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              } catch (e) {
+                debugPrint('❌ خطأ في عرض تفاصيل السنة المالية: $e');
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'حدث خطأ في عرض التفاصيل',
+                    style: TextStyle(color: Colors.red[700]),
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),
