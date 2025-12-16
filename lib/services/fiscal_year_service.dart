@@ -2,6 +2,7 @@
 
 import 'package:accountant_touch/data/database_helper.dart';
 import 'package:accountant_touch/data/models.dart';
+import 'package:accountant_touch/services/transaction_service.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 
@@ -365,29 +366,29 @@ class FiscalYearService {
   /// ← Hint: هذه الدالة تُستدعى يدوياً لإعادة حساب الأرصدة
   /// ← Hint: عادة لا نحتاجها لأن الـ Triggers تحدّث تلقائياً
   /// ← Hint: مفيدة للمراجعة أو بعد استيراد بيانات
+  ///
+  /// ⚠️ CRITICAL: يجب أن تستخدم TransactionService للحصول على الأرقام الصحيحة
+  /// التي تشمل TB_Transactions + TB_Expenses + TB_Profit_Withdrawals
   Future<bool> recalculateFiscalYearBalances(int fiscalYearId) async {
     try {
       debugPrint('🔄 [FiscalYearService] إعادة حساب أرصدة السنة (ID: $fiscalYearId)...');
 
       final db = await DatabaseHelper.instance.database;
+      final transactionService = TransactionService.instance;
 
-      // ← Hint: حساب إجمالي الدخل
-      final incomeResult = await db.rawQuery('''
-        SELECT COALESCE(SUM(Amount), 0) as total
-        FROM TB_Transactions
-        WHERE FiscalYearID = ? AND Direction = 'in'
-      ''', [fiscalYearId]);
+      // ← Hint: حساب إجمالي الدخل من TransactionService
+      // ← Hint: يشمل: المبيعات + دفعات الزبائن + تسديدات السلف
+      final totalIncomeDecimal = await transactionService.getTotalIncome(
+        fiscalYearId: fiscalYearId,
+      );
+      final totalIncome = totalIncomeDecimal.toDouble();
 
-      final totalIncome = (incomeResult.first['total'] as num).toDouble();
-
-      // ← Hint: حساب إجمالي المصروفات
-      final expenseResult = await db.rawQuery('''
-        SELECT COALESCE(SUM(Amount), 0) as total
-        FROM TB_Transactions
-        WHERE FiscalYearID = ? AND Direction = 'out'
-      ''', [fiscalYearId]);
-
-      final totalExpense = (expenseResult.first['total'] as num).toDouble();
+      // ← Hint: حساب إجمالي المصروفات من TransactionService
+      // ← Hint: يشمل: TB_Transactions + TB_Expenses + TB_Profit_Withdrawals
+      final totalExpenseDecimal = await transactionService.getTotalExpense(
+        fiscalYearId: fiscalYearId,
+      );
+      final totalExpense = totalExpenseDecimal.toDouble();
 
       // ← Hint: حساب صافي الربح
       final netProfit = totalIncome - totalExpense;

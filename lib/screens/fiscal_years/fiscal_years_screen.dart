@@ -1,9 +1,11 @@
 // lib/screens/fiscal_years/fiscal_years_screen.dart
 
 import 'package:accountant_touch/data/models.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
+import 'package:accountant_touch/utils/helpers.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -495,35 +497,35 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
                         children: [
                           _buildInfoRow(
                             'الرصيد الافتتاحي',
-                            '${year.openingBalance.toStringAsFixed(2)} دينار',
+                            formatCurrency(year.openingBalance),
                             Icons.trending_up,
                             Colors.blue,
                           ),
                           const Divider(),
                           _buildInfoRow(
                             'إجمالي الدخل',
-                            '${year.totalIncome.toStringAsFixed(2)} دينار',
+                            formatCurrency(year.totalIncome),
                             Icons.arrow_downward,
                             Colors.green,
                           ),
                           const Divider(),
                           _buildInfoRow(
                             'إجمالي المصروفات',
-                            '${year.totalExpense.toStringAsFixed(2)} دينار',
+                            formatCurrency(year.totalExpense),
                             Icons.arrow_upward,
                             Colors.red,
                           ),
                           const Divider(),
                           _buildInfoRow(
                             'صافي الربح',
-                            '${year.netProfit.toStringAsFixed(2)} دينار',
+                            formatCurrency(year.netProfit),
                             Icons.account_balance,
                             year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
                           ),
                           const Divider(),
                           _buildInfoRow(
                             'الرصيد الختامي',
-                            '${year.closingBalance.toStringAsFixed(2)} دينار',
+                            formatCurrency(year.closingBalance),
                             Icons.account_balance_wallet,
                             Colors.purple,
                           ),
