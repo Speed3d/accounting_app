@@ -397,7 +397,16 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
 
   Widget _buildFiscalYearCard(FiscalYear year, bool isDark) {
     try {
+      debugPrint('🔍 [FiscalYears] بناء بطاقة السنة المالية ${year.fiscalYearID}');
+
+      if (year.fiscalYearID == null) {
+        debugPrint('❌ [FiscalYears] fiscalYearID فارغ!');
+        throw Exception('معرف السنة المالية فارغ');
+      }
+
       final dateFormat = DateFormat('yyyy/MM/dd');
+
+      debugPrint('✅ [FiscalYears] تنسيق التاريخ للسنة ${year.year}');
 
       return Card(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
@@ -478,40 +487,57 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ← Hint: معلومات مالية
-                _buildInfoRow(
-                  'الرصيد الافتتاحي',
-                  '${year.openingBalance.toStringAsFixed(2)} دينار',
-                  Icons.trending_up,
-                  Colors.blue,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'إجمالي الدخل',
-                  '${year.totalIncome.toStringAsFixed(2)} دينار',
-                  Icons.arrow_downward,
-                  Colors.green,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'إجمالي المصروفات',
-                  '${year.totalExpense.toStringAsFixed(2)} دينار',
-                  Icons.arrow_upward,
-                  Colors.red,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'صافي الربح',
-                  '${year.netProfit.toStringAsFixed(2)} دينار',
-                  Icons.account_balance,
-                  year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
-                ),
-                const Divider(),
-                _buildInfoRow(
-                  'الرصيد الختامي',
-                  '${year.closingBalance.toStringAsFixed(2)} دينار',
-                  Icons.account_balance_wallet,
-                  Colors.purple,
+                // ← Hint: معلومات مالية مع معالجة آمنة للقيم
+                Builder(
+                  builder: (context) {
+                    try {
+                      return Column(
+                        children: [
+                          _buildInfoRow(
+                            'الرصيد الافتتاحي',
+                            '${year.openingBalance.toStringAsFixed(2)} دينار',
+                            Icons.trending_up,
+                            Colors.blue,
+                          ),
+                          const Divider(),
+                          _buildInfoRow(
+                            'إجمالي الدخل',
+                            '${year.totalIncome.toStringAsFixed(2)} دينار',
+                            Icons.arrow_downward,
+                            Colors.green,
+                          ),
+                          const Divider(),
+                          _buildInfoRow(
+                            'إجمالي المصروفات',
+                            '${year.totalExpense.toStringAsFixed(2)} دينار',
+                            Icons.arrow_upward,
+                            Colors.red,
+                          ),
+                          const Divider(),
+                          _buildInfoRow(
+                            'صافي الربح',
+                            '${year.netProfit.toStringAsFixed(2)} دينار',
+                            Icons.account_balance,
+                            year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
+                          ),
+                          const Divider(),
+                          _buildInfoRow(
+                            'الرصيد الختامي',
+                            '${year.closingBalance.toStringAsFixed(2)} دينار',
+                            Icons.account_balance_wallet,
+                            Colors.purple,
+                          ),
+                        ],
+                      );
+                    } catch (e) {
+                      debugPrint('❌ [FiscalYears] خطأ في عرض المعلومات المالية: $e');
+                      return ListTile(
+                        leading: Icon(Icons.error, color: Colors.orange),
+                        title: Text('خطأ في عرض البيانات المالية'),
+                        subtitle: Text('$e'),
+                      );
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -548,45 +574,81 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
         ],
       ),
     );
-    } catch (e) {
-      debugPrint('❌ خطأ في عرض بطاقة السنة المالية: $e');
+    } catch (e, stackTrace) {
+      debugPrint('❌ [FiscalYears] خطأ في عرض بطاقة السنة المالية: $e');
+      debugPrint('📍 [FiscalYears] Stack Trace:\n$stackTrace');
+
       return Card(
         margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
-        child: ListTile(
+        color: Colors.red.withOpacity(0.1),
+        child: ExpansionTile(
           leading: const Icon(Icons.error_outline, color: Colors.red),
           title: Text('خطأ في عرض سنة ${year.year}'),
-          subtitle: const Text('حدث خطأ أثناء عرض تفاصيل السنة المالية'),
+          subtitle: const Text('اضغط لمعرفة التفاصيل'),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'الخطأ:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('$e'),
+                  SizedBox(height: 8),
+                  Text(
+                    'معلومات السنة:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('ID: ${year.fiscalYearID}'),
+                  Text('السنة: ${year.year}'),
+                  Text('نشطة: ${year.isActive}'),
+                  Text('مقفلة: ${year.isClosed}'),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
   }
 
   Widget _buildInfoRow(String label, String value, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: color,
+    try {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 14),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
-      ),
-    );
+            Flexible(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ [FiscalYears] خطأ في _buildInfoRow: $e');
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text('خطأ في عرض: $label'),
+      );
+    }
   }
 }

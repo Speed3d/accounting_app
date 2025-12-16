@@ -661,6 +661,22 @@ class TransactionService {
         endDate: endDate,
       );
 
+      // ← Hint: المصروفات العامة من TB_Transactions (النوع: expense)
+      final expensesTotal = await _getTotalByType(
+        TransactionType.expense,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // ← Hint: سحوبات الأرباح/الشركاء (النوع: other مع category خاصة أو من جدول منفصل)
+      // سيتم جلبها من جدول TB_Profit_Withdrawals إذا لزم الأمر
+      final profitWithdrawalsTotal = await _getProfitWithdrawalsFromDB(
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
       final summary = {
         'fiscalYearId': targetFiscalYearId,
         'startDate': startDate?.toIso8601String(),
@@ -679,6 +695,8 @@ class TransactionService {
           'advances': advancesTotal.toDouble(),
           'bonuses': bonusesTotal.toDouble(),
           'returns': returnsTotal.toDouble(),
+          'expenses': expensesTotal.toDouble(),
+          'profitWithdrawals': profitWithdrawalsTotal.toDouble(),
         },
       };
 
@@ -882,5 +900,52 @@ class TransactionService {
       customerId: customerId,
       transactionDate: returnDate,
     );
+  }
+
+  // ==========================================================================
+  // 🔟1 جلب سحوبات الأرباح من جدول TB_Profit_Withdrawals
+  // ==========================================================================
+
+  /// جلب إجمالي سحوبات الأرباح من جدول TB_Profit_Withdrawals
+  ///
+  /// ← Hint: هذا جدول منفصل عن TB_Transactions
+  /// ← Hint: نجمع البيانات مباشرة من قاعدة البيانات
+  Future<Decimal> _getProfitWithdrawalsFromDB({
+    int? fiscalYearId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+
+      // ← Hint: بناء الـ WHERE clause
+      final whereClauses = <String>[];
+      final whereArgs = <dynamic>[];
+
+      if (startDate != null) {
+        whereClauses.add('WithdrawalDate >= ?');
+        whereArgs.add(startDate.toIso8601String());
+      }
+
+      if (endDate != null) {
+        whereClauses.add('WithdrawalDate <= ?');
+        whereArgs.add(endDate.toIso8601String());
+      }
+
+      final whereClause =
+          whereClauses.isEmpty ? '1=1' : whereClauses.join(' AND ');
+
+      final result = await db.rawQuery('''
+        SELECT COALESCE(SUM(WithdrawalAmount), 0) as total
+        FROM TB_Profit_Withdrawals
+        WHERE $whereClause
+      ''', whereArgs.isEmpty ? null : whereArgs);
+
+      final total = (result.first['total'] as num).toDouble();
+      return Decimal.parse(total.toString());
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في _getProfitWithdrawalsFromDB: $e');
+      return Decimal.zero;
+    }
   }
 }

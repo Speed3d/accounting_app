@@ -403,6 +403,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             _buildSubtitle('المصروفات', Colors.red),
             const SizedBox(height: 12),
             _buildBreakdownItem(
+              'المصروفات العامة',
+              Decimal.parse(breakdown['expenses']?.toString() ?? '0'),
+              Icons.receipt_long,
+              Colors.red,
+            ),
+            const SizedBox(height: 8),
+            _buildBreakdownItem(
               'الرواتب',
               Decimal.parse(breakdown['salaries'].toString()),
               Icons.people,
@@ -427,6 +434,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               'المرتجعات',
               Decimal.parse(breakdown['returns'].toString()),
               Icons.undo,
+              Colors.red,
+            ),
+            const SizedBox(height: 8),
+            _buildBreakdownItem(
+              'سحوبات الأرباح/الشركاء',
+              Decimal.parse(breakdown['profitWithdrawals']?.toString() ?? '0'),
+              Icons.account_balance,
               Colors.red,
             ),
           ],
