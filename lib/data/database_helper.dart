@@ -675,7 +675,216 @@ class DatabaseHelper {
   await db.execute('CREATE INDEX IF NOT EXISTS idx_products_category ON Store_Products(CategoryID)');
   await db.execute('CREATE INDEX IF NOT EXISTS idx_products_unit ON Store_Products(UnitID)');
 
-    debugPrint('✅ [DatabaseHelper] تم إنشاء ${56} Database Index بنجاح');
+    // ============================================================================
+    // 🏦 v6: جداول نظام السنوات المالية والقيود المحاسبية (CRITICAL!)
+    // ============================================================================
+    // ← Hint: هذا القسم يحول التطبيق إلى نظام محاسبي احترافي كامل
+    // ← Hint: MUST BE INCLUDED في _onCreate لضمان عمل التطبيق عند التثبيت الأول
+    // ← Hint: بدون هذه الجداول، سيفشل التطبيق في تسجيل أي عملية مالية!
+    debugPrint('📦 [DatabaseHelper] إنشاء جداول السنوات المالية (v6)...');
+
+    // ============================================================================
+    // 1️⃣ جدول السنوات المالية (TB_FiscalYears)
+    // ============================================================================
+    // ← Hint: هذا الجدول يحتوي على السنوات المالية للشركة
+    // ← Hint: كل سنة مالية لها رصيد افتتاحي وختامي وحالة (نشطة/مقفلة)
+    // ← Hint: يمكن أن يكون هناك سنة واحدة نشطة فقط في وقت واحد
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS TB_FiscalYears (
+        FiscalYearID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT NOT NULL,
+        Year INTEGER NOT NULL,
+        StartDate TEXT NOT NULL,
+        EndDate TEXT NOT NULL,
+        IsClosed INTEGER NOT NULL DEFAULT 0,
+        IsActive INTEGER NOT NULL DEFAULT 0,
+        OpeningBalance REAL NOT NULL DEFAULT 0.0,
+        TotalIncome REAL NOT NULL DEFAULT 0.0,
+        TotalExpense REAL NOT NULL DEFAULT 0.0,
+        NetProfit REAL NOT NULL DEFAULT 0.0,
+        ClosingBalance REAL NOT NULL DEFAULT 0.0,
+        Notes TEXT,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ClosedAt TEXT,
+        UNIQUE(Year)
+      )
+    ''');
+    debugPrint('  ├─ ✅ تم إنشاء جدول TB_FiscalYears');
+
+    // ============================================================================
+    // 2️⃣ جدول القيود المالية الموحدة (TB_Transactions)
+    // ============================================================================
+    // ← Hint: هذا الجدول هو قلب النظام المحاسبي
+    // ← Hint: كل عملية مالية (مبيعات، رواتب، مصروفات، إلخ) تُسجل هنا تلقائياً
+    // ← Hint: Direction = 'in' للدخل، 'out' للمصروفات
+    // ← Hint: Type يحدد نوع القيد (sale, salary, expense, إلخ)
+    // ← Hint: Category يحدد التصنيف المحاسبي (revenue, operatingExpense, إلخ)
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS TB_Transactions (
+        TransactionID INTEGER PRIMARY KEY AUTOINCREMENT,
+        FiscalYearID INTEGER NOT NULL,
+        Date TEXT NOT NULL,
+        Type TEXT NOT NULL,
+        Category TEXT NOT NULL,
+        Amount REAL NOT NULL,
+        Direction TEXT NOT NULL,
+        Description TEXT NOT NULL,
+        Notes TEXT,
+        ReferenceType TEXT,
+        ReferenceID INTEGER,
+        CustomerID INTEGER,
+        SupplierID INTEGER,
+        EmployeeID INTEGER,
+        ProductID INTEGER,
+        CreatedBy INTEGER,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (FiscalYearID) REFERENCES TB_FiscalYears(FiscalYearID) ON DELETE RESTRICT,
+        FOREIGN KEY (CustomerID) REFERENCES TB_Customer(CustomerID) ON DELETE SET NULL,
+        FOREIGN KEY (SupplierID) REFERENCES TB_Suppliers(SupplierID) ON DELETE SET NULL,
+        FOREIGN KEY (EmployeeID) REFERENCES TB_Employees(EmployeeID) ON DELETE SET NULL,
+        FOREIGN KEY (ProductID) REFERENCES Store_Products(ProductID) ON DELETE SET NULL
+      )
+    ''');
+    debugPrint('  ├─ ✅ تم إنشاء جدول TB_Transactions');
+
+    // ============================================================================
+    // 3️⃣ إضافة عمود FiscalYearID لجميع الجداول المالية
+    // ============================================================================
+    // ← Hint: هذا العمود يربط كل عملية مالية بسنة مالية محددة
+    // ← Hint: ضروري للتقارير المالية والإقفال السنوي
+    // ← Hint: في _onCreate نضيفه مباشرة في تعريف الجدول (أفضل من ALTER TABLE)
+    debugPrint('  ├─ إضافة عمود FiscalYearID للجداول المالية...');
+
+    await batch.commit(); // ← Hint: commit الجداول الأساسية أولاً
+
+    // ← Hint: الآن نضيف العمود للجداول الموجودة
+    // ← Hint: نستخدم ALTER TABLE لأن الجداول تم إنشاؤها بالفعل في السطور السابقة
+    await db.execute('ALTER TABLE Debt_Customer ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE Payment_Customer ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE TB_Payroll ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE TB_Employee_Advances ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE TB_Employee_Bonuses ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE TB_Advance_Repayments ADD COLUMN FiscalYearID INTEGER');
+    await db.execute('ALTER TABLE Sales_Returns ADD COLUMN FiscalYearID INTEGER');
+    debugPrint('  ├─ ✅ تم إضافة FiscalYearID لجميع الجداول المالية');
+
+    // ============================================================================
+    // 4️⃣ إنشاء سنة مالية افتراضية (السنة الحالية)
+    // ============================================================================
+    // ← Hint: عند التثبيت الأول، نحتاج سنة مالية نشطة لبدء العمل
+    // ← Hint: نستخدم السنة الحالية (أو 2025 إذا كنا قبل ذلك)
+    // ← Hint: هذه السنة ستكون نشطة افتراضياً (IsActive = 1)
+    debugPrint('  ├─ إنشاء سنة مالية افتراضية...');
+
+    final currentYear = DateTime.now().year;
+    final defaultYear = currentYear >= 2025 ? currentYear : 2025;
+
+    await db.insert('TB_FiscalYears', {
+      'Name': 'سنة $defaultYear',
+      'Year': defaultYear,
+      'StartDate': '$defaultYear-01-01T00:00:00.000',
+      'EndDate': '$defaultYear-12-31T23:59:59.999',
+      'IsClosed': 0,
+      'IsActive': 1,
+      'OpeningBalance': 0.0,
+      'TotalIncome': 0.0,
+      'TotalExpense': 0.0,
+      'NetProfit': 0.0,
+      'ClosingBalance': 0.0,
+      'Notes': 'السنة المالية الافتراضية - تم إنشاؤها تلقائياً عند التثبيت الأول',
+    });
+    debugPrint('  ├─ ✅ تم إنشاء السنة المالية الافتراضية ($defaultYear)');
+
+    // ============================================================================
+    // 5️⃣ إنشاء Indexes للسنوات المالية والقيود
+    // ============================================================================
+    // ← Hint: Indexes تحسن الأداء بشكل كبير خصوصاً في التقارير
+    // ← Hint: السنوات المالية: نبحث كثيراً عن السنة النشطة والسنة بالرقم
+    // ← Hint: القيود: نبحث كثيراً حسب السنة المالية، التاريخ، النوع، الاتجاه
+    debugPrint('  ├─ إنشاء Indexes للسنوات المالية والقيود...');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_fiscal_years_active ON TB_FiscalYears(IsActive)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_fiscal_years_year ON TB_FiscalYears(Year)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_fiscal_years_closed ON TB_FiscalYears(IsClosed)');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_fiscal_year ON TB_Transactions(FiscalYearID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_date ON TB_Transactions(Date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_type ON TB_Transactions(Type)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_direction ON TB_Transactions(Direction)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_customer ON TB_Transactions(CustomerID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_employee ON TB_Transactions(EmployeeID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_fiscal_date ON TB_Transactions(FiscalYearID, Date)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_fiscal_type ON TB_Transactions(FiscalYearID, Type)');
+    debugPrint('  ├─ ✅ تم إنشاء Indexes للسنوات المالية والقيود');
+
+    // ============================================================================
+    // 6️⃣ إنشاء Triggers للتحديث التلقائي لأرصدة السنة المالية
+    // ============================================================================
+    // ← Hint: عند إضافة/حذف قيد، نحدّث أرصدة السنة المالية تلقائياً
+    // ← Hint: هذا يضمن أن TotalIncome, TotalExpense, NetProfit محدثة دائماً
+    // ← Hint: بدون Triggers، سنحتاج لحساب الأرصدة يدوياً في كل مرة (بطيء!)
+    debugPrint('  ├─ إنشاء Triggers للتحديث التلقائي...');
+
+    // ← Hint: Trigger عند إضافة قيد جديد
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_fiscal_on_insert
+      AFTER INSERT ON TB_Transactions
+      BEGIN
+        UPDATE TB_FiscalYears
+        SET
+          TotalIncome = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'in'
+          ),
+          TotalExpense = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'out'
+          )
+        WHERE FiscalYearID = NEW.FiscalYearID;
+
+        UPDATE TB_FiscalYears
+        SET
+          NetProfit = TotalIncome - TotalExpense,
+          ClosingBalance = OpeningBalance + (TotalIncome - TotalExpense)
+        WHERE FiscalYearID = NEW.FiscalYearID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف قيد
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_fiscal_on_delete
+      AFTER DELETE ON TB_Transactions
+      BEGIN
+        UPDATE TB_FiscalYears
+        SET
+          TotalIncome = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = OLD.FiscalYearID AND Direction = 'in'
+          ),
+          TotalExpense = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = OLD.FiscalYearID AND Direction = 'out'
+          )
+        WHERE FiscalYearID = OLD.FiscalYearID;
+
+        UPDATE TB_FiscalYears
+        SET
+          NetProfit = TotalIncome - TotalExpense,
+          ClosingBalance = OpeningBalance + (TotalIncome - TotalExpense)
+        WHERE FiscalYearID = OLD.FiscalYearID;
+      END;
+    ''');
+    debugPrint('  └─ ✅ تم إنشاء Triggers للتحديث التلقائي');
+    debugPrint('✅ [DatabaseHelper] اكتمل إنشاء نظام السنوات المالية (v6) بنجاح! 🎉');
+
+    // ← Hint: نبدأ batch جديد للـ Indexes المتبقية
+    var batch2 = db.batch();
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء جميع Database Indexes بنجاح');
 
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
     await _insertDefaultCategories(db);
@@ -3771,9 +3980,10 @@ Future<int> recordCustomerPayment({
   final db = await instance.database;
 
   // ← Hint: إدراج الدفعة في جدول Payment_Customer
+  // ← Hint: العمود الصحيح هو 'Payment' وليس 'Amount' (حسب تعريف الجدول في _onCreate)
   final paymentId = await db.insert('Payment_Customer', {
     'CustomerID': customerId,
-    'Amount': amount.toDouble(),
+    'Payment': amount.toDouble(), // ← Hint: 'Payment' هو الاسم الصحيح للعمود
     'DateT': paymentDate,
     'Comments': comments ?? '',
   });
