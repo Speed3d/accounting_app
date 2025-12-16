@@ -992,38 +992,46 @@ iOS: [Coming soon on App Store]
   Widget _buildVersionInfo(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Center(
-      child: Column(
-        children: [
-          Icon(
-            Icons.code,
-            size: 32,
-            color: isDark
-              ? AppColors.textHintDark
-              : AppColors.textHintLight,
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.hasData
+            ? '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+            : '...';
+
+        return Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.code,
+                size: 32,
+                color: isDark
+                    ? AppColors.textHintDark
+                    : AppColors.textHintLight,
+              ),
+              const SizedBox(height: AppConstants.spacingSm),
+              Text(
+                l10n.appTitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: AppConstants.spacingXs),
+              Text(
+                'الإصدار $version',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppColors.textHintDark
+                          : AppColors.textHintLight,
+                    ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppConstants.spacingSm),
-          Text(
-            l10n.appTitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppConstants.spacingXs),
-          const SizedBox(height: AppConstants.spacingXs),
-          Text(
-            l10n.appVersion,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isDark
-                ? AppColors.textHintDark
-                : AppColors.textHintLight,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -399,12 +399,15 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
     final imageFile = customer.imagePath != null && customer.imagePath!.isNotEmpty
         ? File(customer.imagePath!)
         : null;
-    
+
     final hasValidImage = imageFile != null && imageFile.existsSync();
-    
+
+    // ← Hint: تم تكبير الصورة من avatarSizeMd إلى 68
+    const double avatarSize = 68.0;
+
     return Container(
-      width: AppConstants.avatarSizeMd,
-      height: AppConstants.avatarSizeMd,
+      width: avatarSize,
+      height: avatarSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
@@ -413,12 +416,12 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
         ),
       ),
       child: CircleAvatar(
-        radius: AppConstants.avatarSizeMd / 2,
+        radius: avatarSize / 2,
         backgroundImage: hasValidImage ? FileImage(imageFile) : null,
         child: !hasValidImage
             ? Icon(
                 Icons.person,
-                size: AppConstants.iconSizeMd,
+                size: 32,
                 color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
               )
             : null,

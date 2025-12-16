@@ -1,10 +1,12 @@
 // lib/screens/fiscal_years/financial_report_screen.dart
 
 import 'package:accountant_touch/data/models.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
+import 'package:accountant_touch/utils/helpers.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -25,6 +27,7 @@ class FinancialReportScreen extends StatefulWidget {
 class _FinancialReportScreenState extends State<FinancialReportScreen> {
   final _transactionService = TransactionService.instance;
   final _fiscalYearService = FiscalYearService.instance;
+  final _currencyService = CurrencyService.instance;
 
   FiscalYear? _selectedFiscalYear;
   List<FiscalYear> _allFiscalYears = [];
@@ -327,7 +330,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             ),
           ),
           Text(
-            '${amount.toDouble().toStringAsFixed(2)} دينار',
+            formatCurrency(amount),
             style: TextStyle(
               fontSize: isHighlighted ? 18 : 16,
               fontWeight: FontWeight.bold,
@@ -384,6 +387,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               'دفعات العملاء',
               Decimal.parse(breakdown['customerPayments'].toString()),
               Icons.payment,
+              Colors.green,
+            ),
+            const SizedBox(height: 8),
+            _buildBreakdownItem(
+              'تسديدات السلف',
+              Decimal.parse(breakdown['advanceRepayments']?.toString() ?? '0'),
+              Icons.account_balance_wallet,
               Colors.green,
             ),
 
@@ -467,7 +477,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
           ),
         ),
         Text(
-          '${amount.toDouble().toStringAsFixed(2)} د',
+          formatCurrency(amount),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,

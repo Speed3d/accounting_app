@@ -5,6 +5,7 @@ import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
 import 'package:decimal/decimal.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -395,9 +396,10 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
   }
 
   Widget _buildFiscalYearCard(FiscalYear year, bool isDark) {
-    final dateFormat = DateFormat('yyyy/MM/dd');
+    try {
+      final dateFormat = DateFormat('yyyy/MM/dd');
 
-    return Card(
+      return Card(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
       elevation: year.isActive ? 4 : 1,
       shape: RoundedRectangleBorder(
@@ -546,6 +548,17 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
         ],
       ),
     );
+    } catch (e) {
+      debugPrint('❌ خطأ في عرض بطاقة السنة المالية: $e');
+      return Card(
+        margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+        child: ListTile(
+          leading: const Icon(Icons.error_outline, color: Colors.red),
+          title: Text('خطأ في عرض سنة ${year.year}'),
+          subtitle: const Text('حدث خطأ أثناء عرض تفاصيل السنة المالية'),
+        ),
+      );
+    }
   }
 
   Widget _buildInfoRow(String label, String value, IconData icon, Color color) {
@@ -561,12 +574,15 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
               style: const TextStyle(fontSize: 14),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
