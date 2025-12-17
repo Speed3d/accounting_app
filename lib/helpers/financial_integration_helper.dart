@@ -31,7 +31,8 @@ class FinancialIntegrationHelper {
   /// إنشاء قيد مالي تلقائي عند إضافة مبيعة
   ///
   /// ← Hint: يُستدعى من DatabaseHelper.insertCustomerDebt()
-  /// ← Hint: يسجل المبيعة كقيد دخل (in) في نظام القيود
+  /// ← Hint: للبيع النقدي فقط - البيع الآجل لا يُسجل (يُسجل عند الدفع)
+  /// ← Parameter: isCashSale - true للبيع النقدي، false للبيع الآجل
   static Future<bool> recordSaleTransaction({
     required int saleId,
     required int customerId,
@@ -39,9 +40,16 @@ class FinancialIntegrationHelper {
     required String saleDate,
     int? productId,
     String? productName,
+    bool isCashSale = false, // ✅ معامل جديد: افتراضياً false (آجل)
   }) async {
     try {
-      debugPrint('🔗 [FinancialIntegration] تسجيل قيد مبيعة تلقائياً...');
+      // ← Hint: البيع الآجل لا يُسجل كإيراد (سيُسجل عند التسديد)
+      if (!isCashSale) {
+        debugPrint('⏩ [FinancialIntegration] بيع آجل - لا يُسجل إيراد (سيُسجل عند التسديد)');
+        return true; // نجاح لكن بدون تسجيل قيد
+      }
+
+      debugPrint('🔗 [FinancialIntegration] تسجيل قيد مبيعة نقدية تلقائياً...');
 
       // ← Hint: التحقق من وجود سنة مالية نشطة
       final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
@@ -50,18 +58,18 @@ class FinancialIntegrationHelper {
         return false;
       }
 
-      // ← Hint: إنشاء القيد المالي
+      // ← Hint: إنشاء القيد المالي للبيع النقدي
       final transaction = await _transactionService.createSaleTransaction(
         saleId: saleId,
         amount: amount,
         customerId: customerId,
         productId: productId,
-        notes: productName != null ? 'مبيعات - $productName' : null,
+        notes: productName != null ? 'مبيعات نقدية - $productName' : 'مبيعات نقدية',
         saleDate: DateTime.parse(saleDate),
       );
 
       if (transaction != null) {
-        debugPrint('✅ [FinancialIntegration] تم تسجيل قيد المبيعة (ID: ${transaction.transactionID})');
+        debugPrint('✅ [FinancialIntegration] تم تسجيل قيد المبيعة النقدية (ID: ${transaction.transactionID})');
         return true;
       }
 

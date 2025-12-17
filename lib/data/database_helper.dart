@@ -37,10 +37,11 @@ class DatabaseHelper {
   // Version 3: 🆕 النظام الجديد - Email Auth + Subscriptions
   // Version 4: ✅ نظام الوحدات والتصنيفات للمنتجات
   // Version 5: ✅ نظام تسديدات السلف (TB_Advance_Repayments)
-  // Version 6: 🏦 نظام السنوات المالية والقيود المحاسبية الموحدة
+  // Version 7: 🔧 إصلاحات DELETE/UPDATE triggers + منطق البيع النقدي/الآجل
   // ← Hint: v5 يضيف جدول تسديدات السلف لتسجيل عمليات التسديد الكاملة أو الجزئية
   // ← Hint: v6 يحول التطبيق إلى نظام محاسبي احترافي مع قيود مالية موحدة وإقفال سنوات
-  static const _databaseVersion = 6;
+  // ← Hint: v7 يضيف triggers للحذف والتعديل التلقائي + إصلاح منطق البيع (نقدي vs آجل)
+  static const _databaseVersion = 7;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -812,6 +813,112 @@ class DatabaseHelper {
       END;
     ''');
 
+    // ← Hint: Trigger عند حذف فاتورة - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
+      BEFORE DELETE ON TB_Invoices
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'invoice' AND ReferenceID = OLD.InvoiceID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف دفعة زبون - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_payment_transaction
+      BEFORE DELETE ON Payment_Customer
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'customer_payment' AND ReferenceID = OLD.ID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف مصروف - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_expense_transaction
+      BEFORE DELETE ON TB_Expenses
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'expense' AND ReferenceID = OLD.ExpenseID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف سلفة موظف - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_advance_transaction
+      BEFORE DELETE ON TB_Employee_Advances
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'employee_advance' AND ReferenceID = OLD.AdvanceID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف تسديد سلفة - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_repayment_transaction
+      BEFORE DELETE ON TB_Advance_Repayments
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'advance_repayment' AND ReferenceID = OLD.RepaymentID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف راتب - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_payroll_transaction
+      BEFORE DELETE ON TB_Payroll
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'payroll' AND ReferenceID = OLD.PayrollID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند حذف مكافأة - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_bonus_transaction
+      BEFORE DELETE ON TB_Employee_Bonuses
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'bonus' AND ReferenceID = OLD.BonusID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ فاتورة - تحديث القيد المالي
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_invoice_transaction
+      AFTER UPDATE OF TotalAmount ON TB_Invoices
+      WHEN OLD.TotalAmount != NEW.TotalAmount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.TotalAmount
+        WHERE ReferenceType = 'invoice' AND ReferenceID = NEW.InvoiceID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل دفعة زبون - تحديث القيد المالي
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_payment_transaction
+      AFTER UPDATE OF Payment ON Payment_Customer
+      WHEN OLD.Payment != NEW.Payment
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.Payment
+        WHERE ReferenceType = 'customer_payment' AND ReferenceID = NEW.ID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مصروف - تحديث القيد المالي
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_expense_transaction
+      AFTER UPDATE OF Amount ON TB_Expenses
+      WHEN OLD.Amount != NEW.Amount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.Amount
+        WHERE ReferenceType = 'expense' AND ReferenceID = NEW.ExpenseID;
+      END;
+    ''');
+
     debugPrint('✅ [DatabaseHelper] تم إنشاء Triggers التحديث التلقائي بنجاح');
 
     // ============================================================================
@@ -955,6 +1062,13 @@ class DatabaseHelper {
       debugPrint('📦 تطبيق Migration إلى v6 (نظام السنوات المالية)...');
       await DatabaseMigrations.migrateToV6(db);
       debugPrint('✅ تم تطبيق Migration إلى v6 بنجاح - النظام المحاسبي جاهز! 🎉');
+    }
+
+    // ✅ ترقية من الإصدار 6 إلى 7: إصلاحات الحذف والتعديل التلقائي
+    if (oldVersion < 7) {
+      debugPrint('📦 تطبيق Migration إلى v7 (DELETE/UPDATE triggers)...');
+      await DatabaseMigrations.migrateToV7(db);
+      debugPrint('✅ تم تطبيق Migration إلى v7 بنجاح - الحذف والتعديل يعملان تلقائياً! 🎉');
     }
 
   }
@@ -3903,6 +4017,7 @@ Future<int> recordSale({
   required Decimal costPrice,
   required Decimal profitAmount,
   String? productName,
+  bool isCashSale = true, // ✅ معامل جديد: افتراضياً true (نقدي)
 }) async {
   final db = await instance.database;
 
@@ -3921,7 +4036,7 @@ Future<int> recordSale({
     'IsReturned': 0,
   });
 
-  // ← Hint: تسجيل القيد المالي التلقائي
+  // ← Hint: تسجيل القيد المالي التلقائي (نقدي فقط)
   await FinancialIntegrationHelper.recordSaleTransaction(
     saleId: saleId,
     customerId: customerId,
@@ -3929,6 +4044,7 @@ Future<int> recordSale({
     saleDate: DateTime.now().toIso8601String(),
     productId: productId,
     productName: productName ?? details,
+    isCashSale: isCashSale, // ✅ تمرير المعامل
   );
 
   return saleId;
@@ -3950,7 +4066,7 @@ Future<int> recordCustomerPayment({
   // ← Hint: إدراج الدفعة في جدول Payment_Customer
   final paymentId = await db.insert('Payment_Customer', {
     'CustomerID': customerId,
-    'Amount': amount.toDouble(),
+    'Payment': amount.toDouble(), // ✅ تم تصحيح اسم العمود من Amount إلى Payment
     'DateT': paymentDate,
     'Comments': comments ?? '',
   });

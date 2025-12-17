@@ -215,6 +215,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
       );
 
       // ✨ استخدام الدالة الجديدة التي تسجل القيد المالي تلقائياً
+      // ← Hint: بيع آجل - لا يُسجل إيراد فوري (سيُسجل عند التسديد)
       await _dbHelper.recordSale(
         invoiceId: 0, // يمكن تحديث هذا لاحقاً إذا كان لديك نظام فواتير
         customerId: _currentCustomer.customerID!,
@@ -226,6 +227,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen>
         costPrice: product.costPrice,
         profitAmount: profitForItem,
         productName: product.productName,
+        isCashSale: false, // ✅ بيع آجل - لا يُسجل إيراد
       );
 
       // تحديث المخزون

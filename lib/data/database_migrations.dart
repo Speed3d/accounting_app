@@ -560,6 +560,148 @@ static Future<void> migrateToV4(Database db) async {
   }
 
   // ==========================================================================
+  // Migration من v6 إلى v7
+  // ==========================================================================
+  /// ← Hint: التحديثات في v7:
+  /// 1. إضافة DELETE triggers لحذف القيود المالية تلقائياً
+  /// 2. إضافة UPDATE triggers لتحديث القيود المالية تلقائياً
+  /// 3. إصلاح: لا حاجة لتعديل schema (فقط triggers)
+  static Future<void> migrateToV7(Database db) async {
+    debugPrint('🔄 بدء Migration من v6 إلى v7...');
+
+    try {
+      // ========================================================================
+      // 1️⃣ إضافة DELETE Triggers لحذف القيود المرتبطة تلقائياً
+      // ========================================================================
+
+      debugPrint('  ├─ إضافة DELETE triggers...');
+
+      // Trigger: حذف فاتورة → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
+        BEFORE DELETE ON TB_Invoices
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'invoice' AND ReferenceID = OLD.InvoiceID;
+        END;
+      ''');
+
+      // Trigger: حذف دفعة زبون → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_payment_transaction
+        BEFORE DELETE ON Payment_Customer
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'customer_payment' AND ReferenceID = OLD.ID;
+        END;
+      ''');
+
+      // Trigger: حذف مصروف → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_expense_transaction
+        BEFORE DELETE ON TB_Expenses
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'expense' AND ReferenceID = OLD.ExpenseID;
+        END;
+      ''');
+
+      // Trigger: حذف سلفة موظف → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_advance_transaction
+        BEFORE DELETE ON TB_Employee_Advances
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'employee_advance' AND ReferenceID = OLD.AdvanceID;
+        END;
+      ''');
+
+      // Trigger: حذف تسديد سلفة → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_repayment_transaction
+        BEFORE DELETE ON TB_Advance_Repayments
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'advance_repayment' AND ReferenceID = OLD.RepaymentID;
+        END;
+      ''');
+
+      // Trigger: حذف راتب → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_payroll_transaction
+        BEFORE DELETE ON TB_Payroll
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'payroll' AND ReferenceID = OLD.PayrollID;
+        END;
+      ''');
+
+      // Trigger: حذف مكافأة → حذف القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_bonus_transaction
+        BEFORE DELETE ON TB_Employee_Bonuses
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'bonus' AND ReferenceID = OLD.BonusID;
+        END;
+      ''');
+
+      debugPrint('  ├─ ✅ تم إضافة 7 DELETE triggers');
+
+      // ========================================================================
+      // 2️⃣ إضافة UPDATE Triggers لتحديث القيود تلقائياً
+      // ========================================================================
+
+      debugPrint('  ├─ إضافة UPDATE triggers...');
+
+      // Trigger: تعديل مبلغ فاتورة → تحديث القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_invoice_transaction
+        AFTER UPDATE OF TotalAmount ON TB_Invoices
+        WHEN OLD.TotalAmount != NEW.TotalAmount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.TotalAmount
+          WHERE ReferenceType = 'invoice' AND ReferenceID = NEW.InvoiceID;
+        END;
+      ''');
+
+      // Trigger: تعديل دفعة زبون → تحديث القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_payment_transaction
+        AFTER UPDATE OF Payment ON Payment_Customer
+        WHEN OLD.Payment != NEW.Payment
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.Payment
+          WHERE ReferenceType = 'customer_payment' AND ReferenceID = NEW.ID;
+        END;
+      ''');
+
+      // Trigger: تعديل مصروف → تحديث القيد المالي
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_expense_transaction
+        AFTER UPDATE OF Amount ON TB_Expenses
+        WHEN OLD.Amount != NEW.Amount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.Amount
+          WHERE ReferenceType = 'expense' AND ReferenceID = NEW.ExpenseID;
+        END;
+      ''');
+
+      debugPrint('  ├─ ✅ تم إضافة 3 UPDATE triggers');
+
+      debugPrint('✅ Migration إلى v7 اكتمل بنجاح - الآن الحذف والتعديل يحدّثان القيود تلقائياً! 🎉');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v7: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
   // دالة مساعدة: التحقق من وجود عمود في جدول
   // ==========================================================================
   static Future<bool> columnExists(
