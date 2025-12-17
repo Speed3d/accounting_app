@@ -81,7 +81,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
 
     try {
       final summary = await _financialService.getFinancialReport(
-        fiscalYearId: _selectedFiscalYear!.fiscalYearID,
+        fiscalYearId: _selectedFiscalYear!.fiscalYearID!,
       );
 
       setState(() {
