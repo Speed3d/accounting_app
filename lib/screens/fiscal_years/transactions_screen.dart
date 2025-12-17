@@ -3,6 +3,7 @@
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
+import 'package:accountant_touch/services/fiscal_year_financial_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
@@ -27,10 +28,12 @@ class TransactionsScreen extends StatefulWidget {
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final _transactionService = TransactionService.instance;
   final _fiscalYearService = FiscalYearService.instance;
+  final _financialService = FiscalYearFinancialService.instance;
   final _currencyService = CurrencyService.instance;
 
   List<FinancialTransaction> _transactions = [];
   FiscalYear? _activeFiscalYear;
+  Map<String, dynamic>? _financialSummary;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -71,9 +74,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
-  /// تحميل القيود المالية
+  /// تحميل القيود المالية والملخص المالي
   Future<void> _loadTransactions() async {
     try {
+      // ← Hint: تحميل القيود من TB_Transactions
       final transactions = await _transactionService.getTransactions(
         fiscalYearId: _selectedFiscalYearId,
         type: _selectedType,
@@ -81,8 +85,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         orderBy: 'Date DESC',
       );
 
+      // ← Hint: تحميل الملخص المالي الشامل من جميع الجداول المالية
+      Map<String, dynamic>? summary;
+      if (_selectedFiscalYearId != null) {
+        summary = await _financialService.getFinancialReport(
+          fiscalYearId: _selectedFiscalYearId!,
+        );
+      }
+
       setState(() {
         _transactions = transactions;
+        _financialSummary = summary;
         _isLoading = false;
       });
     } catch (e) {
@@ -338,14 +351,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       );
     }
 
-    // ← Hint: حساب الإحصائيات
-    final totalIncome = _transactions
-        .where((t) => t.direction == 'in')
-        .fold<Decimal>(Decimal.zero, (sum, t) => sum + t.amount);
-    final totalExpense = _transactions
-        .where((t) => t.direction == 'out')
-        .fold<Decimal>(Decimal.zero, (sum, t) => sum + t.amount);
-    final netProfit = totalIncome - totalExpense;
+    // ← Hint: استخدام الملخص المالي الشامل من FiscalYearFinancialService
+    // ← Hint: هذا يضمن دقة الأرقام لأنه يستعلم مباشرة من جداول المصدر
+    final totalIncome = _financialSummary != null
+        ? Decimal.parse(_financialSummary!['totalIncome'].toString())
+        : Decimal.zero;
+    final totalExpense = _financialSummary != null
+        ? Decimal.parse(_financialSummary!['totalExpense'].toString())
+        : Decimal.zero;
+    final netProfit = _financialSummary != null
+        ? Decimal.parse(_financialSummary!['netProfit'].toString())
+        : Decimal.zero;
 
     return Column(
       children: [

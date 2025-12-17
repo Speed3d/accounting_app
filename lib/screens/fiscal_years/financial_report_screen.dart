@@ -3,7 +3,7 @@
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
-import 'package:accountant_touch/services/transaction_service.dart';
+import 'package:accountant_touch/services/fiscal_year_financial_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
 import 'package:accountant_touch/utils/helpers.dart';
@@ -25,7 +25,7 @@ class FinancialReportScreen extends StatefulWidget {
 }
 
 class _FinancialReportScreenState extends State<FinancialReportScreen> {
-  final _transactionService = TransactionService.instance;
+  final _financialService = FiscalYearFinancialService.instance;
   final _fiscalYearService = FiscalYearService.instance;
   final _currencyService = CurrencyService.instance;
 
@@ -80,7 +80,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     if (_selectedFiscalYear == null) return;
 
     try {
-      final summary = await _transactionService.getFinancialSummary(
+      final summary = await _financialService.getFinancialReport(
         fiscalYearId: _selectedFiscalYear!.fiscalYearID,
       );
 

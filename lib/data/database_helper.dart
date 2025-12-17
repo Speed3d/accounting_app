@@ -10,6 +10,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../services/database_key_manager.dart';
 import 'database_migrations.dart';  // 🆕 استيراد نظام الـ Migrations
 import '../helpers/financial_integration_helper.dart';  // 🆕 استيراد مساعد الربط المالي
+import '../services/transaction_service.dart';  // 🆕 لتحديث القيود المالية المرتبطة
 
 import 'models.dart' as models;
 
@@ -4081,6 +4082,163 @@ Future<int> recordCustomerPayment({
   );
 
   return paymentId;
+}
+
+// ============================================================================
+// 🆕 دوال التحديث للعمليات المالية المرتبطة بالقيود
+// ============================================================================
+
+/// تحديث راتب موظف
+/// يحدث الراتب في TB_Payroll ويحدث القيد المالي المرتبط في TB_Transactions
+Future<bool> updatePayroll({
+  required int payrollID,
+  required Decimal netSalary,
+  String? notes,
+}) async {
+  try {
+    debugPrint('🔄 [DatabaseHelper] تحديث راتب #$payrollID');
+
+    final db = await instance.database;
+
+    // 1. تحديث TB_Payroll
+    final updates = <String, dynamic>{
+      'NetSalary': netSalary.toDouble(),
+    };
+    if (notes != null) updates['Notes'] = notes;
+
+    final rowsAffected = await db.update(
+      'TB_Payroll',
+      updates,
+      where: 'PayrollID = ?',
+      whereArgs: [payrollID],
+    );
+
+    if (rowsAffected == 0) {
+      debugPrint('⚠️ [DatabaseHelper] لم يُعثر على راتب #$payrollID');
+      return false;
+    }
+
+    // 2. تحديث القيد المرتبط في TB_Transactions
+    final transactionUpdated = await TransactionService.instance.updateRelatedTransaction(
+      referenceType: 'payroll',
+      referenceId: payrollID,
+      newAmount: netSalary,
+      newNotes: notes,
+    );
+
+    if (transactionUpdated) {
+      debugPrint('✅ [DatabaseHelper] تم تحديث راتب #$payrollID والقيد المرتبط بنجاح');
+    } else {
+      debugPrint('⚠️ [DatabaseHelper] تم تحديث الراتب ولكن لم يُعثر على قيد مرتبط');
+    }
+
+    return true;
+  } catch (e) {
+    debugPrint('❌ [DatabaseHelper] خطأ في updatePayroll: $e');
+    return false;
+  }
+}
+
+/// تحديث دفعة زبون
+/// يحدث الدفعة في Payment_Customer ويحدث القيد المالي المرتبط في TB_Transactions
+Future<bool> updateCustomerPayment({
+  required int paymentID,
+  required Decimal payment,
+  String? comments,
+}) async {
+  try {
+    debugPrint('🔄 [DatabaseHelper] تحديث دفعة زبون #$paymentID');
+
+    final db = await instance.database;
+
+    // 1. تحديث Payment_Customer
+    final updates = <String, dynamic>{
+      'Payment': payment.toDouble(),
+    };
+    if (comments != null) updates['Comments'] = comments;
+
+    final rowsAffected = await db.update(
+      'Payment_Customer',
+      updates,
+      where: 'ID = ?',  // ← ملاحظة: العمود هو 'ID' وليس 'PaymentID'
+      whereArgs: [paymentID],
+    );
+
+    if (rowsAffected == 0) {
+      debugPrint('⚠️ [DatabaseHelper] لم يُعثر على دفعة #$paymentID');
+      return false;
+    }
+
+    // 2. تحديث القيد المرتبط في TB_Transactions
+    final transactionUpdated = await TransactionService.instance.updateRelatedTransaction(
+      referenceType: 'customer_payment',
+      referenceId: paymentID,
+      newAmount: payment,
+      newNotes: comments,
+    );
+
+    if (transactionUpdated) {
+      debugPrint('✅ [DatabaseHelper] تم تحديث دفعة الزبون #$paymentID والقيد المرتبط بنجاح');
+    } else {
+      debugPrint('⚠️ [DatabaseHelper] تم تحديث الدفعة ولكن لم يُعثر على قيد مرتبط');
+    }
+
+    return true;
+  } catch (e) {
+    debugPrint('❌ [DatabaseHelper] خطأ في updateCustomerPayment: $e');
+    return false;
+  }
+}
+
+/// تحديث سلفة موظف
+/// يحدث السلفة في TB_Employee_Advances ويحدث القيد المالي المرتبط في TB_Transactions
+Future<bool> updateAdvance({
+  required int advanceID,
+  required Decimal advanceAmount,
+  String? notes,
+}) async {
+  try {
+    debugPrint('🔄 [DatabaseHelper] تحديث سلفة موظف #$advanceID');
+
+    final db = await instance.database;
+
+    // 1. تحديث TB_Employee_Advances
+    final updates = <String, dynamic>{
+      'AdvanceAmount': advanceAmount.toDouble(),
+    };
+    if (notes != null) updates['Notes'] = notes;
+
+    final rowsAffected = await db.update(
+      'TB_Employee_Advances',
+      updates,
+      where: 'AdvanceID = ?',
+      whereArgs: [advanceID],
+    );
+
+    if (rowsAffected == 0) {
+      debugPrint('⚠️ [DatabaseHelper] لم يُعثر على سلفة #$advanceID');
+      return false;
+    }
+
+    // 2. تحديث القيد المرتبط في TB_Transactions
+    final transactionUpdated = await TransactionService.instance.updateRelatedTransaction(
+      referenceType: 'advance',
+      referenceId: advanceID,
+      newAmount: advanceAmount,
+      newNotes: notes,
+    );
+
+    if (transactionUpdated) {
+      debugPrint('✅ [DatabaseHelper] تم تحديث سلفة الموظف #$advanceID والقيد المرتبط بنجاح');
+    } else {
+      debugPrint('⚠️ [DatabaseHelper] تم تحديث السلفة ولكن لم يُعثر على قيد مرتبط');
+    }
+
+    return true;
+  } catch (e) {
+    debugPrint('❌ [DatabaseHelper] خطأ في updateAdvance: $e');
+    return false;
+  }
 }
 
 

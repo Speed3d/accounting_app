@@ -2,7 +2,7 @@
 
 import 'package:accountant_touch/data/database_helper.dart';
 import 'package:accountant_touch/data/models.dart';
-import 'package:accountant_touch/services/transaction_service.dart';
+import 'package:accountant_touch/services/fiscal_year_financial_service.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 
@@ -367,31 +367,24 @@ class FiscalYearService {
   /// ← Hint: عادة لا نحتاجها لأن الـ Triggers تحدّث تلقائياً
   /// ← Hint: مفيدة للمراجعة أو بعد استيراد بيانات
   ///
-  /// ⚠️ CRITICAL: يجب أن تستخدم TransactionService للحصول على الأرقام الصحيحة
-  /// التي تشمل TB_Transactions + TB_Expenses + TB_Profit_Withdrawals
+  /// ⚠️ CRITICAL: تستخدم FiscalYearFinancialService للحصول على الأرقام الصحيحة
+  /// التي تشمل جميع الجداول المالية مباشرة (TB_Invoices, Payment_Customer, إلخ)
   Future<bool> recalculateFiscalYearBalances(int fiscalYearId) async {
     try {
       debugPrint('🔄 [FiscalYearService] إعادة حساب أرصدة السنة (ID: $fiscalYearId)...');
 
       final db = await DatabaseHelper.instance.database;
-      final transactionService = TransactionService.instance;
+      final financialService = FiscalYearFinancialService.instance;
 
-      // ← Hint: حساب إجمالي الدخل من TransactionService
-      // ← Hint: يشمل: المبيعات + دفعات الزبائن + تسديدات السلف
-      final totalIncomeDecimal = await transactionService.getTotalIncome(
+      // ← Hint: حساب الأرصدة من FiscalYearFinancialService
+      // ← Hint: يشمل: المبيعات + دفعات الزبائن + تسديدات السلف - المصروفات - الرواتب - إلخ
+      final report = await financialService.getFinancialReport(
         fiscalYearId: fiscalYearId,
       );
-      final totalIncome = totalIncomeDecimal.toDouble();
 
-      // ← Hint: حساب إجمالي المصروفات من TransactionService
-      // ← Hint: يشمل: TB_Transactions + TB_Expenses + TB_Profit_Withdrawals
-      final totalExpenseDecimal = await transactionService.getTotalExpense(
-        fiscalYearId: fiscalYearId,
-      );
-      final totalExpense = totalExpenseDecimal.toDouble();
-
-      // ← Hint: حساب صافي الربح
-      final netProfit = totalIncome - totalExpense;
+      final totalIncome = (report['totalIncome'] as num).toDouble();
+      final totalExpense = (report['totalExpense'] as num).toDouble();
+      final netProfit = (report['netProfit'] as num).toDouble();
 
       // ← Hint: الحصول على الرصيد الافتتاحي
       final fiscalYear = await getFiscalYearById(fiscalYearId);

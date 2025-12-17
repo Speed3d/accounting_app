@@ -1249,4 +1249,83 @@ class TransactionService {
       return Decimal.zero;
     }
   }
+
+  // ==========================================================================
+  // 🔄 تحديث قيد مرتبط بعملية
+  // ==========================================================================
+
+  /// تحديث قيد مالي مرتبط بعملية معينة (راتب، سلفة، دفعة، إلخ)
+  ///
+  /// ← Hint: يُستخدم عند تعديل عملية في الجداول الأصلية
+  /// ← Hint: يبحث عن القيد المرتبط ويحدثه تلقائياً
+  ///
+  /// **Parameters:**
+  /// - referenceType: نوع المرجع ('payroll', 'advance', 'customer_payment', إلخ)
+  /// - referenceId: معرف العملية الأصلية
+  /// - newAmount: المبلغ الجديد
+  /// - newDescription: الوصف الجديد (اختياري)
+  /// - newNotes: الملاحظات الجديدة (اختياري)
+  ///
+  /// **Returns:**
+  /// true إذا تم التحديث بنجاح، false خلاف ذلك
+  Future<bool> updateRelatedTransaction({
+    required String referenceType,
+    required int referenceId,
+    required Decimal newAmount,
+    String? newDescription,
+    String? newNotes,
+  }) async {
+    try {
+      debugPrint('🔄 [TransactionService] تحديث قيد مرتبط بـ $referenceType #$referenceId');
+
+      final db = await DatabaseHelper.instance.database;
+
+      // ← Hint: 1. البحث عن القيد المرتبط
+      final result = await db.query(
+        'TB_Transactions',
+        where: 'ReferenceType = ? AND ReferenceID = ?',
+        whereArgs: [referenceType, referenceId],
+        limit: 1,
+      );
+
+      if (result.isEmpty) {
+        debugPrint('⚠️ [TransactionService] لم يُعثر على قيد مرتبط بـ $referenceType #$referenceId');
+        return false;
+      }
+
+      final transactionId = result.first['TransactionID'] as int;
+
+      // ← Hint: 2. بناء التحديثات
+      final updates = <String, dynamic>{};
+      updates['Amount'] = newAmount.toDouble();
+
+      if (newDescription != null) {
+        updates['Description'] = newDescription;
+      }
+
+      if (newNotes != null) {
+        updates['Notes'] = newNotes;
+      }
+
+      updates['UpdatedAt'] = DateTime.now().toIso8601String();
+
+      // ← Hint: 3. تطبيق التحديثات
+      final rowsAffected = await db.update(
+        'TB_Transactions',
+        updates,
+        where: 'TransactionID = ?',
+        whereArgs: [transactionId],
+      );
+
+      if (rowsAffected > 0) {
+        debugPrint('✅ [TransactionService] تم تحديث القيد #$transactionId بنجاح');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [TransactionService] خطأ في updateRelatedTransaction: $e');
+      return false;
+    }
+  }
 }
