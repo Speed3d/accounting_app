@@ -371,6 +371,8 @@ static Future<void> migrateToV4(Database db) async {
         'TB_Employee_Bonuses',    // مكافآت الموظفين
         'TB_Advance_Repayments',  // تسديدات السلف
         'Sales_Returns',          // مرتجعات المبيعات - الاسم الفعلي في قاعدة البيانات
+        'TB_Invoices',            // الفواتير - مُضاف في التحديث
+        'TB_Expenses',            // المصروفات العامة - مُضاف في التحديث
       ];
 
       for (final tableName in tables) {

@@ -11,6 +11,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
+import '../../services/fiscal_year_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
@@ -103,11 +104,15 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
       final totalAmount = _calculateTotal();
       int newInvoiceId;
 
+      // ← Hint: الحصول على السنة المالية النشطة
+      final activeFiscalYearId = await FiscalYearService.instance.getActiveFiscalYearId();
+
       // إنشاء الفاتورة أولاً
       newInvoiceId = await db.insert('TB_Invoices', {
         'CustomerID': cashCustomer.customerID!,
         'InvoiceDate': DateTime.now().toIso8601String(),
         'TotalAmount': totalAmount.toDouble(),
+        'FiscalYearID': activeFiscalYearId ?? 1, // ← Hint: إضافة السنة المالية
       });
 
       // ✨ تسجيل كل مبيعة باستخدام الدالة الجديدة (مع قيد مالي تلقائي)

@@ -395,6 +395,53 @@ class FinancialIntegrationHelper {
   }
 
   // ==========================================================================
+  // 💰 الربط التلقائي للمصروفات العامة
+  // ==========================================================================
+
+  /// إنشاء قيد مالي تلقائي عند إضافة مصروف عام
+  ///
+  /// ← Hint: يُستدعى من DatabaseHelper.recordExpense()
+  static Future<bool> recordExpenseTransaction({
+    required int expenseId,
+    required Decimal amount,
+    required String expenseDate,
+    String? description,
+    String? category,
+  }) async {
+    try {
+      debugPrint('🔗 [FinancialIntegration] تسجيل قيد مصروف تلقائياً...');
+
+      final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
+      if (!isOpen) {
+        debugPrint('⚠️ [FinancialIntegration] السنة المالية مقفلة - تخطي');
+        return false;
+      }
+
+      final transaction = await _transactionService.createTransaction(
+        type: TransactionType.expense,
+        category: TransactionCategory.operatingExpense,
+        amount: amount,
+        direction: 'out',
+        description: description ?? 'مصروف عام - مصروف رقم #$expenseId',
+        notes: category,
+        referenceType: 'expense',
+        referenceId: expenseId,
+        transactionDate: DateTime.parse(expenseDate),
+      );
+
+      if (transaction != null) {
+        debugPrint('✅ [FinancialIntegration] تم تسجيل قيد المصروف (ID: ${transaction.transactionID})');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [FinancialIntegration] خطأ في recordExpenseTransaction: $e');
+      return false;
+    }
+  }
+
+  // ==========================================================================
   // 📊 دوال مساعدة للتحقق
   // ==========================================================================
 

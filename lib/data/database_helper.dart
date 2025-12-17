@@ -535,7 +535,9 @@ class DatabaseHelper {
           TotalAmount REAL NOT NULL,
           IsVoid INTEGER NOT NULL DEFAULT 0,
           Status TEXT,
-          FOREIGN KEY (CustomerID) REFERENCES TB_Customer (CustomerID)
+          FiscalYearID INTEGER,
+          FOREIGN KEY (CustomerID) REFERENCES TB_Customer (CustomerID),
+          FOREIGN KEY (FiscalYearID) REFERENCES TB_FiscalYears (FiscalYearID)
       )
     ''');
 
@@ -546,7 +548,9 @@ class DatabaseHelper {
         Amount REAL NOT NULL,
         ExpenseDate TEXT NOT NULL,
         Category TEXT,
-        Notes TEXT
+        Notes TEXT,
+        FiscalYearID INTEGER,
+        FOREIGN KEY (FiscalYearID) REFERENCES TB_FiscalYears (FiscalYearID)
       )
       ''');
 
@@ -663,6 +667,10 @@ class DatabaseHelper {
 
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_date ON TB_Expenses(ExpenseDate)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON TB_Expenses(Category)');
+
+    // ← Hint: Indexes للسنوات المالية (مُضاف في v6)
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_invoices_fiscal_year ON TB_Invoices(FiscalYearID)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_fiscal_year ON TB_Expenses(FiscalYearID)');
 
       // ← Hint: Indexes للتصنيفات والوحدات (بسيطة)
   await db.execute('CREATE INDEX IF NOT EXISTS idx_category_active ON TB_ProductCategory(IsActive)');
@@ -2634,7 +2642,22 @@ Future<Decimal> getTotalEmployeeBonuses() async {
   /// دالة لتسجيل مصروف جديد.
   Future<int> recordExpense(Map<String, dynamic> expenseData) async {
     final db = await instance.database;
-    return await db.insert('TB_Expenses', expenseData);
+    int? expenseId;
+
+    expenseId = await db.insert('TB_Expenses', expenseData);
+
+    // ← Hint: تسجيل القيد المالي التلقائي
+    if (expenseId != null) {
+      await FinancialIntegrationHelper.recordExpenseTransaction(
+        expenseId: expenseId,
+        amount: Decimal.parse(expenseData['Amount'].toString()),
+        expenseDate: expenseData['ExpenseDate'],
+        description: expenseData['Description'],
+        category: expenseData['Category'],
+      );
+    }
+
+    return expenseId;
   }
 
   /// دالة لجلب كل المصاريف، مرتبة من الأحدث للأقدم.

@@ -4,6 +4,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/database_helper.dart';
+import '../../services/fiscal_year_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
@@ -540,6 +541,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               // ============================================================================
               // 📦 تحضير البيانات للحفظ
               // ============================================================================
+              // ← Hint: الحصول على السنة المالية النشطة
+              final activeFiscalYearId = await FiscalYearService.instance.getActiveFiscalYearId();
+
               final expenseData = {
                 'Description': descriptionController.text.trim(),
                 'Amount': parseDecimal(  // ✅ صحيح
@@ -548,6 +552,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 'ExpenseDate': DateTime.now().toIso8601String(),
                 'Category': selectedCategory,
                 'Notes': notesController.text.trim(),
+                'FiscalYearID': activeFiscalYearId ?? 1, // ← Hint: إضافة السنة المالية
               };
 
               try {
