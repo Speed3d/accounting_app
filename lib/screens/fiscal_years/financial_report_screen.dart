@@ -3,6 +3,7 @@
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
 import 'package:decimal/decimal.dart';
@@ -327,7 +328,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             ),
           ),
           Text(
-            '${amount.toDouble().toStringAsFixed(2)} دينار',
+            CurrencyService.instance.formatAmount(amount),
             style: TextStyle(
               fontSize: isHighlighted ? 18 : 16,
               fontWeight: FontWeight.bold,
@@ -467,7 +468,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
           ),
         ),
         Text(
-          '${amount.toDouble().toStringAsFixed(2)} د',
+          CurrencyService.instance.formatAmount(amount),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,

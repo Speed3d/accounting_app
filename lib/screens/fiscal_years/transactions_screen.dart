@@ -3,6 +3,7 @@
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
 import 'package:decimal/decimal.dart';
@@ -498,7 +499,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${isIncome ? '+' : '-'}${transaction.amount.toStringAsFixed(2)}',
+              '${isIncome ? '+' : '-'}${CurrencyService.instance.formatAmount(transaction.amount)}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

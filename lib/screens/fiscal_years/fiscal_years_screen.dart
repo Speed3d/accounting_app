@@ -2,6 +2,7 @@
 
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
+import 'package:accountant_touch/services/currency_service.dart';
 import 'package:accountant_touch/theme/app_colors.dart';
 import 'package:accountant_touch/theme/app_constants.dart';
 import 'package:decimal/decimal.dart';
@@ -479,44 +480,46 @@ class _FiscalYearsScreenState extends State<FiscalYearsScreen> {
                 // ← Hint: معلومات مالية
                 _buildInfoRow(
                   'الرصيد الافتتاحي',
-                  '${year.openingBalance.toStringAsFixed(2)} دينار',
+                  CurrencyService.instance.formatAmount(year.openingBalance),
                   Icons.trending_up,
                   Colors.blue,
                 ),
                 const Divider(),
                 _buildInfoRow(
                   'إجمالي الدخل',
-                  '${year.totalIncome.toStringAsFixed(2)} دينار',
+                  CurrencyService.instance.formatAmount(year.totalIncome),
                   Icons.arrow_downward,
                   Colors.green,
                 ),
                 const Divider(),
                 _buildInfoRow(
                   'إجمالي المصروفات',
-                  '${year.totalExpense.toStringAsFixed(2)} دينار',
+                  CurrencyService.instance.formatAmount(year.totalExpense),
                   Icons.arrow_upward,
                   Colors.red,
                 ),
                 const Divider(),
                 _buildInfoRow(
                   'صافي الربح',
-                  '${year.netProfit.toStringAsFixed(2)} دينار',
+                  CurrencyService.instance.formatAmount(year.netProfit),
                   Icons.account_balance,
                   year.netProfit >= Decimal.zero ? Colors.green : Colors.red,
                 ),
                 const Divider(),
                 _buildInfoRow(
                   'الرصيد الختامي',
-                  '${year.closingBalance.toStringAsFixed(2)} دينار',
+                  CurrencyService.instance.formatAmount(year.closingBalance),
                   Icons.account_balance_wallet,
                   Colors.purple,
                 ),
 
                 const SizedBox(height: 16),
 
-                // ← Hint: أزرار الإجراءات
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                // ← Hint: أزرار الإجراءات (إصلاح مشكلة الـ Layout)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
                   children: [
                     if (!year.isActive && !year.isClosed)
                       ElevatedButton.icon(
