@@ -58,55 +58,6 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
     });
   }
 
-  /// معالجة إلغاء الفاتورة
-  /// Hint: نستخدم مربع حوار بالتصميم الجديد للتأكيد
-  Future<void> _handleVoidInvoice(int invoiceId, AppLocalizations l10n) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.confirmVoidTitle),
-        content: Text(l10n.confirmVoidContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
-            child: Text(l10n.confirmVoidAction),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      await dbHelper.voidInvoice(invoiceId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.voidSuccess),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        _loadInvoices();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorOccurred(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
   // ============= البناء =============
   @override
   Widget build(BuildContext context) {
@@ -395,22 +346,6 @@ class _CashSalesHistoryScreenState extends State<CashSalesHistoryScreen> {
           ),
         ),
       ),
-
-
-                  
-                  // --- زر الحذف ---
-                  if (!isVoid)
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.error,
-                        size: 20,
-                      ),
-                      onPressed: () => _handleVoidInvoice(invoiceId, l10n),
-                      tooltip: l10n.cancel,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
                 ],
               ),
             ],
