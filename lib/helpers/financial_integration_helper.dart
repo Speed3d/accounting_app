@@ -1,5 +1,6 @@
 // lib/helpers/financial_integration_helper.dart
 
+import 'package:accountant_touch/data/database_helper.dart';
 import 'package:accountant_touch/data/models.dart';
 import 'package:accountant_touch/services/fiscal_year_service.dart';
 import 'package:accountant_touch/services/transaction_service.dart';
@@ -324,7 +325,7 @@ class FinancialIntegrationHelper {
 
       // ← Hint: التحقق من وجود قيد مالي للبيع الأصلي
       // ← Hint: إذا كان موجود = بيع نقدي، إذا لم يكن = بيع آجل
-      final db = await _transactionService.database;
+      final db = await DatabaseHelper.instance.database;
       final result = await db.query(
         'TB_Transactions',
         where: 'ReferenceType = ? AND ReferenceID = ?',
