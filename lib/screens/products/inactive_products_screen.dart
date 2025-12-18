@@ -11,7 +11,6 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 import '../../widgets/custom_card.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
 
@@ -553,12 +552,18 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
               ),
 
               // زر الاستعادة
-              CustomButton(
-                text: 'استعادة',
-                icon: Icons.restore,
-                type: ButtonType.secondary,
-                size: ButtonSize.small,
+              ElevatedButton.icon(
                 onPressed: () => _handleRestoreProduct(product),
+                icon: const Icon(Icons.restore, size: 18),
+                label: const Text('استعادة'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConstants.spacingMd,
+                    vertical: AppConstants.spacingSm,
+                  ),
+                ),
               ),
             ],
           ),
