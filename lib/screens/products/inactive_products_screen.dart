@@ -550,59 +550,63 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
                   ],
                 ),
               ),
-
-              // زر الاستعادة
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _handleRestoreProduct(product),
-                    icon: const Icon(Icons.restore, size: 18),
-                    label: const Text('استعادة'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.spacingMd,
-                        vertical: AppConstants.spacingSm,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
 
-          // شارة تحذير
+          // شارة تحذير وزر الاستعادة
           const SizedBox(height: AppConstants.spacingSm),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.spacingSm,
-              vertical: AppConstants.spacingXs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
-              borderRadius: AppConstants.borderRadiusFull,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.warning_amber,
-                  size: 14,
-                  color: AppColors.warning,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppConstants.spacingSm,
+                  vertical: AppConstants.spacingXs,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  'الكمية: 0',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.warning,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.1),
+                  borderRadius: AppConstants.borderRadiusFull,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber,
+                      size: 14,
+                      color: AppColors.warning,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'الكمية: 0',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.warning,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // زر الاستعادة
+              SizedBox(
+                height: 36,
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleRestoreProduct(product),
+                  icon: const Icon(Icons.restore, size: 18),
+                  label: const Text('استعادة'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppConstants.spacingMd,
+                      vertical: AppConstants.spacingXs,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
