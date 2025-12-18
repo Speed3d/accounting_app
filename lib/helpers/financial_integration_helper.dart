@@ -461,6 +461,61 @@ class FinancialIntegrationHelper {
   }
 
   // ==========================================================================
+  // 💰 الربط التلقائي لسحب أرباح الموردين/الشركاء
+  // ==========================================================================
+
+  /// إنشاء قيد مالي تلقائي عند سحب أرباح مورد أو شريك
+  ///
+  /// ← Hint: يُستدعى من DatabaseHelper.recordProfitWithdrawal()
+  /// ← Hint: سحب الأرباح يُسجل كمصروف (direction = 'out')
+  static Future<bool> recordSupplierWithdrawalTransaction({
+    required int withdrawalId,
+    required int supplierId,
+    required Decimal amount,
+    required String withdrawalDate,
+    String? partnerName,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('🔗 [FinancialIntegration] تسجيل قيد سحب أرباح تلقائياً...');
+
+      final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
+      if (!isOpen) {
+        debugPrint('⚠️ [FinancialIntegration] السنة المالية مقفلة - تخطي');
+        return false;
+      }
+
+      // ← Hint: تحديد الوصف حسب نوع السحب (مورد فردي أو شريك)
+      final description = partnerName != null
+          ? 'سحب أرباح شريك - $partnerName (سحب رقم #$withdrawalId)'
+          : 'سحب أرباح مورد (سحب رقم #$withdrawalId)';
+
+      final transaction = await _transactionService.createTransaction(
+        type: TransactionType.supplierWithdrawal,
+        category: TransactionCategory.operatingExpense,
+        amount: amount,
+        direction: 'out',
+        description: description,
+        notes: notes,
+        referenceType: 'supplier_withdrawal',
+        referenceId: withdrawalId,
+        supplierId: supplierId,
+        transactionDate: DateTime.parse(withdrawalDate),
+      );
+
+      if (transaction != null) {
+        debugPrint('✅ [FinancialIntegration] تم تسجيل قيد السحب (ID: ${transaction.transactionID})');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [FinancialIntegration] خطأ في recordSupplierWithdrawalTransaction: $e');
+      return false;
+    }
+  }
+
+  // ==========================================================================
   // 📊 دوال مساعدة للتحقق
   // ==========================================================================
 

@@ -483,7 +483,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               color: Colors.grey[600],
             ),
             const SizedBox(width: 4),
-            Text(_getTypeNameArabic(transaction.type)),
+            Flexible(
+              child: Text(
+                _getTypeNameArabic(transaction.type),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             const SizedBox(width: 12),
             Icon(
               Icons.access_time,
@@ -608,6 +613,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return 'تسديد سلفة';
       case TransactionType.employeeBonus:
         return 'مكافأة';
+      case TransactionType.supplierWithdrawal:
+        return 'سحب أرباح';
       case TransactionType.expense:
         return 'مصروف';
       case TransactionType.openingBalance:

@@ -916,6 +916,16 @@ class DatabaseHelper {
       END;
     ''');
 
+    // ← Hint: Trigger عند حذف سحب أرباح مورد/شريك - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_withdrawal_transaction
+      BEFORE DELETE ON TB_Profit_Withdrawals
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'supplier_withdrawal' AND ReferenceID = OLD.WithdrawalID;
+      END;
+    ''');
+
     // ← Hint: Trigger عند تعديل مبلغ فاتورة - تحديث القيد المالي
     await db.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_update_invoice_transaction
@@ -1001,6 +1011,19 @@ class DatabaseHelper {
         UPDATE TB_Transactions
         SET Amount = NEW.NetSalary
         WHERE ReferenceType = 'payroll' AND ReferenceID = NEW.PayrollID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ سحب أرباح مورد/شريك - تحديث القيد المالي تلقائياً
+    // ← Hint: يضمن تحديث القيود والتقارير المالية عند تعديل مبلغ السحب
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_withdrawal_transaction
+      AFTER UPDATE OF WithdrawalAmount ON TB_Profit_Withdrawals
+      WHEN OLD.WithdrawalAmount != NEW.WithdrawalAmount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.WithdrawalAmount
+        WHERE ReferenceType = 'supplier_withdrawal' AND ReferenceID = NEW.WithdrawalID;
       END;
     ''');
 
@@ -2860,20 +2883,33 @@ Future<Decimal> getTotalEmployeeBonuses() async {
 
 
   // إضافة الدوال الجديدة للتعامل مع جدول سحب الأرباح
-  
+
   /// دالة لحفظ سجل سحب أرباح جديد.
+  /// ← Hint: تسجل السحب في جدول TB_Profit_Withdrawals وتنشئ قيد مالي تلقائياً
   Future<int> recordProfitWithdrawal(Map<String, dynamic> withdrawalData) async {
       final db = await instance.database;
-  
+
     // ✅ تحويل Decimal إلى double للتخزين
       final dataToStore = Map<String, dynamic>.from(withdrawalData);
+      final originalAmount = dataToStore['WithdrawalAmount']; // ← حفظ القيمة الأصلية للربط
       if (dataToStore['WithdrawalAmount'] is Decimal) {
        dataToStore['WithdrawalAmount'] =
       (dataToStore['WithdrawalAmount'] as Decimal).toDouble();
      }
-  
-  return await db.insert('TB_Profit_Withdrawals', dataToStore);
 
+    final withdrawalId = await db.insert('TB_Profit_Withdrawals', dataToStore);
+
+    // ← Hint: الربط التلقائي مع النظام المالي
+    await FinancialIntegrationHelper.recordSupplierWithdrawalTransaction(
+      withdrawalId: withdrawalId,
+      supplierId: withdrawalData['SupplierID'] as int,
+      amount: originalAmount is Decimal ? originalAmount : Decimal.parse(originalAmount.toString()),
+      withdrawalDate: withdrawalData['WithdrawalDate'] as String,
+      partnerName: withdrawalData['PartnerName'] as String?,
+      notes: withdrawalData['Notes'] as String?,
+    );
+
+    return withdrawalId;
   }
 
 

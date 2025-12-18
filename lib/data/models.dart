@@ -1079,6 +1079,7 @@ enum TransactionType {
   employeeAdvance,       // ← Hint: سلفة موظف (صرف)
   advanceRepayment,      // ← Hint: تسديد سلفة من موظف (دخل)
   employeeBonus,         // ← Hint: مكافأة موظف (صرف)
+  supplierWithdrawal,    // ← Hint: سحب أرباح مورد/شريك (صرف)
   expense,               // ← Hint: مصروف عام (صرف)
   openingBalance,        // ← Hint: رصيد افتتاحي (ترحيل من سنة سابقة)
   closingBalance,        // ← Hint: رصيد ختامي (عند إقفال السنة)

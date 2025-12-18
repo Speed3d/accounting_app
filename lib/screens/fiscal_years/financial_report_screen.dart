@@ -387,6 +387,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               Icons.payment,
               Colors.green,
             ),
+            const SizedBox(height: 8),
+            _buildBreakdownItem(
+              'تسديدات السلف من الموظفين',
+              Decimal.parse(breakdown['advanceRepayments'].toString()),
+              Icons.account_balance_wallet,
+              Colors.green,
+            ),
 
             const Divider(height: 32),
 
