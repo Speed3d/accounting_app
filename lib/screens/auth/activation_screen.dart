@@ -615,6 +615,31 @@ class _ActivationScreenState extends State<ActivationScreen>
                     ],
                   ),
                 ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // ─────────────────────────────────────────────────────
+                // زر العودة لتسجيل الدخول
+                // ─────────────────────────────────────────────────────
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'العودة إلى تسجيل الدخول',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: AppConstants.paddingMd,
+                  ),
+                ),
               ],
             ),
           ),

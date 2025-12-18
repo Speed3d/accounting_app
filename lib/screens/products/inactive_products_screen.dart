@@ -552,18 +552,23 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
               ),
 
               // زر الاستعادة
-              ElevatedButton.icon(
-                onPressed: () => _handleRestoreProduct(product),
-                icon: const Icon(Icons.restore, size: 18),
-                label: const Text('استعادة'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.spacingMd,
-                    vertical: AppConstants.spacingSm,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _handleRestoreProduct(product),
+                    icon: const Icon(Icons.restore, size: 18),
+                    label: const Text('استعادة'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppConstants.spacingMd,
+                        vertical: AppConstants.spacingSm,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
