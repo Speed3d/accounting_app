@@ -511,10 +511,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 color: isIncome ? Colors.green : Colors.red,
               ),
             ),
-            const Text(
-              'دينار',
-              style: TextStyle(fontSize: 12),
-            ),
+            // const Text(
+            //   'دينار',
+            //   style: TextStyle(fontSize: 12),
+            // ),
           ],
         ),
         children: [

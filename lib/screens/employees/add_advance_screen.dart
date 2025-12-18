@@ -278,8 +278,8 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
             const SizedBox(height: AppConstants.spacingXl),
 
-            // ============= ملخص السلفة =============
-            _buildSummaryCard(l10n, isDark),
+            // // ============= ملخص السلفة =============
+            // _buildSummaryCard(l10n, isDark),
 
             const SizedBox(height: AppConstants.spacingXl),
 
@@ -295,10 +295,10 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
 
             const SizedBox(height: AppConstants.spacingLg),
 
-            // ============= تنبيه =============
-            _buildWarningNote(isDark),
+            // // ============= تنبيه =============
+            // _buildWarningNote(isDark),
 
-            const SizedBox(height: AppConstants.spacingLg),
+            // const SizedBox(height: AppConstants.spacingLg),
           ],
         ),
       ),
@@ -445,157 +445,157 @@ class _AddAdvanceScreenState extends State<AddAdvanceScreen> {
     );
   }
 
-  // ============================================================
-  // 📊 بناء بطاقة الملخص
-  // ============================================================
-  Widget _buildSummaryCard(AppLocalizations l10n, bool isDark) {
-    final l10n = AppLocalizations.of(context)!;
-    // حساب الرصيد المتوقع بعد السلفة
-    final currentAmount = parseDecimal(
-     convertArabicNumbersToEnglish(_amountController.text.trim()),
-     fallback: Decimal.zero,
-     );
-    final currentBalance = widget.employee.balance;
-    final expectedBalance = currentAmount > Decimal.zero
-    ? currentBalance + currentAmount
-    : currentBalance;
+  // // ============================================================
+  // // 📊 بناء بطاقة الملخص
+  // // ============================================================
+  // Widget _buildSummaryCard(AppLocalizations l10n, bool isDark) {
+  //   final l10n = AppLocalizations.of(context)!;
+  //   // حساب الرصيد المتوقع بعد السلفة
+  //   final currentAmount = parseDecimal(
+  //    convertArabicNumbersToEnglish(_amountController.text.trim()),
+  //    fallback: Decimal.zero,
+  //    );
+  //   final currentBalance = widget.employee.balance;
+  //   final expectedBalance = currentAmount > Decimal.zero
+  //   ? currentBalance + currentAmount
+  //   : currentBalance;
 
-    return CustomCard(
-      child: Container(
-        padding: AppConstants.paddingLg,
-        decoration: BoxDecoration(
-          color: AppColors.warning.withOpacity(0.05),
-          borderRadius: AppConstants.borderRadiusMd,
-          border: Border.all(
-            color: AppColors.warning.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.calculate,
-                  color: AppColors.warning,
-                  size: 20,
-                ),
-                const SizedBox(width: AppConstants.spacingSm),
-                Text(
-                  l10n.financialSummary,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.warning,
-                      ),
-                ),
-              ],
-            ),
+  //   return CustomCard(
+  //     child: Container(
+  //       padding: AppConstants.paddingLg,
+  //       decoration: BoxDecoration(
+  //         color: AppColors.warning.withOpacity(0.05),
+  //         borderRadius: AppConstants.borderRadiusMd,
+  //         border: Border.all(
+  //           color: AppColors.warning.withOpacity(0.3),
+  //           width: 1,
+  //         ),
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(
+  //                 Icons.calculate,
+  //                 color: AppColors.warning,
+  //                 size: 20,
+  //               ),
+  //               const SizedBox(width: AppConstants.spacingSm),
+  //               Text(
+  //                 l10n.financialSummary,
+  //                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                       fontWeight: FontWeight.bold,
+  //                       color: AppColors.warning,
+  //                     ),
+  //               ),
+  //             ],
+  //           ),
 
-            const SizedBox(height: AppConstants.spacingMd),
+  //           const SizedBox(height: AppConstants.spacingMd),
 
-            // الرصيد الحالي
-            _buildSummaryRow(
-              l10n.currentBalance,
-              formatCurrency(currentBalance),
-              AppColors.info,
-              isDark,
-            ),
+  //           // الرصيد الحالي
+  //           _buildSummaryRow(
+  //             l10n.currentBalance,
+  //             formatCurrency(currentBalance),
+  //             AppColors.info,
+  //             isDark,
+  //           ),
 
-            const SizedBox(height: AppConstants.spacingSm),
+  //           const SizedBox(height: AppConstants.spacingSm),
 
-            // مبلغ السلفة
-            _buildSummaryRow(
-              l10n.advanceAmount,
-              currentAmount > Decimal.zero ? formatCurrency(currentAmount) : '---',
-              AppColors.warning,
-              isDark,
-            ),
+  //           // مبلغ السلفة
+  //           _buildSummaryRow(
+  //             l10n.advanceAmount,
+  //             currentAmount > Decimal.zero ? formatCurrency(currentAmount) : '---',
+  //             AppColors.warning,
+  //             isDark,
+  //           ),
 
-            Divider(
-              height: AppConstants.spacingLg,
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-            ),
+  //           Divider(
+  //             height: AppConstants.spacingLg,
+  //             color: isDark ? AppColors.borderDark : AppColors.borderLight,
+  //           ),
 
-            // الرصيد المتوقع
-            _buildSummaryRow(
-              l10n.expectedBalance,
-              formatCurrency(expectedBalance),
-              expectedBalance > Decimal.zero ? AppColors.error : AppColors.success,
-              isDark,
-              isBold: true,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  //           // الرصيد المتوقع
+  //           _buildSummaryRow(
+  //             l10n.expectedBalance,
+  //             formatCurrency(expectedBalance),
+  //             expectedBalance > Decimal.zero ? AppColors.error : AppColors.success,
+  //             isDark,
+  //             isBold: true,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  /// بناء صف ملخص
-  Widget _buildSummaryRow(
-    String label,
-    String value,
-    Color color,
-    bool isDark, {
-    bool isBold = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: isBold ? FontWeight.bold : null,
-              ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isBold ? 18 : 16,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
+  // /// بناء صف ملخص
+  // Widget _buildSummaryRow(
+  //   String label,
+  //   String value,
+  //   Color color,
+  //   bool isDark, {
+  //   bool isBold = false,
+  // }) {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: [
+  //       Text(
+  //         label,
+  //         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //               fontWeight: isBold ? FontWeight.bold : null,
+  //             ),
+  //       ),
+  //       Text(
+  //         value,
+  //         style: TextStyle(
+  //           fontSize: isBold ? 18 : 16,
+  //           fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+  //           color: color,
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
-  // ============================================================
-  // ⚠️ بناء ملاحظة تحذيرية
-  // ============================================================
-  Widget _buildWarningNote(bool isDark) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: AppConstants.paddingMd,
-      decoration: BoxDecoration(
-        color: AppColors.info.withOpacity(0.1),
-        borderRadius: AppConstants.borderRadiusMd,
-        border: Border.all(
-          color: AppColors.info.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.info,
-            size: 20,
-          ),
-          const SizedBox(width: AppConstants.spacingSm),
-          Expanded(
-            child: Text(
-              // 'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل',
-              l10n.autoDeductAdvance,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.info,
-                    height: 1.5,
-                  ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // // ============================================================
+  // // ⚠️ بناء ملاحظة تحذيرية
+  // // ============================================================
+  // Widget _buildWarningNote(bool isDark) {
+  //   final l10n = AppLocalizations.of(context)!;
+  //   return Container(
+  //     padding: AppConstants.paddingMd,
+  //     decoration: BoxDecoration(
+  //       color: AppColors.info.withOpacity(0.1),
+  //       borderRadius: AppConstants.borderRadiusMd,
+  //       border: Border.all(
+  //         color: AppColors.info.withOpacity(0.3),
+  //         width: 1,
+  //       ),
+  //     ),
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Icon(
+  //           Icons.info_outline,
+  //           color: AppColors.info,
+  //           size: 20,
+  //         ),
+  //         const SizedBox(width: AppConstants.spacingSm),
+  //         Expanded(
+  //           child: Text(
+  //             // 'سيتم خصم قيمة السلفة تلقائياً من الرواتب القادمة حتى تسديدها بالكامل',
+  //             l10n.autoDeductAdvance,
+  //             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+  //                   color: AppColors.info,
+  //                   height: 1.5,
+  //                 ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
