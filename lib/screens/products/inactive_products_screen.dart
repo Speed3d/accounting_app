@@ -379,7 +379,6 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
               icon: Icons.check_circle_outline,
               title: 'لا توجد منتجات معطلة',
               message: 'جميع المنتجات لديها كميات متوفرة',
-              iconColor: AppColors.success,
             );
           }
 
