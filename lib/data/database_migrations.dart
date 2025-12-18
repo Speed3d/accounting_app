@@ -869,6 +869,107 @@ static Future<void> migrateToV4(Database db) async {
   }
 
   // ==========================================================================
+  // 🔟 Migration v10: قيد واحد للفاتورة + triggers المرتجعات
+  // ==========================================================================
+  /// ✨ Migration v10: تحويل النظام من قيد لكل منتج إلى قيد واحد لكل فاتورة
+  ///
+  /// ← Hint: يتضمن:
+  /// ← Hint:   1. حذف جميع القيود القديمة (ReferenceType='sale')
+  /// ← Hint:   2. إضافة DELETE trigger للفواتير
+  /// ← Hint:   3. إضافة trigger لتحديث TotalAmount عند الإرجاع
+  /// ← Hint:   4. إنشاء قيود جديدة لكل فاتورة موجودة
+  static Future<void> migrateToV10(Database db) async {
+    debugPrint('🔄 بدء Migration من v9 إلى v10...');
+
+    try {
+      // 1️⃣ حذف جميع القيود القديمة من نوع 'sale'
+      debugPrint('  ├─ حذف قيود المبيعات القديمة (ReferenceType=sale)...');
+
+      final deletedCount = await db.delete(
+        'TB_Transactions',
+        where: 'ReferenceType = ?',
+        whereArgs: ['sale'],
+      );
+
+      debugPrint('  ├─ تم حذف $deletedCount قيد قديم');
+
+      // 2️⃣ إضافة DELETE trigger للفواتير
+      debugPrint('  ├─ إضافة DELETE trigger للفواتير...');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
+        BEFORE DELETE ON TB_Invoices
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'invoice' AND ReferenceID = OLD.InvoiceID;
+        END;
+      ''');
+
+      // 3️⃣ إضافة trigger لتحديث TotalAmount عند إرجاع بند
+      debugPrint('  ├─ إضافة trigger لتحديث TotalAmount عند الإرجاع...');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_invoice_on_return
+        AFTER UPDATE OF IsReturned ON Debt_Customer
+        WHEN NEW.IsReturned = 1 AND OLD.IsReturned = 0
+        BEGIN
+          UPDATE TB_Invoices
+          SET TotalAmount = TotalAmount - OLD.Debt
+          WHERE InvoiceID = OLD.InvoiceID;
+        END;
+      ''');
+
+      // 4️⃣ إنشاء قيود جديدة لكل فاتورة موجودة (غير ملغاة)
+      debugPrint('  ├─ إنشاء قيود جديدة للفواتير الموجودة...');
+
+      // ← Hint: جلب جميع الفواتير غير الملغاة
+      final invoices = await db.rawQuery('''
+        SELECT
+          InvoiceID,
+          CustomerID,
+          TotalAmount,
+          InvoiceDate,
+          FiscalYearID
+        FROM TB_Invoices
+        WHERE IsVoid = 0
+      ''');
+
+      int createdCount = 0;
+      for (var invoice in invoices) {
+        final invoiceId = invoice['InvoiceID'] as int;
+        final customerId = invoice['CustomerID'] as int;
+        final totalAmount = invoice['TotalAmount'] as double;
+        final invoiceDate = invoice['InvoiceDate'] as String;
+        final fiscalYearId = invoice['FiscalYearID'] as int?;
+
+        // ← Hint: إنشاء قيد جديد للفاتورة
+        await db.insert('TB_Transactions', {
+          'FiscalYearID': fiscalYearId ?? 1,
+          'Date': invoiceDate,
+          'Type': 'sale',
+          'Category': 'revenue',
+          'Amount': totalAmount,
+          'Direction': 'in',
+          'Description': 'فاتورة نقدية - رقم #$invoiceId',
+          'ReferenceType': 'invoice',
+          'ReferenceID': invoiceId,
+          'CustomerID': customerId,
+        });
+
+        createdCount++;
+      }
+
+      debugPrint('  ├─ تم إنشاء $createdCount قيد جديد للفواتير');
+      debugPrint('✅ Migration إلى v10 اكتمل بنجاح - الآن قيد واحد لكل فاتورة! 🎉');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v10: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
   // دالة مساعدة: التحقق من وجود عمود في جدول
   // ==========================================================================
   static Future<bool> columnExists(

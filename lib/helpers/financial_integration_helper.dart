@@ -34,6 +34,7 @@ class FinancialIntegrationHelper {
   /// ← Hint: يُستدعى من DatabaseHelper.insertCustomerDebt()
   /// ← Hint: للبيع النقدي فقط - البيع الآجل لا يُسجل (يُسجل عند الدفع)
   /// ← Parameter: isCashSale - true للبيع النقدي، false للبيع الآجل
+  /// ⚠️ DEPRECATED: استخدم recordInvoiceTransaction بدلاً منها (قيد واحد لكل فاتورة)
   static Future<bool> recordSaleTransaction({
     required int saleId,
     required int customerId,
@@ -77,6 +78,49 @@ class FinancialIntegrationHelper {
       return false;
     } catch (e) {
       debugPrint('❌ [FinancialIntegration] خطأ في recordSaleTransaction: $e');
+      return false;
+    }
+  }
+
+  /// ✨ إنشاء قيد مالي تلقائي عند إنشاء فاتورة (قيد واحد للفاتورة بأكملها)
+  ///
+  /// ← Hint: يُستدعى بعد إنشاء الفاتورة وإضافة كل بنودها
+  /// ← Hint: ينشئ قيد واحد فقط للفاتورة بدلاً من قيد لكل منتج
+  /// ← Hint: ReferenceType = 'invoice', ReferenceID = InvoiceID
+  static Future<bool> recordInvoiceTransaction({
+    required int invoiceId,
+    required int customerId,
+    required Decimal totalAmount,
+    required String invoiceDate,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('🔗 [FinancialIntegration] تسجيل قيد فاتورة نقدية تلقائياً...');
+
+      // ← Hint: التحقق من وجود سنة مالية نشطة
+      final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
+      if (!isOpen) {
+        debugPrint('⚠️ [FinancialIntegration] السنة المالية النشطة مقفلة - تخطي التسجيل');
+        return false;
+      }
+
+      // ← Hint: إنشاء قيد واحد للفاتورة بأكملها
+      final transaction = await _transactionService.createInvoiceTransaction(
+        invoiceId: invoiceId,
+        totalAmount: totalAmount,
+        customerId: customerId,
+        notes: notes,
+        invoiceDate: DateTime.parse(invoiceDate),
+      );
+
+      if (transaction != null) {
+        debugPrint('✅ [FinancialIntegration] تم تسجيل قيد الفاتورة (ID: ${transaction.transactionID})');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [FinancialIntegration] خطأ في recordInvoiceTransaction: $e');
       return false;
     }
   }
@@ -309,9 +353,12 @@ class FinancialIntegrationHelper {
 
   /// معالجة إرجاع مبيعة (نقدية أو آجلة) بشكل ذكي
   ///
-  /// ← Hint: يُستدعى من DatabaseHelper.insertSalesReturn()
-  /// ← Hint: البيع النقدي → يحذف القيد الأصلي (بدلاً من تسجيل مرتجع)
-  /// ← Hint: البيع الآجل → لا يفعل شيء (لأنه لم يكن هناك قيد أصلاً)
+  /// ← Hint: يُستدعى من DatabaseHelper.returnSaleItem()
+  /// ← Hint: ⚠️ بعد التحديث للنظام الجديد (قيد واحد لكل فاتورة):
+  /// ← Hint:    - لا حاجة لحذف أو تعديل القيود يدوياً
+  /// ← Hint:    - Trigger (trg_update_invoice_on_return) يحدّث TotalAmount تلقائياً
+  /// ← Hint:    - Trigger (trg_update_invoice_transaction) يحدّث القيد تلقائياً
+  /// ← Hint:    - هذه الدالة الآن مجرد placeholder للتوافق مع الكود القديم
   static Future<bool> recordSaleReturnTransaction({
     required int returnId,
     required int originalSaleId,
@@ -323,33 +370,13 @@ class FinancialIntegrationHelper {
     try {
       debugPrint('🔗 [FinancialIntegration] معالجة إرجاع مبيعة #$originalSaleId...');
 
-      // ← Hint: التحقق من وجود قيد مالي للبيع الأصلي
-      // ← Hint: إذا كان موجود = بيع نقدي، إذا لم يكن = بيع آجل
-      final db = await DatabaseHelper.instance.database;
-      final result = await db.query(
-        'TB_Transactions',
-        where: 'ReferenceType = ? AND ReferenceID = ?',
-        whereArgs: ['sale', originalSaleId],
-        limit: 1,
-      );
+      // ← Hint: ✨ النظام الجديد - الـ Triggers تتعامل مع كل شيء تلقائياً!
+      // ← Hint: عند تحديث IsReturned = 1:
+      // ← Hint:   1. trg_update_invoice_on_return يُنقص TotalAmount
+      // ← Hint:   2. trg_update_invoice_transaction يُحدّث قيد الفاتورة
+      // ← Hint: لا حاجة لأي إجراء يدوي هنا
 
-      if (result.isEmpty) {
-        // ← Hint: بيع آجل - لم يكن هناك قيد أصلاً
-        debugPrint('⏩ [FinancialIntegration] بيع آجل - لا يوجد قيد للحذف');
-        return true; // نجاح بدون فعل أي شيء
-      }
-
-      // ← Hint: بيع نقدي - يوجد قيد، يجب حذفه بدلاً من تسجيل مرتجع
-      debugPrint('🗑️ [FinancialIntegration] بيع نقدي - حذف القيد الأصلي بدلاً من تسجيل مرتجع');
-      final transactionId = result.first['TransactionID'] as int;
-
-      await db.delete(
-        'TB_Transactions',
-        where: 'TransactionID = ?',
-        whereArgs: [transactionId],
-      );
-
-      debugPrint('✅ [FinancialIntegration] تم حذف القيد المالي للبيع الأصلي');
+      debugPrint('✅ [FinancialIntegration] إرجاع مُعالج تلقائياً عبر Triggers');
       return true;
 
     } catch (e) {

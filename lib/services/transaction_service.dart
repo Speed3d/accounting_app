@@ -739,6 +739,7 @@ class TransactionService {
   /// إنشاء قيد مبيعات تلقائياً
   ///
   /// ← Hint: يُستدعى عند إضافة مبيعة جديدة
+  /// ⚠️ DEPRECATED: استخدم createInvoiceTransaction بدلاً منها (قيد واحد لكل فاتورة)
   Future<FinancialTransaction?> createSaleTransaction({
     required int saleId,
     required Decimal amount,
@@ -759,6 +760,31 @@ class TransactionService {
       customerId: customerId,
       productId: productId,
       transactionDate: saleDate,
+    );
+  }
+
+  /// ✨ إنشاء قيد فاتورة تلقائياً (قيد واحد للفاتورة بأكملها)
+  ///
+  /// ← Hint: يُستدعى عند إنشاء فاتورة جديدة (بدلاً من قيد لكل منتج)
+  /// ← Hint: ReferenceType = 'invoice', ReferenceID = InvoiceID
+  Future<FinancialTransaction?> createInvoiceTransaction({
+    required int invoiceId,
+    required Decimal totalAmount,
+    required int customerId,
+    String? notes,
+    DateTime? invoiceDate,
+  }) async {
+    return await createTransaction(
+      type: TransactionType.sale,
+      category: TransactionCategory.revenue,
+      amount: totalAmount,
+      direction: 'in',
+      description: 'فاتورة نقدية - رقم #$invoiceId',
+      notes: notes,
+      referenceType: 'invoice',
+      referenceId: invoiceId,
+      customerId: customerId,
+      transactionDate: invoiceDate,
     );
   }
 

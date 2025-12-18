@@ -40,12 +40,14 @@ class DatabaseHelper {
   // Version 7: 🔧 إصلاحات DELETE/UPDATE triggers + منطق البيع النقدي/الآجل
   // Version 8: 🔧 UPDATE triggers للسنوات المالية والموظفين + إصلاح المرتجعات
   // Version 9: 🔧 إصلاح ReferenceType للسلف في triggers (employee_advance → advance)
+  // Version 10: ✨ قيد واحد لكل فاتورة (بدلاً من قيد لكل منتج) + triggers المرتجعات
   // ← Hint: v5 يضيف جدول تسديدات السلف لتسجيل عمليات التسديد الكاملة أو الجزئية
   // ← Hint: v6 يحول التطبيق إلى نظام محاسبي احترافي مع قيود مالية موحدة وإقفال سنوات
   // ← Hint: v7 يضيف triggers للحذف والتعديل التلقائي + إصلاح منطق البيع (نقدي vs آجل)
   // ← Hint: v8 يضيف UPDATE trigger للسنوات المالية + 4 triggers للموظفين + إصلاح منطق المرتجعات
   // ← Hint: v9 يصلح عدم التطابق في ReferenceType للسلف ليعمل التعديل والحذف بشكل صحيح
-  static const _databaseVersion = 9;
+  // ← Hint: v10 يحوّل النظام من قيد لكل منتج إلى قيد واحد لكل فاتورة (تقارير أنظف)
+  static const _databaseVersion = 10;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -926,6 +928,16 @@ class DatabaseHelper {
       END;
     ''');
 
+    // ← Hint: Trigger عند حذف فاتورة - حذف القيد المالي المرتبط
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
+      BEFORE DELETE ON TB_Invoices
+      BEGIN
+        DELETE FROM TB_Transactions
+        WHERE ReferenceType = 'invoice' AND ReferenceID = OLD.InvoiceID;
+      END;
+    ''');
+
     // ← Hint: Trigger عند تعديل مبلغ فاتورة - تحديث القيد المالي
     await db.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_update_invoice_transaction
@@ -1024,6 +1036,20 @@ class DatabaseHelper {
         UPDATE TB_Transactions
         SET Amount = NEW.WithdrawalAmount
         WHERE ReferenceType = 'supplier_withdrawal' AND ReferenceID = NEW.WithdrawalID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند إرجاع بند في فاتورة - تحديث TotalAmount للفاتورة تلقائياً
+    // ← Hint: عند تحديث IsReturned من 0 إلى 1، يتم إنقاص TotalAmount بمبلغ البند
+    // ← Hint: هذا سيُطلق trg_update_invoice_transaction لتحديث القيد المالي
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_invoice_on_return
+      AFTER UPDATE OF IsReturned ON Debt_Customer
+      WHEN NEW.IsReturned = 1 AND OLD.IsReturned = 0
+      BEGIN
+        UPDATE TB_Invoices
+        SET TotalAmount = TotalAmount - OLD.Debt
+        WHERE InvoiceID = OLD.InvoiceID;
       END;
     ''');
 
@@ -1191,6 +1217,13 @@ class DatabaseHelper {
       debugPrint('📦 تطبيق Migration إلى v9 (إصلاح ReferenceType للسلف)...');
       await DatabaseMigrations.migrateToV9(db);
       debugPrint('✅ تم تطبيق Migration إلى v9 بنجاح - تعديل وحذف السلف يعمل الآن! 🎉');
+    }
+
+    // ✅ ترقية من الإصدار 9 إلى 10: قيد واحد لكل فاتورة
+    if (oldVersion < 10) {
+      debugPrint('📦 تطبيق Migration إلى v10 (قيد واحد لكل فاتورة)...');
+      await DatabaseMigrations.migrateToV10(db);
+      debugPrint('✅ تم تطبيق Migration إلى v10 بنجاح - قيد واحد لكل فاتورة! 🎉');
     }
 
   }
@@ -2318,6 +2351,16 @@ Future<void> deleteAdvance(int advanceID) async {
     Decimal totalRepaid = Decimal.zero;
     for (var repayment in repaymentsMaps) {
       totalRepaid += Decimal.parse(repayment['RepaymentAmount'].toString());
+    }
+
+    // ← Hint: 🛡️ شرط الأمان: التحقق من التسديد الكامل قبل الحذف
+    // ← Hint: منع حذف السلفة إذا لم يتم تسديدها بالكامل (حماية البيانات المالية)
+    if (totalRepaid < advanceAmount) {
+      final remaining = advanceAmount - totalRepaid;
+      throw Exception(
+        'لا يمكن حذف السلفة - المبلغ المتبقي: ${remaining.toStringAsFixed(2)} دينار\n'
+        'يجب تسديد السلفة بالكامل أولاً قبل الحذف.'
+      );
     }
 
     // ← Hint: 3. حذف جميع التسديدات أولاً
@@ -4136,10 +4179,10 @@ Future<void> cleanupCategoriesAndUnits() async {
 // ← Hint: تسجل القيود المالية تلقائياً عبر FinancialIntegrationHelper
 // ← Hint: يُفضل استخدامها بدلاً من التعامل المباشر مع قاعدة البيانات
 
-/// تسجيل مبيعة جديدة مع قيد مالي تلقائي
+/// تسجيل مبيعة جديدة (بند في فاتورة)
 ///
-/// ← Hint: تُستدعى من الشاشات لتسجيل مبيعة
-/// ← Hint: تسجل القيد المالي تلقائياً
+/// ← Hint: تُستدعى من الشاشات لتسجيل بند مبيعة
+/// ← Hint: ⚠️ لا تسجل القيد المالي هنا! القيد يُسجل على مستوى الفاتورة بأكملها
 /// ← Returns: معرف المبيعة (Sale ID)
 Future<int> recordSale({
   required int invoiceId,
@@ -4171,16 +4214,9 @@ Future<int> recordSale({
     'IsReturned': 0,
   });
 
-  // ← Hint: تسجيل القيد المالي التلقائي (نقدي فقط)
-  await FinancialIntegrationHelper.recordSaleTransaction(
-    saleId: saleId,
-    customerId: customerId,
-    amount: debt,
-    saleDate: DateTime.now().toIso8601String(),
-    productId: productId,
-    productName: productName ?? details,
-    isCashSale: isCashSale, // ✅ تمرير المعامل
-  );
+  // ← Hint: ⚠️ تم إزالة recordSaleTransaction من هنا
+  // ← Hint: القيد المالي الآن يُسجل مرة واحدة على مستوى الفاتورة (recordInvoiceTransaction)
+  // ← Hint: هذا يمنع إنشاء قيود متعددة لنفس الفاتورة
 
   return saleId;
 }

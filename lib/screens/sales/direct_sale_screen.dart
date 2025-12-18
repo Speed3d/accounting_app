@@ -12,6 +12,7 @@ import 'package:printing/printing.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../services/fiscal_year_service.dart';
+import '../../helpers/financial_integration_helper.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/helpers.dart';
 import '../../theme/app_colors.dart';
@@ -115,7 +116,7 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
         'FiscalYearID': activeFiscalYearId ?? 1, // ← Hint: إضافة السنة المالية
       });
 
-      // ✨ تسجيل كل مبيعة باستخدام الدالة الجديدة (مع قيد مالي تلقائي)
+      // ✨ تسجيل كل بند في الفاتورة (بدون قيود مالية)
       for (var item in _cartItems) {
         final product = item.product;
         final quantitySold = item.quantity;
@@ -143,6 +144,15 @@ class _DirectSaleScreenState extends State<DirectSaleScreen> {
           [quantitySold, product.productID],
         );
       }
+
+      // ← Hint: ✨ تسجيل قيد مالي واحد للفاتورة بأكملها (بدلاً من قيد لكل منتج)
+      await FinancialIntegrationHelper.recordInvoiceTransaction(
+        invoiceId: newInvoiceId,
+        customerId: cashCustomer.customerID!,
+        totalAmount: totalAmount,
+        invoiceDate: DateTime.now().toIso8601String(),
+        notes: 'فاتورة نقدية - ${_cartItems.length} ${_cartItems.length == 1 ? 'منتج' : 'منتجات'}',
+      );
 
       // ← Hint: ✅ تعطيل القفل التلقائي مؤقتاً (10 دقائق) قبل عرض PDF
       // ← Hint: السبب: عند فتح PDF خارجي، التطبيق ينتقل للخلفية
