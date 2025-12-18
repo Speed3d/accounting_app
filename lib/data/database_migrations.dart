@@ -702,6 +702,118 @@ static Future<void> migrateToV4(Database db) async {
   }
 
   // ==========================================================================
+  // Migration من v7 إلى v8
+  // ==========================================================================
+  /// ← Hint: التحديثات في v8:
+  /// 1. إضافة UPDATE trigger للسنوات المالية (تحديث عند تعديل قيد)
+  /// 2. إضافة 4 UPDATE triggers للموظفين (السلف، تسديد، مكافآت، رواتب)
+  /// 3. إصلاح منطق المرتجعات (في الكود - لا trigger)
+  static Future<void> migrateToV8(Database db) async {
+    debugPrint('🔄 بدء Migration من v7 إلى v8...');
+
+    try {
+      // ========================================================================
+      // 1️⃣ إضافة UPDATE Trigger للسنوات المالية
+      // ========================================================================
+
+      debugPrint('  ├─ إضافة UPDATE trigger للسنوات المالية...');
+
+      // ← Hint: عند تعديل مبلغ قيد → تحديث السنة المالية تلقائياً
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_fiscal_on_update
+        AFTER UPDATE OF Amount ON TB_Transactions
+        WHEN OLD.Amount != NEW.Amount
+        BEGIN
+          UPDATE TB_FiscalYears
+          SET
+            TotalIncome = (
+              SELECT COALESCE(SUM(Amount), 0)
+              FROM TB_Transactions
+              WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'in'
+            ),
+            TotalExpense = (
+              SELECT COALESCE(SUM(Amount), 0)
+              FROM TB_Transactions
+              WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'out'
+            )
+          WHERE FiscalYearID = NEW.FiscalYearID;
+
+          UPDATE TB_FiscalYears
+          SET
+            NetProfit = TotalIncome - TotalExpense,
+            ClosingBalance = OpeningBalance + (TotalIncome - TotalExpense)
+          WHERE FiscalYearID = NEW.FiscalYearID;
+        END;
+      ''');
+
+      debugPrint('  ├─ ✅ تم إضافة UPDATE trigger للسنوات المالية');
+
+      // ========================================================================
+      // 2️⃣ إضافة UPDATE Triggers للموظفين
+      // ========================================================================
+
+      debugPrint('  ├─ إضافة UPDATE triggers للموظفين...');
+
+      // Trigger: تعديل سلفة موظف
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_advance_transaction
+        AFTER UPDATE OF AdvanceAmount ON TB_Employee_Advances
+        WHEN OLD.AdvanceAmount != NEW.AdvanceAmount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.AdvanceAmount
+          WHERE ReferenceType = 'employee_advance' AND ReferenceID = NEW.AdvanceID;
+        END;
+      ''');
+
+      // Trigger: تعديل تسديد سلفة
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_repayment_transaction
+        AFTER UPDATE OF RepaymentAmount ON TB_Advance_Repayments
+        WHEN OLD.RepaymentAmount != NEW.RepaymentAmount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.RepaymentAmount
+          WHERE ReferenceType = 'advance_repayment' AND ReferenceID = NEW.RepaymentID;
+        END;
+      ''');
+
+      // Trigger: تعديل مكافأة
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_bonus_transaction
+        AFTER UPDATE OF BonusAmount ON TB_Employee_Bonuses
+        WHEN OLD.BonusAmount != NEW.BonusAmount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.BonusAmount
+          WHERE ReferenceType = 'bonus' AND ReferenceID = NEW.BonusID;
+        END;
+      ''');
+
+      // Trigger: تعديل راتب
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_payroll_transaction
+        AFTER UPDATE OF NetSalary ON TB_Payroll
+        WHEN OLD.NetSalary != NEW.NetSalary
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.NetSalary
+          WHERE ReferenceType = 'payroll' AND ReferenceID = NEW.PayrollID;
+        END;
+      ''');
+
+      debugPrint('  ├─ ✅ تم إضافة 4 UPDATE triggers للموظفين');
+
+      debugPrint('✅ Migration إلى v8 اكتمل بنجاح - الآن التعديل يحدّث القيود والسنوات المالية تلقائياً! 🎉');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v8: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
   // دالة مساعدة: التحقق من وجود عمود في جدول
   // ==========================================================================
   static Future<bool> columnExists(

@@ -38,10 +38,12 @@ class DatabaseHelper {
   // Version 4: ✅ نظام الوحدات والتصنيفات للمنتجات
   // Version 5: ✅ نظام تسديدات السلف (TB_Advance_Repayments)
   // Version 7: 🔧 إصلاحات DELETE/UPDATE triggers + منطق البيع النقدي/الآجل
+  // Version 8: 🔧 UPDATE triggers للسنوات المالية والموظفين + إصلاح المرتجعات
   // ← Hint: v5 يضيف جدول تسديدات السلف لتسجيل عمليات التسديد الكاملة أو الجزئية
   // ← Hint: v6 يحول التطبيق إلى نظام محاسبي احترافي مع قيود مالية موحدة وإقفال سنوات
   // ← Hint: v7 يضيف triggers للحذف والتعديل التلقائي + إصلاح منطق البيع (نقدي vs آجل)
-  static const _databaseVersion = 7;
+  // ← Hint: v8 يضيف UPDATE trigger للسنوات المالية + 4 triggers للموظفين + إصلاح منطق المرتجعات
+  static const _databaseVersion = 8;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -813,6 +815,35 @@ class DatabaseHelper {
       END;
     ''');
 
+    // ← Hint: Trigger عند تعديل مبلغ قيد - تحديث السنة المالية تلقائياً
+    // ← Hint: هذا يضمن تحديث أرصدة السنة المالية عند تعديل أي قيد
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_fiscal_on_update
+      AFTER UPDATE OF Amount ON TB_Transactions
+      WHEN OLD.Amount != NEW.Amount
+      BEGIN
+        UPDATE TB_FiscalYears
+        SET
+          TotalIncome = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'in'
+          ),
+          TotalExpense = (
+            SELECT COALESCE(SUM(Amount), 0)
+            FROM TB_Transactions
+            WHERE FiscalYearID = NEW.FiscalYearID AND Direction = 'out'
+          )
+        WHERE FiscalYearID = NEW.FiscalYearID;
+
+        UPDATE TB_FiscalYears
+        SET
+          NetProfit = TotalIncome - TotalExpense,
+          ClosingBalance = OpeningBalance + (TotalIncome - TotalExpense)
+        WHERE FiscalYearID = NEW.FiscalYearID;
+      END;
+    ''');
+
     // ← Hint: Trigger عند حذف فاتورة - حذف القيد المالي المرتبط
     await db.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_delete_invoice_transaction
@@ -916,6 +947,58 @@ class DatabaseHelper {
         UPDATE TB_Transactions
         SET Amount = NEW.Amount
         WHERE ReferenceType = 'expense' AND ReferenceID = NEW.ExpenseID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ سلفة موظف - تحديث القيد المالي تلقائياً
+    // ← Hint: يضمن تحديث القيود والتقارير المالية عند تعديل السلفة
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_advance_transaction
+      AFTER UPDATE OF AdvanceAmount ON TB_Employee_Advances
+      WHEN OLD.AdvanceAmount != NEW.AdvanceAmount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.AdvanceAmount
+        WHERE ReferenceType = 'employee_advance' AND ReferenceID = NEW.AdvanceID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ تسديد سلفة - تحديث القيد المالي تلقائياً
+    // ← Hint: يضمن تحديث القيود والتقارير المالية عند تعديل التسديد
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_repayment_transaction
+      AFTER UPDATE OF RepaymentAmount ON TB_Advance_Repayments
+      WHEN OLD.RepaymentAmount != NEW.RepaymentAmount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.RepaymentAmount
+        WHERE ReferenceType = 'advance_repayment' AND ReferenceID = NEW.RepaymentID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ مكافأة - تحديث القيد المالي تلقائياً
+    // ← Hint: يضمن تحديث القيود والتقارير المالية عند تعديل المكافأة
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_bonus_transaction
+      AFTER UPDATE OF BonusAmount ON TB_Employee_Bonuses
+      WHEN OLD.BonusAmount != NEW.BonusAmount
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.BonusAmount
+        WHERE ReferenceType = 'bonus' AND ReferenceID = NEW.BonusID;
+      END;
+    ''');
+
+    // ← Hint: Trigger عند تعديل مبلغ راتب - تحديث القيد المالي تلقائياً
+    // ← Hint: يضمن تحديث القيود والتقارير المالية عند تعديل الراتب
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_payroll_transaction
+      AFTER UPDATE OF NetSalary ON TB_Payroll
+      WHEN OLD.NetSalary != NEW.NetSalary
+      BEGIN
+        UPDATE TB_Transactions
+        SET Amount = NEW.NetSalary
+        WHERE ReferenceType = 'payroll' AND ReferenceID = NEW.PayrollID;
       END;
     ''');
 
@@ -1069,6 +1152,13 @@ class DatabaseHelper {
       debugPrint('📦 تطبيق Migration إلى v7 (DELETE/UPDATE triggers)...');
       await DatabaseMigrations.migrateToV7(db);
       debugPrint('✅ تم تطبيق Migration إلى v7 بنجاح - الحذف والتعديل يعملان تلقائياً! 🎉');
+    }
+
+    // ✅ ترقية من الإصدار 7 إلى 8: إصلاحات UPDATE للسنوات المالية والموظفين
+    if (oldVersion < 8) {
+      debugPrint('📦 تطبيق Migration إلى v8 (UPDATE triggers للسنوات والموظفين)...');
+      await DatabaseMigrations.migrateToV8(db);
+      debugPrint('✅ تم تطبيق Migration إلى v8 بنجاح - التعديل يحدّث القيود والسنوات تلقائياً! 🎉');
     }
 
   }
