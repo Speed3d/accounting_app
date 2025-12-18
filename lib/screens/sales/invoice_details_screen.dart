@@ -167,6 +167,129 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
     }
   }
 
+  /// ✨ دالة معالجة إلغاء الفاتورة بالكامل (جميع البنود)
+  /// ← Hint: تستدعي voidInvoice من DatabaseHelper لإرجاع جميع البنود مرة واحدة
+  Future<void> _handleCancelAllItems(AppLocalizations l10n) async {
+    // عرض مربع حوار التأكيد
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.error,
+              size: 28,
+            ),
+            const SizedBox(width: AppConstants.spacingMd),
+            const Expanded(child: Text('تأكيد إلغاء الفاتورة')),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('هل أنت متأكد من إلغاء الفاتورة بالكامل؟'),
+            const SizedBox(height: AppConstants.spacingMd),
+            // صندوق التحذير
+            Container(
+              padding: AppConstants.paddingMd,
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+                border: Border.all(
+                  color: AppColors.error.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  const Expanded(
+                    child: Text(
+                      'سيتم إرجاع جميع المنتجات إلى المخزن وإلغاء الفاتورة بشكل نهائي',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cancel_outlined, size: 18),
+                SizedBox(width: AppConstants.spacingXs),
+                Text('إلغاء الفاتورة'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // تنفيذ عملية الإلغاء
+    try {
+      await dbHelper.voidInvoice(widget.invoiceId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: AppConstants.spacingSm),
+                Expanded(child: Text('تم إلغاء الفاتورة بالكامل بنجاح')),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        // تحديث البيانات وإغلاق الشاشة
+        setState(() {
+          _hasChanged = true;
+          _salesFuture = dbHelper.getSalesForInvoice(widget.invoiceId);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: AppConstants.spacingSm),
+                Expanded(child: Text(l10n.errorOccurred(e.toString()))),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -345,6 +468,20 @@ class _InvoiceDetailsScreenState extends State<InvoiceDetailsScreen> {
             type: StatusType.info,
             small: true,
           ),
+
+          // ← Hint: ✨ زر "إلغاء الكل" (يظهر فقط إذا كانت هناك بنود غير مرجعة)
+          if (totalAmount > Decimal.zero) ...[
+            const SizedBox(height: AppConstants.spacingMd),
+            OutlinedButton.icon(
+              onPressed: () => _handleCancelAllItems(l10n),
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('إلغاء الفاتورة بالكامل'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: BorderSide(color: AppColors.error.withOpacity(0.5)),
+              ),
+            ),
+          ],
         ],
       ),
     );

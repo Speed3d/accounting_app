@@ -1588,7 +1588,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   if (value == null || value.isEmpty) {
                     return 'الرجاء إدخال المبلغ';
                   }
-                  final amount = Decimal.tryParse(value);
+                  // ← Hint: ✨ تحويل الأرقام العربية إلى إنجليزية قبل التحليل
+                  final normalizedValue = convertArabicNumbersToEnglish(value);
+                  final amount = Decimal.tryParse(normalizedValue);
                   if (amount == null || amount <= Decimal.zero) {
                     return 'الرجاء إدخال مبلغ صحيح';
                   }
@@ -1612,7 +1614,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             ),
             onPressed: () {
               if (formKey.currentState!.validate()) {
-                final amount = Decimal.parse(amountController.text);
+                // ← Hint: ✨ تحويل الأرقام العربية إلى إنجليزية قبل التحليل
+                final normalizedValue = convertArabicNumbersToEnglish(amountController.text);
+                final amount = Decimal.parse(normalizedValue);
                 Navigator.pop(context);
                 _processRepayment(advance, amount, l10n);
               }
