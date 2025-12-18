@@ -39,11 +39,13 @@ class DatabaseHelper {
   // Version 5: ✅ نظام تسديدات السلف (TB_Advance_Repayments)
   // Version 7: 🔧 إصلاحات DELETE/UPDATE triggers + منطق البيع النقدي/الآجل
   // Version 8: 🔧 UPDATE triggers للسنوات المالية والموظفين + إصلاح المرتجعات
+  // Version 9: 🔧 إصلاح ReferenceType للسلف في triggers (employee_advance → advance)
   // ← Hint: v5 يضيف جدول تسديدات السلف لتسجيل عمليات التسديد الكاملة أو الجزئية
   // ← Hint: v6 يحول التطبيق إلى نظام محاسبي احترافي مع قيود مالية موحدة وإقفال سنوات
   // ← Hint: v7 يضيف triggers للحذف والتعديل التلقائي + إصلاح منطق البيع (نقدي vs آجل)
   // ← Hint: v8 يضيف UPDATE trigger للسنوات المالية + 4 triggers للموظفين + إصلاح منطق المرتجعات
-  static const _databaseVersion = 8;
+  // ← Hint: v9 يصلح عدم التطابق في ReferenceType للسلف ليعمل التعديل والحذف بشكل صحيح
+  static const _databaseVersion = 9;
 
     // --- ✅ تعريف الاسم الرمزي الثابت للزبون النقدي ---
   static const String cashCustomerInternalName = '_CASH_CUSTOMER_';
@@ -880,7 +882,7 @@ class DatabaseHelper {
       BEFORE DELETE ON TB_Employee_Advances
       BEGIN
         DELETE FROM TB_Transactions
-        WHERE ReferenceType = 'employee_advance' AND ReferenceID = OLD.AdvanceID;
+        WHERE ReferenceType = 'advance' AND ReferenceID = OLD.AdvanceID;
       END;
     ''');
 
@@ -959,7 +961,7 @@ class DatabaseHelper {
       BEGIN
         UPDATE TB_Transactions
         SET Amount = NEW.AdvanceAmount
-        WHERE ReferenceType = 'employee_advance' AND ReferenceID = NEW.AdvanceID;
+        WHERE ReferenceType = 'advance' AND ReferenceID = NEW.AdvanceID;
       END;
     ''');
 
@@ -1159,6 +1161,13 @@ class DatabaseHelper {
       debugPrint('📦 تطبيق Migration إلى v8 (UPDATE triggers للسنوات والموظفين)...');
       await DatabaseMigrations.migrateToV8(db);
       debugPrint('✅ تم تطبيق Migration إلى v8 بنجاح - التعديل يحدّث القيود والسنوات تلقائياً! 🎉');
+    }
+
+    // ✅ ترقية من الإصدار 8 إلى 9: إصلاح ReferenceType للسلف
+    if (oldVersion < 9) {
+      debugPrint('📦 تطبيق Migration إلى v9 (إصلاح ReferenceType للسلف)...');
+      await DatabaseMigrations.migrateToV9(db);
+      debugPrint('✅ تم تطبيق Migration إلى v9 بنجاح - تعديل وحذف السلف يعمل الآن! 🎉');
     }
 
   }

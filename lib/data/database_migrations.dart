@@ -814,6 +814,61 @@ static Future<void> migrateToV4(Database db) async {
   }
 
   // ==========================================================================
+  // 🔄 Migration من v8 إلى v9
+  // ==========================================================================
+
+  /// ← Hint: التحديثات في v9:
+  /// 1. إصلاح ReferenceType في triggers السلف من 'employee_advance' إلى 'advance'
+  /// 2. إعادة إنشاء UPDATE و DELETE triggers للسلف مع ReferenceType الصحيح
+  /// 3. هذا يضمن أن تعديل وحذف السلف يعمل بشكل صحيح
+  static Future<void> migrateToV9(Database db) async {
+    debugPrint('🔄 بدء Migration من v8 إلى v9...');
+
+    try {
+      // 1️⃣ حذف الـ triggers القديمة (بـ ReferenceType خاطئ)
+      debugPrint('  ├─ حذف triggers السلف القديمة...');
+
+      await db.execute('DROP TRIGGER IF EXISTS trg_delete_advance_transaction');
+      await db.execute('DROP TRIGGER IF EXISTS trg_update_advance_transaction');
+
+      // 2️⃣ إعادة إنشاء DELETE trigger مع ReferenceType الصحيح
+      debugPrint('  ├─ إعادة إنشاء DELETE trigger للسلف...');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_delete_advance_transaction
+        BEFORE DELETE ON TB_Employee_Advances
+        BEGIN
+          DELETE FROM TB_Transactions
+          WHERE ReferenceType = 'advance' AND ReferenceID = OLD.AdvanceID;
+        END;
+      ''');
+
+      // 3️⃣ إعادة إنشاء UPDATE trigger مع ReferenceType الصحيح
+      debugPrint('  ├─ إعادة إنشاء UPDATE trigger للسلف...');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_update_advance_transaction
+        AFTER UPDATE OF AdvanceAmount ON TB_Employee_Advances
+        WHEN OLD.AdvanceAmount != NEW.AdvanceAmount
+        BEGIN
+          UPDATE TB_Transactions
+          SET Amount = NEW.AdvanceAmount
+          WHERE ReferenceType = 'advance' AND ReferenceID = NEW.AdvanceID;
+        END;
+      ''');
+
+      debugPrint('  ├─ ✅ تم إصلاح triggers السلف');
+
+      debugPrint('✅ Migration إلى v9 اكتمل بنجاح - الآن تعديل وحذف السلف يعمل بشكل صحيح! 🎉');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ خطأ في Migration إلى v9: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ==========================================================================
   // دالة مساعدة: التحقق من وجود عمود في جدول
   // ==========================================================================
   static Future<bool> columnExists(
