@@ -654,6 +654,13 @@ class TransactionService {
         endDate: endDate,
       );
 
+      final supplierWithdrawalsTotal = await _getTotalByType(
+        TransactionType.supplierWithdrawal,
+        fiscalYearId: targetFiscalYearId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
       final returnsTotal = await _getTotalByType(
         TransactionType.saleReturn,
         fiscalYearId: targetFiscalYearId,
@@ -678,6 +685,7 @@ class TransactionService {
           'salaries': salariesTotal.toDouble(),
           'advances': advancesTotal.toDouble(),
           'bonuses': bonusesTotal.toDouble(),
+          'supplierWithdrawals': supplierWithdrawalsTotal.toDouble(),
           'returns': returnsTotal.toDouble(),
         },
       };

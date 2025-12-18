@@ -422,6 +422,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             ),
             const SizedBox(height: 8),
             _buildBreakdownItem(
+              'سحوبات الشركاء',
+              Decimal.parse(breakdown['supplierWithdrawals'].toString()),
+              Icons.account_balance,
+              Colors.red,
+            ),
+            const SizedBox(height: 8),
+            _buildBreakdownItem(
               'المرتجعات',
               Decimal.parse(breakdown['returns'].toString()),
               Icons.undo,
