@@ -14,6 +14,7 @@ import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
 import 'manage_categories_units_screen.dart';
+import 'inactive_products_screen.dart'; // ✅ Hint: شاشة المنتجات المعطلة
 
 // ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
 
@@ -40,10 +41,15 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   List<Product> _filteredProducts = [];
   String? _selectedFilter; // null = الكل، 'low' = منخفضة
 
+  // ✅ Hint: فلتر التصنيفات
+  List<ProductCategory> _categories = [];
+  ProductCategory? _selectedCategory; // null = الكل
+
   // ============= دورة الحياة =============
   @override
   void initState() {
     super.initState();
+    _loadCategories();
     _reloadProducts();
   }
 
@@ -51,6 +57,18 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// ✅ Hint: تحميل التصنيفات
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await dbHelper.getProductCategories();
+      setState(() {
+        _categories = categories;
+      });
+    } catch (e) {
+      debugPrint('❌ خطأ في تحميل التصنيفات: $e');
+    }
   }
 
   /// Hint: تحميل قائمة المنتجات
@@ -62,7 +80,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     try {
       final products = await _productsFuture;
       setState(() {
-        _allProducts = products;
+        // ✅ Hint: فلترة المنتجات لعرض فقط التي لديها كمية > 0
+        _allProducts = products.where((product) => product.quantity > 0).toList();
         _applyFilter();
       });
     } catch (e) {
@@ -70,16 +89,27 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// Hint: تطبيق الفلتر المحدد
+  /// ✅ Hint: تطبيق الفلتر المحدد (مع دعم التصنيفات)
   void _applyFilter() {
-    if (_selectedFilter == null) {
-      _filteredProducts = _allProducts;
-    } else if (_selectedFilter == 'low') {
-      _filteredProducts = _allProducts.where((product) {
+    List<Product> result = _allProducts;
+
+    // 1️⃣ فلترة حسب التصنيف
+    if (_selectedCategory != null) {
+      result = result.where((product) {
+        return product.categoryID == _selectedCategory!.categoryID;
+      }).toList();
+    }
+
+    // 2️⃣ فلترة حسب الكمية المنخفضة
+    if (_selectedFilter == 'low') {
+      result = result.where((product) {
         return product.quantity < 5;
       }).toList();
     }
-    
+
+    _filteredProducts = result;
+
+    // 3️⃣ فلترة حسب البحث
     if (_searchController.text.isNotEmpty) {
       _filterProducts(_searchController.text);
     }
@@ -218,6 +248,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           ],
         ),
         actions: [
+          // ✅ Hint: زر المنتجات المعطلة (كمية = 0)
+          IconButton(
+            icon: const Icon(Icons.inventory_outlined),
+            tooltip: 'المنتجات المعطلة',
+            onPressed: _navigateToInactiveProducts,
+          ),
+
           // ← Hint: زر إدارة التصنيفات والوحدات
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -290,6 +327,8 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           return Column(
             children: [
               _buildSearchBar(l10n),
+              // ✅ Hint: فلتر التصنيفات
+              if (_categories.isNotEmpty) _buildCategoryFilter(),
               _buildQuickStats(l10n, isDark),
               Expanded(
                 child: _filteredProducts.isEmpty
@@ -333,6 +372,62 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 )
               : null,
         ),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // 🏷️ ✅ Hint: بناء فلتر التصنيفات
+  // ===========================================================================
+  Widget _buildCategoryFilter() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.only(
+        bottom: AppConstants.spacingSm,
+      ),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd),
+        children: [
+          // زر "الكل"
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: FilterChip(
+              label: Text(l10n.all ?? 'الكل'),
+              selected: _selectedCategory == null,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() {
+                    _selectedCategory = null;
+                    _applyFilter();
+                  });
+                }
+              },
+            ),
+          ),
+
+          // أزرار التصنيفات
+          ..._categories.map((category) {
+            final isSelected = _selectedCategory?.categoryID == category.categoryID;
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FilterChip(
+                label: Text(category.getLocalizedName(languageCode)),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    _selectedCategory = selected ? category : null;
+                    _applyFilter();
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
@@ -859,6 +954,20 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     );
     // ← Hint: إعادة تحميل المنتجات بعد تعديل التصنيفات/الوحدات
     _reloadProducts();
+  }
+
+  /// ✅ Hint: الانتقال لصفحة المنتجات المعطلة (كمية = 0)
+  Future<void> _navigateToInactiveProducts() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => const InactiveProductsScreen(),
+      ),
+    );
+
+    // ← Hint: إعادة تحميل القائمة بعد استعادة أي منتج
+    if (result == true) {
+      _reloadProducts();
+    }
   }
 
   Future<void> _navigateToAddProduct() async {

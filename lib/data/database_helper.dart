@@ -1663,6 +1663,34 @@ class DatabaseHelper {
     return suppliers;
   }
 
+  /// ✅ Hint: جلب مورد محدد بواسطة المعرف
+  Future<Supplier?> getSupplierById(int supplierID) async {
+    try {
+      final db = await instance.database;
+      final supplierMaps = await db.query(
+        'TB_Suppliers',
+        where: 'SupplierID = ? AND IsActive = ?',
+        whereArgs: [supplierID, 1],
+      );
+
+      if (supplierMaps.isEmpty) {
+        return null;
+      }
+
+      final supplier = Supplier.fromMap(supplierMaps.first);
+
+      // جلب الشركاء إذا كان النوع "شراكة"
+      if (supplier.supplierType == 'شراكة') {
+        supplier.partners = await getPartnersForSupplier(supplier.supplierID!);
+      }
+
+      return supplier;
+    } catch (e) {
+      debugPrint('❌ خطأ في جلب المورد: $e');
+      rethrow;
+    }
+  }
+
   /// دالة لأرشفة مورد (جعله غير نشط).
   /// 
   /// **المعامل:**
@@ -1771,6 +1799,53 @@ class DatabaseHelper {
       ORDER BY P.ProductName
     ''');
     return result.map((map) => Product.fromMap(map)).toList();
+  }
+
+  /// ✅ Hint: جلب المنتجات المعطلة (كمية = 0)
+  Future<List<Product>> getInactiveProducts() async {
+    try {
+      final db = await instance.database;
+      final result = await db.rawQuery('''
+        SELECT
+          P.*,
+          S.SupplierName,
+          U.UnitNameAr as UnitName,
+          C.CategoryNameAr as CategoryName
+        FROM Store_Products P
+        LEFT JOIN TB_Suppliers S ON P.SupplierID = S.SupplierID
+        LEFT JOIN TB_ProductUnit U ON P.UnitID = U.UnitID
+        LEFT JOIN TB_ProductCategory C ON P.CategoryID = C.CategoryID
+        WHERE P.IsActive = 1 AND P.Quantity = 0
+        ORDER BY P.ProductName
+      ''');
+      return result.map((map) => Product.fromMap(map)).toList();
+    } catch (e) {
+      debugPrint('❌ خطأ في جلب المنتجات المعطلة: $e');
+      rethrow;
+    }
+  }
+
+  /// ✅ Hint: استعادة منتج (تحديث الكمية من 0 إلى قيمة جديدة)
+  Future<int> reactivateProduct(int productID, int newQuantity) async {
+    try {
+      if (newQuantity <= 0) {
+        throw Exception('الكمية يجب أن تكون أكبر من صفر');
+      }
+
+      final db = await instance.database;
+      final result = await db.update(
+        'Store_Products',
+        {'Quantity': newQuantity},
+        where: 'ProductID = ? AND IsActive = 1',
+        whereArgs: [productID],
+      );
+
+      debugPrint('✅ تم استعادة المنتج $productID بكمية $newQuantity');
+      return result;
+    } catch (e) {
+      debugPrint('❌ خطأ في استعادة المنتج: $e');
+      rethrow;
+    }
   }
 
   Future<int> insertCustomer(Customer customer) async => await (await instance.database).insert('TB_Customer', customer.toMap());

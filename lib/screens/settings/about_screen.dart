@@ -232,8 +232,8 @@ class _AboutScreenState extends State<AboutScreen> {
               borderRadius: AppConstants.borderRadiusFull,
             ),
             child: Text(
-              // 'الإصدار ${_version ?? '1.0.0'} (${_buildNumber ?? '1'})',
-              l10n.appVersion,
+              // ✅ Hint: رقم الإصدار التلقائي من pubspec.yaml
+              'الإصدار ${_version ?? '1.0.0'}+${_buildNumber ?? '1'}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDark ? AppColors.primaryDark : AppColors.primaryLight,

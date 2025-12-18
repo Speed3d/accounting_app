@@ -900,58 +900,38 @@ class _AddEditSupplierScreenState extends State<AddEditSupplierScreen> {
         );
         return;
       }
-      
+
+      // ✅ Hint: حساب مجموع نسب الشركاء
       final totalPercentage = _partners.fold<Decimal>(
        Decimal.zero,
        (sum, partner) => sum + partner.sharePercentage,
        );
-      
-      if (totalPercentage < Decimal.fromInt(100)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.partnerShareTotalExceeds100(totalPercentage.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
+
+      // ✅ Hint: التحقق من أن النسبة = 100% بالضبط (لا أكثر ولا أقل)
+      if (totalPercentage != Decimal.fromInt(100)) {
+        // ✅ Hint: تحديد نوع الخطأ (أقل أو أكثر من 100)
+        final isLessThan100 = totalPercentage < Decimal.fromInt(100);
+        final errorMessage = isLessThan100
+            ? 'مجموع نسب الشركاء ${totalPercentage.toStringAsFixed(1)}% أقل من 100%.\nيجب أن يكون المجموع 100% بالضبط.'
+            : 'مجموع نسب الشركاء ${totalPercentage.toStringAsFixed(1)}% أكبر من 100%.\nيجب أن يكون المجموع 100% بالضبط.';
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: AppConstants.spacingSm),
+                  Expanded(child: Text(errorMessage)),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
         return;
-      }
-      
-      
-      // تحذير إذا كانت النسب أقل من 100%
-      if (totalPercentage > Decimal.fromInt(100)) {
-        
-        final proceed = await showDialog<bool>(
-          
-          context: context,
-          builder: (context) => AlertDialog(
-            icon: const Icon(
-              Icons.warning_outlined,
-              size: 48,
-              color: AppColors.warning,
-            ),
-            title: Text(l10n.warning),
-            content: Text(
-              l10n.partnerShareWarning(totalPercentage.toStringAsFixed(1))
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(l10n.cancel),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.warning,
-                  foregroundColor: Colors.white,
-                ),
-                
-                child: Text(l10n.continueButton),
-              ),
-            ],
-          ),
-        );
-        
-        if (proceed != true) return;
       }
     }
     

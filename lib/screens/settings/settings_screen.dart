@@ -993,36 +993,41 @@ iOS: [Coming soon on App Store]
     final l10n = AppLocalizations.of(context)!;
 
     return Center(
-      child: Column(
-        children: [
-          Icon(
-            Icons.code,
-            size: 32,
-            color: isDark
-              ? AppColors.textHintDark
-              : AppColors.textHintLight,
-          ),
-          const SizedBox(height: AppConstants.spacingSm),
-          Text(
-            l10n.appTitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppConstants.spacingXs),
-          const SizedBox(height: AppConstants.spacingXs),
-          Text(
-            l10n.appVersion,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: isDark
-                ? AppColors.textHintDark
-                : AppColors.textHintLight,
-            ),
-          ),
-        ],
+      child: FutureBuilder<PackageInfo>(
+        future: PackageInfo.fromPlatform(),
+        builder: (context, snapshot) {
+          // ✅ Hint: رقم الإصدار التلقائي من pubspec.yaml
+          final version = snapshot.hasData
+              ? 'الإصدار ${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+              : l10n.appVersion; // fallback
+
+          return Column(
+            children: [
+              Icon(
+                Icons.code,
+                size: 32,
+                color: isDark ? AppColors.textHintDark : AppColors.textHintLight,
+              ),
+              const SizedBox(height: AppConstants.spacingSm),
+              Text(
+                l10n.appTitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppConstants.spacingXs),
+              Text(
+                version,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: isDark ? AppColors.textHintDark : AppColors.textHintLight,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

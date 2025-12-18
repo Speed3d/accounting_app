@@ -12,6 +12,9 @@ import '../../theme/app_constants.dart';
 import '../../utils/helpers.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/loading_state.dart';
+import '../fiscal_years/financial_report_screen.dart'; // ✅ Hint: التقرير المالي
+import '../fiscal_years/fiscal_years_screen.dart'; // ✅ Hint: السنوات المالية
+import '../fiscal_years/transactions_screen.dart'; // ✅ Hint: المعاملات المالية
 
 // ← Hint: تم إزالة AuthService - لا حاجة له في Dashboard
 
@@ -170,6 +173,11 @@ Future<void> _loadDashboardData() async {
                 children: [
                   const SizedBox(height: AppConstants.spacingMd),
 
+                  // ============= 🆕 القسم 0: بطاقات سريعة للشاشات الرئيسية =============
+                  _buildQuickAccessSection(l10n, isDark),
+
+                  const SizedBox(height: AppConstants.spacingXl),
+
                   // ============= القسم 1: بطاقات الإحصائيات السريعة =============
                   _buildQuickStatsSection(l10n, isDark),
 
@@ -212,6 +220,144 @@ Future<void> _loadDashboardData() async {
                 ],
               ),
             ),
+    );
+  }
+
+  // ==========================================================================
+  // 🆕 القسم 0: بطاقات سريعة للوصول للشاشات الرئيسية
+  // ==========================================================================
+
+  Widget _buildQuickAccessSection(AppLocalizations l10n, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'الوصول السريع',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: AppConstants.spacingMd),
+
+        Row(
+          children: [
+            // بطاقة التقرير المالي
+            Expanded(
+              child: _buildQuickAccessCard(
+                title: 'التقرير المالي',
+                icon: Icons.assessment_outlined,
+                color: AppColors.info,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FinancialReportScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingSm),
+
+            // بطاقة السنوات المالية
+            Expanded(
+              child: _buildQuickAccessCard(
+                title: 'السنوات المالية',
+                icon: Icons.calendar_today_outlined,
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FiscalYearsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingSm),
+
+            // بطاقة المعاملات المالية
+            Expanded(
+              child: _buildQuickAccessCard(
+                title: 'المعاملات',
+                icon: Icons.receipt_long_outlined,
+                color: AppColors.primaryLight,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TransactionsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 🃏 بناء بطاقة وصول سريع
+  Widget _buildQuickAccessCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppConstants.borderRadiusMd,
+      child: Container(
+        padding: const EdgeInsets.all(AppConstants.spacingMd),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.1),
+              color.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: AppConstants.borderRadiusMd,
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppConstants.spacingSm),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: AppConstants.spacingSm),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
