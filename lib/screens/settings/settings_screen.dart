@@ -61,7 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ============================================================
           _buildSectionHeader(
             context,
-            title: 'الحساب',
+            title: l10n.accountuser,
             icon: Icons.person_outline,
             isDark: isDark,
           ),
@@ -69,8 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _SettingsCard(
             child: _SettingsLinkTile(
-              title: 'الملف الشخصي',
-              subtitle: 'تعديل الاسم وكلمة المرور',
+              title: l10n.profileuser,
+              subtitle: l10n.editNameAndPassword,
               icon: Icons.badge_outlined,
               iconColor: AppColors.primaryLight,
               onTap: () {
@@ -279,8 +279,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ← Hint: 🆕 دليل التطبيق - شرح شامل لجميع الميزات
                 _SettingsLinkTile(
-                  title: 'دليل التطبيق',
-                  subtitle: 'شرح شامل لجميع ميزات التطبيق',
+                  title: l10n.appGuide,
+                  subtitle: l10n.appGuideDescription,
                   icon: Icons.menu_book,
                   iconColor: AppColors.primaryLight,
                   onTap: () {
@@ -297,8 +297,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ← Hint: 🆕 مشاركة التطبيق مع الأصدقاء
                 _SettingsLinkTile(
-                  title: 'مشاركة التطبيق',
-                  subtitle: 'شارك التطبيق مع أصدقائك',
+                  title: l10n.shareApp,
+                  subtitle: l10n.shareAppDescription,
                   icon: Icons.share,
                   iconColor: AppColors.success,
                   onTap: () => _shareApp(context),
@@ -813,8 +813,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               if (isEmulatorError) ...[
                 const SizedBox(height: 4),
-                const Text(
-                  'يمكنك تجربة الميزة على جهاز حقيقي',
+                 Text(
+                  l10n.youcantrythe,
                   style: TextStyle(fontSize: 12),
                 ),
               ],
@@ -998,7 +998,8 @@ iOS: [Coming soon on App Store]
         builder: (context, snapshot) {
           // ✅ Hint: رقم الإصدار التلقائي من pubspec.yaml
           final version = snapshot.hasData
-              ? 'الإصدار ${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+              // ? 'الإصدار ${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+              ? '${snapshot.data!.version}+${snapshot.data!.buildNumber}'
               : l10n.appVersion; // fallback
 
           return Column(

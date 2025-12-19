@@ -2861,7 +2861,7 @@ abstract class AppLocalizations {
   /// No description provided for @appVersion.
   ///
   /// In en, this message translates to:
-  /// **'Version 1.0.0'**
+  /// **'Version'**
   String get appVersion;
 
   /// No description provided for @loading.
@@ -5959,6 +5959,582 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details'**
   String get details;
+
+  /// No description provided for @register_screen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Account'**
+  String get register_screen_title;
+
+  /// No description provided for @register_screen_icon_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Account'**
+  String get register_screen_icon_label;
+
+  /// No description provided for @register_full_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get register_full_name_label;
+
+  /// No description provided for @register_full_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'John Doe'**
+  String get register_full_name_hint;
+
+  /// No description provided for @register_email_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get register_email_label;
+
+  /// No description provided for @register_email_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'example@company.com'**
+  String get register_email_hint;
+
+  /// No description provided for @register_password_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get register_password_label;
+
+  /// No description provided for @register_password_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'••••••••'**
+  String get register_password_hint;
+
+  /// No description provided for @register_confirm_password_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get register_confirm_password_label;
+
+  /// No description provided for @register_confirm_password_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'••••••••'**
+  String get register_confirm_password_hint;
+
+  /// No description provided for @register_button_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get register_button_text;
+
+  /// No description provided for @register_divider_text.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get register_divider_text;
+
+  /// No description provided for @register_have_account_button.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an account - Sign In'**
+  String get register_have_account_button;
+
+  /// No description provided for @register_validation_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get register_validation_required;
+
+  /// No description provided for @register_validation_email_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid format'**
+  String get register_validation_email_invalid;
+
+  /// No description provided for @register_validation_password_min.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 6 characters'**
+  String get register_validation_password_min;
+
+  /// No description provided for @register_validation_password_mismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords don\'t match'**
+  String get register_validation_password_mismatch;
+
+  /// No description provided for @register_success_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get register_success_dialog_title;
+
+  /// No description provided for @register_success_auto_activated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created successfully!\n\n✅ Trial subscription activated for 14 days.\n\nYou will be redirected to the main screen now.'**
+  String get register_success_auto_activated;
+
+  /// No description provided for @register_success_manual_activation.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created successfully!\n\nPlease contact the developer to activate your subscription.\n\nYou will be redirected to the main screen now.'**
+  String get register_success_manual_activation;
+
+  /// No description provided for @register_success_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Now'**
+  String get register_success_button;
+
+  /// No description provided for @register_error_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get register_error_dialog_title;
+
+  /// No description provided for @register_error_email_in_use.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already in use'**
+  String get register_error_email_in_use;
+
+  /// No description provided for @register_error_invalid_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get register_error_invalid_email;
+
+  /// No description provided for @register_error_weak_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak'**
+  String get register_error_weak_password;
+
+  /// No description provided for @register_error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection error'**
+  String get register_error_network;
+
+  /// No description provided for @register_error_general.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration error occurred'**
+  String get register_error_general;
+
+  /// No description provided for @register_error_button.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get register_error_button;
+
+  /// No description provided for @login_screen_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get login_screen_title;
+
+  /// No description provided for @login_welcome_back.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get login_welcome_back;
+
+  /// No description provided for @login_email_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get login_email_label;
+
+  /// No description provided for @login_email_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'example@company.com'**
+  String get login_email_hint;
+
+  /// No description provided for @login_password_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get login_password_label;
+
+  /// No description provided for @login_password_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'••••••••'**
+  String get login_password_hint;
+
+  /// No description provided for @login_forgot_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password'**
+  String get login_forgot_password;
+
+  /// No description provided for @login_button_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get login_button_text;
+
+  /// No description provided for @login_divider_text.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get login_divider_text;
+
+  /// No description provided for @login_no_account_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account - Sign Up'**
+  String get login_no_account_button;
+
+  /// No description provided for @login_validation_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get login_validation_required;
+
+  /// No description provided for @login_validation_email_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid format'**
+  String get login_validation_email_invalid;
+
+  /// No description provided for @login_error_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get login_error_dialog_title;
+
+  /// No description provided for @login_error_user_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email'**
+  String get login_error_user_not_found;
+
+  /// No description provided for @login_error_wrong_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password'**
+  String get login_error_wrong_password;
+
+  /// No description provided for @login_error_invalid_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get login_error_invalid_email;
+
+  /// No description provided for @login_error_user_disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is disabled'**
+  String get login_error_user_disabled;
+
+  /// No description provided for @login_error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection error'**
+  String get login_error_network;
+
+  /// No description provided for @login_error_too_many_requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts - try later'**
+  String get login_error_too_many_requests;
+
+  /// No description provided for @login_error_general.
+  ///
+  /// In en, this message translates to:
+  /// **'Login error occurred'**
+  String get login_error_general;
+
+  /// No description provided for @login_error_button.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get login_error_button;
+
+  /// No description provided for @login_subscription_expired_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Expired'**
+  String get login_subscription_expired_title;
+
+  /// No description provided for @login_subscription_expired_info.
+  ///
+  /// In en, this message translates to:
+  /// **'Please renew your subscription to continue'**
+  String get login_subscription_expired_info;
+
+  /// No description provided for @login_subscription_expired_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get login_subscription_expired_cancel;
+
+  /// No description provided for @login_subscription_expired_renew.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew Subscription'**
+  String get login_subscription_expired_renew;
+
+  /// No description provided for @login_no_subscription_title.
+  ///
+  /// In en, this message translates to:
+  /// **'No Subscription'**
+  String get login_no_subscription_title;
+
+  /// No description provided for @login_no_subscription_message.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscription found for this account.'**
+  String get login_no_subscription_message;
+
+  /// No description provided for @login_no_subscription_info.
+  ///
+  /// In en, this message translates to:
+  /// **'Please contact the developer to get an activation code.'**
+  String get login_no_subscription_info;
+
+  /// No description provided for @login_no_subscription_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get login_no_subscription_cancel;
+
+  /// No description provided for @login_no_subscription_activate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Now'**
+  String get login_no_subscription_activate;
+
+  /// No description provided for @login_forgot_password_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email first'**
+  String get login_forgot_password_empty;
+
+  /// No description provided for @login_forgot_password_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get login_forgot_password_invalid;
+
+  /// No description provided for @login_forgot_password_sent_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get login_forgot_password_sent_title;
+
+  /// No description provided for @login_forgot_password_sent_button.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get login_forgot_password_sent_button;
+
+  /// No description provided for @login_forgot_password_error_user_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email'**
+  String get login_forgot_password_error_user_not_found;
+
+  /// No description provided for @login_forgot_password_error_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get login_forgot_password_error_invalid;
+
+  /// No description provided for @login_forgot_password_error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection error'**
+  String get login_forgot_password_error_network;
+
+  /// No description provided for @login_forgot_password_error_general.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sending reset link'**
+  String get login_forgot_password_error_general;
+
+  /// No description provided for @login_offline_mode_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Cannot verify subscription - Working in offline mode'**
+  String get login_offline_mode_warning;
+
+  /// No description provided for @login_unexpected_error.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again later.'**
+  String get login_unexpected_error;
+
+  /// No description provided for @login_online_check_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Please connect to the internet to verify subscription'**
+  String get login_online_check_required;
+
+  /// No description provided for @appGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'App Guide'**
+  String get appGuide;
+
+  /// No description provided for @appGuideDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A complete guide to all app features'**
+  String get appGuideDescription;
+
+  /// No description provided for @shareApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share App'**
+  String get shareApp;
+
+  /// No description provided for @shareAppDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the app with your friends'**
+  String get shareAppDescription;
+
+  /// No description provided for @profileuser.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileuser;
+
+  /// No description provided for @accountuser.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountuser;
+
+  /// No description provided for @youcantrythe.
+  ///
+  /// In en, this message translates to:
+  /// **'You can try the feature on a real device'**
+  String get youcantrythe;
+
+  /// No description provided for @editNameAndPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Name and Password'**
+  String get editNameAndPassword;
+
+  /// No description provided for @editName.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Name'**
+  String get editName;
+
+  /// No description provided for @saveName.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Name'**
+  String get saveName;
+
+  /// No description provided for @requiredd.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get requiredd;
+
+  /// No description provided for @nameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is too short'**
+  String get nameTooShort;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get userNotFound;
+
+  /// No description provided for @nameUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Name updated successfully'**
+  String get nameUpdatedSuccess;
+
+  /// No description provided for @nameUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error updating name'**
+  String get nameUpdateError;
+
+  /// No description provided for @internetError.
+  ///
+  /// In en, this message translates to:
+  /// **'Internet connection error'**
+  String get internetError;
+
+  /// No description provided for @passwordChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully'**
+  String get passwordChangedSuccess;
+
+  /// No description provided for @currentPasswordWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect'**
+  String get currentPasswordWrong;
+
+  /// No description provided for @newPasswordWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'New password is too weak'**
+  String get newPasswordWeak;
+
+  /// No description provided for @reloginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must log in again to perform this action'**
+  String get reloginRequired;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePassword;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get currentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPassword;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 6 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get confirmNewPassword;
+
+  /// No description provided for @passwordsNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Does not match'**
+  String get passwordsNotMatch;
+
+  /// No description provided for @sinanayad.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinan Ayad'**
+  String get sinanayad;
 }
 
 class _AppLocalizationsDelegate

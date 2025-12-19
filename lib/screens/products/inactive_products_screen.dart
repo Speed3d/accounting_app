@@ -387,7 +387,7 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
               _buildInfoBanner(),
               Expanded(
                 child: _filteredProducts.isEmpty
-                    ? _buildNoResultsState(l10n)
+                    ? _buildNoResultsState()
                     : _buildProductsList(),
               ),
             ],
@@ -449,12 +449,12 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
     );
   }
 
-  /// 📭 حالة عدم وجود نتائج
-  Widget _buildNoResultsState(AppLocalizations l10n) {
-    return EmptyState(
+  /// 📭 حالة عدم وجود نتائج - ✅ مُصلحة
+  Widget _buildNoResultsState() {
+    return const EmptyState(
       icon: Icons.search_off,
-      title: l10n.noMatchingResults,
-      message: l10n.tryAnotherSearch,
+      title: 'لا توجد نتائج',
+      message: 'حاول البحث بكلمات مختلفة',
     );
   }
 
@@ -590,19 +590,17 @@ class _InactiveProductsScreenState extends State<InactiveProductsScreen> {
               const Spacer(),
 
               // زر الاستعادة
-              SizedBox(
-                height: 36,
-                child: ElevatedButton.icon(
-                  onPressed: () => _handleRestoreProduct(product),
-                  icon: const Icon(Icons.restore, size: 18),
-                  label: const Text('استعادة'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppConstants.spacingMd,
-                      vertical: AppConstants.spacingXs,
-                    ),
+              ElevatedButton.icon(
+                onPressed: () => _handleRestoreProduct(product),
+                icon: const Icon(Icons.restore, size: 18),
+                label: const Text('استعادة'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(100, 36),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConstants.spacingMd,
+                    vertical: AppConstants.spacingXs,
                   ),
                 ),
               ),

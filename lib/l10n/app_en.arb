@@ -805,7 +805,7 @@
   "darkModeEnabled": "Enabled - Relax your eyes 😌",
   "darkModeDisabled": "Disabled - Enjoy the light ☀️",
   "appTitle": "Smart Accounting System",
-  "appVersion": "Version 1.0.0",
+  "appVersion": "Version",
   
   "loading": "Loading...",
   "appDescription": "A smart and integrated accounting system to manage your business easily and professionally",
@@ -2483,7 +2483,132 @@
 
 "activationcodegenerator": "Activation Code Generator",
 
-"details": "Details"
+"details": "Details",
+
+"register_screen_title": "Create New Account",
+  "register_screen_icon_label": "Create New Account",
+  "register_full_name_label": "Full Name",
+  "register_full_name_hint": "John Doe",
+  "register_email_label": "Email",
+  "register_email_hint": "example@company.com",
+  "register_password_label": "Password",
+  "register_password_hint": "••••••••",
+  "register_confirm_password_label": "Confirm Password",
+  "register_confirm_password_hint": "••••••••",
+  "register_button_text": "Create Account",
+  "register_divider_text": "OR",
+  "register_have_account_button": "I have an account - Sign In",
+  
+  "register_validation_required": "Required",
+  "register_validation_email_invalid": "Invalid format",
+  "register_validation_password_min": "At least 6 characters",
+  "register_validation_password_mismatch": "Passwords don't match",
+  
+  "register_success_dialog_title": "Success",
+  "register_success_auto_activated": "Account created successfully!\n\n✅ Trial subscription activated for 14 days.\n\nYou will be redirected to the main screen now.",
+  "register_success_manual_activation": "Account created successfully!\n\nPlease contact the developer to activate your subscription.\n\nYou will be redirected to the main screen now.",
+  "register_success_button": "Start Now",
+  
+  "register_error_dialog_title": "Error",
+  "register_error_email_in_use": "This email is already in use",
+  "register_error_invalid_email": "Invalid email format",
+  "register_error_weak_password": "Password is too weak",
+  "register_error_network": "Network connection error",
+  "register_error_general": "Registration error occurred",
+  "register_error_button": "OK",
+  
+  "login_screen_title": "Sign In",
+  "login_welcome_back": "Welcome Back",
+  "login_email_label": "Email",
+  "login_email_hint": "example@company.com",
+  "login_password_label": "Password",
+  "login_password_hint": "••••••••",
+  "login_forgot_password": "Forgot Password",
+  "login_button_text": "Sign In",
+  "login_divider_text": "OR",
+  "login_no_account_button": "Don't have an account - Sign Up",
+  
+  "login_validation_required": "Required",
+  "login_validation_email_invalid": "Invalid format",
+  
+  "login_error_dialog_title": "Error",
+  "login_error_user_not_found": "No account found with this email",
+  "login_error_wrong_password": "Incorrect password",
+  "login_error_invalid_email": "Invalid email format",
+  "login_error_user_disabled": "This account is disabled",
+  "login_error_network": "Network connection error",
+  "login_error_too_many_requests": "Too many attempts - try later",
+  "login_error_general": "Login error occurred",
+  "login_error_button": "OK",
+  
+  "login_subscription_expired_title": "Subscription Expired",
+  "login_subscription_expired_info": "Please renew your subscription to continue",
+  "login_subscription_expired_cancel": "Cancel",
+  "login_subscription_expired_renew": "Renew Subscription",
+  
+  "login_no_subscription_title": "No Subscription",
+  "login_no_subscription_message": "No subscription found for this account.",
+  "login_no_subscription_info": "Please contact the developer to get an activation code.",
+  "login_no_subscription_cancel": "Cancel",
+  "login_no_subscription_activate": "Activate Now",
+  
+  "login_forgot_password_empty": "Please enter your email first",
+  "login_forgot_password_invalid": "Invalid email format",
+  "login_forgot_password_sent_title": "Sent",
+  "login_forgot_password_sent_button": "OK",
+  "login_forgot_password_error_user_not_found": "No account found with this email",
+  "login_forgot_password_error_invalid": "Invalid email format",
+  "login_forgot_password_error_network": "Network connection error",
+  "login_forgot_password_error_general": "Error sending reset link",
+  
+  "login_offline_mode_warning": "⚠️ Cannot verify subscription - Working in offline mode",
+  "login_unexpected_error": "An unexpected error occurred. Please try again later.",
+  "login_online_check_required": "Please connect to the internet to verify subscription",
+
+  "appGuide": "App Guide",
+  "appGuideDescription": "A complete guide to all app features",
+
+  "shareApp": "Share App",
+  "shareAppDescription": "Share the app with your friends",
+
+  "profileuser": "Profile",
+  "accountuser": "Account",
+
+  "youcantrythe": "You can try the feature on a real device",
+
+   "editNameAndPassword": "Edit Name and Password",
+  "editName": "Edit Name",
+  "saveName": "Save Name",
+
+  "requiredd": "Required",
+  "fullName": "Full Name",
+  "nameTooShort": "Name is too short",
+
+  "userNotFound": "User not found",
+  "nameUpdatedSuccess": "Name updated successfully",
+  "nameUpdateError": "Error updating name",
+
+  "internetError": "Internet connection error",
+
+  "passwordChangedSuccess": "Password changed successfully",
+  "currentPasswordWrong": "Current password is incorrect",
+  "newPasswordWeak": "New password is too weak",
+  "reloginRequired": "You must log in again to perform this action",
+
+  "success": "Success",
+  "ok": "OK",
+  "error": "Error",
+
+  "changePassword": "Change Password",
+
+  "currentPassword": "Current Password",
+  "newPassword": "New Password",
+  "passwordMinLength": "At least 6 characters",
+  "confirmNewPassword": "Confirm New Password",
+  "passwordsNotMatch": "Does not match",
+
+  "sinanayad": "Sinan Ayad"
+
 
 
 

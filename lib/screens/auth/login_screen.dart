@@ -192,12 +192,11 @@ class _LoginScreenState extends State<LoginScreen> {
       // 🔄 الحالة 4: يحتاج اتصال بالإنترنت
       // ────────────────────────────────────────────────────────────────────
       if (subscriptionStatus.requiresOnline) {
+        final l10n = AppLocalizations.of(context)!;
         debugPrint('🌐 يحتاج التحقق عبر الإنترنت');
         debugPrint('═══════════════════════════════════════════════════════════');
 
-        _showErrorDialog(
-          'يرجى الاتصال بالإنترنت للتحقق من الاشتراك',
-        );
+        _showErrorDialog(l10n.login_online_check_required);
         return;
       }
 
@@ -216,15 +215,14 @@ class _LoginScreenState extends State<LoginScreen> {
       // ⚠️ الحالة 6: خطأ في الاتصال (fail-safe - السماح بالدخول)
       // ────────────────────────────────────────────────────────────────────
       if (subscriptionStatus.statusType == 'error') {
+        final l10n = AppLocalizations.of(context)!;
         debugPrint('⚠️ خطأ في التحقق من الاشتراك - السماح بالدخول (offline mode)');
         debugPrint('═══════════════════════════════════════════════════════════');
 
         // ← Hint: نعرض تنبيه بسيط ونسمح بالدخول
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              '⚠️ لا يمكن التحقق من الاشتراك - العمل في الوضع المحلي',
-            ),
+            content: Text(l10n.login_offline_mode_warning),
             backgroundColor: AppColors.warning,
             duration: const Duration(seconds: 3),
           ),
@@ -241,33 +239,35 @@ class _LoginScreenState extends State<LoginScreen> {
       // ────────────────────────────────────────────────────────────────────
       // 🔴 الحالة الافتراضية: حالة غير متوقعة
       // ────────────────────────────────────────────────────────────────────
+      final l10n = AppLocalizations.of(context)!;
       debugPrint('🔴 حالة غير متوقعة: ${subscriptionStatus.statusType}');
-      _showErrorDialog('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.');
+      _showErrorDialog(l10n.login_unexpected_error);
 
     } on firebase_auth.FirebaseAuthException catch (e) {
       // ════════════════════════════════════════════════════════════════════
       // معالجة أخطاء Firebase Authentication
       // ════════════════════════════════════════════════════════════════════
-      String message = 'حدث خطأ في تسجيل الدخول';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.login_error_general;
 
       switch (e.code) {
         case 'user-not-found':
-          message = 'لا يوجد حساب بهذا الإيميل';
+          message = l10n.login_error_user_not_found;
           break;
         case 'wrong-password':
-          message = 'كلمة المرور غير صحيحة';
+          message = l10n.login_error_wrong_password;
           break;
         case 'invalid-email':
-          message = 'صيغة الإيميل غير صحيحة';
+          message = l10n.login_error_invalid_email;
           break;
         case 'user-disabled':
-          message = 'هذا الحساب معطل';
+          message = l10n.login_error_user_disabled;
           break;
         case 'network-request-failed':
-          message = 'خطأ في الاتصال بالإنترنت';
+          message = l10n.login_error_network;
           break;
         case 'too-many-requests':
-          message = 'محاولات كثيرة - حاول لاحقاً';
+          message = l10n.login_error_too_many_requests;
           break;
       }
 
@@ -292,6 +292,8 @@ class _LoginScreenState extends State<LoginScreen> {
     required String email,
     DateTime? endDate,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     return showDialog(
       context: context,
       barrierDismissible: false, // ← Hint: لا يمكن الإغلاق بالنقر خارجه
@@ -307,10 +309,10 @@ class _LoginScreenState extends State<LoginScreen> {
               size: 28,
             ),
             const SizedBox(width: AppConstants.spacingSm),
-            const Expanded(
+            Expanded(
               child: Text(
-                'الاشتراك منتهي',
-                style: TextStyle(fontSize: 18),
+                l10n.login_subscription_expired_title,
+                style: const TextStyle(fontSize: 18),
               ),
             ),
           ],
@@ -320,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'انتهت صلاحية اشتراكك ${endDate != null ? 'في ${_formatDate(endDate)}' : ''}.',
+              _getSubscriptionExpiredMessage(endDate: endDate),
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: AppConstants.spacingMd),
@@ -343,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(width: AppConstants.spacingSm),
                   Expanded(
                     child: Text(
-                      'يرجى تجديد الاشتراك للمتابعة',
+                      l10n.login_subscription_expired_info,
                       style: TextStyle(
                         color: AppColors.warning,
                         fontSize: 13,
@@ -361,7 +363,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.pop(context); // ← Hint: إغلاق الحوار
               // ← Hint: العودة لشاشة الدخول (المستخدم يبقى في LoginScreen)
             },
-            child: const Text('إلغاء'),
+            child: Text(l10n.login_subscription_expired_cancel),
           ),
           ElevatedButton.icon(
             onPressed: () async {
@@ -385,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
             icon: const Icon(Icons.vpn_key),
-            label: const Text('تجديد الاشتراك'),
+            label: Text(l10n.login_subscription_expired_renew),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryLight,
             ),
@@ -402,6 +404,8 @@ class _LoginScreenState extends State<LoginScreen> {
   /// ← Hint: يوفر زر للتوجيه لشاشة التفعيل
   /// ============================================================================
   Future<void> _showNoSubscriptionDialog({required String email}) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -417,10 +421,10 @@ class _LoginScreenState extends State<LoginScreen> {
               size: 28,
             ),
             const SizedBox(width: AppConstants.spacingSm),
-            const Expanded(
+            Expanded(
               child: Text(
-                'لا يوجد اشتراك',
-                style: TextStyle(fontSize: 18),
+                l10n.login_no_subscription_title,
+                style: const TextStyle(fontSize: 18),
               ),
             ),
           ],
@@ -429,9 +433,7 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'لا يوجد اشتراك مسجل لهذا الحساب.',
-            ),
+            Text(l10n.login_no_subscription_message),
             const SizedBox(height: AppConstants.spacingMd),
             Container(
               padding: AppConstants.paddingMd,
@@ -442,9 +444,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: AppColors.info.withOpacity(0.3),
                 ),
               ),
-              child: const Text(
-                'يرجى التواصل مع المطور للحصول على كود تفعيل.',
-                style: TextStyle(fontSize: 13),
+              child: Text(
+                l10n.login_no_subscription_info,
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           ],
@@ -452,7 +454,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(l10n.login_no_subscription_cancel),
           ),
           ElevatedButton.icon(
             onPressed: () async {
@@ -475,7 +477,7 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
             icon: const Icon(Icons.vpn_key),
-            label: const Text('تفعيل الآن'),
+            label: Text(l10n.login_no_subscription_activate),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.info,
             ),
@@ -490,17 +492,42 @@ class _LoginScreenState extends State<LoginScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  /// ← Hint: دالة مساعدة للحصول على رسالة انتهاء الاشتراك بناءً على اللغة
+  String _getSubscriptionExpiredMessage({DateTime? endDate}) {
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'ar') {
+      return endDate != null 
+          ? 'انتهت صلاحية اشتراكك في ${_formatDate(endDate)}.'
+          : 'انتهت صلاحية اشتراكك.';
+    } else {
+      return endDate != null 
+          ? 'Your subscription expired on ${_formatDate(endDate)}.'
+          : 'Your subscription expired.';
+    }
+  }
+
+  /// ← Hint: دالة مساعدة للحصول على رسالة نسيت كلمة المرور بناءً على اللغة
+  String _getForgotPasswordMessage(String email) {
+    final locale = Localizations.localeOf(context).languageCode;
+    if (locale == 'ar') {
+      return 'تم إرسال رابط استعادة كلمة المرور إلى:\n$email\n\nالرجاء التحقق من بريدك الإلكتروني.';
+    } else {
+      return 'Password reset link sent to:\n$email\n\nPlease check your email.';
+    }
+  }
+
   /// ← Hint: نسيت كلمة المرور - إرسال رابط الاستعادة عبر Firebase
   Future<void> _handleForgotPassword() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      _showErrorDialog('الرجاء إدخال البريد الإلكتروني أولاً');
+      _showErrorDialog(l10n.login_forgot_password_empty);
       return;
     }
 
     if (!email.contains('@')) {
-      _showErrorDialog('صيغة البريد الإلكتروني غير صحيحة');
+      _showErrorDialog(l10n.login_forgot_password_invalid);
       return;
     }
 
@@ -520,33 +547,32 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Icon(Icons.mark_email_read, color: AppColors.success),
               const SizedBox(width: AppConstants.spacingSm),
-              const Text('تم الإرسال'),
+              Text(l10n.login_forgot_password_sent_title),
             ],
           ),
           content: Text(
-            'تم إرسال رابط استعادة كلمة المرور إلى:\n$email\n\n'
-            'الرجاء التحقق من بريدك الإلكتروني.',
+            _getForgotPasswordMessage(email),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('حسناً'),
+              child: Text(l10n.login_forgot_password_sent_button),
             ),
           ],
         ),
       );
     } on firebase_auth.FirebaseAuthException catch (e) {
-      String message = 'حدث خطأ في إرسال الرابط';
+      String message = l10n.login_forgot_password_error_general;
 
       switch (e.code) {
         case 'user-not-found':
-          message = 'لا يوجد حساب بهذا الإيميل';
+          message = l10n.login_forgot_password_error_user_not_found;
           break;
         case 'invalid-email':
-          message = 'صيغة الإيميل غير صحيحة';
+          message = l10n.login_forgot_password_error_invalid;
           break;
         case 'network-request-failed':
-          message = 'خطأ في الاتصال بالإنترنت';
+          message = l10n.login_forgot_password_error_network;
           break;
       }
 
@@ -555,6 +581,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -562,14 +590,14 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: AppConstants.spacingSm),
-            const Text('خطأ'),
+            Text(l10n.login_error_dialog_title),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً'),
+            child: Text(l10n.login_error_button),
           ),
         ],
       ),
@@ -578,10 +606,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('تسجيل الدخول')),
+      appBar: AppBar(title: Text(l10n.login_screen_title)),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -624,14 +653,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // اسم الشركة أو عنوان افتراضي
                       Text(
-                        widget.companyName ?? 'تسجيل الدخول',
+                        widget.companyName ?? l10n.login_screen_title,
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
 
                       const SizedBox(height: AppConstants.spacingSm),
 
                       Text(
-                        'مرحباً بعودتك',
+                        l10n.login_welcome_back,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Theme.of(context)
                                   .textTheme
@@ -646,14 +675,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       // البريد الإلكتروني
                       CustomTextField(
                         controller: _emailController,
-                        label: 'البريد الإلكتروني',
-                        hint: 'example@company.com',
+                        label: l10n.login_email_label,
+                        hint: l10n.login_email_hint,
                         prefixIcon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (!v.contains('@')) return 'صيغة غير صحيحة';
+                          if (v == null || v.isEmpty) return l10n.login_validation_required;
+                          if (!v.contains('@')) return l10n.login_validation_email_invalid;
                           return null;
                         },
                       ),
@@ -663,8 +692,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       // كلمة المرور
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'كلمة المرور',
-                        hint: '••••••••',
+                        label: l10n.login_password_label,
+                        hint: l10n.login_password_hint,
                         prefixIcon: Icons.lock,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
@@ -674,7 +703,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onSuffixIconPressed: () =>
                             setState(() => _obscurePassword = !_obscurePassword),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
+                          if (v == null || v.isEmpty) return l10n.login_validation_required;
                           return null;
                         },
                       ),
@@ -686,7 +715,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerLeft,
                         child: TextButton(
                           onPressed: _handleForgotPassword,
-                          child: Text('نسيت كلمة المرور', 
+                          child: Text(l10n.login_forgot_password, 
                               style: Theme.of(context).textTheme.headlineSmall),
                         ),
                       ),
@@ -695,7 +724,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // زر تسجيل الدخول
                       CustomButton(
-                        text: 'تسجيل الدخول',
+                        text: l10n.login_button_text,
                         icon: Icons.login,
                         onPressed: _handleLogin,
                         isLoading: _isLoading,
@@ -713,7 +742,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: AppConstants.spacingSm),
                             child: Text(
-                              'أو',
+                              l10n.login_divider_text,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .textTheme
@@ -730,7 +759,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // زر إنشاء حساب جديد
                       CustomButton(
-                        text: 'ليس لدي حساب - إنشاء حساب',
+                        text: l10n.login_no_account_button,
                         icon: Icons.person_add,
                         onPressed: () {
                           Navigator.pushReplacement(

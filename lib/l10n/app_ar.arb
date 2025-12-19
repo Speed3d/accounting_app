@@ -805,7 +805,7 @@
   "darkModeEnabled": "مفعّل - العيون مرتاحة 😌",
   "darkModeDisabled": "معطّل - استمتع بالنور ☀️",
   "appTitle": "نظام المحاسبة الذكي",
-  "appVersion": "الإصدار 1.0.0",
+  "appVersion": "الإصدار",
   
   "loading": "جاري التحميل...",
   "appDescription": "نظام محاسبي ذكي ومتكامل لإدارة أعمالك بسهولة واحترافية",
@@ -2422,7 +2422,140 @@
 
 "activationcodegenerator": "مولد اكواد التفعيل",
 
-"details": "التفاصيل"
+"details": "التفاصيل",
+
+"register_screen_title": "إنشاء حساب جديد",
+  "register_screen_icon_label": "إنشاء حساب جديد",
+  "register_full_name_label": "الاسم الكامل",
+  "register_full_name_hint": "أحمد محمد",
+  "register_email_label": "البريد الإلكتروني",
+  "register_email_hint": "example@company.com",
+  "register_password_label": "كلمة المرور",
+  "register_password_hint": "••••••••",
+  "register_confirm_password_label": "تأكيد كلمة المرور",
+  "register_confirm_password_hint": "••••••••",
+  "register_button_text": "إنشاء الحساب",
+  "register_divider_text": "أو",
+  "register_have_account_button": "لدي حساب - تسجيل الدخول",
+  
+  "register_validation_required": "مطلوب",
+  "register_validation_email_invalid": "صيغة غير صحيحة",
+  "register_validation_password_min": "6 أحرف على الأقل",
+  "register_validation_password_mismatch": "غير متطابقة",
+  
+  "register_success_dialog_title": "نجح",
+  "register_success_auto_activated": "تم إنشاء الحساب بنجاح!\n\n✅ تم تفعيل الاشتراك التجريبي لمدة 14 يوم.\n\nسيتم توجيهك للشاشة الرئيسية الآن.",
+  "register_success_manual_activation": "تم إنشاء الحساب بنجاح!\n\nيرجى التواصل مع المطور لتفعيل الاشتراك.\n\nسيتم توجيهك للشاشة الرئيسية الآن.",
+  "register_success_button": "ابدأ الآن",
+  
+  "register_error_dialog_title": "خطأ",
+  "register_error_email_in_use": "هذا الإيميل مستخدم بالفعل",
+  "register_error_invalid_email": "صيغة الإيميل غير صحيحة",
+  "register_error_weak_password": "كلمة المرور ضعيفة جداً",
+  "register_error_network": "خطأ في الاتصال بالإنترنت",
+  "register_error_general": "حدث خطأ في التسجيل",
+  "register_error_button": "حسناً",
+  
+  "login_screen_title": "تسجيل الدخول",
+  "login_welcome_back": "مرحباً بعودتك",
+  "login_email_label": "البريد الإلكتروني",
+  "login_email_hint": "example@company.com",
+  "login_password_label": "كلمة المرور",
+  "login_password_hint": "••••••••",
+  "login_forgot_password": "نسيت كلمة المرور",
+  "login_button_text": "تسجيل الدخول",
+  "login_divider_text": "أو",
+  "login_no_account_button": "ليس لدي حساب - إنشاء حساب",
+  
+  "login_validation_required": "مطلوب",
+  "login_validation_email_invalid": "صيغة غير صحيحة",
+  
+  "login_error_dialog_title": "خطأ",
+  "login_error_user_not_found": "لا يوجد حساب بهذا الإيميل",
+  "login_error_wrong_password": "كلمة المرور غير صحيحة",
+  "login_error_invalid_email": "صيغة الإيميل غير صحيحة",
+  "login_error_user_disabled": "هذا الحساب معطل",
+  "login_error_network": "خطأ في الاتصال بالإنترنت",
+  "login_error_too_many_requests": "محاولات كثيرة - حاول لاحقاً",
+  "login_error_general": "حدث خطأ في تسجيل الدخول",
+  "login_error_button": "حسناً",
+  
+  "login_subscription_expired_title": "الاشتراك منتهي",
+  "login_subscription_expired_info": "يرجى تجديد الاشتراك للمتابعة",
+  "login_subscription_expired_cancel": "إلغاء",
+  "login_subscription_expired_renew": "تجديد الاشتراك",
+  
+  "login_no_subscription_title": "لا يوجد اشتراك",
+  "login_no_subscription_message": "لا يوجد اشتراك مسجل لهذا الحساب.",
+  "login_no_subscription_info": "يرجى التواصل مع المطور للحصول على كود تفعيل.",
+  "login_no_subscription_cancel": "إلغاء",
+  "login_no_subscription_activate": "تفعيل الآن",
+  
+  "login_forgot_password_empty": "الرجاء إدخال البريد الإلكتروني أولاً",
+  "login_forgot_password_invalid": "صيغة البريد الإلكتروني غير صحيحة",
+  "login_forgot_password_sent_title": "تم الإرسال",
+  "login_forgot_password_sent_message": "تم إرسال رابط استعادة كلمة المرور إلى:\n{email}\n\nالرجاء التحقق من بريدك الإلكتروني.",
+  "@login_forgot_password_sent_message": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "login_forgot_password_sent_button": "حسناً",
+  "login_forgot_password_error_user_not_found": "لا يوجد حساب بهذا الإيميل",
+  "login_forgot_password_error_invalid": "صيغة الإيميل غير صحيحة",
+  "login_forgot_password_error_network": "خطأ في الاتصال بالإنترنت",
+  "login_forgot_password_error_general": "حدث خطأ في إرسال الرابط",
+  
+  "login_offline_mode_warning": "⚠️ لا يمكن التحقق من الاشتراك - العمل في الوضع المحلي",
+  "login_unexpected_error": "حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.",
+  "login_online_check_required": "يرجى الاتصال بالإنترنت للتحقق من الاشتراك",
+
+    "appGuide": "دليل التطبيق",
+  "appGuideDescription": "شرح شامل لجميع ميزات التطبيق",
+
+  "shareApp": "مشاركة التطبيق",
+  "shareAppDescription": "شارك التطبيق مع أصدقائك",
+
+  "profileuser": "الملف الشخصي",
+  "accountuser": "الحساب",
+  
+  "youcantrythe": "يمكنك تجربة الميزة على جهاز حقيقي",
+
+    "editNameAndPassword": "تعديل الاسم وكلمة المرور",
+  "editName": "تعديل الاسم",
+  "saveName": "حفظ الاسم",
+
+  
+  "requiredd": "مطلوب",
+  "fullName": "الاسم الكامل",
+  "nameTooShort": "الاسم قصير جداً",
+
+  "userNotFound": "لم يتم العثور على المستخدم",
+  "nameUpdatedSuccess": "تم تحديث الاسم بنجاح",
+  "nameUpdateError": "حدث خطأ في تحديث الاسم",
+
+  "internetError": "خطأ في الاتصال بالإنترنت",
+
+  "passwordChangedSuccess": "تم تغيير كلمة المرور بنجاح",
+  "currentPasswordWrong": "كلمة المرور الحالية غير صحيحة",
+  "newPasswordWeak": "كلمة المرور الجديدة ضعيفة جداً",
+  "reloginRequired": "يجب تسجيل الدخول مرة أخرى للقيام بهذا الإجراء",
+
+  "success": "نجح",
+  "ok": "حسناً",
+  "error": "خطأ",
+
+  "changePassword": "تغيير كلمة المرور",
+
+  "currentPassword": "كلمة المرور الحالية",
+  "newPassword": "كلمة المرور الجديدة",
+  "passwordMinLength": "6 أحرف على الأقل",
+  "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "passwordsNotMatch": "غير متطابقة",
+
+  "sinanayad": "سنان اياد"
 
 
 

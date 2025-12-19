@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 import 'package:accountant_touch/layouts/main_screen.dart';
+import 'package:accountant_touch/screens/auth/login_screen.dart';
+import 'package:accountant_touch/screens/settings/about_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -623,7 +625,11 @@ class _ActivationScreenState extends State<ActivationScreen>
                 // ─────────────────────────────────────────────────────
                 TextButton.icon(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    // Navigator.of(context).pop();
+                    Navigator.of(context).pushReplacement(
+                    // MaterialPageRoute(builder: (_) => const AboutScreen()),
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
                   },
                   icon: const Icon(
                     Icons.arrow_back,
@@ -631,6 +637,7 @@ class _ActivationScreenState extends State<ActivationScreen>
                   ),
                   label: const Text(
                     'العودة إلى تسجيل الدخول',
+                    // 'الذهاب الى صحفة معلومات المطور',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -640,6 +647,33 @@ class _ActivationScreenState extends State<ActivationScreen>
                     padding: AppConstants.paddingMd,
                   ),
                 ),
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // ─────────────────────────────────────────────────────
+                // زر الذهاب الى معلومات المطور
+                // ─────────────────────────────────────────────────────
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const AboutScreen()),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'الذهاب الى صحفة معلومات المطور',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: AppConstants.paddingMd,
+                  ),
+                ),
+
               ],
             ),
           ),

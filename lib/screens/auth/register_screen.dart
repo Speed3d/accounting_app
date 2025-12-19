@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart'; // 🆕 للغات
 import '../../services/firebase_service.dart';
 import '../../services/session_service.dart'; // 🆕 SessionService
 import '../../theme/app_colors.dart';
@@ -116,20 +117,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // 5️⃣ عرض رسالة نجاح مع/بدون تفعيل
       _showSuccessDialog(autoActivated: autoActivate);
     } on firebase_auth.FirebaseAuthException catch (e) {
-      String message = 'حدث خطأ في التسجيل';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.register_error_general;
 
       switch (e.code) {
         case 'email-already-in-use':
-          message = 'هذا الإيميل مستخدم بالفعل';
+          message = l10n.register_error_email_in_use;
           break;
         case 'invalid-email':
-          message = 'صيغة الإيميل غير صحيحة';
+          message = l10n.register_error_invalid_email;
           break;
         case 'weak-password':
-          message = 'كلمة المرور ضعيفة جداً';
+          message = l10n.register_error_weak_password;
           break;
         case 'network-request-failed':
-          message = 'خطأ في الاتصال بالإنترنت';
+          message = l10n.register_error_network;
           break;
       }
 
@@ -201,6 +203,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /// ← Hint: عرض رسالة نجاح والانتقال للشاشة الرئيسية
   /// ← Hint: النظام الجديد: الانتقال مباشرة لـ MainScreen (لا login screen!)
   void _showSuccessDialog({required bool autoActivated}) {
+    final l10n = AppLocalizations.of(context)!;
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -209,17 +213,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             Icon(Icons.check_circle, color: AppColors.success),
             const SizedBox(width: AppConstants.spacingSm),
-            const Text('نجح'),
+            Text(l10n.register_success_dialog_title),
           ],
         ),
         content: Text(
           autoActivated
-              ? 'تم إنشاء الحساب بنجاح!\n\n'
-                  '✅ تم تفعيل الاشتراك التجريبي لمدة 14 يوم.\n\n'
-                  'سيتم توجيهك للشاشة الرئيسية الآن.'
-              : 'تم إنشاء الحساب بنجاح!\n\n'
-                  'يرجى التواصل مع المطور لتفعيل الاشتراك.\n\n'
-                  'سيتم توجيهك للشاشة الرئيسية الآن.',
+              ? l10n.register_success_auto_activated
+              : l10n.register_success_manual_activation,
         ),
         actions: [
           TextButton(
@@ -236,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 (route) => false, // ← Hint: حذف كل الشاشات السابقة
               );
             },
-            child: const Text('ابدأ الآن'),
+            child: Text(l10n.register_success_button),
           ),
         ],
       ),
@@ -244,6 +244,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -251,14 +253,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: AppConstants.spacingSm),
-            const Text('خطأ'),
+            Text(l10n.register_error_dialog_title),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً'),
+            child: Text(l10n.register_error_button),
           ),
         ],
       ),
@@ -267,10 +269,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('إنشاء حساب جديد')),
+      appBar: AppBar(title: Text(l10n.register_screen_title)),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -293,31 +296,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       Icon(Icons.person_add, size: 80, color: AppColors.primaryLight),
                       const SizedBox(height: AppConstants.spacingXl),
-                      Text('إنشاء حساب جديد', style: Theme.of(context).textTheme.headlineMedium),
+                      Text(l10n.register_screen_icon_label, style: Theme.of(context).textTheme.headlineMedium),
                       const SizedBox(height: AppConstants.spacingXl),
 
                       // الاسم الكامل
                       CustomTextField(
                         controller: _fullNameController,
-                        label: 'الاسم الكامل',
-                        hint: 'أحمد محمد',
+                        label: l10n.register_full_name_label,
+                        hint: l10n.register_full_name_hint,
                         prefixIcon: Icons.person,
                         textInputAction: TextInputAction.next,
-                        validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
+                        validator: (v) => v == null || v.isEmpty ? l10n.register_validation_required : null,
                       ),
                       const SizedBox(height: AppConstants.spacingMd),
 
                       // الإيميل
                       CustomTextField(
                         controller: _emailController,
-                        label: 'البريد الإلكتروني',
-                        hint: 'example@company.com',
+                        label: l10n.register_email_label,
+                        hint: l10n.register_email_hint,
                         prefixIcon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (!v.contains('@')) return 'صيغة غير صحيحة';
+                          if (v == null || v.isEmpty) return l10n.register_validation_required;
+                          if (!v.contains('@')) return l10n.register_validation_email_invalid;
                           return null;
                         },
                       ),
@@ -326,16 +329,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // كلمة المرور
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'كلمة المرور',
-                        hint: '••••••••',
+                        label: l10n.register_password_label,
+                        hint: l10n.register_password_hint,
                         prefixIcon: Icons.lock,
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.next,
                         suffixIcon: _obscurePassword ? Icons.visibility : Icons.visibility_off,
                         onSuffixIconPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (v.length < 6) return '6 أحرف على الأقل';
+                          if (v == null || v.isEmpty) return l10n.register_validation_required;
+                          if (v.length < 6) return l10n.register_validation_password_min;
                           return null;
                         },
                       ),
@@ -344,16 +347,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // تأكيد كلمة المرور
                       CustomTextField(
                         controller: _confirmPasswordController,
-                        label: 'تأكيد كلمة المرور',
-                        hint: '••••••••',
+                        label: l10n.register_confirm_password_label,
+                        hint: l10n.register_confirm_password_hint,
                         prefixIcon: Icons.lock_outline,
                         obscureText: _obscureConfirmPassword,
                         textInputAction: TextInputAction.done,
                         suffixIcon: _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
                         onSuffixIconPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (v != _passwordController.text) return 'غير متطابقة';
+                          if (v == null || v.isEmpty) return l10n.register_validation_required;
+                          if (v != _passwordController.text) return l10n.register_validation_password_mismatch;
                           return null;
                         },
                       ),
@@ -361,7 +364,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // زر التسجيل
                       CustomButton(
-                        text: 'إنشاء الحساب',
+                        text: l10n.register_button_text,
                         icon: Icons.person_add,
                         onPressed: _handleRegister,
                         isLoading: _isLoading,
@@ -378,7 +381,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingSm),
                             child: Text(
-                              'أو',
+                              l10n.register_divider_text,
                               style: TextStyle(
                                 color: Theme.of(context).textTheme.bodySmall?.color,
                               ),
@@ -392,7 +395,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // زر تسجيل الدخول
                       CustomButton(
-                        text: 'لدي حساب - تسجيل الدخول',
+                        text: l10n.register_have_account_button,
                         icon: Icons.login,
                         onPressed: () {
                           Navigator.pushReplacement(

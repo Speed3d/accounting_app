@@ -778,13 +778,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get invalidCredentials => 'اسم المستخدم أو كلمة المرور غير صحيحة.';
 
   @override
-  String get ok => 'موافق';
+  String get ok => 'حسناً';
 
   @override
   String get error => 'خطأ';
 
   @override
-  String get success => 'بنجاح';
+  String get success => 'نجح';
 
   @override
   String get backupStarted => 'تم بدء مشاركة النسخة الاحتياطية.';
@@ -1521,7 +1521,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appTitle => 'نظام المحاسبة الذكي';
 
   @override
-  String get appVersion => 'الإصدار 1.0.0';
+  String get appVersion => 'الإصدار';
 
   @override
   String get loading => 'جاري التحميل...';
@@ -3165,4 +3165,302 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get details => 'التفاصيل';
+
+  @override
+  String get register_screen_title => 'إنشاء حساب جديد';
+
+  @override
+  String get register_screen_icon_label => 'إنشاء حساب جديد';
+
+  @override
+  String get register_full_name_label => 'الاسم الكامل';
+
+  @override
+  String get register_full_name_hint => 'أحمد محمد';
+
+  @override
+  String get register_email_label => 'البريد الإلكتروني';
+
+  @override
+  String get register_email_hint => 'example@company.com';
+
+  @override
+  String get register_password_label => 'كلمة المرور';
+
+  @override
+  String get register_password_hint => '••••••••';
+
+  @override
+  String get register_confirm_password_label => 'تأكيد كلمة المرور';
+
+  @override
+  String get register_confirm_password_hint => '••••••••';
+
+  @override
+  String get register_button_text => 'إنشاء الحساب';
+
+  @override
+  String get register_divider_text => 'أو';
+
+  @override
+  String get register_have_account_button => 'لدي حساب - تسجيل الدخول';
+
+  @override
+  String get register_validation_required => 'مطلوب';
+
+  @override
+  String get register_validation_email_invalid => 'صيغة غير صحيحة';
+
+  @override
+  String get register_validation_password_min => '6 أحرف على الأقل';
+
+  @override
+  String get register_validation_password_mismatch => 'غير متطابقة';
+
+  @override
+  String get register_success_dialog_title => 'نجح';
+
+  @override
+  String get register_success_auto_activated =>
+      'تم إنشاء الحساب بنجاح!\n\n✅ تم تفعيل الاشتراك التجريبي لمدة 14 يوم.\n\nسيتم توجيهك للشاشة الرئيسية الآن.';
+
+  @override
+  String get register_success_manual_activation =>
+      'تم إنشاء الحساب بنجاح!\n\nيرجى التواصل مع المطور لتفعيل الاشتراك.\n\nسيتم توجيهك للشاشة الرئيسية الآن.';
+
+  @override
+  String get register_success_button => 'ابدأ الآن';
+
+  @override
+  String get register_error_dialog_title => 'خطأ';
+
+  @override
+  String get register_error_email_in_use => 'هذا الإيميل مستخدم بالفعل';
+
+  @override
+  String get register_error_invalid_email => 'صيغة الإيميل غير صحيحة';
+
+  @override
+  String get register_error_weak_password => 'كلمة المرور ضعيفة جداً';
+
+  @override
+  String get register_error_network => 'خطأ في الاتصال بالإنترنت';
+
+  @override
+  String get register_error_general => 'حدث خطأ في التسجيل';
+
+  @override
+  String get register_error_button => 'حسناً';
+
+  @override
+  String get login_screen_title => 'تسجيل الدخول';
+
+  @override
+  String get login_welcome_back => 'مرحباً بعودتك';
+
+  @override
+  String get login_email_label => 'البريد الإلكتروني';
+
+  @override
+  String get login_email_hint => 'example@company.com';
+
+  @override
+  String get login_password_label => 'كلمة المرور';
+
+  @override
+  String get login_password_hint => '••••••••';
+
+  @override
+  String get login_forgot_password => 'نسيت كلمة المرور';
+
+  @override
+  String get login_button_text => 'تسجيل الدخول';
+
+  @override
+  String get login_divider_text => 'أو';
+
+  @override
+  String get login_no_account_button => 'ليس لدي حساب - إنشاء حساب';
+
+  @override
+  String get login_validation_required => 'مطلوب';
+
+  @override
+  String get login_validation_email_invalid => 'صيغة غير صحيحة';
+
+  @override
+  String get login_error_dialog_title => 'خطأ';
+
+  @override
+  String get login_error_user_not_found => 'لا يوجد حساب بهذا الإيميل';
+
+  @override
+  String get login_error_wrong_password => 'كلمة المرور غير صحيحة';
+
+  @override
+  String get login_error_invalid_email => 'صيغة الإيميل غير صحيحة';
+
+  @override
+  String get login_error_user_disabled => 'هذا الحساب معطل';
+
+  @override
+  String get login_error_network => 'خطأ في الاتصال بالإنترنت';
+
+  @override
+  String get login_error_too_many_requests => 'محاولات كثيرة - حاول لاحقاً';
+
+  @override
+  String get login_error_general => 'حدث خطأ في تسجيل الدخول';
+
+  @override
+  String get login_error_button => 'حسناً';
+
+  @override
+  String get login_subscription_expired_title => 'الاشتراك منتهي';
+
+  @override
+  String get login_subscription_expired_info => 'يرجى تجديد الاشتراك للمتابعة';
+
+  @override
+  String get login_subscription_expired_cancel => 'إلغاء';
+
+  @override
+  String get login_subscription_expired_renew => 'تجديد الاشتراك';
+
+  @override
+  String get login_no_subscription_title => 'لا يوجد اشتراك';
+
+  @override
+  String get login_no_subscription_message =>
+      'لا يوجد اشتراك مسجل لهذا الحساب.';
+
+  @override
+  String get login_no_subscription_info =>
+      'يرجى التواصل مع المطور للحصول على كود تفعيل.';
+
+  @override
+  String get login_no_subscription_cancel => 'إلغاء';
+
+  @override
+  String get login_no_subscription_activate => 'تفعيل الآن';
+
+  @override
+  String get login_forgot_password_empty =>
+      'الرجاء إدخال البريد الإلكتروني أولاً';
+
+  @override
+  String get login_forgot_password_invalid =>
+      'صيغة البريد الإلكتروني غير صحيحة';
+
+  @override
+  String get login_forgot_password_sent_title => 'تم الإرسال';
+
+  @override
+  String get login_forgot_password_sent_button => 'حسناً';
+
+  @override
+  String get login_forgot_password_error_user_not_found =>
+      'لا يوجد حساب بهذا الإيميل';
+
+  @override
+  String get login_forgot_password_error_invalid => 'صيغة الإيميل غير صحيحة';
+
+  @override
+  String get login_forgot_password_error_network => 'خطأ في الاتصال بالإنترنت';
+
+  @override
+  String get login_forgot_password_error_general => 'حدث خطأ في إرسال الرابط';
+
+  @override
+  String get login_offline_mode_warning =>
+      '⚠️ لا يمكن التحقق من الاشتراك - العمل في الوضع المحلي';
+
+  @override
+  String get login_unexpected_error =>
+      'حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.';
+
+  @override
+  String get login_online_check_required =>
+      'يرجى الاتصال بالإنترنت للتحقق من الاشتراك';
+
+  @override
+  String get appGuide => 'دليل التطبيق';
+
+  @override
+  String get appGuideDescription => 'شرح شامل لجميع ميزات التطبيق';
+
+  @override
+  String get shareApp => 'مشاركة التطبيق';
+
+  @override
+  String get shareAppDescription => 'شارك التطبيق مع أصدقائك';
+
+  @override
+  String get profileuser => 'الملف الشخصي';
+
+  @override
+  String get accountuser => 'الحساب';
+
+  @override
+  String get youcantrythe => 'يمكنك تجربة الميزة على جهاز حقيقي';
+
+  @override
+  String get editNameAndPassword => 'تعديل الاسم وكلمة المرور';
+
+  @override
+  String get editName => 'تعديل الاسم';
+
+  @override
+  String get saveName => 'حفظ الاسم';
+
+  @override
+  String get requiredd => 'مطلوب';
+
+  @override
+  String get nameTooShort => 'الاسم قصير جداً';
+
+  @override
+  String get userNotFound => 'لم يتم العثور على المستخدم';
+
+  @override
+  String get nameUpdatedSuccess => 'تم تحديث الاسم بنجاح';
+
+  @override
+  String get nameUpdateError => 'حدث خطأ في تحديث الاسم';
+
+  @override
+  String get internetError => 'خطأ في الاتصال بالإنترنت';
+
+  @override
+  String get passwordChangedSuccess => 'تم تغيير كلمة المرور بنجاح';
+
+  @override
+  String get currentPasswordWrong => 'كلمة المرور الحالية غير صحيحة';
+
+  @override
+  String get newPasswordWeak => 'كلمة المرور الجديدة ضعيفة جداً';
+
+  @override
+  String get reloginRequired => 'يجب تسجيل الدخول مرة أخرى للقيام بهذا الإجراء';
+
+  @override
+  String get changePassword => 'تغيير كلمة المرور';
+
+  @override
+  String get currentPassword => 'كلمة المرور الحالية';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get passwordMinLength => '6 أحرف على الأقل';
+
+  @override
+  String get confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get passwordsNotMatch => 'غير متطابقة';
+
+  @override
+  String get sinanayad => 'سنان اياد';
 }

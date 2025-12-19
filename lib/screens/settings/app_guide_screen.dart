@@ -39,7 +39,7 @@ class AppGuideScreen extends StatelessWidget {
             icon: Icons.waving_hand,
             title: isArabic ? 'مرحباً بك!' : 'Welcome!',
             subtitle: isArabic
-                ? 'دليلك الشامل لاستخدام تطبيق Accountant Touch'
+                ? 'هنا دليلك الشامل لاستخدام تطبيق لمسة محاسب'
                 : 'Your complete guide to using Accountant Touch',
             color: AppColors.primaryLight,
             isDark: isDark,
@@ -58,7 +58,7 @@ class AppGuideScreen extends StatelessWidget {
             children: [
               _GuideText(
                 isArabic
-                    ? 'Accountant Touch هو تطبيق محاسبي احترافي وسهل الاستخدام، '
+                    ? ' لمسة محاسب هو تطبيق محاسبي احترافي وسهل الاستخدام، '
                         'مصمم خصيصاً لمساعدتك في إدارة حسابات شركتك أو متجرك بكل سهولة وأمان.'
                     : 'Accountant Touch is a professional and easy-to-use accounting app, '
                         'specially designed to help you manage your company or store accounts easily and securely.',

@@ -1,5 +1,6 @@
 // lib/screens/settings/profile_settings_screen.dart
 
+import 'package:accountant_touch/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 
@@ -88,8 +89,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
       // 1️⃣ Hint: تحديث الاسم في Firebase Auth
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      final l10n = AppLocalizations.of(context)!;
       if (user == null) {
-        throw Exception('لم يتم العثور على المستخدم');
+        throw Exception(l10n.userNotFound);
       }
 
       await user.updateDisplayName(newName);
@@ -105,17 +107,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       if (!mounted) return;
 
       // 3️⃣ Hint: عرض رسالة نجاح
-      _showSuccessDialog('تم تحديث الاسم بنجاح!');
+      _showSuccessDialog(l10n.nameUpdatedSuccess);
 
       setState(() {
         _currentDisplayName = newName;
       });
     } on firebase_auth.FirebaseAuthException catch (e) {
-      String message = 'حدث خطأ في تحديث الاسم';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.nameUpdateError;
 
       switch (e.code) {
         case 'network-request-failed':
-          message = 'خطأ في الاتصال بالإنترنت';
+          message = l10n.internetError;
           break;
       }
 
@@ -143,8 +146,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
       // 1️⃣ Hint: إعادة المصادقة أولاً (Firebase يطلب ذلك لتغيير الباسوورد)
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      final l10n = AppLocalizations.of(context)!;
       if (user == null || user.email == null) {
-        throw Exception('لم يتم العثور على المستخدم');
+        throw Exception(l10n.userNotFound);
       }
 
       final credential = firebase_auth.EmailAuthProvider.credential(
@@ -170,20 +174,21 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       _newPasswordController.clear();
       _confirmPasswordController.clear();
     } on firebase_auth.FirebaseAuthException catch (e) {
-      String message = 'حدث خطأ في تغيير كلمة المرور';
+      final l10n = AppLocalizations.of(context)!;
+      String message = l10n.passwordChangedSuccess;
 
       switch (e.code) {
         case 'wrong-password':
-          message = 'كلمة المرور الحالية غير صحيحة';
+          message = l10n.currentPasswordWrong;
           break;
         case 'weak-password':
-          message = 'كلمة المرور الجديدة ضعيفة جداً';
+          message = l10n.newPasswordWeak;
           break;
         case 'requires-recent-login':
-          message = 'يجب تسجيل الدخول مرة أخرى للقيام بهذا الإجراء';
+          message = l10n.reloginRequired;
           break;
         case 'network-request-failed':
-          message = 'خطأ في الاتصال بالإنترنت';
+          message = l10n.internetError;
           break;
       }
 
@@ -198,6 +203,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   void _showSuccessDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -205,14 +211,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           children: [
             Icon(Icons.check_circle, color: AppColors.success),
             const SizedBox(width: AppConstants.spacingSm),
-            const Text('نجح'),
+            Text(l10n.success),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً'),
+            child:  Text(l10n.ok),
           ),
         ],
       ),
@@ -220,6 +226,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   void _showErrorDialog(String message) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -227,14 +234,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           children: [
             Icon(Icons.error_outline, color: AppColors.error),
             const SizedBox(width: AppConstants.spacingSm),
-            const Text('خطأ'),
+             Text(l10n.error),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً'),
+            child:  Text(l10n.ok),
           ),
         ],
       ),
@@ -244,10 +251,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الملف الشخصي'),
+        title:  Text(l10n.profileuser),
       ),
       body: ListView(
         padding: AppConstants.screenPadding,
@@ -260,14 +268,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           const SizedBox(height: AppConstants.spacingXl),
 
           // ============= تعديل الاسم =============
-          _buildSectionHeader('تعديل الاسم', Icons.person_outline, isDark),
+          _buildSectionHeader(l10n.editName, Icons.person_outline, isDark),
           const SizedBox(height: AppConstants.spacingSm),
           _buildNameForm(),
 
           const SizedBox(height: AppConstants.spacingXl),
 
           // ============= تغيير كلمة المرور =============
-          _buildSectionHeader('تغيير كلمة المرور', Icons.lock_outline, isDark),
+          _buildSectionHeader(l10n.changePassword, Icons.lock_outline, isDark),
           const SizedBox(height: AppConstants.spacingSm),
           _buildPasswordForm(),
 
@@ -279,6 +287,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   /// ← Hint: عرض معلومات المستخدم الحالية
   Widget _buildUserInfoCard(bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: AppConstants.paddingLg,
       decoration: BoxDecoration(
@@ -313,7 +322,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
           // الاسم
           Text(
-            _currentDisplayName.isNotEmpty ? _currentDisplayName : 'مستخدم',
+            _currentDisplayName.isNotEmpty ? _currentDisplayName : l10n.user,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -359,7 +368,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'مدير النظام',
+                  l10n.admin,
                   style: TextStyle(
                     color: AppColors.primaryLight,
                     fontSize: 13,
@@ -402,6 +411,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   /// ← Hint: نموذج تعديل الاسم
   Widget _buildNameForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: AppConstants.paddingLg,
       decoration: BoxDecoration(
@@ -422,13 +432,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           children: [
             CustomTextField(
               controller: _nameController,
-              label: 'الاسم الكامل',
-              hint: 'أحمد محمد',
+              label: l10n.fullName,
+              hint: l10n.sinanayad,
               prefixIcon: Icons.person,
               textInputAction: TextInputAction.done,
               validator: (v) {
-                if (v == null || v.isEmpty) return 'مطلوب';
-                if (v.length < 2) return 'الاسم قصير جداً';
+                if (v == null || v.isEmpty) return l10n.requiredd;
+                if (v.length < 2) return l10n.nameTooShort;
                 return null;
               },
             ),
@@ -436,7 +446,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             const SizedBox(height: AppConstants.spacingLg),
 
             CustomButton(
-              text: 'حفظ الاسم',
+              text: l10n.saveName,
               icon: Icons.save,
               onPressed: _handleUpdateName,
               isLoading: _isLoadingName,
@@ -451,6 +461,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   /// ← Hint: نموذج تغيير كلمة المرور
   Widget _buildPasswordForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: AppConstants.paddingLg,
       decoration: BoxDecoration(
@@ -472,7 +483,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             // كلمة المرور الحالية
             CustomTextField(
               controller: _currentPasswordController,
-              label: 'كلمة المرور الحالية',
+              label: l10n.currentPassword,
               hint: '••••••••',
               prefixIcon: Icons.lock,
               obscureText: _obscureCurrentPassword,
@@ -483,7 +494,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               onSuffixIconPressed: () => setState(
                   () => _obscureCurrentPassword = !_obscureCurrentPassword),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'مطلوب';
+                if (v == null || v.isEmpty) return l10n.requiredd;
                 return null;
               },
             ),
@@ -493,7 +504,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             // كلمة المرور الجديدة
             CustomTextField(
               controller: _newPasswordController,
-              label: 'كلمة المرور الجديدة',
+              label: l10n.newPassword,
               hint: '••••••••',
               prefixIcon: Icons.lock_outline,
               obscureText: _obscureNewPassword,
@@ -503,8 +514,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               onSuffixIconPressed: () =>
                   setState(() => _obscureNewPassword = !_obscureNewPassword),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'مطلوب';
-                if (v.length < 6) return '6 أحرف على الأقل';
+                if (v == null || v.isEmpty) return l10n.requiredd;
+                if (v.length < 6) return l10n.passwordMinLength;
                 return null;
               },
             ),
@@ -514,7 +525,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             // تأكيد كلمة المرور
             CustomTextField(
               controller: _confirmPasswordController,
-              label: 'تأكيد كلمة المرور الجديدة',
+              label: l10n.confirmNewPassword,
               hint: '••••••••',
               prefixIcon: Icons.lock_outline,
               obscureText: _obscureConfirmPassword,
@@ -525,8 +536,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               onSuffixIconPressed: () => setState(
                   () => _obscureConfirmPassword = !_obscureConfirmPassword),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'مطلوب';
-                if (v != _newPasswordController.text) return 'غير متطابقة';
+                if (v == null || v.isEmpty) return l10n.requiredd;
+                if (v != _newPasswordController.text) return l10n.passwordsNotMatch;
                 return null;
               },
             ),
@@ -534,7 +545,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             const SizedBox(height: AppConstants.spacingLg),
 
             CustomButton(
-              text: 'تغيير كلمة المرور',
+              text: l10n.changePassword,
               icon: Icons.vpn_key,
               onPressed: _handleChangePassword,
               isLoading: _isLoadingPassword,

@@ -1532,7 +1532,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Smart Accounting System';
 
   @override
-  String get appVersion => 'Version 1.0.0';
+  String get appVersion => 'Version';
 
   @override
   String get loading => 'Loading...';
@@ -3196,4 +3196,301 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get details => 'Details';
+
+  @override
+  String get register_screen_title => 'Create New Account';
+
+  @override
+  String get register_screen_icon_label => 'Create New Account';
+
+  @override
+  String get register_full_name_label => 'Full Name';
+
+  @override
+  String get register_full_name_hint => 'John Doe';
+
+  @override
+  String get register_email_label => 'Email';
+
+  @override
+  String get register_email_hint => 'example@company.com';
+
+  @override
+  String get register_password_label => 'Password';
+
+  @override
+  String get register_password_hint => '••••••••';
+
+  @override
+  String get register_confirm_password_label => 'Confirm Password';
+
+  @override
+  String get register_confirm_password_hint => '••••••••';
+
+  @override
+  String get register_button_text => 'Create Account';
+
+  @override
+  String get register_divider_text => 'OR';
+
+  @override
+  String get register_have_account_button => 'I have an account - Sign In';
+
+  @override
+  String get register_validation_required => 'Required';
+
+  @override
+  String get register_validation_email_invalid => 'Invalid format';
+
+  @override
+  String get register_validation_password_min => 'At least 6 characters';
+
+  @override
+  String get register_validation_password_mismatch => 'Passwords don\'t match';
+
+  @override
+  String get register_success_dialog_title => 'Success';
+
+  @override
+  String get register_success_auto_activated =>
+      'Account created successfully!\n\n✅ Trial subscription activated for 14 days.\n\nYou will be redirected to the main screen now.';
+
+  @override
+  String get register_success_manual_activation =>
+      'Account created successfully!\n\nPlease contact the developer to activate your subscription.\n\nYou will be redirected to the main screen now.';
+
+  @override
+  String get register_success_button => 'Start Now';
+
+  @override
+  String get register_error_dialog_title => 'Error';
+
+  @override
+  String get register_error_email_in_use => 'This email is already in use';
+
+  @override
+  String get register_error_invalid_email => 'Invalid email format';
+
+  @override
+  String get register_error_weak_password => 'Password is too weak';
+
+  @override
+  String get register_error_network => 'Network connection error';
+
+  @override
+  String get register_error_general => 'Registration error occurred';
+
+  @override
+  String get register_error_button => 'OK';
+
+  @override
+  String get login_screen_title => 'Sign In';
+
+  @override
+  String get login_welcome_back => 'Welcome Back';
+
+  @override
+  String get login_email_label => 'Email';
+
+  @override
+  String get login_email_hint => 'example@company.com';
+
+  @override
+  String get login_password_label => 'Password';
+
+  @override
+  String get login_password_hint => '••••••••';
+
+  @override
+  String get login_forgot_password => 'Forgot Password';
+
+  @override
+  String get login_button_text => 'Sign In';
+
+  @override
+  String get login_divider_text => 'OR';
+
+  @override
+  String get login_no_account_button => 'Don\'t have an account - Sign Up';
+
+  @override
+  String get login_validation_required => 'Required';
+
+  @override
+  String get login_validation_email_invalid => 'Invalid format';
+
+  @override
+  String get login_error_dialog_title => 'Error';
+
+  @override
+  String get login_error_user_not_found => 'No account found with this email';
+
+  @override
+  String get login_error_wrong_password => 'Incorrect password';
+
+  @override
+  String get login_error_invalid_email => 'Invalid email format';
+
+  @override
+  String get login_error_user_disabled => 'This account is disabled';
+
+  @override
+  String get login_error_network => 'Network connection error';
+
+  @override
+  String get login_error_too_many_requests => 'Too many attempts - try later';
+
+  @override
+  String get login_error_general => 'Login error occurred';
+
+  @override
+  String get login_error_button => 'OK';
+
+  @override
+  String get login_subscription_expired_title => 'Subscription Expired';
+
+  @override
+  String get login_subscription_expired_info =>
+      'Please renew your subscription to continue';
+
+  @override
+  String get login_subscription_expired_cancel => 'Cancel';
+
+  @override
+  String get login_subscription_expired_renew => 'Renew Subscription';
+
+  @override
+  String get login_no_subscription_title => 'No Subscription';
+
+  @override
+  String get login_no_subscription_message =>
+      'No subscription found for this account.';
+
+  @override
+  String get login_no_subscription_info =>
+      'Please contact the developer to get an activation code.';
+
+  @override
+  String get login_no_subscription_cancel => 'Cancel';
+
+  @override
+  String get login_no_subscription_activate => 'Activate Now';
+
+  @override
+  String get login_forgot_password_empty => 'Please enter your email first';
+
+  @override
+  String get login_forgot_password_invalid => 'Invalid email format';
+
+  @override
+  String get login_forgot_password_sent_title => 'Sent';
+
+  @override
+  String get login_forgot_password_sent_button => 'OK';
+
+  @override
+  String get login_forgot_password_error_user_not_found =>
+      'No account found with this email';
+
+  @override
+  String get login_forgot_password_error_invalid => 'Invalid email format';
+
+  @override
+  String get login_forgot_password_error_network => 'Network connection error';
+
+  @override
+  String get login_forgot_password_error_general => 'Error sending reset link';
+
+  @override
+  String get login_offline_mode_warning =>
+      '⚠️ Cannot verify subscription - Working in offline mode';
+
+  @override
+  String get login_unexpected_error =>
+      'An unexpected error occurred. Please try again later.';
+
+  @override
+  String get login_online_check_required =>
+      'Please connect to the internet to verify subscription';
+
+  @override
+  String get appGuide => 'App Guide';
+
+  @override
+  String get appGuideDescription => 'A complete guide to all app features';
+
+  @override
+  String get shareApp => 'Share App';
+
+  @override
+  String get shareAppDescription => 'Share the app with your friends';
+
+  @override
+  String get profileuser => 'Profile';
+
+  @override
+  String get accountuser => 'Account';
+
+  @override
+  String get youcantrythe => 'You can try the feature on a real device';
+
+  @override
+  String get editNameAndPassword => 'Edit Name and Password';
+
+  @override
+  String get editName => 'Edit Name';
+
+  @override
+  String get saveName => 'Save Name';
+
+  @override
+  String get requiredd => 'Required';
+
+  @override
+  String get nameTooShort => 'Name is too short';
+
+  @override
+  String get userNotFound => 'User not found';
+
+  @override
+  String get nameUpdatedSuccess => 'Name updated successfully';
+
+  @override
+  String get nameUpdateError => 'Error updating name';
+
+  @override
+  String get internetError => 'Internet connection error';
+
+  @override
+  String get passwordChangedSuccess => 'Password changed successfully';
+
+  @override
+  String get currentPasswordWrong => 'Current password is incorrect';
+
+  @override
+  String get newPasswordWeak => 'New password is too weak';
+
+  @override
+  String get reloginRequired => 'You must log in again to perform this action';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get passwordMinLength => 'At least 6 characters';
+
+  @override
+  String get confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get passwordsNotMatch => 'Does not match';
+
+  @override
+  String get sinanayad => 'Sinan Ayad';
 }
