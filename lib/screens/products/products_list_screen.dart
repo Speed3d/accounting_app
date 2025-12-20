@@ -262,6 +262,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       // ═══════════════════════════════════════════════════════════
       final accountingSuccess = await AccountingIntegrationHelper.recordProductDeletion(
         productId: product.productID!,
+        quantity: product.quantity,
         costPrice: product.costPrice,
         deleteReason: deleteReason,
       );
