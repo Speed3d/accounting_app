@@ -1087,7 +1087,7 @@ class DatabaseHelper {
     // ============================================================================
     debugPrint('💰 [DatabaseHelper] إنشاء جدول الحسابات المحاسبية...');
 
-    batch.execute('''
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS TB_Accounts (
         AccountID INTEGER PRIMARY KEY AUTOINCREMENT,
         AccountCode TEXT NOT NULL UNIQUE,
@@ -1118,8 +1118,6 @@ class DatabaseHelper {
       'ALTER TABLE TB_Transactions ADD COLUMN CreditAccountID INTEGER REFERENCES TB_Accounts(AccountID)'
     );
     debugPrint('✅ [DatabaseHelper] تم تعديل جدول TB_Transactions لدعم القيد المزدوج');
-
-    await batch.commit();
 
     // ============================================================================
     // 💰 إضافة الحسابات الافتراضية (12 حساب)
