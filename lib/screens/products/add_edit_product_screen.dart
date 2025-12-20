@@ -17,6 +17,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../widgets/loading_state.dart';
 import 'barcode_scanner_screen.dart';
 import 'manage_categories_units_screen.dart';
+import '../../helpers/accounting_integration_helper.dart';
 
 /// ============================================================================
 /// 📦 شاشة إضافة/تعديل منتج (النسخة المحدثة)
@@ -260,7 +261,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _generateInternalBarcode() async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final internalBarcode = 'INTERNAL-$timestamp';
-    
+
     setState(() {
       _barcodeController.text = internalBarcode;
     });
@@ -270,6 +271,141 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         content: Text('تم توليد باركود داخلي تلقائياً'),
         backgroundColor: AppColors.success,
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// ============================================================================
+  /// عرض Dialog لاختيار نوع الشراء (عند إضافة منتج جديد)
+  /// ============================================================================
+  /// ← Hint: يسأل المستخدم عن نوع الشراء: نقدي / آجل / رصيد افتتاحي
+  /// ← Hint: يعيد القيمة المختارة: 'cash' / 'credit' / 'opening_stock' / null
+  Future<String?> _showPurchaseTypeDialog() async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // ← Hint: يجب اختيار نوع قبل المتابعة
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: AppColors.primaryLight),
+              const SizedBox(width: 8),
+              const Text('نوع الشراء'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'كيف تم شراء هذا المنتج؟',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+
+              // ═══════════════════════════════════════════════════════════
+              // خيار 1: شراء نقدي (من الصندوق)
+              // ═══════════════════════════════════════════════════════════
+              _buildPurchaseTypeOption(
+                icon: Icons.money,
+                iconColor: AppColors.success,
+                title: 'شراء نقدي',
+                description: 'تم الدفع من الصندوق فوراً',
+                value: 'cash',
+              ),
+
+              const SizedBox(height: 12),
+
+              // ═══════════════════════════════════════════════════════════
+              // خيار 2: شراء آجل (من المورد)
+              // ═══════════════════════════════════════════════════════════
+              _buildPurchaseTypeOption(
+                icon: Icons.credit_card,
+                iconColor: AppColors.warning,
+                title: 'شراء آجل',
+                description: 'سيتم الدفع للمورد لاحقاً',
+                value: 'credit',
+              ),
+
+              const SizedBox(height: 12),
+
+              // ═══════════════════════════════════════════════════════════
+              // خيار 3: رصيد افتتاحي
+              // ═══════════════════════════════════════════════════════════
+              _buildPurchaseTypeOption(
+                icon: Icons.inventory_2,
+                iconColor: AppColors.info,
+                title: 'رصيد افتتاحي',
+                description: 'مخزون موجود من قبل',
+                value: 'opening_stock',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text('إلغاء'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// ============================================================================
+  /// بناء خيار من خيارات نوع الشراء
+  /// ============================================================================
+  Widget _buildPurchaseTypeOption({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String description,
+    required String value,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pop(context, value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          ],
+        ),
       ),
     );
   }
@@ -366,16 +502,72 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         unitID: _selectedUnit?.unitID,
       );
 
-      // ← Hint: حفظ في قاعدة البيانات
+      // ════════════════════════════════════════════════════════════════
+      // حفظ في قاعدة البيانات + التكامل المحاسبي
+      // ════════════════════════════════════════════════════════════════
       if (widget.product == null) {
-        // ← Hint: إضافة منتج جديد
-        await _dbHelper.insertProduct(product);
-        await _dbHelper.logActivity(
-          'تم إضافة منتج جديد: ${product.productName}',
+        // ══════════════════════════════════════════════════════════════
+        // إضافة منتج جديد → يجب اختيار نوع الشراء
+        // ══════════════════════════════════════════════════════════════
+
+        // 1️⃣ عرض Dialog لاختيار نوع الشراء
+        final purchaseType = await _showPurchaseTypeDialog();
+
+        // ← Hint: إذا تم الإلغاء، لا نكمل الحفظ
+        if (purchaseType == null) {
+          setState(() => _isSaving = false);
+          return;
+        }
+
+        // 2️⃣ حفظ المنتج في قاعدة البيانات
+        final productId = await _dbHelper.insertProduct(product);
+
+        // 3️⃣ تسجيل القيد المحاسبي للشراء
+        final accountingSuccess = await AccountingIntegrationHelper.recordProductPurchase(
+          productId: productId,
+          quantity: quantity,
+          costPrice: costPrice,
+          purchaseType: purchaseType,
+          supplierId: _selectedSupplier!.supplierID!,
         );
+
+        if (!accountingSuccess) {
+          debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي للمنتج الجديد');
+        }
+
+        // 4️⃣ تسجيل في Activity Log
+        await _dbHelper.logActivity(
+          'تم إضافة منتج جديد: ${product.productName} (نوع الشراء: $purchaseType)',
+        );
+
       } else {
-        // ← Hint: تعديل منتج موجود
+        // ══════════════════════════════════════════════════════════════
+        // تعديل منتج موجود → تسجيل قيد التعديل
+        // ══════════════════════════════════════════════════════════════
+
+        // 1️⃣ حساب الفرق في الكمية والسعر
+        final oldProduct = widget.product!;
+        final quantityDifference = quantity - oldProduct.quantity;
+        final costDifference = costPrice - oldProduct.costPrice;
+
+        // 2️⃣ حفظ التعديلات في قاعدة البيانات
         await _dbHelper.updateProduct(product);
+
+        // 3️⃣ تسجيل القيد المحاسبي للتعديل (إذا كان هناك فرق)
+        if (quantityDifference != 0 || costDifference != Decimal.zero) {
+          final adjustmentSuccess = await AccountingIntegrationHelper.recordProductAdjustment(
+            productId: product.productID!,
+            costDifference: costDifference,
+            quantityDifference: quantityDifference,
+            adjustmentReason: 'تعديل المنتج: ${product.productName}',
+          );
+
+          if (!adjustmentSuccess) {
+            debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي لتعديل المنتج');
+          }
+        }
+
+        // 4️⃣ تسجيل في Activity Log
         await _dbHelper.logActivity(
           'تم تعديل المنتج: ${product.productName}',
         );

@@ -15,6 +15,7 @@ import '../../widgets/loading_state.dart';
 import 'add_edit_product_screen.dart';
 import 'manage_categories_units_screen.dart';
 import 'inactive_products_screen.dart'; // ✅ Hint: شاشة المنتجات المعطلة
+import '../../helpers/accounting_integration_helper.dart';
 
 // ← Hint: تم إزالة AuthService - كل مستخدم admin الآن
 
@@ -147,7 +148,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     });
   }
 
-  /// Hint: أرشفة منتج
+  /// Hint: أرشفة منتج (محدثة لتشمل التكامل المحاسبي)
   Future<void> _handleArchiveProduct(Product product) async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -165,6 +166,73 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       return;
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // 1️⃣ عرض Dialog لاختيار سبب الحذف
+    // ═══════════════════════════════════════════════════════════
+    final deleteReason = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: const [
+            Icon(Icons.delete_outline, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('سبب حذف/أرشفة المنتج'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('لماذا تريد حذف "${product.productName}"؟'),
+            const SizedBox(height: 24),
+
+            // خيار 1: إرجاع للمورد
+            _buildDeleteReasonOption(
+              icon: Icons.undo,
+              iconColor: AppColors.info,
+              title: 'إرجاع للمورد',
+              description: 'تم إرجاع المنتج للمورد',
+              value: 'return_to_supplier',
+            ),
+
+            const SizedBox(height: 12),
+
+            // خيار 2: خسارة/تلف
+            _buildDeleteReasonOption(
+              icon: Icons.broken_image,
+              iconColor: AppColors.error,
+              title: 'خسارة أو تلف',
+              description: 'المنتج تالف أو مفقود',
+              value: 'loss',
+            ),
+
+            const SizedBox(height: 12),
+
+            // خيار 3: خطأ في الإدخال
+            _buildDeleteReasonOption(
+              icon: Icons.edit_off,
+              iconColor: AppColors.warning,
+              title: 'خطأ في الإدخال',
+              description: 'تم إضافته بالخطأ',
+              value: 'entry_error',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('إلغاء'),
+          ),
+        ],
+      ),
+    );
+
+    // ← Hint: إذا تم الإلغاء، لا نكمل الحذف
+    if (deleteReason == null) return;
+
+    // ═══════════════════════════════════════════════════════════
+    // 2️⃣ تأكيد الحذف
+    // ═══════════════════════════════════════════════════════════
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -189,7 +257,24 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     if (confirm != true) return;
 
     try {
+      // ═══════════════════════════════════════════════════════════
+      // 3️⃣ تسجيل القيد المحاسبي للحذف
+      // ═══════════════════════════════════════════════════════════
+      final accountingSuccess = await AccountingIntegrationHelper.recordProductDeletion(
+        productId: product.productID!,
+        costPrice: product.costPrice,
+        deleteReason: deleteReason,
+      );
+
+      if (!accountingSuccess) {
+        debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي لحذف المنتج');
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // 4️⃣ أرشفة المنتج في قاعدة البيانات
+      // ═══════════════════════════════════════════════════════════
       await dbHelper.archiveProduct(product.productID!);
+
       // ← Hint: لا حاجة لـ userId و userName - يتم جلبهم تلقائياً من SessionService
       await dbHelper.logActivity(
         l10n.archiveProductAction(product.productName),
@@ -993,5 +1078,64 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     if (result == true) {
       _reloadProducts();
     }
+  }
+
+  /// ============================================================================
+  /// بناء خيار من خيارات سبب الحذف
+  /// ============================================================================
+  Widget _buildDeleteReasonOption({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String description,
+    required String value,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pop(context, value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: iconColor, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    );
   }
 }
