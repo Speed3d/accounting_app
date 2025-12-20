@@ -1082,6 +1082,343 @@ class DatabaseHelper {
 
     debugPrint('✅ [DatabaseHelper] تم إنشاء السنة المالية الافتراضية ($defaultYear) بنجاح');
 
+    // ============================================================================
+    // 🆕 إنشاء جدول الحسابات المحاسبية (TB_Accounts)
+    // ============================================================================
+    debugPrint('💰 [DatabaseHelper] إنشاء جدول الحسابات المحاسبية...');
+
+    batch.execute('''
+      CREATE TABLE IF NOT EXISTS TB_Accounts (
+        AccountID INTEGER PRIMARY KEY AUTOINCREMENT,
+        AccountCode TEXT NOT NULL UNIQUE,
+        AccountNameAr TEXT NOT NULL,
+        AccountNameEn TEXT NOT NULL,
+        AccountType TEXT NOT NULL,
+        AccountCategory TEXT NOT NULL,
+        ParentAccountID INTEGER,
+        Balance REAL NOT NULL DEFAULT 0.0,
+        DebitBalance REAL NOT NULL DEFAULT 0.0,
+        CreditBalance REAL NOT NULL DEFAULT 0.0,
+        IsDefault INTEGER NOT NULL DEFAULT 0,
+        IsActive INTEGER NOT NULL DEFAULT 1,
+        Description TEXT,
+        CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TEXT,
+        FOREIGN KEY (ParentAccountID) REFERENCES TB_Accounts(AccountID) ON DELETE SET NULL
+      )
+    ''');
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء جدول TB_Accounts بنجاح');
+
+    // ← Hint: إضافة DebitAccountID و CreditAccountID إلى TB_Transactions
+    await db.execute(
+      'ALTER TABLE TB_Transactions ADD COLUMN DebitAccountID INTEGER REFERENCES TB_Accounts(AccountID)'
+    );
+    await db.execute(
+      'ALTER TABLE TB_Transactions ADD COLUMN CreditAccountID INTEGER REFERENCES TB_Accounts(AccountID)'
+    );
+    debugPrint('✅ [DatabaseHelper] تم تعديل جدول TB_Transactions لدعم القيد المزدوج');
+
+    await batch.commit();
+
+    // ============================================================================
+    // 💰 إضافة الحسابات الافتراضية (12 حساب)
+    // ============================================================================
+    debugPrint('📊 [DatabaseHelper] إضافة الحسابات الافتراضية...');
+
+    final defaultAccounts = [
+      // ═══════════════════════════════════════════════════════════
+      // 🏦 الأصول (Assets) - AccountType: asset
+      // ═══════════════════════════════════════════════════════════
+      {
+        'AccountCode': '1001',
+        'AccountNameAr': 'الصندوق',
+        'AccountNameEn': 'Cash',
+        'AccountType': 'asset',
+        'AccountCategory': 'current_asset',
+        'IsDefault': 1,
+        'Description': 'النقدية في الصندوق - الحساب الافتراضي للعمليات النقدية',
+      },
+      {
+        'AccountCode': '1002',
+        'AccountNameAr': 'البنك',
+        'AccountNameEn': 'Bank',
+        'AccountType': 'asset',
+        'AccountCategory': 'current_asset',
+        'IsDefault': 1,
+        'Description': 'الأرصدة البنكية',
+      },
+      {
+        'AccountCode': '1100',
+        'AccountNameAr': 'المخزون',
+        'AccountNameEn': 'Inventory',
+        'AccountType': 'asset',
+        'AccountCategory': 'current_asset',
+        'IsDefault': 1,
+        'Description': 'قيمة المنتجات المخزنة (يتحدث تلقائياً عند الشراء/البيع)',
+      },
+      {
+        'AccountCode': '1200',
+        'AccountNameAr': 'العملاء (المدينون)',
+        'AccountNameEn': 'Accounts Receivable',
+        'AccountType': 'asset',
+        'AccountCategory': 'current_asset',
+        'IsDefault': 1,
+        'Description': 'ديون العملاء (مبيعات آجلة)',
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // 📊 الخصوم (Liabilities) - AccountType: liability
+      // ═══════════════════════════════════════════════════════════
+      {
+        'AccountCode': '2001',
+        'AccountNameAr': 'الموردون (الدائنون)',
+        'AccountNameEn': 'Accounts Payable',
+        'AccountType': 'liability',
+        'AccountCategory': 'current_liability',
+        'IsDefault': 1,
+        'Description': 'ديون للموردين (مشتريات آجلة)',
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // 💰 حقوق الملكية (Equity) - AccountType: equity
+      // ═══════════════════════════════════════════════════════════
+      {
+        'AccountCode': '3001',
+        'AccountNameAr': 'رأس المال',
+        'AccountNameEn': 'Capital',
+        'AccountType': 'equity',
+        'AccountCategory': 'capital',
+        'IsDefault': 1,
+        'Description': 'رأس المال الأولي للشركة',
+      },
+      {
+        'AccountCode': '3002',
+        'AccountNameAr': 'الأرباح المحتجزة',
+        'AccountNameEn': 'Retained Earnings',
+        'AccountType': 'equity',
+        'AccountCategory': 'retained_earnings',
+        'IsDefault': 1,
+        'Description': 'الأرباح المتراكمة من السنوات السابقة',
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // 📈 الإيرادات (Revenue) - AccountType: revenue
+      // ═══════════════════════════════════════════════════════════
+      {
+        'AccountCode': '4001',
+        'AccountNameAr': 'إيرادات المبيعات',
+        'AccountNameEn': 'Sales Revenue',
+        'AccountType': 'revenue',
+        'AccountCategory': 'sales_revenue',
+        'IsDefault': 1,
+        'Description': 'دخل من بيع المنتجات',
+      },
+
+      // ═══════════════════════════════════════════════════════════
+      // 📉 المصروفات (Expenses) - AccountType: expense
+      // ═══════════════════════════════════════════════════════════
+      {
+        'AccountCode': '5001',
+        'AccountNameAr': 'تكلفة المبيعات',
+        'AccountNameEn': 'Cost of Goods Sold',
+        'AccountType': 'expense',
+        'AccountCategory': 'cost_of_sales',
+        'IsDefault': 1,
+        'Description': 'تكلفة شراء المنتجات المباعة',
+      },
+      {
+        'AccountCode': '5002',
+        'AccountNameAr': 'الرواتب والأجور',
+        'AccountNameEn': 'Salaries & Wages',
+        'AccountType': 'expense',
+        'AccountCategory': 'salary_expense',
+        'IsDefault': 1,
+        'Description': 'رواتب الموظفين ومكافآتهم',
+      },
+      {
+        'AccountCode': '5003',
+        'AccountNameAr': 'المصروفات العامة',
+        'AccountNameEn': 'General Expenses',
+        'AccountType': 'expense',
+        'AccountCategory': 'general_expense',
+        'IsDefault': 1,
+        'Description': 'مصروفات متنوعة (كهرباء، ماء، إيجار، إلخ)',
+      },
+      {
+        'AccountCode': '5010',
+        'AccountNameAr': 'خسائر المخزون',
+        'AccountNameEn': 'Inventory Losses',
+        'AccountType': 'expense',
+        'AccountCategory': 'general_expense',
+        'IsDefault': 1,
+        'Description': 'خسائر ناتجة عن تلف أو سرقة المخزون',
+      },
+    ];
+
+    // إدراج جميع الحسابات الافتراضية
+    for (var account in defaultAccounts) {
+      await db.insert('TB_Accounts', account);
+    }
+
+    debugPrint('✅ [DatabaseHelper] تم إضافة ${defaultAccounts.length} حساب افتراضي');
+
+    // ============================================================================
+    // 🔄 إنشاء Triggers لتحديث أرصدة الحسابات تلقائياً
+    // ============================================================================
+    debugPrint('🔄 [DatabaseHelper] إنشاء Triggers لتحديث أرصدة الحسابات...');
+
+    // Trigger: عند إضافة قيد جديد → تحديث رصيد الحساب المدين والدائن
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_account_on_insert
+      AFTER INSERT ON TB_Transactions
+      WHEN NEW.DebitAccountID IS NOT NULL AND NEW.CreditAccountID IS NOT NULL
+      BEGIN
+        -- تحديث الحساب المدين (إضافة للرصيد)
+        UPDATE TB_Accounts
+        SET
+          DebitBalance = DebitBalance + NEW.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('asset', 'expense') THEN Balance + NEW.Amount
+            ELSE Balance - NEW.Amount
+          END
+        WHERE AccountID = NEW.DebitAccountID;
+
+        -- تحديث الحساب الدائن (خصم من الرصيد)
+        UPDATE TB_Accounts
+        SET
+          CreditBalance = CreditBalance + NEW.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('liability', 'equity', 'revenue') THEN Balance + NEW.Amount
+            ELSE Balance - NEW.Amount
+          END
+        WHERE AccountID = NEW.CreditAccountID;
+      END;
+    ''');
+
+    // Trigger: عند حذف قيد → عكس التأثير على الأرصدة
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_account_on_delete
+      AFTER DELETE ON TB_Transactions
+      WHEN OLD.DebitAccountID IS NOT NULL AND OLD.CreditAccountID IS NOT NULL
+      BEGIN
+        -- عكس التأثير على الحساب المدين
+        UPDATE TB_Accounts
+        SET
+          DebitBalance = DebitBalance - OLD.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('asset', 'expense') THEN Balance - OLD.Amount
+            ELSE Balance + OLD.Amount
+          END
+        WHERE AccountID = OLD.DebitAccountID;
+
+        -- عكس التأثير على الحساب الدائن
+        UPDATE TB_Accounts
+        SET
+          CreditBalance = CreditBalance - OLD.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('liability', 'equity', 'revenue') THEN Balance - OLD.Amount
+            ELSE Balance + OLD.Amount
+          END
+        WHERE AccountID = OLD.CreditAccountID;
+      END;
+    ''');
+
+    // Trigger: عند تعديل مبلغ قيد → تحديث الأرصدة
+    await db.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_update_account_on_update
+      AFTER UPDATE OF Amount ON TB_Transactions
+      WHEN OLD.Amount != NEW.Amount
+        AND NEW.DebitAccountID IS NOT NULL
+        AND NEW.CreditAccountID IS NOT NULL
+      BEGIN
+        -- عكس التأثير القديم
+        UPDATE TB_Accounts
+        SET
+          DebitBalance = DebitBalance - OLD.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('asset', 'expense') THEN Balance - OLD.Amount
+            ELSE Balance + OLD.Amount
+          END
+        WHERE AccountID = OLD.DebitAccountID;
+
+        UPDATE TB_Accounts
+        SET
+          CreditBalance = CreditBalance - OLD.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('liability', 'equity', 'revenue') THEN Balance - OLD.Amount
+            ELSE Balance + OLD.Amount
+          END
+        WHERE AccountID = OLD.CreditAccountID;
+
+        -- تطبيق التأثير الجديد
+        UPDATE TB_Accounts
+        SET
+          DebitBalance = DebitBalance + NEW.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('asset', 'expense') THEN Balance + NEW.Amount
+            ELSE Balance - NEW.Amount
+          END
+        WHERE AccountID = NEW.DebitAccountID;
+
+        UPDATE TB_Accounts
+        SET
+          CreditBalance = CreditBalance + NEW.Amount,
+          Balance = CASE
+            WHEN AccountType IN ('liability', 'equity', 'revenue') THEN Balance + NEW.Amount
+            ELSE Balance - NEW.Amount
+          END
+        WHERE AccountID = NEW.CreditAccountID;
+      END;
+    ''');
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء 3 Triggers للحسابات');
+
+    // ============================================================================
+    // 📊 إنشاء Indexes لتحسين الأداء
+    // ============================================================================
+    debugPrint('📊 [DatabaseHelper] إنشاء Indexes للحسابات...');
+
+    // مؤشر على كود الحساب (فريد - بحث سريع)
+    await db.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_code
+      ON TB_Accounts(AccountCode)
+    ''');
+
+    // مؤشر على نوع الحساب (للفلترة)
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_accounts_type
+      ON TB_Accounts(AccountType)
+    ''');
+
+    // مؤشر على الحسابات النشطة
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_accounts_active
+      ON TB_Accounts(IsActive)
+    ''');
+
+    // مؤشر على الحسابات الافتراضية
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_accounts_default
+      ON TB_Accounts(IsDefault)
+    ''');
+
+    // مؤشر على الحساب المدين في Transactions
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_transactions_debit
+      ON TB_Transactions(DebitAccountID)
+    ''');
+
+    // مؤشر على الحساب الدائن في Transactions
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_transactions_credit
+      ON TB_Transactions(CreditAccountID)
+    ''');
+
+    debugPrint('✅ [DatabaseHelper] تم إنشاء 6 Indexes للحسابات');
+
+    debugPrint('🎉 [DatabaseHelper] نظام الحسابات المحاسبي جاهز في _onCreate!');
+
     // ✅✅✅ التعديل الثالث: إضافة الفئات الافتراضية بعد إنشاء الجداول ✅✅✅
     await _insertDefaultCategories(db);
 
