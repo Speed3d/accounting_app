@@ -17,6 +17,7 @@ import 'package:package_info_plus/package_info_plus.dart'; // ← Hint: للحص
 import '../../l10n/app_localizations.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/accounting_view_provider.dart';  // 🆕 Provider العرض المحاسبي
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
 
@@ -145,7 +146,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsCard(
             child: _buildCurrencyTile(context, l10n, isDark),
           ),
-          
+
+          const SizedBox(height: AppConstants.spacingLg),
+
+          // ============================================================
+          // 📊 قسم الإعدادات المحاسبية
+          // ← Hint: يحتوي على خيار التبديل بين العرض البسيط والمحاسبي
+          // ============================================================
+          _buildSectionHeader(
+            context,
+            title: 'الإعدادات المحاسبية',
+            icon: Icons.account_balance_outlined,
+            isDark: isDark,
+          ),
+          const SizedBox(height: AppConstants.spacingSm),
+
+          _SettingsCard(
+            child: Consumer<AccountingViewProvider>(
+              builder: (context, accountingProvider, child) {
+                return SwitchListTile(
+                  title: const Text(
+                    'العرض المحاسبي',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    accountingProvider.showAccountingView
+                        ? 'عرض التفاصيل المحاسبية والقيود'
+                        : 'عرض بسيط بدون تفاصيل محاسبية',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    ),
+                  ),
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (accountingProvider.showAccountingView
+                              ? AppColors.success
+                              : AppColors.info)
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      accountingProvider.showAccountingView
+                          ? Icons.receipt_long
+                          : Icons.receipt,
+                      color: accountingProvider.showAccountingView
+                          ? AppColors.success
+                          : AppColors.info,
+                      size: 24,
+                    ),
+                  ),
+                  value: accountingProvider.showAccountingView,
+                  onChanged: (value) {
+                    accountingProvider.toggleAccountingView(value);
+                  },
+                  activeColor: AppColors.success,
+                );
+              },
+            ),
+          ),
+
           const SizedBox(height: AppConstants.spacingLg),
 
           // ============================================================

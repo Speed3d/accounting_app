@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:accountant_touch/l10n/app_localizations.dart';
 import 'package:accountant_touch/providers/theme_provider.dart';
 import 'package:accountant_touch/providers/locale_provider.dart';
+import 'package:accountant_touch/providers/accounting_view_provider.dart';  // 🆕 Provider العرض المحاسبي
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/splash_screen.dart';
@@ -181,9 +182,10 @@ Future<void> main() async {
   // ============================================================================
   // الخطوة 2: تهيئة الـ Providers
   // ============================================================================
-  
+
   final themeProvider = ThemeProvider();
   final localeProvider = LocaleProvider();
+  final accountingViewProvider = AccountingViewProvider();  // 🆕 Provider العرض المحاسبي
 
   // ============================================================================
   // الخطوة 3: تحميل الإعدادات المحلية
@@ -197,6 +199,9 @@ Future<void> main() async {
 
     // ← Hint: تحميل اللغة المحفوظة
     await localeProvider.loadSavedLocale();
+
+    // 🆕 تحميل إعدادات العرض المحاسبي
+    await accountingViewProvider.loadSettings();
 
     // ← Hint: تحميل العملة المحفوظة
     await CurrencyService.instance.loadSavedCurrency();
@@ -232,6 +237,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: localeProvider),
+        ChangeNotifierProvider.value(value: accountingViewProvider),  // 🆕 Provider العرض المحاسبي
       ],
       child: const MyApp(),
     ),
