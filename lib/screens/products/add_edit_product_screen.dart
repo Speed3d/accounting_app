@@ -422,10 +422,23 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.product == null ? l10n.addProduct : l10n.editProduct,
-        ),
+      //   title: Text(
+      //     widget.product == null ? l10n.addProduct : l10n.editProduct,
+      //   ),
+      // ),
+
+      /////////////////////////////////
+        title: Text(widget.product == null ? l10n.addProduct : l10n.editProduct),
+        actions: [
+          // زر الحفظ في الـ AppBar للتجربة ونجحت
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: l10n.save,
+            onPressed: _isSaving ? null : _saveProduct,
+          ),
+        ],
       ),
+      /////////////////////////////////
 
       body: _isLoadingSuppliers
           ? LoadingState(message: l10n.loadingMessage)
@@ -486,7 +499,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       // 💾 زر الحفظ
                       // ============================================================
                       CustomButton(
-                        text: widget.product == null ? l10n.add : l10n.save,
+                        text: widget.product == null ? l10n.add : l10n.save, 
                         onPressed: _isSaving ? null : _saveProduct,
                         type: ButtonType.primary,
                         isLoading: _isSaving,
@@ -814,7 +827,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   child: CustomTextField(
                     controller: _costPriceController,
                     label: l10n.costPrice,
-                    hint: '0.00',
+                    hint: '0',
                     prefixIcon: Icons.shopping_cart,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}), // ← Hint: تحديث الخلاصة
@@ -839,7 +852,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   child: CustomTextField(
                     controller: _sellingPriceController,
                     label: l10n.sellingPrice,
-                    hint: '0.00',
+                    hint: '0',
                     prefixIcon: Icons.sell,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setState(() {}), // ← Hint: تحديث الخلاصة

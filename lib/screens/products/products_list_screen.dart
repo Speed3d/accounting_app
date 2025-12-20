@@ -103,7 +103,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     // 2️⃣ فلترة حسب الكمية المنخفضة
     if (_selectedFilter == 'low') {
       result = result.where((product) {
-        return product.quantity < 5;
+        return product.quantity < 3;
       }).toList();
     }
 
@@ -446,7 +446,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     
     // Hint: عد المنتجات منخفضة المخزون
     final lowStockCount = _allProducts.where(
-      (product) => product.quantity < 10,
+      (product) => product.quantity < 3,
     ).length;
 
     // Hint: ✅ حساب قيمة المخزون باستخدام Decimal
@@ -484,7 +484,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               icon: Icons.warning_amber,
               label: l10n.low,
               value: lowStockCount.toString(),
-              color: lowStockCount > 0 ? AppColors.warning : AppColors.success,
+              color: lowStockCount > 3 ? AppColors.success : AppColors.warning,
               isDark: isDark,
               filterType: 'low',
             ),
