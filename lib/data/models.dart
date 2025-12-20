@@ -1254,4 +1254,212 @@ class FinancialTransaction {
   bool get isExpense => direction == 'out';
 }
 
+// ============================================================================
+// 🏦 نظام الحسابات المحاسبي (Chart of Accounts)
+// ============================================================================
+// ← Hint: هذا النظام يحول التطبيق إلى نظام محاسبي مزدوج القيد كامل
+// ← Hint: كل عملية مالية تُسجل بمدين ودائن (Debit & Credit)
+// ← Hint: يتيح تتبع دقيق للمخزون، النقدية، الموردين، والعملاء
+// ============================================================================
+
+// ============================================================================
+// 📊 أنواع الحسابات (Account Types)
+// ============================================================================
+// ← Hint: التصنيف الرئيسي للحسابات حسب المعايير المحاسبية
+enum AccountType {
+  asset,        // ← Hint: الأصول (الصندوق، المخزون، العملاء)
+  liability,    // ← Hint: الخصوم (الموردون، القروض)
+  equity,       // ← Hint: حقوق الملكية (رأس المال، الأرباح المحتجزة)
+  revenue,      // ← Hint: الإيرادات (المبيعات، إيرادات أخرى)
+  expense,      // ← Hint: المصروفات (المشتريات، الرواتب، المصروفات العامة)
+}
+
+// ============================================================================
+// 🏷️ تصنيفات فرعية للحسابات
+// ============================================================================
+// ← Hint: تصنيف أدق داخل كل نوع رئيسي
+enum AccountCategory {
+  // ← Hint: الأصول
+  current_asset,       // ← Hint: أصول متداولة (نقدية، مخزون)
+  fixed_asset,         // ← Hint: أصول ثابتة (أراضي، مباني، معدات)
+
+  // ← Hint: الخصوم
+  current_liability,   // ← Hint: خصوم متداولة (موردون، مستحقات)
+  long_term_liability, // ← Hint: خصوم طويلة الأجل (قروض)
+
+  // ← Hint: حقوق الملكية
+  capital,             // ← Hint: رأس المال
+  retained_earnings,   // ← Hint: أرباح محتجزة
+
+  // ← Hint: الإيرادات
+  sales_revenue,       // ← Hint: إيرادات المبيعات
+  other_revenue,       // ← Hint: إيرادات أخرى
+
+  // ← Hint: المصروفات
+  cost_of_sales,       // ← Hint: تكلفة المبيعات (المشتريات)
+  operating_expense,   // ← Hint: مصروفات تشغيلية
+  salary_expense,      // ← Hint: رواتب وأجور
+  general_expense,     // ← Hint: مصروفات عامة
+}
+
+// ============================================================================
+// 💼 نموذج الحساب المحاسبي
+// ============================================================================
+// ← Hint: يمثل جدول TB_Accounts
+// ← Hint: كل حساب له كود فريد ورصيد يتحدث تلقائياً
+class Account {
+  final int? accountID;              // ← Hint: المعرف الفريد
+  final String accountCode;          // ← Hint: كود الحساب (مثل: "1001", "2001")
+  final String accountNameAr;        // ← Hint: اسم الحساب بالعربية
+  final String accountNameEn;        // ← Hint: اسم الحساب بالإنجليزية
+  final AccountType accountType;     // ← Hint: نوع الحساب الرئيسي
+  final AccountCategory accountCategory; // ← Hint: التصنيف الفرعي
+  final int? parentAccountID;        // ← Hint: الحساب الأب (للحسابات الفرعية)
+
+  // ← Hint: الأرصدة
+  final Decimal balance;             // ← Hint: الرصيد الحالي (مدين - دائن)
+  final Decimal debitBalance;        // ← Hint: إجمالي المدين
+  final Decimal creditBalance;       // ← Hint: إجمالي الدائن
+
+  // ← Hint: إعدادات الحساب
+  final bool isDefault;              // ← Hint: حساب افتراضي (لا يمكن حذفه)
+  final bool isActive;               // ← Hint: حساب نشط
+
+  final String? description;         // ← Hint: وصف الحساب
+  final String? createdAt;           // ← Hint: تاريخ الإنشاء
+  final String? updatedAt;           // ← Hint: تاريخ آخر تحديث
+
+  Account({
+    this.accountID,
+    required this.accountCode,
+    required this.accountNameAr,
+    required this.accountNameEn,
+    required this.accountType,
+    required this.accountCategory,
+    this.parentAccountID,
+    Decimal? balance,
+    Decimal? debitBalance,
+    Decimal? creditBalance,
+    this.isDefault = false,
+    this.isActive = true,
+    this.description,
+    this.createdAt,
+    this.updatedAt,
+  })  : balance = balance ?? Decimal.zero,
+        debitBalance = debitBalance ?? Decimal.zero,
+        creditBalance = creditBalance ?? Decimal.zero;
+
+  // ← Hint: تحويل الكائن إلى Map لحفظه في قاعدة البيانات
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'AccountID': accountID,
+      'AccountCode': accountCode,
+      'AccountNameAr': accountNameAr,
+      'AccountNameEn': accountNameEn,
+      'AccountType': accountType.name,
+      'AccountCategory': accountCategory.name,
+      'ParentAccountID': parentAccountID,
+      'Balance': balance.toDouble(),
+      'DebitBalance': debitBalance.toDouble(),
+      'CreditBalance': creditBalance.toDouble(),
+      'IsDefault': isDefault ? 1 : 0,
+      'IsActive': isActive ? 1 : 0,
+      'Description': description,
+    };
+
+    // ← Hint: إضافة التواريخ فقط إذا كانت موجودة
+    if (createdAt != null) map['CreatedAt'] = createdAt;
+    if (updatedAt != null) map['UpdatedAt'] = updatedAt;
+
+    return map;
+  }
+
+  // ← Hint: إنشاء كائن Account من Map (من قاعدة البيانات)
+  factory Account.fromMap(Map<String, dynamic> map) => Account(
+        accountID: map['AccountID'] as int?,
+        accountCode: map['AccountCode'] as String,
+        accountNameAr: map['AccountNameAr'] as String,
+        accountNameEn: map['AccountNameEn'] as String,
+        accountType: AccountType.values.firstWhere(
+          (e) => e.name == map['AccountType'],
+          orElse: () => AccountType.asset,
+        ),
+        accountCategory: AccountCategory.values.firstWhere(
+          (e) => e.name == map['AccountCategory'],
+          orElse: () => AccountCategory.current_asset,
+        ),
+        parentAccountID: map['ParentAccountID'] as int?,
+        balance: map.getDecimal('Balance'),
+        debitBalance: map.getDecimal('DebitBalance'),
+        creditBalance: map.getDecimal('CreditBalance'),
+        isDefault: (map['IsDefault'] as int?) == 1,
+        isActive: (map['IsActive'] as int?) == 1,
+        description: map['Description'] as String?,
+        createdAt: map['CreatedAt'] as String?,
+        updatedAt: map['UpdatedAt'] as String?,
+      );
+
+  // ← Hint: نسخة معدلة من الكائن (copyWith pattern)
+  Account copyWith({
+    int? accountID,
+    String? accountCode,
+    String? accountNameAr,
+    String? accountNameEn,
+    AccountType? accountType,
+    AccountCategory? accountCategory,
+    int? parentAccountID,
+    Decimal? balance,
+    Decimal? debitBalance,
+    Decimal? creditBalance,
+    bool? isDefault,
+    bool? isActive,
+    String? description,
+    String? createdAt,
+    String? updatedAt,
+  }) =>
+      Account(
+        accountID: accountID ?? this.accountID,
+        accountCode: accountCode ?? this.accountCode,
+        accountNameAr: accountNameAr ?? this.accountNameAr,
+        accountNameEn: accountNameEn ?? this.accountNameEn,
+        accountType: accountType ?? this.accountType,
+        accountCategory: accountCategory ?? this.accountCategory,
+        parentAccountID: parentAccountID ?? this.parentAccountID,
+        balance: balance ?? this.balance,
+        debitBalance: debitBalance ?? this.debitBalance,
+        creditBalance: creditBalance ?? this.creditBalance,
+        isDefault: isDefault ?? this.isDefault,
+        isActive: isActive ?? this.isActive,
+        description: description ?? this.description,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
+  // ← Hint: دوال مساعدة للحصول على الاسم حسب اللغة
+  String getLocalizedName(String languageCode) {
+    return languageCode == 'ar' ? accountNameAr : accountNameEn;
+  }
+
+  // ← Hint: دالة للتحقق من نوع الحساب
+  bool get isAsset => accountType == AccountType.asset;
+  bool get isLiability => accountType == AccountType.liability;
+  bool get isEquity => accountType == AccountType.equity;
+  bool get isRevenue => accountType == AccountType.revenue;
+  bool get isExpense => accountType == AccountType.expense;
+
+  // ← Hint: دالة للتحقق من نوع الرصيد (مدين أم دائن)
+  // ← Hint: الأصول والمصروفات: رصيد مدين طبيعي
+  // ← Hint: الخصوم وحقوق الملكية والإيرادات: رصيد دائن طبيعي
+  bool get hasDebitNormalBalance {
+    return accountType == AccountType.asset ||
+           accountType == AccountType.expense;
+  }
+
+  bool get hasCreditNormalBalance {
+    return accountType == AccountType.liability ||
+           accountType == AccountType.equity ||
+           accountType == AccountType.revenue;
+  }
+}
+
 
