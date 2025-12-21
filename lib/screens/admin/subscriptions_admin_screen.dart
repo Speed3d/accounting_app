@@ -388,7 +388,28 @@ class _SubscriptionsAdminScreenState extends State<SubscriptionsAdminScreen> {
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'edit', child: Text('تعديل')),
             const PopupMenuItem(value: 'extend', child: Text('تمديد')),
-            const PopupMenuItem(value: 'suspend', child: Text('إيقاف')),
+
+            // ═══════════════════════════════════════════════════════════════
+            // ← Hint: زر إيقاف/تفعيل ديناميكي (يتغير حسب حالة الاشتراك)
+            // ═══════════════════════════════════════════════════════════════
+            // ← Hint: إذا كان status = 'suspended' → يعرض "تفعيل"
+            // ← Hint: إذا كان status = 'active' → يعرض "إيقاف"
+            // ← Hint: القيمة المرسلة: 'resume' أو 'suspend'
+            PopupMenuItem(
+              value: status == 'suspended' ? 'resume' : 'suspend',
+              child: Row(
+                children: [
+                  Icon(
+                    status == 'suspended' ? Icons.play_arrow : Icons.pause,
+                    size: 18,
+                    color: status == 'suspended' ? AppColors.success : AppColors.warning,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(status == 'suspended' ? 'تفعيل' : 'إيقاف'),
+                ],
+              ),
+            ),
+
             const PopupMenuItem(value: 'delete', child: Text('حذف')),
           ],
         ),
@@ -401,6 +422,14 @@ class _SubscriptionsAdminScreenState extends State<SubscriptionsAdminScreen> {
   // ==========================================================================
 
   /// معالجة اختيار القائمة
+  ///
+  /// ← Hint: يعالج جميع إجراءات القائمة المنبثقة
+  /// ← Hint: الإجراءات المدعومة:
+  ///   - edit: تعديل الاشتراك
+  ///   - extend: تمديد الاشتراك
+  ///   - suspend: إيقاف الاشتراك
+  ///   - resume: تفعيل الاشتراك الموقوف (🆕)
+  ///   - delete: حذف الاشتراك
   void _handleMenuAction(String action, DocumentSnapshot doc) {
     switch (action) {
       case 'edit':
@@ -412,44 +441,500 @@ class _SubscriptionsAdminScreenState extends State<SubscriptionsAdminScreen> {
       case 'suspend':
         _confirmSuspendSubscription(doc);
         break;
+      case 'resume': // ← Hint: 🆕 إجراء جديد لتفعيل الاشتراك الموقوف
+        _confirmResumeSubscription(doc);
+        break;
       case 'delete':
         _confirmDeleteSubscription(doc);
         break;
     }
   }
 
+  // ==========================================================================
+  // ← Hint: 🆕 دالة محدّثة - إنشاء اشتراك جديد
+  // ==========================================================================
+
   /// حوار إنشاء اشتراك جديد
+  ///
+  /// ← Hint: يسمح بإنشاء اشتراك جديد من لوحة التحكم مباشرة
+  /// ← Hint: الحقول المطلوبة (*):
+  ///   - email*: الإيميل (يجب أن يكون فريد)
+  ///   - plan*: نوع الخطة
+  ///   - days*: المدة بالأيام
+  ///   - maxDevices*: عدد الأجهزة
+  /// ← Hint: الحقول الاختيارية:
+  ///   - displayName: الاسم
+  ///   - notes: ملاحظات
+  /// ← Hint: يتم التحقق من:
+  ///   1. صحة الإيميل (يحتوي على @)
+  ///   2. عدم وجود اشتراك بنفس الإيميل
+  ///   3. المدة أكبر من صفر
   void _showCreateSubscriptionDialog() {
-    // TODO: إضافة نموذج إنشاء اشتراك
+    // ═══════════════════════════════════════════════════════════════════
+    // ← Hint: Controllers للحقول
+    // ═══════════════════════════════════════════════════════════════════
+    final emailController = TextEditingController();
+    final displayNameController = TextEditingController();
+    final notesController = TextEditingController();
+    final daysController = TextEditingController(text: '30');
+
+    String selectedPlan = 'premium';
+    int maxDevices = 3;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('إنشاء اشتراك جديد'),
-        content: const Text('قريباً...'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.add_circle, color: AppColors.primaryLight),
+              SizedBox(width: 8),
+              Text('إنشاء اشتراك جديد'),
+            ],
           ),
-        ],
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 450,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ═════════════════════════════════════════════════════════
+                  // معلومات توضيحية
+                  // ═════════════════════════════════════════════════════════
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.info.withOpacity(0.3),
+                      ),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20, color: AppColors.info),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'سيتم إنشاء اشتراك جديد في Firestore',
+                            style: TextStyle(fontSize: 12, color: AppColors.info),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ═════════════════════════════════════════════════════════
+                  // الإيميل (مطلوب)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'الإيميل *',
+                      hintText: 'user@example.com',
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // الاسم (اختياري)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: displayNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم (اختياري)',
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // نوع الخطة
+                  // ═════════════════════════════════════════════════════════
+                  // ← Hint: تحديث القيم الافتراضية عند تغيير الخطة
+                  DropdownButtonFormField<String>(
+                    value: selectedPlan,
+                    decoration: const InputDecoration(
+                      labelText: 'نوع الخطة *',
+                      prefixIcon: Icon(Icons.card_membership),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'trial', child: Text('🎯 تجريبي (14 يوم)')),
+                      DropdownMenuItem(value: 'premium', child: Text('⭐ مميز')),
+                      DropdownMenuItem(value: 'professional', child: Text('💼 احترافي')),
+                      DropdownMenuItem(value: 'lifetime', child: Text('♾️ دائم')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPlan = value!;
+
+                        // ← Hint: تحديث القيم الافتراضية حسب نوع الخطة
+                        if (selectedPlan == 'trial') {
+                          daysController.text = '14';
+                          maxDevices = 3;
+                        } else if (selectedPlan == 'lifetime') {
+                          daysController.text = '36500'; // 100 سنة
+                          maxDevices = 999;
+                        } else if (selectedPlan == 'professional') {
+                          daysController.text = '30';
+                          maxDevices = 10;
+                        } else {
+                          daysController.text = '30';
+                          maxDevices = 3;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // المدة (بالأيام)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: daysController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'المدة (بالأيام) *',
+                      prefixIcon: Icon(Icons.calendar_today),
+                      suffixText: 'يوم',
+                      border: OutlineInputBorder(),
+                      helperText: 'مثال: 30 = شهر، 365 = سنة',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // عدد الأجهزة
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'عدد الأجهزة المسموحة *',
+                      prefixIcon: Icon(Icons.devices),
+                      border: OutlineInputBorder(),
+                      helperText: '0 = غير محدود',
+                    ),
+                    controller: TextEditingController(text: maxDevices.toString()),
+                    onChanged: (value) {
+                      maxDevices = int.tryParse(value) ?? 3;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // ملاحظات (اختياري)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: notesController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'ملاحظات (اختياري)',
+                      prefixIcon: Icon(Icons.notes),
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // ═══════════════════════════════════════════════════════════
+                // ← Hint: التحقق من البيانات
+                // ═══════════════════════════════════════════════════════════
+                final email = emailController.text.trim();
+
+                // ← Hint: التحقق من صحة الإيميل
+                if (email.isEmpty || !email.contains('@')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('❌ الرجاء إدخال إيميل صحيح'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+
+                // ← Hint: التحقق من المدة
+                final days = int.tryParse(daysController.text) ?? 0;
+                if (days <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('❌ المدة يجب أن تكون أكبر من صفر'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+
+                // ═══════════════════════════════════════════════════════════
+                // ← Hint: التحقق من عدم وجود اشتراك بنفس الإيميل
+                // ═══════════════════════════════════════════════════════════
+                final existingDoc = await _firestore
+                    .collection('subscriptions')
+                    .doc(email)
+                    .get();
+
+                if (existingDoc.exists) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('❌ يوجد اشتراك بهذا الإيميل مسبقاً!\n$email'),
+                        backgroundColor: AppColors.error,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                // ═══════════════════════════════════════════════════════════
+                // ← Hint: إنشاء الاشتراك في Firestore
+                // ═══════════════════════════════════════════════════════════
+                final now = DateTime.now();
+                final endDate = now.add(Duration(days: days));
+
+                await _firestore.collection('subscriptions').doc(email).set({
+                  'email': email,
+                  'displayName': displayNameController.text.trim(),
+                  'plan': selectedPlan,
+                  'status': 'active',
+                  'isActive': true,
+                  'startDate': Timestamp.fromDate(now),
+                  'endDate': Timestamp.fromDate(endDate),
+                  'maxDevices': maxDevices,
+                  'currentDevices': [], // ← Hint: قائمة فارغة في البداية
+                  'notes': notesController.text.trim(),
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                  'createdBy': 'admin', // ← Hint: يمكن وضع email الأدمن هنا
+
+                  // ← Hint: الميزات حسب نوع الخطة
+                  'features': {
+                    'multiUser': selectedPlan == 'professional' || selectedPlan == 'premium',
+                    'backup': true,
+                    'reports': true,
+                    'accounting': selectedPlan != 'trial', // ← Hint: المحاسبة غير متاحة للتجريبي
+                  },
+                });
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '✅ تم إنشاء اشتراك جديد بنجاح!',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text('الإيميل: $email'),
+                          Text('الخطة: ${_getPlanDisplayName(selectedPlan)}'),
+                          Text('المدة: $days يوم'),
+                        ],
+                      ),
+                      backgroundColor: AppColors.success,
+                      duration: const Duration(seconds: 6),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryLight,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text('إنشاء الاشتراك'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  // ==========================================================================
+  // ← Hint: 🆕 دالة محدّثة - تعديل الاشتراك
+  // ==========================================================================
+
   /// حوار تعديل اشتراك
+  ///
+  /// ← Hint: يسمح بتعديل معلومات الاشتراك الأساسية
+  /// ← Hint: الحقول القابلة للتعديل:
+  ///   - displayName: الاسم (اختياري)
+  ///   - plan: نوع الخطة (trial, premium, professional, lifetime)
+  ///   - maxDevices: عدد الأجهزة المسموحة
+  ///   - notes: ملاحظات (اختياري)
+  /// ← Hint: الحقول غير القابلة للتعديل:
+  ///   - email: الإيميل (معرّف رئيسي - read-only)
+  ///   - endDate: تاريخ الانتهاء (استخدم "تمديد" لتغييره)
   void _showEditSubscriptionDialog(DocumentSnapshot doc) {
-    // TODO: إضافة نموذج تعديل
+    final data = doc.data() as Map<String, dynamic>;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ← Hint: Controllers للحقول القابلة للتعديل
+    // ═══════════════════════════════════════════════════════════════════
+    final emailController = TextEditingController(text: data['email']);
+    final displayNameController = TextEditingController(text: data['displayName'] ?? '');
+    final notesController = TextEditingController(text: data['notes'] ?? '');
+
+    String selectedPlan = data['plan'] ?? 'premium';
+    int maxDevices = data['maxDevices'] ?? 3;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تعديل الاشتراك'),
-        content: const Text('قريباً...'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.edit, color: AppColors.primaryLight),
+              SizedBox(width: 8),
+              Text('تعديل الاشتراك'),
+            ],
           ),
-        ],
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ═════════════════════════════════════════════════════════
+                  // الإيميل (read-only)
+                  // ═════════════════════════════════════════════════════════
+                  // ← Hint: لا يمكن تعديل الإيميل لأنه معرّف الوثيقة في Firestore
+                  TextField(
+                    controller: emailController,
+                    enabled: false,
+                    decoration: const InputDecoration(
+                      labelText: 'الإيميل',
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // الاسم (اختياري)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: displayNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'الاسم (اختياري)',
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // نوع الخطة
+                  // ═════════════════════════════════════════════════════════
+                  // ← Hint: تحديث القيم الافتراضية عند تغيير الخطة
+                  DropdownButtonFormField<String>(
+                    value: selectedPlan,
+                    decoration: const InputDecoration(
+                      labelText: 'نوع الخطة',
+                      prefixIcon: Icon(Icons.card_membership),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'trial', child: Text('🎯 تجريبي')),
+                      DropdownMenuItem(value: 'premium', child: Text('⭐ مميز')),
+                      DropdownMenuItem(value: 'professional', child: Text('💼 احترافي')),
+                      DropdownMenuItem(value: 'lifetime', child: Text('♾️ دائم')),
+                    ],
+                    onChanged: (value) {
+                      setState(() => selectedPlan = value!);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // عدد الأجهزة
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'عدد الأجهزة المسموحة',
+                      prefixIcon: Icon(Icons.devices),
+                      border: OutlineInputBorder(),
+                      helperText: '0 = غير محدود',
+                    ),
+                    controller: TextEditingController(text: maxDevices.toString()),
+                    onChanged: (value) {
+                      maxDevices = int.tryParse(value) ?? 3;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ═════════════════════════════════════════════════════════
+                  // ملاحظات (اختياري)
+                  // ═════════════════════════════════════════════════════════
+                  TextField(
+                    controller: notesController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'ملاحظات (اختياري)',
+                      prefixIcon: Icon(Icons.notes),
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // ═══════════════════════════════════════════════════════════
+                // ← Hint: تحديث البيانات في Firestore
+                // ═══════════════════════════════════════════════════════════
+                await doc.reference.update({
+                  'displayName': displayNameController.text.trim(),
+                  'plan': selectedPlan,
+                  'maxDevices': maxDevices,
+                  'notes': notesController.text.trim(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ تم تحديث الاشتراك بنجاح'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryLight,
+              ),
+              child: const Text('حفظ التعديلات'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -515,12 +1000,28 @@ class _SubscriptionsAdminScreenState extends State<SubscriptionsAdminScreen> {
   }
 
   /// تأكيد إيقاف اشتراك
+  ///
+  /// ← Hint: يوقف الاشتراك مؤقتاً (يمكن إعادة تفعيله لاحقاً)
+  /// ← Hint: التحديثات في Firestore:
+  ///   - status → 'suspended'
+  ///   - isActive → false
+  ///   - suspensionReason → سبب الإيقاف
+  ///   - suspendedAt → timestamp (🆕 للتوثيق)
   void _confirmSuspendSubscription(DocumentSnapshot doc) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إيقاف الاشتراك'),
-        content: const Text('هل أنت متأكد من إيقاف هذا الاشتراك؟'),
+        title: const Row(
+          children: [
+            Icon(Icons.pause_circle, color: AppColors.warning),
+            SizedBox(width: 8),
+            Text('إيقاف الاشتراك'),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من إيقاف هذا الاشتراك؟\n\n'
+          'ملاحظة: يمكنك تفعيله مرة أخرى في أي وقت.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -532,12 +1033,116 @@ class _SubscriptionsAdminScreenState extends State<SubscriptionsAdminScreen> {
                 'status': 'suspended',
                 'isActive': false,
                 'suspensionReason': 'تم الإيقاف من لوحة التحكم',
+                'suspendedAt': FieldValue.serverTimestamp(), // ← Hint: 🆕 توثيق وقت الإيقاف
                 'updatedAt': FieldValue.serverTimestamp(),
               });
-              if (context.mounted) Navigator.pop(context);
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('تم إيقاف الاشتراك بنجاح'),
+                    backgroundColor: AppColors.warning,
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
             child: const Text('إيقاف'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================================
+  // ← Hint: 🆕 دالة جديدة - تفعيل الاشتراك الموقوف
+  // ==========================================================================
+
+  /// تأكيد تفعيل اشتراك موقوف
+  ///
+  /// ← Hint: يعيد تفعيل اشتراك تم إيقافه مسبقاً
+  /// ← Hint: الشروط:
+  ///   1. يجب أن يكون status = 'suspended'
+  ///   2. يجب أن يكون endDate لم ينته بعد
+  /// ← Hint: إذا كان التاريخ منتهي → يطلب من Admin التمديد أولاً
+  /// ← Hint: التحديثات في Firestore:
+  ///   - status → 'active'
+  ///   - isActive → true
+  ///   - suspensionReason → null (مسح السبب)
+  ///   - resumedAt → timestamp (للتوثيق)
+  void _confirmResumeSubscription(DocumentSnapshot doc) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.play_circle, color: AppColors.success),
+            SizedBox(width: 8),
+            Text('تفعيل الاشتراك'),
+          ],
+        ),
+        content: const Text(
+          'هل تريد تفعيل هذا الاشتراك؟\n\n'
+          'سيتمكن المستخدم من استخدام التطبيق مباشرة.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // ═══════════════════════════════════════════════════════════
+              // ← Hint: التحقق من تاريخ الانتهاء قبل التفعيل
+              // ═══════════════════════════════════════════════════════════
+              final data = doc.data() as Map<String, dynamic>;
+              final endDate = (data['endDate'] as Timestamp?)?.toDate();
+              final now = DateTime.now();
+
+              // ← Hint: إذا كان التاريخ منتهي → لا يمكن التفعيل
+              if (endDate != null && endDate.isBefore(now)) {
+                Navigator.pop(context);
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        '❌ لا يمكن تفعيل اشتراك منتهي!\n'
+                        'قم بتمديد الاشتراك أولاً',
+                      ),
+                      backgroundColor: AppColors.error,
+                      duration: Duration(seconds: 4),
+                    ),
+                  );
+                }
+                return;
+              }
+
+              // ═══════════════════════════════════════════════════════════
+              // ← Hint: تفعيل الاشتراك في Firestore
+              // ═══════════════════════════════════════════════════════════
+              await doc.reference.update({
+                'status': 'active',
+                'isActive': true,
+                'suspensionReason': null, // ← Hint: مسح سبب الإيقاف
+                'resumedAt': FieldValue.serverTimestamp(), // ← Hint: توثيق وقت التفعيل
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ تم تفعيل الاشتراك بنجاح'),
+                    backgroundColor: AppColors.success,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            child: const Text('تفعيل'),
           ),
         ],
       ),
