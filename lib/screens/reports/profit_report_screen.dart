@@ -4,11 +4,15 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:provider/provider.dart';
 import '../../data/database_helper.dart';
 import '../../data/models.dart';
 import '../../utils/helpers.dart';
 import '../../utils/pdf_helpers.dart';
 import '../../services/pdf_service.dart';
+import '../../services/account_service.dart';
+import '../../services/currency_service.dart';
+import '../../providers/accounting_view_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_constants.dart';
@@ -36,6 +40,13 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
   bool _isDetailsVisible = false; // للتحكم في إظهار/إخفاء التفاصيل
   bool _isGeneratingPdf = false; // ✅ متغير حالة PDF
 
+  // ← Hint: متغيرات للبيانات المحاسبية (جديد)
+  Account? _cashAccount;
+  Account? _inventoryAccount;
+  Account? _suppliersAccount;
+  Decimal _totalAssets = Decimal.zero;
+  Decimal _totalLiabilities = Decimal.zero;
+
   // ============================================================================
   // التهيئة
   // ============================================================================
@@ -43,6 +54,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
   void initState() {
     super.initState();
     _loadFinancialSummary();
+    _loadAccountingData(); // ← تحميل البيانات المحاسبية
   }
 
   /// تحميل الملخص المالي من قاعدة البيانات
@@ -68,6 +80,31 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
       totalWithdrawals: results[2] as Decimal,
       sales: results[3] as List<CustomerDebt>,
     );
+  }
+
+  /// ============================================================================
+  /// تحميل البيانات المحاسبية (جديد)
+  /// ============================================================================
+  /// ← Hint: يجلب أرصدة الحسابات من النظام المحاسبي
+  Future<void> _loadAccountingData() async {
+    try {
+      final accountService = AccountService.instance;
+
+      // جلب الحسابات المهمة
+      _cashAccount = await accountService.getCashAccount();
+      _inventoryAccount = await accountService.getInventoryAccount();
+      _suppliersAccount = await accountService.getSuppliersAccount();
+
+      // جلب الإحصائيات
+      _totalAssets = await accountService.getTotalAssets();
+      _totalLiabilities = await accountService.getTotalLiabilities();
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('❌ خطأ في تحميل البيانات المحاسبية: $e');
+    }
   }
 
   // ============================================================================
@@ -145,26 +182,41 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
               summary.totalExpenses -
               summary.totalWithdrawals;
 
-          return SingleChildScrollView(
-            padding: AppConstants.screenPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 💰 قسم الملخص المالي
-                _buildFinancialSummarySection(summary, netProfit, l10n),
+          // ← Hint: استخدام Consumer للوصول إلى AccountingViewProvider
+          return Consumer<AccountingViewProvider>(
+            builder: (context, accountingProvider, child) {
+              return SingleChildScrollView(
+                padding: AppConstants.screenPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 💰 قسم الملخص المالي
+                    _buildFinancialSummarySection(summary, netProfit, l10n),
 
-                const SizedBox(height: AppConstants.spacingXl),
+                    const SizedBox(height: AppConstants.spacingXl),
 
-                // 🔍 زر إظهار/إخفاء التفاصيل
-                _buildToggleDetailsButton(l10n),
+                    // 🔍 زر إظهار/إخفاء التفاصيل
+                    _buildToggleDetailsButton(l10n),
 
-                // 📋 قائمة تفاصيل المبيعات
-                if (_isDetailsVisible) ...[
-                  const SizedBox(height: AppConstants.spacingMd),
-                  _buildSalesList(summary.sales, l10n),
-                ],
-              ],
-            ),
+                    // 📋 قائمة تفاصيل المبيعات
+                    if (_isDetailsVisible) ...[
+                      const SizedBox(height: AppConstants.spacingMd),
+                      _buildSalesList(summary.sales, l10n),
+                    ],
+
+                    // ═══════════════════════════════════════════════════
+                    // ✨ قسم التفاصيل المحاسبية (جديد)
+                    // ═══════════════════════════════════════════════════
+                    // ← Hint: يظهر فقط إذا فعّل المستخدم "العرض المحاسبي"
+                    if (accountingProvider.showAccountingView) ...[
+                      const SizedBox(height: AppConstants.spacingXl),
+                      const Divider(thickness: 2, height: 40),
+                      _buildAccountingSection(l10n),
+                    ],
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
@@ -427,6 +479,262 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
                 Text(
                   l10n.fromAmount(formatCurrency(sale.debt)),
                   style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // قسم التفاصيل المحاسبية (جديد)
+  // ============================================================================
+  /// ← Hint: يعرض أرصدة الحسابات والإحصائيات المالية من النظام المحاسبي
+  /// يظهر فقط عندما يفعّل المستخدم "العرض المحاسبي" في الإعدادات
+  Widget _buildAccountingSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // --- عنوان القسم ---
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primaryDark.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Icon(
+                Icons.account_balance,
+                color: AppColors.primaryDark,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppConstants.spacingMd),
+            Text(
+              'التفاصيل المحاسبية',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppConstants.spacingLg),
+
+        // --- بطاقة حساب الصندوق (النقدية) ---
+        _buildAccountCard(
+          title: 'حساب الصندوق',
+          accountCode: _cashAccount?.accountCode ?? '----',
+          balance: _cashAccount?.balance ?? Decimal.zero,
+          icon: Icons.account_balance_wallet,
+          color: AppColors.success,
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // --- بطاقة حساب المخزون ---
+        _buildAccountCard(
+          title: 'حساب المخزون',
+          accountCode: _inventoryAccount?.accountCode ?? '----',
+          balance: _inventoryAccount?.balance ?? Decimal.zero,
+          icon: Icons.inventory_2,
+          color: AppColors.info,
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // --- بطاقة حساب الموردين ---
+        _buildAccountCard(
+          title: 'حساب الموردين',
+          accountCode: _suppliersAccount?.accountCode ?? '----',
+          balance: _suppliersAccount?.balance ?? Decimal.zero,
+          icon: Icons.people_outline,
+          color: AppColors.warning,
+        ),
+
+        const Divider(height: 32, thickness: 2),
+
+        // --- ملخص الأصول والخصوم ---
+        Row(
+          children: [
+            // إجمالي الأصول
+            Expanded(
+              child: CustomCard(
+                color: AppColors.success.withOpacity(0.05),
+                child: Padding(
+                  padding: AppConstants.paddingSm,
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.trending_up,
+                        color: AppColors.success,
+                        size: 32,
+                      ),
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        'إجمالي الأصول',
+                        style: Theme.of(context).textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        formatCurrency(_totalAssets),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.success,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // إجمالي الخصوم
+            Expanded(
+              child: CustomCard(
+                color: AppColors.error.withOpacity(0.05),
+                child: Padding(
+                  padding: AppConstants.paddingSm,
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.trending_down,
+                        color: AppColors.error,
+                        size: 32,
+                      ),
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        'إجمالي الخصوم',
+                        style: Theme.of(context).textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppConstants.spacingXs),
+                      Text(
+                        formatCurrency(_totalLiabilities),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.error,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppConstants.spacingMd),
+
+        // --- ملاحظة توضيحية ---
+        CustomCard(
+          color: AppColors.info.withOpacity(0.05),
+          child: Padding(
+            padding: AppConstants.paddingSm,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.info,
+                  size: 20,
+                ),
+                const SizedBox(width: AppConstants.spacingMd),
+                Expanded(
+                  child: Text(
+                    'هذه البيانات مأخوذة من النظام المحاسبي ذو القيد المزدوج',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.info,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// بطاقة حساب واحد
+  Widget _buildAccountCard({
+    required String title,
+    required String accountCode,
+    required Decimal balance,
+    required IconData icon,
+    required Color color,
+  }) {
+    return CustomCard(
+      child: Padding(
+        padding: AppConstants.paddingSm,
+        child: Row(
+          children: [
+            // --- أيقونة الحساب ---
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: AppConstants.borderRadiusMd,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 26,
+              ),
+            ),
+
+            const SizedBox(width: AppConstants.spacingMd),
+
+            // --- تفاصيل الحساب ---
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // اسم الحساب
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingXs),
+                  // رقم الحساب
+                  Text(
+                    'رقم الحساب: $accountCode',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+
+            // --- الرصيد ---
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'الرصيد',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppConstants.spacingXs),
+                Text(
+                  formatCurrency(balance),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: balance >= Decimal.zero ? color : AppColors.error,
+                  ),
                 ),
               ],
             ),
