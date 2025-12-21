@@ -132,7 +132,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
                     : Icons.visibility_off,
               ),
               onPressed: () {
-                accountingProvider.toggleAccountingView();
+                accountingProvider.toggleAccountingView(!accountingProvider.showAccountingView);
               },
               tooltip: accountingProvider.showAccountingView
                   ? 'إخفاء العرض المحاسبي'
