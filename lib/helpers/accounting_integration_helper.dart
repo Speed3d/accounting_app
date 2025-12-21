@@ -169,105 +169,143 @@ class AccountingIntegrationHelper {
   ///
   /// ← Hint: يُستدعى من AddEditProductScreen عند تعديل منتج موجود
   /// ← Hint: يُسجل فقط الفرق في التكلفة أو الكمية
+  /// تسجيل قيد محاسبي لتعديل منتج موجود (كمية أو سعر)
+  /// ========================================================================
+  /// ← Hint: تم تبسيط النظام - جميع المعاملات نقدية من/إلى الصندوق
+  /// ← Hint: القيد يعتمد على فرق القيمة الإجمالية للمخزون
+  /// ========================================================================
   static Future<bool> recordProductAdjustment({
     required int productId,
-    required Decimal costDifference,    // الفرق في التكلفة الإجمالية
-    required int quantityDifference,    // الفرق في الكمية
-    required String adjustmentReason,   // 'price_change', 'quantity_increase', 'quantity_decrease'
-    String? purchaseType,               // نفس منطق الشراء
-    int? supplierId,
-    String? notes,
+    required Decimal costDifference,    // الفرق في السعر (جديد - قديم)
+    required int quantityDifference,    // الفرق في الكمية (جديد - قديم)
+    required String adjustmentReason,
   }) async {
     try {
-      // ← Hint: إذا لا يوجد فرق، لا حاجة للقيد
+      // ═══════════════════════════════════════════════════════
+      // التحقق: هل هناك تغيير فعلي؟
+      // ═══════════════════════════════════════════════════════
       if (costDifference == Decimal.zero && quantityDifference == 0) {
-        debugPrint('⏩ [AccountingIntegration] لا يوجد فرق - لا حاجة لقيد');
+        debugPrint('⏩ [AccountingIntegration] لا يوجد تغيير - تخطي القيد');
         return true;
       }
 
-      debugPrint('🔗 [AccountingIntegration] تسجيل قيد تعديل منتج...');
-      debugPrint('   📦 ProductID: $productId');
-      debugPrint('   💰 فرق التكلفة: $costDifference');
-      debugPrint('   📊 فرق الكمية: $quantityDifference');
+      debugPrint('🔗 [AccountingIntegration] تسجيل قيد تعديل منتج #$productId');
+      debugPrint('   فرق السعر: $costDifference');
+      debugPrint('   فرق الكمية: $quantityDifference');
 
-      // ← Hint: حساب المبلغ الإجمالي للتعديل
-      final adjustmentAmount = costDifference.abs();
+      // ═══════════════════════════════════════════════════════
+      // حساب القيمة المالية للتغيير
+      // ═══════════════════════════════════════════════════════
+      // المنطق: نحتاج لحساب قيمة التغيير الإجمالي في المخزون
 
-      if (adjustmentAmount == Decimal.zero) {
-        debugPrint('⏩ [AccountingIntegration] المبلغ صفر - لا حاجة لقيد');
+      // جلب بيانات المنتج الحالية
+      final db = await DatabaseHelper.instance.database;
+      final productResult = await db.query(
+        'Store_Products',
+        where: 'ProductID = ?',
+        whereArgs: [productId],
+      );
+
+      if (productResult.isEmpty) {
+        debugPrint('❌ المنتج غير موجود!');
+        return false;
+      }
+
+      final currentQuantity = productResult.first['Quantity'] as int;
+      final currentCostPrice = Decimal.parse(productResult.first['CostPrice'].toString());
+
+      // الكمية القديمة = الكمية الحالية - فرق الكمية
+      final oldQuantity = currentQuantity - quantityDifference;
+
+      // السعر القديم = السعر الحالي - فرق السعر
+      final oldCostPrice = currentCostPrice - costDifference;
+
+      // حساب القيمة الإجمالية للتغيير
+      final oldTotalValue = oldCostPrice * Decimal.fromInt(oldQuantity);
+      final newTotalValue = currentCostPrice * Decimal.fromInt(currentQuantity);
+      final totalValueChange = newTotalValue - oldTotalValue;
+
+      debugPrint('   القيمة القديمة للمخزون: $oldTotalValue');
+      debugPrint('   القيمة الجديدة للمخزون: $newTotalValue');
+      debugPrint('   التغيير الإجمالي: $totalValueChange');
+
+      if (totalValueChange == Decimal.zero) {
+        debugPrint('⏩ [AccountingIntegration] لا تغيير في القيمة الإجمالية - تخطي');
         return true;
       }
 
-      // ← Hint: التحقق من السنة المالية
+      // ═══════════════════════════════════════════════════════
+      // التحقق من السنة المالية
+      // ═══════════════════════════════════════════════════════
       final isOpen = await _fiscalYearService.isActiveFiscalYearOpen();
       if (!isOpen) {
-        debugPrint('⚠️ [AccountingIntegration] السنة المالية مقفلة - تخطي');
-        return false;
-      }
-
-      // ← Hint: الحصول على الحسابات
-      final inventoryAccount = await _accountService.getInventoryAccount();
-      if (inventoryAccount == null) {
-        debugPrint('❌ [AccountingIntegration] حساب المخزون غير موجود!');
-        return false;
-      }
-
-      Account? creditAccount;
-      if (purchaseType == 'cash') {
-        creditAccount = await _accountService.getCashAccount();
-      } else if (purchaseType == 'credit') {
-        creditAccount = await _accountService.getSuppliersAccount();
-      }
-
-      if (creditAccount == null) {
-        debugPrint('⚠️ [AccountingIntegration] لم يتم تحديد طريقة الدفع - تخطي');
+        debugPrint('⚠️ [AccountingIntegration] السنة المالية مقفلة');
         return false;
       }
 
       final fiscalYear = await _fiscalYearService.getActiveFiscalYear();
-      if (fiscalYear == null) return false;
+      if (fiscalYear == null) {
+        debugPrint('❌ لا توجد سنة مالية نشطة');
+        return false;
+      }
 
-      final db = await DatabaseHelper.instance.database;
+      // ═══════════════════════════════════════════════════════
+      // الحصول على الحسابات المطلوبة
+      // ═══════════════════════════════════════════════════════
+      final inventoryAccount = await _accountService.getInventoryAccount();  // 1100
+      final cashAccount = await _accountService.getCashAccount();            // 1001
 
-      // ← Hint: تحديد اتجاه القيد حسب الزيادة أو النقصان
-      int? debitAccountId;
-      int? creditAccountId;
+      if (inventoryAccount == null || cashAccount == null) {
+        debugPrint('❌ فشل جلب الحسابات المحاسبية');
+        return false;
+      }
 
-      if (costDifference > Decimal.zero) {
-        // ← Hint: زيادة في التكلفة (شراء إضافي)
-        debitAccountId = inventoryAccount.accountID;
-        creditAccountId = creditAccount.accountID;
+      // ═══════════════════════════════════════════════════════
+      // تسجيل القيد المحاسبي
+      // ═══════════════════════════════════════════════════════
+      int debitAccountId;
+      int creditAccountId;
+      String transactionType;
+
+      if (totalValueChange > Decimal.zero) {
+        // ✅ زيادة في قيمة المخزون (شراء/زيادة)
+        // من ح/ المخزون - إلى ح/ الصندوق
+        debitAccountId = inventoryAccount.accountID!;
+        creditAccountId = cashAccount.accountID!;
+        transactionType = 'expense';
       } else {
-        // ← Hint: نقصان في التكلفة (إرجاع أو خصم)
-        debitAccountId = creditAccount.accountID;
-        creditAccountId = inventoryAccount.accountID;
+        // ❌ نقص في قيمة المخزون (بيع/تخفيض)
+        // من ح/ الصندوق - إلى ح/ المخزون
+        debitAccountId = cashAccount.accountID!;
+        creditAccountId = inventoryAccount.accountID!;
+        transactionType = 'income';
       }
 
       final transactionId = await db.insert('TB_Transactions', {
         'FiscalYearID': fiscalYear.fiscalYearID,
         'Date': DateTime.now().toIso8601String(),
-        'Type': 'purchase_adjustment',
-        'Category': 'cost_of_sales',
-        'Amount': adjustmentAmount.toDouble(),
-        'Direction': costDifference > Decimal.zero ? 'out' : 'in',
-        'Description': 'تعديل تكلفة منتج - رقم #$productId ($adjustmentReason)',
-        'Notes': notes,
+        'Type': transactionType,
+        'Category': 'inventory_adjustment',
+        'Amount': totalValueChange.abs().toDouble(),
+        'Direction': totalValueChange > Decimal.zero ? 'out' : 'in',
+        'Description': adjustmentReason,
         'ReferenceType': 'product_adjustment',
         'ReferenceID': productId,
         'ProductID': productId,
-        'SupplierID': supplierId,
         'DebitAccountID': debitAccountId,
         'CreditAccountID': creditAccountId,
       });
 
       if (transactionId > 0) {
-        debugPrint('✅ [AccountingIntegration] تم تسجيل قيد التعديل (ID: $transactionId)');
+        debugPrint('✅ [AccountingIntegration] قيد التعديل (ID: $transactionId) - مبلغ: ${totalValueChange.abs()}');
         return true;
       }
 
       return false;
-    } catch (e) {
+
+    } catch (e, stackTrace) {
       debugPrint('❌ [AccountingIntegration] خطأ في recordProductAdjustment: $e');
+      debugPrint('Stack trace: $stackTrace');
       return false;
     }
   }

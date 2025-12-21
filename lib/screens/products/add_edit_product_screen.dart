@@ -276,142 +276,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   /// ============================================================================
-  /// عرض Dialog لاختيار نوع الشراء (عند إضافة منتج جديد)
-  /// ============================================================================
-  /// ← Hint: يسأل المستخدم عن نوع الشراء: نقدي / آجل / رصيد افتتاحي
-  /// ← Hint: يعيد القيمة المختارة: 'cash' / 'credit' / 'opening_stock' / null
-  Future<String?> _showPurchaseTypeDialog() async {
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false, // ← Hint: يجب اختيار نوع قبل المتابعة
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: AppColors.primaryLight),
-              const SizedBox(width: 8),
-              const Text('نوع الشراء'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'كيف تم شراء هذا المنتج؟',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-
-              // ═══════════════════════════════════════════════════════════
-              // خيار 1: شراء نقدي (من الصندوق)
-              // ═══════════════════════════════════════════════════════════
-              _buildPurchaseTypeOption(
-                icon: Icons.money,
-                iconColor: AppColors.success,
-                title: 'شراء نقدي',
-                description: 'تم الدفع من الصندوق فوراً',
-                value: 'cash',
-              ),
-
-              const SizedBox(height: 12),
-
-              // ═══════════════════════════════════════════════════════════
-              // خيار 2: شراء آجل (من المورد)
-              // ═══════════════════════════════════════════════════════════
-              _buildPurchaseTypeOption(
-                icon: Icons.credit_card,
-                iconColor: AppColors.warning,
-                title: 'شراء آجل',
-                description: 'سيتم الدفع للمورد لاحقاً',
-                value: 'credit',
-              ),
-
-              const SizedBox(height: 12),
-
-              // ═══════════════════════════════════════════════════════════
-              // خيار 3: رصيد افتتاحي
-              // ═══════════════════════════════════════════════════════════
-              _buildPurchaseTypeOption(
-                icon: Icons.inventory_2,
-                iconColor: AppColors.info,
-                title: 'رصيد افتتاحي',
-                description: 'مخزون موجود من قبل',
-                value: 'opening_stock',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: const Text('إلغاء'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// ============================================================================
-  /// بناء خيار من خيارات نوع الشراء
-  /// ============================================================================
-  Widget _buildPurchaseTypeOption({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String description,
-    required String value,
-  }) {
-    return InkWell(
-      onTap: () => Navigator.pop(context, value),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// ============================================================================
   /// دالة الحفظ (محدثة لحفظ التصنيف والوحدة)
+  /// ============================================================================
+  /// ← Hint: تم تبسيط النظام - جميع المشتريات نقدية فقط
   /// ============================================================================
   Future<void> _saveProduct() async {
     final l10n = AppLocalizations.of(context)!;
@@ -507,27 +374,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       // ════════════════════════════════════════════════════════════════
       if (widget.product == null) {
         // ══════════════════════════════════════════════════════════════
-        // إضافة منتج جديد → يجب اختيار نوع الشراء
+        // إضافة منتج جديد → شراء نقدي من الصندوق
         // ══════════════════════════════════════════════════════════════
+        // ← Hint: تم تبسيط النظام - جميع المشتريات نقدية من الصندوق
 
-        // 1️⃣ عرض Dialog لاختيار نوع الشراء
-        final purchaseType = await _showPurchaseTypeDialog();
-
-        // ← Hint: إذا تم الإلغاء، لا نكمل الحفظ
-        if (purchaseType == null) {
-          setState(() => _isSaving = false);
-          return;
-        }
-
-        // 2️⃣ حفظ المنتج في قاعدة البيانات
+        // 1️⃣ حفظ المنتج في قاعدة البيانات
         final productId = await _dbHelper.insertProduct(product);
 
-        // 3️⃣ تسجيل القيد المحاسبي للشراء
+        // 2️⃣ تسجيل القيد المحاسبي للشراء (نقدي دائماً)
         final accountingSuccess = await AccountingIntegrationHelper.recordProductPurchase(
           productId: productId,
           quantity: quantity,
           costPrice: costPrice,
-          purchaseType: purchaseType,
+          purchaseType: 'cash',  // ← دائماً نقدي من الصندوق
           supplierId: _selectedSupplier!.supplierID!,
         );
 
@@ -535,26 +394,52 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي للمنتج الجديد');
         }
 
-        // 4️⃣ تسجيل في Activity Log
+        // 3️⃣ تسجيل في Activity Log
         await _dbHelper.logActivity(
-          'تم إضافة منتج جديد: ${product.productName} (نوع الشراء: $purchaseType)',
+          'تم إضافة منتج جديد: ${product.productName} (شراء نقدي من الصندوق)',
         );
 
       } else {
         // ══════════════════════════════════════════════════════════════
-        // تعديل منتج موجود → تسجيل قيد التعديل
+        // تعديل منتج موجود
         // ══════════════════════════════════════════════════════════════
 
-        // 1️⃣ حساب الفرق في الكمية والسعر
         final oldProduct = widget.product!;
-        final quantityDifference = quantity - oldProduct.quantity;
-        final costDifference = costPrice - oldProduct.costPrice;
 
-        // 2️⃣ حفظ التعديلات في قاعدة البيانات
+        // 1️⃣ حفظ التعديلات في قاعدة البيانات أولاً
         await _dbHelper.updateProduct(product);
 
-        // 3️⃣ تسجيل القيد المحاسبي للتعديل (إذا كان هناك فرق)
-        if (quantityDifference != 0 || costDifference != Decimal.zero) {
+        // 2️⃣ التعامل المحاسبي حسب الحالة
+
+        // 🔸 حالة خاصة: استعادة منتج من الأرشيف (كان كميته = 0، أصبحت > 0)
+        if (oldProduct.quantity == 0 && quantity > 0) {
+          debugPrint('📦 استعادة منتج من الأرشيف: ${product.productName}');
+          debugPrint('   الكمية القديمة: 0 → الكمية الجديدة: $quantity');
+
+          // تسجيل قيد شراء جديد (لأن المنتج يعود للمخزون)
+          final accountingSuccess = await AccountingIntegrationHelper.recordProductPurchase(
+            productId: product.productID!,
+            quantity: quantity,
+            costPrice: costPrice,
+            purchaseType: 'cash',  // نقدي دائماً
+            supplierId: _selectedSupplier!.supplierID!,
+          );
+
+          if (!accountingSuccess) {
+            debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي للمنتج المستعاد');
+          } else {
+            debugPrint('✅ تم تسجيل قيد شراء جديد للمنتج المستعاد');
+          }
+
+        // 🔸 حالة عادية: تعديل كمية أو سعر منتج موجود
+        } else if (quantity != oldProduct.quantity || costPrice != oldProduct.costPrice) {
+          debugPrint('✏️ تعديل منتج موجود: ${product.productName}');
+          debugPrint('   الكمية: ${oldProduct.quantity} → $quantity');
+          debugPrint('   السعر: ${oldProduct.costPrice} → $costPrice');
+
+          final quantityDifference = quantity - oldProduct.quantity;
+          final costDifference = costPrice - oldProduct.costPrice;
+
           final adjustmentSuccess = await AccountingIntegrationHelper.recordProductAdjustment(
             productId: product.productID!,
             costDifference: costDifference,
@@ -564,10 +449,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
           if (!adjustmentSuccess) {
             debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي لتعديل المنتج');
+          } else {
+            debugPrint('✅ تم تسجيل قيد التعديل بنجاح');
           }
         }
 
-        // 4️⃣ تسجيل في Activity Log
+        // 3️⃣ تسجيل في Activity Log
         await _dbHelper.logActivity(
           'تم تعديل المنتج: ${product.productName}',
         );

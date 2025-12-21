@@ -167,72 +167,53 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 1️⃣ عرض Dialog لاختيار سبب الحذف
+    // 🚨 تحقق حرج: منع أرشفة منتج له كمية موجودة
     // ═══════════════════════════════════════════════════════════
-    final deleteReason = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: const [
-            Icon(Icons.delete_outline, color: AppColors.error),
-            SizedBox(width: 8),
-            Text('سبب حذف/أرشفة المنتج'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('لماذا تريد حذف "${product.productName}"؟'),
-            const SizedBox(height: 24),
-
-            // خيار 1: إرجاع للمورد
-            _buildDeleteReasonOption(
-              icon: Icons.undo,
-              iconColor: AppColors.info,
-              title: 'إرجاع للمورد',
-              description: 'تم إرجاع المنتج للمورد',
-              value: 'return_to_supplier',
+    // ← Hint: لضمان التوازن المحاسبي، لا يمكن أرشفة منتج له كمية
+    // ← Hint: المستخدم يجب أن يصفّر الكمية أولاً (عن طريق البيع أو التعديل)
+    if (product.quantity > 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'لا يمكن أرشفة منتج له كمية موجودة',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'الكمية الحالية: ${product.quantity}\n'
+                        'يجب تصفير الكمية أولاً عن طريق:\n'
+                        '• بيع المنتج للعملاء\n'
+                        '• تعديل المنتج وجعل الكمية = 0',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 12),
-
-            // خيار 2: خسارة/تلف
-            _buildDeleteReasonOption(
-              icon: Icons.broken_image,
-              iconColor: AppColors.error,
-              title: 'خسارة أو تلف',
-              description: 'المنتج تالف أو مفقود',
-              value: 'loss',
-            ),
-
-            const SizedBox(height: 12),
-
-            // خيار 3: خطأ في الإدخال
-            _buildDeleteReasonOption(
-              icon: Icons.edit_off,
-              iconColor: AppColors.warning,
-              title: 'خطأ في الإدخال',
-              description: 'تم إضافته بالخطأ',
-              value: 'entry_error',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('إلغاء'),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 6),
+            behavior: SnackBarBehavior.floating,
           ),
-        ],
-      ),
-    );
-
-    // ← Hint: إذا تم الإلغاء، لا نكمل الحذف
-    if (deleteReason == null) return;
+        );
+      }
+      return;  // ← إيقاف العملية فوراً
+    }
 
     // ═══════════════════════════════════════════════════════════
-    // 2️⃣ تأكيد الحذف
+    // 1️⃣ تأكيد الأرشفة
     // ═══════════════════════════════════════════════════════════
+    // ← Hint: الوصول لهنا يعني الكمية = 0، أرشفة آمنة بدون قيود محاسبية
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -258,22 +239,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
     try {
       // ═══════════════════════════════════════════════════════════
-      // 3️⃣ تسجيل القيد المحاسبي للحذف
+      // 2️⃣ أرشفة المنتج في قاعدة البيانات
       // ═══════════════════════════════════════════════════════════
-      final accountingSuccess = await AccountingIntegrationHelper.recordProductDeletion(
-        productId: product.productID!,
-        quantity: product.quantity,
-        costPrice: product.costPrice,
-        deleteReason: deleteReason,
-      );
-
-      if (!accountingSuccess) {
-        debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي لحذف المنتج');
-      }
-
-      // ═══════════════════════════════════════════════════════════
-      // 4️⃣ أرشفة المنتج في قاعدة البيانات
-      // ═══════════════════════════════════════════════════════════
+      // ← Hint: لا حاجة لقيد محاسبي لأن الكمية = 0
       await dbHelper.archiveProduct(product.productID!);
 
       // ← Hint: لا حاجة لـ userId و userName - يتم جلبهم تلقائياً من SessionService
@@ -1081,62 +1049,4 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     }
   }
 
-  /// ============================================================================
-  /// بناء خيار من خيارات سبب الحذف
-  /// ============================================================================
-  Widget _buildDeleteReasonOption({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String description,
-    required String value,
-  }) {
-    return InkWell(
-      onTap: () => Navigator.pop(context, value),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: iconColor, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-          ],
-        ),
-      ),
-    );
-  }
 }
