@@ -427,6 +427,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
           if (!accountingSuccess) {
             debugPrint('⚠️ تحذير: فشل تسجيل القيد المحاسبي للمنتج المستعاد');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('⚠️ تحذير: فشل تسجيل القيد المحاسبي للمنتج المستعاد'),
+                  backgroundColor: AppColors.warning,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
           } else {
             debugPrint('✅ تم تسجيل قيد شراء جديد للمنتج المستعاد');
           }

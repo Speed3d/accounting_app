@@ -62,6 +62,7 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
     setState(() {
       _summaryFuture = _getFinancialSummary();
     });
+    _loadAccountingData(); // ← تحديث البيانات المحاسبية أيضاً
   }
 
   /// جلب البيانات المالية من قاعدة البيانات
@@ -122,6 +123,22 @@ class _ProfitReportScreenState extends State<ProfitReportScreen> {
         title: Text(l10n.generalProfitReport),
         elevation: 0,
         actions: [
+          // زر تبديل العرض المحاسبي
+          Consumer<AccountingViewProvider>(
+            builder: (context, accountingProvider, _) => IconButton(
+              icon: Icon(
+                accountingProvider.showAccountingView
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+              ),
+              onPressed: () {
+                accountingProvider.toggleAccountingView();
+              },
+              tooltip: accountingProvider.showAccountingView
+                  ? 'إخفاء العرض المحاسبي'
+                  : 'إظهار العرض المحاسبي',
+            ),
+          ),
           // زر التحديث
           IconButton(
             icon: const Icon(Icons.refresh),

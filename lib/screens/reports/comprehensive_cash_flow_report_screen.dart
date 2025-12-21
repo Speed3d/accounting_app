@@ -553,6 +553,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
     final advances = expenses['advances'] as double;
     final bonuses = expenses['bonuses'] as double; // ← Hint: المكافآت من TB_Employee_Bonuses
     final profitWithdrawals = expenses['profitWithdrawals'] as double;
+    final inventoryPurchases = expenses['inventoryPurchases'] as double; // ← مشتريات المنتجات
     final total = expenses['total'] as double;
 
     return CustomCard(
@@ -583,6 +584,7 @@ class _ComprehensiveCashFlowReportScreenState extends State<ComprehensiveCashFlo
             _buildExpenseItem(l10n.advances, advances, Icons.money, l10n),
             _buildExpenseItem('المكافآت', bonuses, Icons.card_giftcard, l10n), // ← Hint: عرض المكافآت
             _buildExpenseItem(l10n.profitWithdrawals, profitWithdrawals, Icons.account_balance, l10n),
+            _buildExpenseItem('شراء منتجات', inventoryPurchases, Icons.shopping_cart, l10n), // ← مشتريات المنتجات
 
             const Divider(height: AppConstants.spacingLg),
 

@@ -272,13 +272,13 @@ class AccountingIntegrationHelper {
         // من ح/ المخزون - إلى ح/ الصندوق
         debitAccountId = inventoryAccount.accountID!;
         creditAccountId = cashAccount.accountID!;
-        transactionType = 'expense';
+        transactionType = 'correction'; // ← تغيير من expense إلى correction
       } else {
         // ❌ نقص في قيمة المخزون (بيع/تخفيض)
         // من ح/ الصندوق - إلى ح/ المخزون
         debitAccountId = cashAccount.accountID!;
         creditAccountId = inventoryAccount.accountID!;
-        transactionType = 'income';
+        transactionType = 'correction'; // ← تغيير من income إلى correction
       }
 
       final transactionId = await db.insert('TB_Transactions', {

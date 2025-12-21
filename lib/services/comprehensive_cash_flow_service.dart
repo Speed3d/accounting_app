@@ -17,6 +17,7 @@ import '../data/database_helper.dart';
 /// - TB_Employee_Advances: السلف
 /// - TB_Employee_Bonuses: المكافآت
 /// - TB_Profit_Withdrawals: سحوبات الأرباح
+/// - TB_Transactions: مشتريات المنتجات (ReferenceType='product_purchase')
 class ComprehensiveCashFlowService {
   // ============================================================================
   // Singleton Pattern
@@ -65,8 +66,9 @@ class ComprehensiveCashFlowService {
     final advances = await _getAdvancesInPeriod(startDate, endDate);
     final bonuses = await _getBonusesInPeriod(startDate, endDate); // ← إضافة المكافآت من TB_Employee_Bonuses
     final profitWithdrawals = await _getProfitWithdrawalsInPeriod(startDate, endDate);
+    final inventoryPurchases = await _getInventoryPurchasesInPeriod(startDate, endDate); // ← إضافة مشتريات المنتجات
 
-    final totalExpenses = generalExpenses + salaries + advances + bonuses + profitWithdrawals;
+    final totalExpenses = generalExpenses + salaries + advances + bonuses + profitWithdrawals + inventoryPurchases;
 
     // ═══════════════════════════════════════════════════════════
     // حسابات صافي التدفق النقدي
@@ -87,6 +89,7 @@ class ComprehensiveCashFlowService {
     final advancesDetails = await _getAdvancesDetails(startDate, endDate);
     final bonusesDetails = await _getBonusesDetails(startDate, endDate); // ← إضافة تفاصيل المكافآت
     final withdrawalsDetails = await _getWithdrawalsDetails(startDate, endDate);
+    final inventoryPurchasesDetails = await _getInventoryPurchasesDetails(startDate, endDate); // ← تفاصيل مشتريات المنتجات
 
     // ═══════════════════════════════════════════════════════════
     // إرجاع التقرير الشامل
@@ -121,6 +124,7 @@ class ComprehensiveCashFlowService {
         'advances': advances,
         'bonuses': bonuses, // ← إضافة المكافآت
         'profitWithdrawals': profitWithdrawals,
+        'inventoryPurchases': inventoryPurchases, // ← إضافة مشتريات المنتجات
         'total': totalExpenses,
         'details': {
           'generalExpenses': expensesDetails,
@@ -128,6 +132,7 @@ class ComprehensiveCashFlowService {
           'advances': advancesDetails,
           'bonuses': bonusesDetails, // ← إضافة تفاصيل المكافآت
           'profitWithdrawals': withdrawalsDetails,
+          'inventoryPurchases': inventoryPurchasesDetails, // ← تفاصيل مشتريات المنتجات
         },
       },
 
@@ -306,6 +311,31 @@ class ComprehensiveCashFlowService {
 
     if (endDate != null) {
       sql += ' AND WithdrawalDate <= ?';
+      args.add(endDate.toIso8601String());
+    }
+
+    final result = await db.rawQuery(sql, args);
+    return result.first['total'] != null ? (result.first['total'] as num).toDouble() : 0.0;
+  }
+
+  /// مشتريات المنتجات من TB_Transactions (ReferenceType = 'product_purchase')
+  Future<double> _getInventoryPurchasesInPeriod(DateTime? startDate, DateTime? endDate) async {
+    final db = await _db.database;
+
+    String sql = '''
+      SELECT SUM(Amount) as total
+      FROM TB_Transactions
+      WHERE ReferenceType = 'product_purchase'
+    ''';
+    final List<dynamic> args = [];
+
+    if (startDate != null) {
+      sql += ' AND TransactionDate >= ?';
+      args.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      sql += ' AND TransactionDate <= ?';
       args.add(endDate.toIso8601String());
     }
 
@@ -541,6 +571,45 @@ class ComprehensiveCashFlowService {
     return await db.rawQuery(sql, args);
   }
 
+  /// تفاصيل مشتريات المنتجات من TB_Transactions
+  Future<List<Map<String, dynamic>>> _getInventoryPurchasesDetails(
+    DateTime? startDate,
+    DateTime? endDate,
+  ) async {
+    final db = await _db.database;
+
+    String sql = '''
+      SELECT
+        t.TransactionID,
+        t.TransactionDate,
+        t.Amount,
+        t.Description,
+        t.ReferenceType,
+        t.ReferenceID,
+        p.ProductName,
+        s.SupplierName
+      FROM TB_Transactions t
+      LEFT JOIN Store_Products p ON t.ReferenceID = p.ProductID
+      LEFT JOIN TB_Suppliers s ON p.SupplierID = s.SupplierID
+      WHERE t.ReferenceType = 'product_purchase'
+    ''';
+    final List<dynamic> args = [];
+
+    if (startDate != null) {
+      sql += ' AND t.TransactionDate >= ?';
+      args.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      sql += ' AND t.TransactionDate <= ?';
+      args.add(endDate.toIso8601String());
+    }
+
+    sql += ' ORDER BY t.TransactionDate DESC';
+
+    return await db.rawQuery(sql, args);
+  }
+
   /// تفاصيل تسديدات السلف من TB_Advance_Repayments (جديد في v5)
   /// ← Hint: تجلب قائمة مفصلة بعمليات تسديد السلف مع معلومات الموظف
   Future<List<Map<String, dynamic>>> _getAdvanceRepaymentsDetails(
@@ -594,6 +663,7 @@ class ComprehensiveCashFlowService {
       'advances': expenses['advances'] as double,
       'bonuses': expenses['bonuses'] as double, // ← إضافة المكافآت
       'profitWithdrawals': expenses['profitWithdrawals'] as double,
+      'inventoryPurchases': expenses['inventoryPurchases'] as double, // ← إضافة مشتريات المنتجات
     };
   }
 }
